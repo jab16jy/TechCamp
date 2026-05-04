@@ -1,0 +1,468 @@
+/* ============================================
+   Acceso.module.css — Pantalla de selección de perfil
+   Diseño responsivo, accesible y con identidad visual
+   del Caribe colombiano (verde agrícola + acento cálido)
+   ============================================ */
+
+/* ── Página base ── */
+.pagina {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--crema);
+  position: relative;
+  overflow: hidden;
+}
+
+/* ── Fondo decorativo ── */
+.fondo {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.fondoCirculo1 {
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(45, 158, 79, 0.08) 0%, transparent 70%);
+  top: -200px;
+  right: -150px;
+}
+
+.fondoCirculo2 {
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(232, 184, 75, 0.07) 0%, transparent 70%);
+  bottom: -100px;
+  left: -100px;
+}
+
+.fondoGrilla {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(45, 158, 79, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(45, 158, 79, 0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* ── Cabecera con logo ── */
+.cabecera {
+  position: relative;
+  z-index: 1;
+  padding: var(--espacio-lg) var(--espacio-xl);
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-sm);
+  text-decoration: none;
+}
+
+.logoIcono {
+  font-size: 2rem;
+  width: 48px;
+  height: 48px;
+  background: var(--verde-oscuro);
+  border-radius: var(--radio-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logoTexto {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.logoNombre {
+  font-family: var(--font-titulo);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--verde-oscuro);
+  line-height: 1;
+}
+
+.logoSub {
+  font-family: var(--font-cuerpo);
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  color: var(--gris-400);
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+/* ── Contenido principal ── */
+.main {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--espacio-xl) var(--espacio-lg);
+  gap: var(--espacio-2xl);
+}
+
+/* ── Sección introductoria ── */
+.intro {
+  text-align: center;
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--espacio-md);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacio-xs);
+  padding: 0.35rem 1rem;
+  background: rgba(45, 158, 79, 0.1);
+  border: 1px solid rgba(45, 158, 79, 0.25);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--verde-medio);
+  letter-spacing: 0.03em;
+}
+
+.titulo {
+  font-family: var(--font-titulo);
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 700;
+  color: var(--verde-oscuro);
+  line-height: 1.15;
+  margin: 0;
+}
+
+.tituloAcento {
+  color: var(--verde-medio);
+  position: relative;
+}
+
+/* Subrayado decorativo animado */
+.tituloAcento::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--verde-medio), var(--dorado));
+  border-radius: 2px;
+  transform-origin: left;
+  animation: subrayado 0.8s 0.3s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes subrayado {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+.subtitulo {
+  font-size: 1.05rem;
+  color: var(--gris-600);
+  line-height: 1.7;
+  max-width: 440px;
+}
+
+/* ── Grid de tarjetas ── */
+.tarjetasGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--espacio-xl);
+  width: 100%;
+  max-width: 860px;
+}
+
+/* ── Tarjeta base ── */
+.tarjeta {
+  border-radius: var(--radio-xl);
+  padding: var(--espacio-2xl) var(--espacio-xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--espacio-xl);
+  text-align: center;
+  transition: transform var(--transicion), box-shadow var(--transicion);
+  animation: aparecerTarjeta 0.6s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.tarjeta:first-child { animation-delay: 0.1s; }
+.tarjeta:last-child  { animation-delay: 0.25s; }
+
+@keyframes aparecerTarjeta {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.tarjeta:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--sombra-lg);
+}
+
+/* ── Tarjeta Productor ── */
+.tarjetaProductor {
+  background: var(--blanco);
+  border: 2px solid var(--gris-200);
+  box-shadow: var(--sombra-md);
+}
+
+/* ── Tarjeta Investigador ── */
+.tarjetaInvestigador {
+  background: var(--verde-oscuro);
+  border: 2px solid rgba(255,255,255,0.08);
+  box-shadow: 0 8px 40px rgba(13, 61, 28, 0.35);
+}
+
+/* ── Ícono grande de tarjeta ── */
+.tarjetaIcono {
+  font-size: 3.5rem;
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform var(--transicion);
+}
+
+.tarjetaProductor .tarjetaIcono {
+  background: rgba(45, 158, 79, 0.1);
+}
+
+.tarjetaInvestigador .tarjetaIcono {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.tarjeta:hover .tarjetaIcono {
+  transform: scale(1.1) rotate(-5deg);
+}
+
+/* ── Contenido de tarjeta ── */
+.tarjetaContenido {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-sm);
+  align-items: center;
+}
+
+/* Badge de acceso */
+.tarjetaBadge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background: rgba(45, 158, 79, 0.1);
+  color: var(--verde-medio);
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.tarjetaBadgeInv {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background: rgba(232, 184, 75, 0.15);
+  color: var(--dorado);
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Títulos */
+.tarjetaTitulo {
+  font-family: var(--font-titulo);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--verde-oscuro);
+  line-height: 1.1;
+}
+
+.tarjetaTituloInv {
+  font-family: var(--font-titulo);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--blanco);
+  line-height: 1.1;
+}
+
+/* Descripciones */
+.tarjetaDesc {
+  font-size: 0.95rem;
+  color: var(--gris-600);
+  line-height: 1.65;
+}
+
+.tarjetaDescInv {
+  font-size: 0.95rem;
+  color: rgba(250, 248, 242, 0.7);
+  line-height: 1.65;
+}
+
+/* ── Lista de beneficios ── */
+.beneficios,
+.beneficiosInv {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-xs);
+  margin-top: var(--espacio-xs);
+  text-align: left;
+  align-self: stretch;
+}
+
+.beneficios li {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-sm);
+  font-size: 0.9rem;
+  color: var(--gris-600);
+}
+
+.beneficiosInv li {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-sm);
+  font-size: 0.9rem;
+  color: rgba(250, 248, 242, 0.75);
+}
+
+.checkmark {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(45, 158, 79, 0.12);
+  color: var(--verde-medio);
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.checkmarkInv {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(232, 184, 75, 0.15);
+  color: var(--dorado);
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ── Botones CTA ── */
+.btnProductor {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--espacio-sm);
+  width: 100%;
+  padding: 1rem 1.5rem;
+  background: var(--verde-medio);
+  color: var(--blanco);
+  font-family: var(--font-cuerpo);
+  font-size: 1rem;
+  font-weight: 700;
+  border-radius: var(--radio-md);
+  text-decoration: none;
+  transition: all var(--transicion);
+  border: 2px solid transparent;
+}
+
+.btnProductor:hover {
+  background: var(--verde-oscuro);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(45, 158, 79, 0.35);
+}
+
+.btnInvestigador {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--espacio-sm);
+  width: 100%;
+  padding: 1rem 1.5rem;
+  background: var(--dorado);
+  color: var(--verde-oscuro);
+  font-family: var(--font-cuerpo);
+  font-size: 1rem;
+  font-weight: 700;
+  border-radius: var(--radio-md);
+  text-decoration: none;
+  transition: all var(--transicion);
+  border: 2px solid transparent;
+}
+
+.btnInvestigador:hover {
+  background: var(--dorado-claro);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(232, 184, 75, 0.45);
+}
+
+/* ── Nota legal / privacidad ── */
+.nota {
+  font-size: 0.78rem;
+  color: var(--gris-400);
+  text-align: center;
+}
+
+/* ════════════════════════════════════════
+   RESPONSIVE — Móvil primero
+   La mayoría de productores acceden desde celular
+   ════════════════════════════════════════ */
+
+@media (max-width: 700px) {
+  .cabecera {
+    padding: var(--espacio-md);
+  }
+
+  .main {
+    padding: var(--espacio-lg) var(--espacio-md);
+    gap: var(--espacio-xl);
+  }
+
+  /* En móvil, las tarjetas van en columna */
+  .tarjetasGrid {
+    grid-template-columns: 1fr;
+    max-width: 420px;
+  }
+
+  /* Iconos más grandes en móvil para mejor UX */
+  .tarjetaIcono {
+    font-size: 4rem;
+    width: 96px;
+    height: 96px;
+  }
+
+  .tarjeta {
+    padding: var(--espacio-xl) var(--espacio-lg);
+  }
+
+  /* Botones más grandes en móvil (dedo) */
+  .btnProductor,
+  .btnInvestigador {
+    padding: 1.1rem 1.5rem;
+    font-size: 1.05rem;
+  }
+}
