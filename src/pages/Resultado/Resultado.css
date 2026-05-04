@@ -1,0 +1,254 @@
+.resultado-page {
+  padding-top: calc(var(--navbar-h) + var(--espacio-lg));
+  padding-bottom: var(--espacio-2xl);
+  min-height: 100vh;
+}
+
+.resultado-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: var(--espacio-xl);
+  flex-wrap: wrap;
+  gap: var(--espacio-md);
+}
+
+.resultado-title h1 {
+  font-size: 2.5rem;
+  margin-bottom: var(--espacio-xs);
+}
+
+.resultado-title p {
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+.resultado-acciones {
+  display: flex;
+  gap: var(--espacio-md);
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--espacio-xl);
+}
+
+@media (max-width: 992px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Secciones genéricas */
+.seccion-dashboard {
+  background: var(--blanco);
+  border-radius: var(--radio-lg);
+  padding: var(--espacio-lg);
+  box-shadow: var(--sombra-md);
+  margin-bottom: var(--espacio-xl);
+}
+
+.seccion-dashboard h2 {
+  font-size: 1.3rem;
+  margin-bottom: var(--espacio-md);
+  border-bottom: 2px solid var(--crema-2);
+  padding-bottom: var(--espacio-xs);
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-sm);
+}
+
+/* Clima Grid */
+.clima-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: var(--espacio-md);
+}
+
+.clima-card {
+  background: var(--crema);
+  padding: var(--espacio-md);
+  border-radius: var(--radio-md);
+  text-align: center;
+  border: 1px solid var(--gris-200);
+  transition: transform var(--transicion);
+}
+
+.clima-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--sombra-sm);
+}
+
+.clima-icono {
+  font-size: 1.8rem;
+  margin-bottom: var(--espacio-xs);
+}
+
+.clima-valor {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--verde-oscuro);
+  font-family: var(--font-titulo);
+}
+
+.clima-label {
+  font-size: 0.85rem;
+  color: var(--gris-600);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Indicadores / NDVI */
+.indicador-ndvi-container {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-md);
+}
+
+.ndvi-circulo {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--blanco);
+  box-shadow: inset 0 0 0 4px rgba(255,255,255,0.3);
+}
+
+.ndvi-info h3 {
+  font-size: 1.1rem;
+  margin-bottom: 0.2rem;
+}
+
+.ndvi-info p {
+  font-size: 0.9rem;
+}
+
+.satelite-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--espacio-md);
+  margin-top: var(--espacio-md);
+}
+
+.satelite-item {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--espacio-sm) 0;
+  border-bottom: 1px solid var(--gris-200);
+}
+
+.satelite-item span:first-child {
+  color: var(--gris-600);
+  font-weight: 500;
+}
+
+.satelite-item span:last-child {
+  font-weight: 700;
+  color: var(--verde-oscuro);
+}
+
+/* Recomendaciones */
+.recomendaciones-lista {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-md);
+}
+
+.cultivo-card {
+  border: 1px solid var(--gris-200);
+  border-radius: var(--radio-md);
+  padding: var(--espacio-md);
+  background: var(--crema);
+  transition: all var(--transicion);
+}
+
+.cultivo-card:hover {
+  border-color: var(--verde-medio);
+  box-shadow: var(--sombra-sm);
+}
+
+.cultivo-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--espacio-sm);
+}
+
+.cultivo-nombre {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-sm);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--verde-oscuro);
+}
+
+.cultivo-score {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--verde-medio);
+}
+
+.score-bar-bg {
+  width: 100%;
+  height: 8px;
+  background: var(--gris-200);
+  border-radius: 4px;
+  margin-bottom: var(--espacio-sm);
+  overflow: hidden;
+}
+
+.score-bar-fill {
+  height: 100%;
+  background: var(--verde-medio);
+  border-radius: 4px;
+  transition: width 1s ease-in-out;
+}
+
+.cultivo-meta {
+  display: flex;
+  gap: var(--espacio-md);
+  margin-bottom: var(--espacio-sm);
+  font-size: 0.85rem;
+}
+
+.badge-riesgo {
+  padding: 0.15rem 0.6rem;
+  border-radius: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  color: var(--blanco);
+}
+
+.riesgo-alto { background: var(--riesgo-alto); }
+.riesgo-medio { background: var(--riesgo-medio); color: var(--gris-800); }
+.riesgo-bajo { background: var(--riesgo-bajo); }
+
+.cultivo-justificacion {
+  font-size: 0.95rem;
+  color: var(--gris-600);
+  line-height: 1.5;
+}
+
+/* Minimapa */
+.minimapa-container {
+  height: 300px;
+  border-radius: var(--radio-md);
+  overflow: hidden;
+  border: 1px solid var(--gris-200);
+  margin-bottom: var(--espacio-md);
+}
+
+.ubicacion-detalles {
+  font-size: 0.9rem;
+}
+
+.ubicacion-detalles p {
+  margin-bottom: 0.25rem;
+}

@@ -1,0 +1,109 @@
+.historial-page {
+  padding-top: calc(var(--navbar-h) + var(--espacio-lg));
+  padding-bottom: var(--espacio-2xl);
+  min-height: 100vh;
+}
+
+.historial-header {
+  margin-bottom: var(--espacio-xl);
+  text-align: center;
+}
+
+.historial-header h1 {
+  font-size: 2.5rem;
+  margin-bottom: var(--espacio-xs);
+}
+
+.historial-header p {
+  color: var(--gris-600);
+  font-size: 1.1rem;
+}
+
+.historial-container {
+  background: var(--blanco);
+  border-radius: var(--radio-lg);
+  box-shadow: var(--sombra-md);
+  padding: var(--espacio-lg);
+  overflow-x: auto;
+}
+
+.historial-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.historial-table th {
+  padding: var(--espacio-md);
+  border-bottom: 2px solid var(--crema-2);
+  color: var(--gris-600);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+}
+
+.historial-table td {
+  padding: var(--espacio-md);
+  border-bottom: 1px solid var(--gris-200);
+  vertical-align: middle;
+}
+
+.historial-table tbody tr {
+  transition: background-color var(--transicion);
+}
+
+.historial-table tbody tr:hover {
+  background-color: var(--crema);
+}
+
+.historial-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.score-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radio-xl);
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--blanco);
+}
+
+.btn-detalle {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+  border-radius: var(--radio-sm);
+  background: var(--crema-2);
+  color: var(--verde-oscuro);
+  font-weight: 600;
+  border: 1px solid transparent;
+  transition: all var(--transicion);
+}
+
+.btn-detalle:hover {
+  background: var(--verde-medio);
+  color: var(--blanco);
+  transform: translateY(-1px);
+}
+
+/* Empty state */
+.historial-vacio {
+  text-align: center;
+  padding: var(--espacio-3xl) 0;
+  color: var(--gris-600);
+}
+
+.historial-vacio p {
+  font-size: 1.2rem;
+  margin-bottom: var(--espacio-md);
+}
+
+/* Cargando */
+.historial-cargando {
+  text-align: center;
+  padding: var(--espacio-3xl) 0;
+  color: var(--verde-medio);
+  font-size: 1.2rem;
+  font-weight: 500;
+}

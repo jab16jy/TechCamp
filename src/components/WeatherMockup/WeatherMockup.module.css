@@ -1,0 +1,197 @@
+/* WeatherMockup — Tarjeta de clima animada */
+
+.tarjeta {
+  background: rgba(13, 61, 28, 0.92);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(232, 184, 75, 0.2);
+  border-radius: var(--radio-xl);
+  padding: var(--espacio-xl);
+  width: 320px;
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+  position: relative;
+  z-index: 2;
+}
+
+/* Brillo decorativo en la esquina */
+.tarjeta::before {
+  content: '';
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(circle, rgba(232, 184, 75, 0.3), transparent 70%);
+  pointer-events: none;
+}
+
+/* Cabecera */
+.cabecera {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: var(--espacio-lg);
+}
+
+.puntoVerde {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #4ade80;
+  box-shadow: 0 0 10px rgba(74, 222, 128, 0.7);
+  animation: pulso 2s ease-in-out infinite;
+}
+
+@keyframes pulso {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(0.85); }
+}
+
+.etiqueta {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(232, 184, 75, 0.8);
+}
+
+/* Ciudad */
+.ciudad {
+  margin-bottom: var(--espacio-lg);
+}
+
+.nombreCiudad {
+  font-family: var(--font-titulo);
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--crema);
+  margin-bottom: 2px;
+}
+
+.fecha {
+  font-size: 0.78rem;
+  color: rgba(250, 248, 242, 0.45);
+}
+
+/* Grilla de variables */
+.grilla {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--espacio-md);
+  margin-bottom: var(--espacio-lg);
+}
+
+.variable {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: var(--radio-md);
+  padding: 10px 12px;
+}
+
+.varIcono {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.varValor {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--crema);
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+.varLabel {
+  font-size: 0.68rem;
+  color: rgba(250, 248, 242, 0.45);
+  line-height: 1;
+}
+
+/* Recomendación */
+.recomendacion {
+  background: rgba(45, 158, 79, 0.15);
+  border: 1px solid rgba(45, 158, 79, 0.3);
+  border-radius: var(--radio-md);
+  padding: var(--espacio-md);
+  margin-bottom: var(--espacio-md);
+}
+
+.recCabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--espacio-sm);
+}
+
+.recLabel {
+  font-size: 0.72rem;
+  color: rgba(250, 248, 242, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.recScore {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--dorado);
+}
+
+.recCultivo {
+  font-family: var(--font-titulo);
+  font-size: 1.2rem;
+  color: var(--crema);
+  font-weight: 600;
+  margin-bottom: var(--espacio-sm);
+}
+
+.barraContenedor {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.barra {
+  height: 100%;
+  background: linear-gradient(90deg, var(--verde-medio), var(--dorado));
+  border-radius: 2px;
+  transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Dots */
+.dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(250, 248, 242, 0.2);
+  cursor: pointer;
+  transition: all var(--transicion);
+}
+
+.dotActivo {
+  background: var(--dorado);
+  width: 20px;
+  border-radius: 3px;
+}
+
+/* Transición de contenido */
+.visible {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.oculto {
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
