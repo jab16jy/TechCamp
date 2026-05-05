@@ -50,7 +50,6 @@ const DashboardInvestigador = () => {
   const agregarToast = useAppStore((s) => s.agregarToast);
 
   // ── Guardia de autenticación simple ──
-  // En producción usar JWT + contexto de auth real
   useEffect(() => {
     const rol = sessionStorage.getItem('rol');
     if (rol !== 'investigador') {
@@ -59,7 +58,7 @@ const DashboardInvestigador = () => {
   }, [navigate]);
 
   // Estado de la pestaña activa
-  const [tabActiva, setTabActiva] = useState('metricas');
+  const [tabActiva, setTabActiva] = useState('historial'); // Default to historial as requested
 
   // ── Cerrar sesión ──
   const cerrarSesion = () => {
@@ -74,289 +73,458 @@ const DashboardInvestigador = () => {
   };
 
   return (
-    <div className={styles.pagina}>
-
-      {/* ══════════════════════════════════
-          SIDEBAR de navegación
-          ══════════════════════════════════ */}
-      <aside className={styles.sidebar} aria-label="Navegación del panel">
-
-        {/* Logo */}
-        <div className={styles.sidebarLogo}>
-          <span className={styles.sidebarLogoIcono}>🌿</span>
-          <div>
-            <span className={styles.sidebarLogoNombre}>AgroCaribe AI</span>
-            <span className={styles.sidebarLogoRol}>Panel Investigador</span>
+    <div className={styles.dashboardLayout}>
+      {/* Top Navigation Bar */}
+      <header className={styles.topBar}>
+        <div className={styles.topBarLeft}>
+          <span className={styles.logoText}>AgroCaribe IA</span>
+          <nav className={styles.topNav}>
+            <button 
+              className={`${styles.topNavItem} ${tabActiva === 'metricas' ? styles.topNavItemActive : ''}`}
+              onClick={() => setTabActiva('metricas')}
+            >
+              Métricas del modelo
+            </button>
+            <button 
+              className={`${styles.topNavItem} ${tabActiva === 'historial' ? styles.topNavItemActive : ''}`}
+              onClick={() => setTabActiva('historial')}
+            >
+              Historial de consultas
+            </button>
+            <button 
+              className={`${styles.topNavItem} ${tabActiva === 'exportar' ? styles.topNavItemActive : ''}`}
+              onClick={() => setTabActiva('exportar')}
+            >
+              Exportar datos
+            </button>
+          </nav>
+        </div>
+        <div className={styles.topBarRight}>
+          <button className={styles.iconButton}>
+            <span className="material-symbols-outlined">notifications</span>
+          </button>
+          <button className={styles.iconButton}>
+            <span className="material-symbols-outlined">settings</span>
+          </button>
+          <div className={styles.profileCircle}>
+            <img 
+              src="https://lh3.googleusercontent.com/aida/ADBb0ujPlGjbWMxBx3mhqQy7KLwgTutTW9OFXzmeMtI6mp5Mx5IM7k3vzcwkhNiEO6YVglNVEQ2byE9IiCgVKI3xhn0KC9eB64BE1PH4Y23FdAI9jkvfIoeIYrRDZ1GXPqabFEiYnlDVD4l5WWdzrKiAVIbQVyC4OUnuY4NvJAi6OQDBKkcBsyT4i2Yki7WEPIYlKMSNbhiyZBPCbgIz6J81cpQJhXrCEWFmaIIqBPjVY-VUl18q5qHZ7LSWymM" 
+              alt="Profile" 
+            />
           </div>
         </div>
+      </header>
 
-        {/* Navegación por pestañas */}
-        <nav className={styles.sidebarNav} aria-label="Secciones del dashboard">
-          {[
-            { id: 'metricas',    icono: '📊', label: 'Métricas del modelo' },
-            { id: 'historial',   icono: '🗂️', label: 'Historial de consultas' },
-            { id: 'exportar',    icono: '📤', label: 'Exportar datos' },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              id={`tab-${tab.id}`}
-              className={`${styles.sidebarItem} ${tabActiva === tab.id ? styles.sidebarItemActivo : ''}`}
-              onClick={() => setTabActiva(tab.id)}
-              aria-current={tabActiva === tab.id ? 'page' : undefined}
-            >
-              <span className={styles.sidebarItemIcono}>{tab.icono}</span>
-              <span>{tab.label}</span>
-            </button>
-          ))}
-        </nav>
-
-        {/* Acceso rápido al mapa */}
-        <div className={styles.sidebarAccesoMapa}>
-          <Link to="/consulta" className={styles.btnMapa} id="btn-dashboard-mapa">
-            <span>🗺️</span>
-            <span>Ir al mapa</span>
-          </Link>
-        </div>
-
-        {/* Footer del sidebar */}
-        <div className={styles.sidebarFooter}>
-          <div className={styles.sidebarUsuario}>
-            <span className={styles.sidebarAvatar}>🔬</span>
+      <div className={styles.mainContainer}>
+        {/* Sidebar */}
+        <aside className={styles.sidebar}>
+          <div className={styles.sidebarHeader}>
+            <div className={styles.sidebarHeaderIcon}>
+              <span className="material-symbols-outlined">biotech</span>
+            </div>
             <div>
-              <span className={styles.sidebarUsuarioNombre}>Investigador</span>
-              <span className={styles.sidebarUsuarioEmail}>TECHCAMP · 2025</span>
+              <p className={styles.sidebarHeaderTitle}>Laboratorio IA</p>
+              <p className={styles.sidebarHeaderSubtitle}>Sede Central</p>
             </div>
           </div>
-          <button
-            className={styles.btnCerrarSesion}
-            onClick={cerrarSesion}
-            id="btn-cerrar-sesion"
-            aria-label="Cerrar sesión"
-          >
-            🚪 Salir
-          </button>
-        </div>
-      </aside>
 
-      {/* ══════════════════════════════════
-          CONTENIDO PRINCIPAL
-          ══════════════════════════════════ */}
-      <main className={styles.contenido} role="main">
+          <nav className={styles.sidebarNav}>
+            <a href="#" className={styles.sidebarNavItem}>
+              <span className="material-symbols-outlined">dashboard</span>
+              <span>Dashboard</span>
+            </a>
+            <a href="#" className={styles.sidebarNavItem}>
+              <span className="material-symbols-outlined">potted_plant</span>
+              <span>Análisis de Cultivos</span>
+            </a>
+            <a href="#" className={styles.sidebarNavItem}>
+              <span className="material-symbols-outlined">sensors</span>
+              <span>Sensores IoT</span>
+            </a>
+            <a href="#" className={`${styles.sidebarNavItem} ${styles.sidebarNavItemActive}`}>
+              <span className="material-symbols-outlined">psychology</span>
+              <span>IA Predictiva</span>
+            </a>
+            <a href="#" className={styles.sidebarNavItem}>
+              <span className="material-symbols-outlined">assessment</span>
+              <span>Reportes</span>
+            </a>
+          </nav>
 
-        {/* Cabecera del contenido */}
-        <header className={styles.contenidoCabecera}>
-          <div>
-            <h1 className={styles.contenidoTitulo}>
-              {tabActiva === 'metricas'  && '📊 Métricas del Modelo IA'}
-              {tabActiva === 'historial' && '🗂️ Historial de Consultas'}
-              {tabActiva === 'exportar'  && '📤 Exportar Datos'}
-            </h1>
-            <p className={styles.contenidoSubtitulo}>
-              {tabActiva === 'metricas'  && 'Rendimiento en producción · Datos actualizados hoy'}
-              {tabActiva === 'historial' && 'Predicciones recientes del sistema · Últimos 30 días'}
-              {tabActiva === 'exportar'  && 'Descarga datos del modelo y consultas históricas'}
-            </p>
+          <div className={styles.sidebarAction}>
+            <button className={styles.newSimulationBtn}>
+              <span className="material-symbols-outlined">add</span>
+              Nueva Simulación
+            </button>
           </div>
-          {/* Badge de estado API */}
-          <div className={styles.apiBadge}>
-            <span className={styles.apiDot} />
-            API conectada
+
+          <div className={styles.sidebarFooter}>
+            <a href="#" className={styles.sidebarFooterItem}>
+              <span className="material-symbols-outlined">help</span>
+              <span>Ayuda</span>
+            </a>
+            <button onClick={cerrarSesion} className={styles.sidebarFooterItem}>
+              <span className="material-symbols-outlined">logout</span>
+              <span>Cerrar Sesión</span>
+            </button>
           </div>
-        </header>
+        </aside>
 
-        {/* ─── TAB: MÉTRICAS DEL MODELO ─── */}
-        {tabActiva === 'metricas' && (
-          <section className={styles.seccion} aria-label="Métricas del modelo">
+        {/* Main Content */}
+        <main className={styles.content}>
+          {tabActiva === 'historial' && (
+            <div className={styles.historialSection}>
+              {/* Page Header */}
+              <div className={styles.sectionHeader}>
+                <div>
+                  <h1 className={styles.sectionTitle}>Historial de consultas</h1>
+                  <p className={styles.sectionSubtitle}>
+                    Registro centralizado de predicciones y análisis generados por el motor de IA AgroCaribe para la optimización de rendimientos regionales.
+                  </p>
+                </div>
+                <div className={styles.headerActions}>
+                  <button className={styles.filterBtn}>
+                    <span className="material-symbols-outlined">filter_list</span>
+                    Filtrar
+                  </button>
+                  <button className={styles.exportBtn} onClick={() => handleExportar('CSV')}>
+                    <span className="material-symbols-outlined">csv</span>
+                    Exportar CSV
+                  </button>
+                </div>
+              </div>
 
-            {/* Tarjetas KPI */}
-            <div className={styles.kpiGrid} role="list">
-              {METRICAS.map((m) => (
-                <div key={m.label} className={styles.kpiCard} role="listitem">
-                  <div className={styles.kpiIcono}>{m.icono}</div>
-                  <div className={styles.kpiValor}>{m.valor}</div>
-                  <div className={styles.kpiLabel}>{m.label}</div>
-                  <div className={`${styles.kpiDelta} ${m.positivo ? styles.kpiDeltaPos : styles.kpiDeltaNeg}`}>
-                    {m.positivo ? '▲' : '▼'} {m.delta}
+              {/* Bento Stats */}
+              <div className={styles.bentoGrid}>
+                <div className={styles.statCard}>
+                  <span className={styles.statLabel}>Total Consultas</span>
+                  <p className={styles.statValue}>1,284</p>
+                  <div className={styles.statTrend}>
+                    <span className="material-symbols-outlined">trending_up</span>
+                    <span>+12% este mes</span>
                   </div>
                 </div>
-              ))}
+                <div className={styles.statCard}>
+                  <span className={styles.statLabel}>Confianza Promedio</span>
+                  <p className={styles.statValue}>86.4%</p>
+                  <div className={styles.progressBar}>
+                    <div className={styles.progressFill} style={{ width: '86.4%' }}></div>
+                  </div>
+                </div>
+                <div className={styles.statCard}>
+                  <span className={styles.statLabel}>Municipio Líder</span>
+                  <p className={styles.statValue}>Montería</p>
+                  <p className={styles.statSubText}>422 consultas realizadas</p>
+                </div>
+                <div className={`${styles.statCard} ${styles.aiInsightCard}`}>
+                  <span className={styles.aiInsightLabel}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '12px' }}>auto_awesome</span>
+                    AI Insight
+                  </span>
+                  <p className={styles.aiInsightText}>Tendencia al alza en peticiones para cultivo de Yuca en el departamento de Sucre.</p>
+                </div>
+              </div>
+
+              {/* Table Container */}
+              <div className={styles.tableCard}>
+                <div className={styles.tableHeader}>
+                  <h2 className={styles.tableTitle}>Consultas recientes</h2>
+                  <div className={styles.searchWrapper}>
+                    <span className="material-symbols-outlined">search</span>
+                    <input type="text" placeholder="Buscar por ID o Municipio..." className={styles.searchInput} />
+                  </div>
+                </div>
+
+                <div className={styles.tableScroll}>
+                  <table className={styles.mainTable}>
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Fecha</th>
+                        <th>Municipio</th>
+                        <th>Cultivo rec.</th>
+                        <th className={styles.textCenter}>Score IA</th>
+                        <th>Estado</th>
+                        <th className={styles.textRight}>Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {HISTORIAL_DEMO.map((row) => (
+                        <tr key={row.id}>
+                          <td className={styles.rowId}>{row.id}</td>
+                          <td className={styles.rowDate}>{row.fecha}</td>
+                          <td className={styles.rowLocation}>{row.municipio}</td>
+                          <td>
+                            <div className={styles.cropInfo}>
+                              <span className="material-symbols-outlined">agriculture</span>
+                              <span>{row.cultivo}</span>
+                            </div>
+                          </td>
+                          <td>
+                            <div className={styles.scoreContainer}>
+                              <span className={`${styles.scoreText} ${row.score < 70 ? styles.scoreLow : ''}`}>{row.score}%</span>
+                              <div className={styles.scoreBar}>
+                                <div 
+                                  className={`${styles.scoreFill} ${row.score < 70 ? styles.scoreFillLow : ''}`} 
+                                  style={{ width: `${row.score}%` }}
+                                ></div>
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <span className={`${styles.statusBadge} ${row.estado !== 'Exitosa' ? styles.statusWarning : ''}`}>
+                              {row.estado}
+                            </span>
+                          </td>
+                          <td className={styles.textRight}>
+                            <button className={styles.viewBtn}>
+                              Ver <span className="material-symbols-outlined">arrow_forward</span>
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Pagination */}
+                <div className={styles.pagination}>
+                  <p className={styles.paginationInfo}>Mostrando <span>5</span> de <span>1,284</span> resultados</p>
+                  <div className={styles.paginationControls}>
+                    <button className={styles.pageArrow} disabled>
+                      <span className="material-symbols-outlined">chevron_left</span>
+                    </button>
+                    <button className={`${styles.pageNum} ${styles.pageNumActive}`}>1</button>
+                    <button className={styles.pageNum}>2</button>
+                    <button className={styles.pageNum}>3</button>
+                    <button className={styles.pageArrow}>
+                      <span className="material-symbols-outlined">chevron_right</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
+          )}
 
-            {/* Gráfico de barras por cultivo (CSS puro — placeholder elegante) */}
-            <div className={styles.panel}>
-              <h2 className={styles.panelTitulo}>Precisión y Recall por cultivo</h2>
-              <p className={styles.panelDesc}>
-                Métricas de clasificación evaluadas sobre el conjunto de validación (n = 840 muestras).
-              </p>
+          {tabActiva === 'metricas' && (
+            <div className={styles.metricasSection}>
+              {/* Background Effects */}
+              <div className={styles.ecoGrain}></div>
+              <div className={styles.topographicBg}></div>
 
-              <div className={styles.barrasContainer} aria-label="Gráfico de barras de métricas por cultivo">
-                {RENDIMIENTO_CULTIVOS.map((c) => (
-                  <div key={c.cultivo} className={styles.barraFila}>
-                    <span className={styles.barraLabel}>{c.cultivo}</span>
-                    <div className={styles.barrasDobles}>
-                      {/* Barra Precision */}
-                      <div className={styles.barraWrapper} title={`Precisión: ${c.precision}%`}>
-                        <div
-                          className={styles.barra}
-                          style={{ width: `${c.precision}%`, background: c.color }}
-                          role="meter"
-                          aria-label={`${c.cultivo} precisión ${c.precision}%`}
-                          aria-valuenow={c.precision}
-                          aria-valuemin="0"
-                          aria-valuemax="100"
-                        />
-                        <span className={styles.barraPct}>{c.precision}%</span>
+              {/* Hero Header */}
+              <section className={styles.metricasHero}>
+                <h1 className={styles.metricasTitle}>Rendimiento del Modelo IA</h1>
+                <p className={styles.metricasSubtitle}>
+                  Analítica de rendimiento en tiempo real para la predicción de cultivos. Estos datos reflejan la precisión operativa del motor de AgroCaribe IA en toda la región.
+                </p>
+              </section>
+
+              {/* KPI Grid */}
+              <section className={styles.kpiGrid}>
+                {METRICAS.map((m, idx) => (
+                  <div key={idx} className={styles.kpiCard}>
+                    <div className={styles.kpiHeader}>
+                      <span className={`${styles.kpiIconBox} ${idx === 1 ? styles.kpiIconBoxAlt : idx === 2 ? styles.kpiIconBoxSecondary : idx === 3 ? styles.kpiIconBoxHighest : ''}`}>
+                        <span className="material-symbols-outlined">
+                          {idx === 0 ? 'insights' : idx === 1 ? 'query_stats' : idx === 2 ? 'database' : 'speed'}
+                        </span>
+                      </span>
+                      <div className={styles.kpiTrend}>
+                        <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
+                          {idx === 2 ? 'history' : idx === 3 ? 'bolt' : 'trending_up'}
+                        </span>
+                        <span>{m.delta}</span>
                       </div>
-                      {/* Barra Recall */}
-                      <div className={styles.barraWrapper} title={`Recall: ${c.recall}%`}>
-                        <div
-                          className={styles.barra}
-                          style={{ width: `${c.recall}%`, background: c.color, opacity: 0.55 }}
-                          role="meter"
-                          aria-label={`${c.cultivo} recall ${c.recall}%`}
-                          aria-valuenow={c.recall}
-                          aria-valuemin="0"
-                          aria-valuemax="100"
-                        />
-                        <span className={styles.barraPct}>{c.recall}%</span>
+                    </div>
+                    <p className={styles.kpiLabel}>{m.label}</p>
+                    <h2 className={styles.kpiValue}>{m.valor}</h2>
+                  </div>
+                ))}
+              </section>
+
+              {/* Visualization Section */}
+              <section className={styles.vizSection}>
+                <div className={styles.vizCard}>
+                  <div className={styles.vizHeader}>
+                    <div className={styles.vizHeaderLeft}>
+                      <h3 className={styles.vizTitle}>Precisión y Recall por Cultivo</h3>
+                      <p className={styles.vizSubtitle}>Análisis detallado de la eficiencia predictiva categorizada por tipo de plantación.</p>
+                    </div>
+                    <div className={styles.vizLegend}>
+                      <div className={styles.legendItem}>
+                        <div className={styles.legendDotPrimary}></div>
+                        <span>Precisión</span>
+                      </div>
+                      <div className={styles.legendItem}>
+                        <div className={styles.legendDotSecondary}></div>
+                        <span>Recall</span>
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
 
-              {/* Leyenda */}
-              <div className={styles.leyenda} aria-label="Leyenda del gráfico">
-                <span className={styles.leyendaItem}>
-                  <span className={styles.leyendaColor} style={{ opacity: 1 }} /> Precisión
-                </span>
-                <span className={styles.leyendaItem}>
-                  <span className={styles.leyendaColor} style={{ opacity: 0.55 }} /> Recall
-                </span>
-              </div>
-            </div>
-
-            {/* Placeholder para gráfico temporal */}
-            <div className={`${styles.panel} ${styles.panelPlaceholder}`}>
-              <div className={styles.placeholderIcono}>📈</div>
-              <h3 className={styles.placeholderTitulo}>Evolución temporal del modelo</h3>
-              <p className={styles.placeholderDesc}>
-                Gráfico de accuracy a lo largo del tiempo (próxima versión — integrar Chart.js o Recharts)
-              </p>
-              <span className={styles.placeholderBadge}>En desarrollo</span>
-            </div>
-
-          </section>
-        )}
-
-        {/* ─── TAB: HISTORIAL DE CONSULTAS ─── */}
-        {tabActiva === 'historial' && (
-          <section className={styles.seccion} aria-label="Historial de consultas">
-            <div className={styles.panel}>
-              <div className={styles.panelAcciones}>
-                <h2 className={styles.panelTitulo}>Consultas recientes</h2>
-                <button
-                  className={styles.btnSecundario}
-                  onClick={() => handleExportar('CSV de historial')}
-                  id="btn-exportar-historial"
-                >
-                  📄 Exportar CSV
-                </button>
-              </div>
-
-              {/* Tabla de historial */}
-              <div className={styles.tablaWrapper} role="region" aria-label="Tabla de consultas históricas">
-                <table className={styles.tabla}>
-                  <thead>
-                    <tr>
-                      <th scope="col">ID</th>
-                      <th scope="col">Fecha</th>
-                      <th scope="col">Municipio</th>
-                      <th scope="col">Cultivo rec.</th>
-                      <th scope="col">Score IA</th>
-                      <th scope="col">Estado</th>
-                      <th scope="col">Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {HISTORIAL_DEMO.map((fila) => (
-                      <tr key={fila.id} className={styles.tablaFila}>
-                        <td className={styles.tablaId}>{fila.id}</td>
-                        <td>{fila.fecha}</td>
-                        <td>{fila.municipio}</td>
-                        <td><span className={styles.tablaCultivo}>{fila.cultivo}</span></td>
-                        <td>
-                          <span
-                            className={`${styles.tablaScore} ${
-                              fila.score >= 85 ? styles.scoreAlto :
-                              fila.score >= 70 ? styles.scoreMedio : styles.scoreBajo
-                            }`}
-                          >
-                            {fila.score}%
-                          </span>
-                        </td>
-                        <td>
-                          <span className={`${styles.tablaEstado} ${
-                            fila.estado === 'Exitosa' ? styles.estadoExitoso : styles.estadoAviso
-                          }`}>
-                            {fila.estado}
-                          </span>
-                        </td>
-                        <td>
-                          <button
-                            className={styles.btnTablaAccion}
-                            onClick={() => agregarToast(`Detalle de ${fila.id} (próximamente)`, 'info')}
-                            aria-label={`Ver detalle de consulta ${fila.id}`}
-                          >
-                            Ver →
-                          </button>
-                        </td>
-                      </tr>
+                  <div className={styles.vizBody}>
+                    {RENDIMIENTO_CULTIVOS.map((c, idx) => (
+                      <div key={idx} className={styles.cropRow}>
+                        <div className={styles.cropInfoBox}>
+                          <div className={styles.cropIconCircle}>
+                            <span className="material-symbols-outlined">
+                              {idx === 0 ? 'grass' : idx === 1 ? 'potted_plant' : idx === 2 ? 'nature_people' : idx === 3 ? 'eco' : 'agriculture'}
+                            </span>
+                          </div>
+                          <span className={styles.cropName}>{c.cultivo}</span>
+                        </div>
+                        <div className={styles.cropBars}>
+                          <div className={styles.barWrapper}>
+                            <div className={styles.barTrack}>
+                              <div className={styles.barFillPrimary} style={{ width: `${c.precision}%` }}></div>
+                            </div>
+                            <span className={styles.barValueLabel}>{c.precision}% Precisión</span>
+                          </div>
+                          <div className={styles.barWrapper}>
+                            <div className={styles.barTrack}>
+                              <div className={styles.barFillSecondary} style={{ width: `${c.recall}%` }}></div>
+                            </div>
+                            <span className={styles.barValueLabelSecondary}>{c.recall}% Recall</span>
+                          </div>
+                        </div>
+                      </div>
                     ))}
-                  </tbody>
-                </table>
+
+                    {/* AI Insight Sidebar */}
+                    <div className={styles.metricAIInsight}>
+                      <span className="material-symbols-outlined text-primary">auto_awesome</span>
+                      <div>
+                        <h4 className={styles.insightTitle}>AI Optimization Insight</h4>
+                        <p className={styles.insightText}>
+                          El modelo muestra una mayor estabilidad en cultivos de ciclo corto (Arroz, Maíz) con una reducción de falsos positivos del 4.2% este mes. Se recomienda recalibrar el dataset para Ñame durante la transición estacional.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </div>
+          )}
+
+          {tabActiva === 'exportar' && (
+            <div className={styles.exportSection}>
+              {/* Hero Section */}
+              <div className={styles.exportHero}>
+                <img 
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBWD_sqXrd23fqsDY4FHnJhnE_0oqUEFXOkA_wR611ZYz24_fHmMCKnrfr3qupz5-7TaBPzpoIqtvjnEIuwgLghzaTPIFH3Yd07-CCujsrnFKBMPBSddZEBb8ppxvNj5b75B0jv9TeGbyf1jRN7DPrx2G7rX6V9kgd4sgaMg8ORgj8U5_qlK_uyvZmNTouXiVQBMjG5wQAarn5wkMB_bbL4ercv0ro92HWmC992UXQEYdmE_sG47Md49xb0dSZVyfJGc3K1fuUIdmk" 
+                  alt="Plantation" 
+                  className={styles.heroImg}
+                />
+                <div className={styles.heroOverlay}>
+                  <h1 className={styles.heroTitle}>Exportar Datos</h1>
+                  <p className={styles.heroSubtitle}>Descarga de reportes y conjuntos de datos generados por el motor de IA para fortalecer la toma de decisiones estratégicas.</p>
+                </div>
               </div>
 
-              <p className={styles.tablaNota}>
-                Mostrando 6 de 4 218 consultas. Filtra por fecha, municipio o cultivo en la versión completa.
-              </p>
-            </div>
-          </section>
-        )}
-
-        {/* ─── TAB: EXPORTAR DATOS ─── */}
-        {tabActiva === 'exportar' && (
-          <section className={styles.seccion} aria-label="Exportar datos">
-            <div className={styles.exportGrid}>
-              {EXPORTACIONES.map((exp) => (
-                <div key={exp.label} className={styles.exportCard}>
-                  <span className={styles.exportIcono}>{exp.icono}</span>
-                  <h3 className={styles.exportLabel}>{exp.label}</h3>
-                  <p className={styles.exportDesc}>{exp.desc}</p>
-                  <button
-                    className={styles.btnExportar}
-                    onClick={() => handleExportar(exp.label)}
-                    id={`btn-exportar-${exp.label.toLowerCase().replace(/\s+/g, '-')}`}
-                  >
-                    Descargar
+              {/* Download Cards Grid */}
+              <div className={styles.downloadGrid}>
+                {/* CSV Card */}
+                <div className={styles.downloadCard}>
+                  <div className={styles.iconBox}>
+                    <span className="material-symbols-outlined">table_view</span>
+                  </div>
+                  <h3 className={styles.cardTitle}>Predicciones en formato tabular (CSV)</h3>
+                  <p className={styles.cardDesc}>Descargar todas las predicciones registradas para análisis externo y visualización en herramientas BI.</p>
+                  <button className={`${styles.downloadBtn} ${styles.btnOutline}`} onClick={() => handleExportar('CSV')}>
+                    <span className="material-symbols-outlined">download</span>
+                    Descargar CSV
                   </button>
                 </div>
-              ))}
-            </div>
 
-            {/* Placeholder configuración de exportación */}
-            <div className={`${styles.panel} ${styles.panelPlaceholder}`}>
-              <div className={styles.placeholderIcono}>⚙️</div>
-              <h3 className={styles.placeholderTitulo}>Configurar exportación avanzada</h3>
-              <p className={styles.placeholderDesc}>
-                Filtros por fecha, municipio, departamento y tipo de cultivo (próxima versión)
-              </p>
-              <span className={styles.placeholderBadge}>En desarrollo</span>
-            </div>
-          </section>
-        )}
+                {/* PDF Card */}
+                <div className={styles.downloadCard}>
+                  <div className={styles.iconBox}>
+                    <span className="material-symbols-outlined">picture_as_pdf</span>
+                  </div>
+                  <h3 className={styles.cardTitle}>Reporte PDF Ejecutivo</h3>
+                  <p className={styles.cardDesc}>Resumen visual y ejecutivo del rendimiento del modelo, tendencias de cultivo y métricas clave de salud foliar.</p>
+                  <button className={`${styles.downloadBtn} ${styles.btnFilled}`} onClick={() => handleExportar('PDF')}>
+                    <span className="material-symbols-outlined">download</span>
+                    Descargar PDF
+                  </button>
+                </div>
 
-      </main>
+                {/* JSON Card */}
+                <div className={styles.downloadCard}>
+                  <div className={styles.iconBox}>
+                    <span className="material-symbols-outlined">data_object</span>
+                  </div>
+                  <h3 className={styles.cardTitle}>Dataset JSON</h3>
+                  <p className={styles.cardDesc}>Datos crudos estructurados ideales para procesos de re-entrenamiento de modelos y auditoría técnica profunda.</p>
+                  <button className={`${styles.downloadBtn} ${styles.btnOutline}`} onClick={() => handleExportar('JSON')}>
+                    <span className="material-symbols-outlined">download</span>
+                    Descargar JSON
+                  </button>
+                </div>
+              </div>
+
+              {/* Advanced Configuration */}
+              <div className={styles.advancedCard}>
+                <div className={styles.bgIcon}>
+                  <span className="material-symbols-outlined">precision_manufacturing</span>
+                </div>
+                <div className={styles.advancedHeader}>
+                  <div>
+                    <div className={styles.advancedTitleRow}>
+                      <span className="material-symbols-outlined">tune</span>
+                      <h2 className={styles.advancedTitle}>Configurar exportación avanzada</h2>
+                    </div>
+                    <p className={styles.advancedDesc}>Refine sus datos mediante filtros granulares por rango de fecha, municipio, departamento y tipo de cultivo específico. Ideal para investigadores que requieren segmentaciones territoriales precisas.</p>
+                  </div>
+                  <div>
+                    <span className={styles.devBadge}>
+                      <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>build_circle</span>
+                      En desarrollo (Próxima versión)
+                    </span>
+                  </div>
+                </div>
+
+                <div className={styles.filterGrid}>
+                  <div className={styles.filterItem}>
+                    <span className={styles.filterLabel}>Rango Fecha</span>
+                    <span className={styles.filterValue}>Últimos 30 días</span>
+                  </div>
+                  <div className={styles.filterItem}>
+                    <span className={styles.filterLabel}>Territorio</span>
+                    <span className={styles.filterValue}>Antioquia</span>
+                  </div>
+                  <div className={styles.filterItem}>
+                    <span className={styles.filterLabel}>Municipio</span>
+                    <span className={styles.filterValue}>Sonsón</span>
+                  </div>
+                  <div className={styles.filterItem}>
+                    <span className={styles.filterLabel}>Cultivo</span>
+                    <span className={styles.filterValue}>Aguacate Hass</span>
+                  </div>
+                </div>
+              </div>
+
+
+              {/* Page Footer */}
+              <footer className={styles.dashboardFooter}>
+                <div className={styles.footerContent}>
+                  <span className={styles.footerBrand}>AgroCaribe IA Portal de Investigador</span>
+                  <p className={styles.footerCopy}>© 2024 Innovación Sostenible. Todos los derechos reservados.</p>
+                </div>
+              </footer>
+            </div>
+          )}
+        </main>
+      </div>
+
+      {/* Floating Action Button */}
+      <div className={styles.fabContainer}>
+        <button className={styles.fab}>
+          <span className="material-symbols-outlined">add_chart</span>
+          <span className={styles.fabTooltip}>Nueva Analítica</span>
+        </button>
+      </div>
     </div>
   );
 };

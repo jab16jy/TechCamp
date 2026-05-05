@@ -40,6 +40,40 @@
   --sombra-lg: 0 8px 40px rgba(13, 61, 28, 0.18);
   --navbar-h: 68px;
   --transicion: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Material 3 / AgroCaribe New Palette */
+  --m3-primary: #154212;
+  --m3-on-primary: #ffffff;
+  --m3-primary-container: #2d5a27;
+  --m3-on-primary-container: #9dd090;
+  --m3-secondary: #006e1c;
+  --m3-on-secondary: #ffffff;
+  --m3-secondary-container: #91f78e;
+  --m3-on-secondary-container: #00731e;
+  --m3-tertiary: #4c332a;
+  --m3-on-tertiary: #ffffff;
+  --m3-tertiary-container: #654a40;
+  --m3-on-tertiary-container: #e0bbae;
+  --m3-error: #ba1a1a;
+  --m3-on-error: #ffffff;
+  --m3-error-container: #ffdad6;
+  --m3-on-error-container: #93000a;
+  --m3-background: #f8faf8;
+  --m3-on-background: #191c1b;
+  --m3-surface: #f8faf8;
+  --m3-on-surface: #191c1b;
+  --m3-surface-variant: #e1e3e1;
+  --m3-on-surface-variant: #42493e;
+  --m3-outline: #72796e;
+  --m3-outline-variant: #c2c9bb;
+  --m3-surface-container-lowest: #ffffff;
+  --m3-surface-container-low: #f2f4f2;
+  --m3-surface-container: #eceeec;
+  --m3-surface-container-high: #e6e9e7;
+  --m3-surface-container-highest: #e1e3e1;
+  --m3-inverse-surface: #2e3130;
+  --m3-inverse-on-surface: #eff1ef;
+  --m3-inverse-primary: #a1d494;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
