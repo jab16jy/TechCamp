@@ -414,19 +414,6 @@ const DashboardInvestigador = () => {
 
           {tabActiva === 'exportar' && (
             <div className={styles.exportSection}>
-              {/* Hero Section */}
-              <div className={styles.exportHero}>
-                <img 
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBWD_sqXrd23fqsDY4FHnJhnE_0oqUEFXOkA_wR611ZYz24_fHmMCKnrfr3qupz5-7TaBPzpoIqtvjnEIuwgLghzaTPIFH3Yd07-CCujsrnFKBMPBSddZEBb8ppxvNj5b75B0jv9TeGbyf1jRN7DPrx2G7rX6V9kgd4sgaMg8ORgj8U5_qlK_uyvZmNTouXiVQBMjG5wQAarn5wkMB_bbL4ercv0ro92HWmC992UXQEYdmE_sG47Md49xb0dSZVyfJGc3K1fuUIdmk" 
-                  alt="Plantation" 
-                  className={styles.heroImg}
-                />
-                <div className={styles.heroOverlay}>
-                  <h1 className={styles.heroTitle}>Exportar Datos</h1>
-                  <p className={styles.heroSubtitle}>Descarga de reportes y conjuntos de datos generados por el motor de IA para fortalecer la toma de decisiones estratégicas.</p>
-                </div>
-              </div>
-
               {/* Download Cards Grid */}
               <div className={styles.downloadGrid}>
                 {/* CSV Card */}
