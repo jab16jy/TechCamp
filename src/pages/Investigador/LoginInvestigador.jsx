@@ -1,9 +1,3 @@
-// ============================================
-// LoginInvestigador.jsx — Formulario de autenticación
-// Solo accesible para investigadores del sistema.
-// Incluye validación básica y feedback visual.
-// ============================================
-
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import useAppStore from '../../context/useAppStore';
@@ -16,7 +10,6 @@ const LoginInvestigador = () => {
   const navigate = useNavigate();
   const agregarToast = useAppStore((s) => s.agregarToast);
 
-  // Estado del formulario
   const [form, setForm] = useState({ usuario: '', clave: '' });
   const [errores, setErrores] = useState({});
   const [cargando, setCargando] = useState(false);
@@ -40,9 +33,8 @@ const LoginInvestigador = () => {
 
   // ── Manejador de cambio en inputs ──
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-    // Limpiar error del campo al escribir
+    const { name, value, type, checked } = e.target;
+    setForm((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
     if (errores[name]) setErrores((prev) => ({ ...prev, [name]: '' }));
   };
 
@@ -57,14 +49,12 @@ const LoginInvestigador = () => {
 
     setCargando(true);
 
-    // Simular llamada a API (reemplazar con fetch/axios real)
     await new Promise((r) => setTimeout(r, 1200));
 
     if (
       form.usuario === USUARIO_DEMO.usuario &&
       form.clave === USUARIO_DEMO.clave
     ) {
-      // Login exitoso — guardar sesión mínima en sessionStorage
       sessionStorage.setItem('rol', 'investigador');
       agregarToast('Bienvenido al panel de investigación 🔬', 'exito');
       navigate('/investigador/dashboard');
@@ -77,143 +67,147 @@ const LoginInvestigador = () => {
   };
 
   return (
-    <div className={styles.pagina}>
-
-      {/* ── Fondo dividido verde/crema ── */}
-      <div className={styles.fondoVerde} aria-hidden="true">
-        <div className={styles.fondoPatron} />
-      </div>
-
-      {/* ── Volver atrás ── */}
-      <Link to="/" className={styles.btnVolver} id="btn-volver-acceso">
-        ← Volver al inicio
-      </Link>
-
-      {/* ── Tarjeta de login centrada ── */}
-      <main className={styles.main}>
-        <div className={styles.tarjeta}>
-
-          {/* Encabezado de la tarjeta */}
-          <div className={styles.tarjetaCabecera}>
-            <div className={styles.tarjetaIcono} aria-hidden="true">🔬</div>
-            <div>
-              <h1 className={styles.tarjetaTitulo}>Acceso Investigador</h1>
-              <p className={styles.tarjetaSubtitulo}>
-                Panel de análisis y métricas del modelo IA
-              </p>
+    <div className={styles.page}>
+      {/* Left Side: Immersive Visual */}
+      <section className={styles.leftSection}>
+        <img 
+          className={styles.heroImage}
+          alt="Granja sostenible" 
+          src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfrp3H79E2ymZvrFwEw4sM4S7KK4ukvw01eODI2zxw6ZHBvac_JOotcY-pioZw3UqL6gIIDiss3qt-KG6INouaAebPkMcB9YDzSUZFhhTlXIrhhYztfDVCrvaFfdhRFfKNlaHDUK49p_Iy-5NGcYTPtycP-J1DFMYqgtFlFI6pzzcnL3XX-GVwfGkOfby96qDKXVAEl-ckUJlYXophfR5Hf3XjyQHl07VLTNO8L0m0L15KcTJnlaczIiA5UB5yKWQx_ZA37V6uzxc"
+        />
+        <div className={styles.heroContent}>
+          <div className={styles.heroTextContainer}>
+            <h2 className={styles.heroTitle}>AgroCaribe IA</h2>
+            <p className={styles.heroDesc}>
+              El futuro de la agricultura sostenible potenciado por inteligencia artificial. Monitoreo en tiempo real y análisis predictivo para el Caribe.
+            </p>
+            <div className={styles.heroBadges}>
+              <div className={styles.badgePrimary}>
+                <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>energy_savings_leaf</span>
+                <span>Tecnología de Punta</span>
+              </div>
+              <div className={styles.badgeTertiary}>
+                <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>eco</span>
+                <span>Impacto Ecológico</span>
+              </div>
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* ── Formulario ── */}
-          <form
-            className={styles.formulario}
-            onSubmit={handleSubmit}
-            noValidate
-            aria-label="Formulario de autenticación investigador"
-          >
+      {/* Right Side: Login Form */}
+      <main className={styles.mainContent}>
+        <div className={styles.loginCard}>
+          {/* Subtle Organic Decoration */}
+          <div className={styles.decorTopRight}></div>
+          <div className={styles.decorBottomLeft}></div>
 
-            {/* Error general (credenciales incorrectas) */}
+          <div className={styles.cardHeader}>
+            <h1 className={styles.title}>Bienvenido</h1>
+            <p className={styles.subtitle}>Ingrese sus credenciales para acceder al portal del investigador.</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className={styles.form}>
+            {/* Error General */}
             {errores.general && (
-              <div className={styles.errorGeneral} role="alert">
-                <span>⚠️</span> {errores.general}
+              <div className={styles.errorGeneral}>
+                {errores.general}
               </div>
             )}
 
-            {/* Campo usuario/correo */}
-            <div className={styles.campo}>
-              <label className={styles.label} htmlFor="usuario">
-                Correo electrónico
-              </label>
-              <input
-                id="usuario"
-                name="usuario"
-                type="email"
-                className={`${styles.input} ${errores.usuario ? styles.inputError : ''}`}
-                placeholder="tu@correo.com"
-                value={form.usuario}
-                onChange={handleChange}
-                autoComplete="username"
-                autoFocus
-                aria-describedby={errores.usuario ? 'error-usuario' : undefined}
-                aria-invalid={!!errores.usuario}
-              />
-              {errores.usuario && (
-                <span id="error-usuario" className={styles.errorMsg} role="alert">
-                  {errores.usuario}
-                </span>
-              )}
+            {/* Email Input */}
+            <div className={styles.inputGroup}>
+              <label htmlFor="usuario" className={styles.label}>Correo Electrónico</label>
+              <div className={styles.inputWrapper}>
+                <span className={`material-symbols-outlined ${styles.inputIcon}`}>mail</span>
+                <input 
+                  id="usuario"
+                  name="usuario"
+                  type="email" 
+                  className={`${styles.input} ${errores.usuario ? styles.inputError : ''}`}
+                  placeholder="investigador@agrocaribe.ia"
+                  value={form.usuario}
+                  onChange={handleChange}
+                  required 
+                />
+              </div>
+              {errores.usuario && <span className={styles.errorText}>{errores.usuario}</span>}
             </div>
 
-            {/* Campo contraseña */}
-            <div className={styles.campo}>
-              <label className={styles.label} htmlFor="clave">
-                Contraseña
-              </label>
+            {/* Password Input */}
+            <div className={styles.inputGroup}>
+              <div className={styles.labelRow}>
+                <label htmlFor="clave" className={styles.label}>Contraseña</label>
+                <a href="#" className={styles.forgotLink}>¿Olvidó su contraseña?</a>
+              </div>
               <div className={styles.inputWrapper}>
-                <input
+                <span className={`material-symbols-outlined ${styles.inputIcon}`}>key</span>
+                <input 
                   id="clave"
                   name="clave"
                   type={mostrarClave ? 'text' : 'password'}
                   className={`${styles.input} ${errores.clave ? styles.inputError : ''}`}
-                  placeholder="••••••••"
+                  placeholder="••••••••••••"
                   value={form.clave}
                   onChange={handleChange}
-                  autoComplete="current-password"
-                  aria-describedby={errores.clave ? 'error-clave' : undefined}
-                  aria-invalid={!!errores.clave}
+                  required 
                 />
-                {/* Toggle visibilidad de contraseña */}
                 <button
                   type="button"
                   className={styles.toggleClave}
                   onClick={() => setMostrarClave((v) => !v)}
                   aria-label={mostrarClave ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                 >
-                  {mostrarClave ? '🙈' : '👁️'}
+                  <span className="material-symbols-outlined">
+                    {mostrarClave ? 'visibility_off' : 'visibility'}
+                  </span>
                 </button>
               </div>
-              {errores.clave && (
-                <span id="error-clave" className={styles.errorMsg} role="alert">
-                  {errores.clave}
-                </span>
-              )}
+              {errores.clave && <span className={styles.errorText}>{errores.clave}</span>}
             </div>
 
-            {/* Botón de envío */}
-            <button
-              type="submit"
-              className={styles.btnLogin}
-              disabled={cargando}
-              id="btn-submit-login"
-            >
-              {cargando ? (
-                <>
-                  <span className={styles.spinner} aria-hidden="true" />
-                  Verificando...
-                </>
-              ) : (
-                <>🔐 Iniciar sesión</>
-              )}
-            </button>
+            {/* Remember Me */}
+            <div className={styles.rememberGroup}>
+              <input type="checkbox" id="remember" className={styles.checkbox} />
+              <label htmlFor="remember" className={styles.rememberLabel}>Mantener sesión iniciada</label>
+            </div>
 
+            {/* Login Button */}
+            <button type="submit" className={styles.submitBtn} disabled={cargando}>
+              <span>{cargando ? 'Verificando...' : 'Entrar'}</span>
+              {!cargando && <span className={`material-symbols-outlined ${styles.submitIcon}`}>chevron_right</span>}
+            </button>
+            
+            {/* Demo Credentials Hint */}
+            <div className={styles.demoHint}>
+              <span className={styles.demoBadge}>Demo</span> user: investigador@techcamp.co / pass: AgroCaribe2025
+            </div>
           </form>
 
-          {/* ── Credenciales demo visibles para evaluadores ── */}
-          <div className={styles.demoBox} aria-label="Credenciales de demostración">
-            <span className={styles.demoBadge}>Demo</span>
-            <div className={styles.demoCredenciales}>
-              <span><b>Usuario:</b> investigador@techcamp.co</span>
-              <span><b>Clave:</b> AgroCaribe2025</span>
-            </div>
+          {/* Registration Link */}
+          <div className={styles.registerContainer}>
+            <p className={styles.registerText}>
+              ¿No tiene una cuenta? 
+              <Link to="/consulta" className={styles.registerLink}>
+                Solicitar Acceso
+              </Link>
+            </p>
           </div>
 
-          {/* Separador + enlace a productor */}
-          <p className={styles.alternativa}>
-            ¿Eres productor?{' '}
-            <Link to="/consulta" className={styles.enlaceAlternativa}>
-              Entra sin registro →
-            </Link>
-          </p>
+          {/* Branding Tag (Mobile/Fallback) */}
+          <div className={styles.mobileBranding}>
+            <span className="material-symbols-outlined" style={{ color: 'var(--primary)' }}>potted_plant</span>
+            <span className={styles.mobileBrandingText}>AgroCaribe IA</span>
+          </div>
+        </div>
+
+        {/* Footer Help Links */}
+        <div className={styles.footerLinks}>
+          <a href="#">Términos de Servicio</a>
+          <span className={styles.footerDot}>•</span>
+          <a href="#">Privacidad</a>
+          <span className={styles.footerDot}>•</span>
+          <a href="#">Soporte Técnico</a>
         </div>
       </main>
     </div>

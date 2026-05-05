@@ -1,124 +1,102 @@
-// ============================================
-// Acceso.jsx — Pantalla de selección de perfil
-// Primera pantalla que ve el usuario al ingresar.
-// Permite elegir entre Productor (acceso directo)
-// o Investigador (con autenticación).
-// ============================================
-
 import { Link } from 'react-router-dom';
 import styles from './Acceso.module.css';
 
 const Acceso = () => (
-  <div className={styles.pagina}>
+  <div className={styles.page}>
+    <main className={styles.mainContainer}>
+      {/* Header Section */}
+      <header className={styles.header}>
+        <div className={styles.logoContainer}>
+          <span className={`material-symbols-outlined ${styles.logoIcon}`}>agriculture</span>
+          <h1 className={styles.logoTitle}>AgroCaribe IA</h1>
+        </div>
+        <h2 className={styles.mainHeading}>¿Cómo quieres ingresar?</h2>
+        <p className={styles.subHeading}>
+          Selecciona tu perfil para continuar. Cada acceso está diseñado para darte exactamente lo que necesitas.
+        </p>
+        <div className={styles.infoBox}>
+          <p>
+            <strong>AgroCaribe IA</strong> es la plataforma líder en agricultura de precisión para el Caribe, utilizando inteligencia artificial para optimizar cultivos, predecir rendimientos y promover la sostenibilidad en cada parcela.
+          </p>
+        </div>
+      </header>
 
-    {/* ── Fondo decorativo con patrón agrícola ── */}
-    <div className={styles.fondo} aria-hidden="true">
-      <div className={styles.fondoCirculo1} />
-      <div className={styles.fondoCirculo2} />
-      <div className={styles.fondoGrilla} />
-    </div>
+      {/* Selection Bento Grid */}
+      <div className={styles.grid}>
+        {/* Producer Card */}
+        <div className={styles.card}>
+          <div className={styles.cardImageContainer}>
+            <img 
+              alt="Productor Agrícola" 
+              className={styles.cardImage} 
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuCFOMWv2MzmsZ4YCp2KofSrNcPGdbLYtCYpmC4YFRPPZq3zkk6ar_jD9TlPlebQq0N3Zs3VL4t5rN-dJKOWzUOY8KPtJuRJmTlW9tPlW-c8douwRs7rtDp_oFDjBeNgqwtpvXlhB3ZuQA6xG6xR_-CrIVHjnPMKBIByK17xrzPWd9uiqiAFl5H-NjcY9WMRMixyLekFezUJ2AQ1P1wIoMFi52T6mbD1RwIbOuvaRjRX-JUH5CY_Fe0k06m1bNjrLwWEmi6MurCtHAI"
+            />
+            <div className={styles.imageOverlay}></div>
+          </div>
+          <div className={styles.cardContent}>
+            <div className={styles.cardBadges}>
+              <span className={styles.badgeProducer}>Sin Registro</span>
+              <span className={`material-symbols-outlined ${styles.badgeIconProducer}`}>rocket_launch</span>
+            </div>
+            <h3 className={styles.cardTitle}>Soy Productor</h3>
+            <p className={styles.cardDesc}>
+              Entra directo al mapa y descubre qué sembrar en tu parcela. Rápida, fácil y sin complicaciones.
+            </p>
+            <div className={styles.cardFooter}>
+              <Link to="/consulta" className={styles.btnProducer}>
+                ¡Quiero saber qué sembrar!
+                <span className={`material-symbols-outlined ${styles.btnIcon}`}>arrow_forward</span>
+              </Link>
+            </div>
+          </div>
+        </div>
 
-    {/* ── Cabecera con logo ── */}
-    <header className={styles.cabecera}>
-      <div className={styles.logo}>
-        <span className={styles.logoIcono}>🌿</span>
-        <div className={styles.logoTexto}>
-          <span className={styles.logoNombre}>AgroCaribe AI</span>
-          <span className={styles.logoSub}>TECHCAMP · 2025</span>
+        {/* Researcher Card */}
+        <div className={styles.card}>
+          <div className={styles.cardImageContainer}>
+            <img 
+              alt="Investigador de Datos" 
+              className={styles.cardImage} 
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuCaDHOg0ym0lJdmik8TRtB8n33jXEVoZUniV6BqWV2ZWLp5C_WaVJWwYq2k8VSqwjdYBBp8JJJDrUcM6Y_45J8aslpEC1kCqbjVfhcUHxpD8ASsq3AHypn6mlw7ss946_txX3HMr0ukf5Xxa7B708qYKoyXHJgoLhpTG1SuPz49k0RjbTuwO1DkCcden-poBuLqhwVTn9hM5zVuy7VsLdwnDJufkNXJeMGL2KOKWWxkUlTm6kfP1LOJAT7TSVaOxhrRGAsDXCKJjd4"
+            />
+            <div className={styles.imageOverlay}></div>
+          </div>
+          <div className={styles.cardContent}>
+            <div className={styles.cardBadges}>
+              <span className={styles.badgeResearcher}>Acceso Analítico</span>
+              <span className={`material-symbols-outlined ${styles.badgeIconResearcher}`}>science</span>
+            </div>
+            <h3 className={styles.cardTitle}>Soy Investigador</h3>
+            <p className={styles.cardDesc}>
+              Accede al panel de métricas del modelo, exporta datos históricos y analiza el rendimiento del sistema de IA.
+            </p>
+            <div className={styles.cardFooter}>
+              <Link to="/investigador/login" className={styles.btnResearcher}>
+                Iniciar sesión
+                <span className="material-symbols-outlined">login</span>
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
-    </header>
 
-    {/* ── Contenido principal ── */}
-    <main className={styles.main}>
-      <div className={styles.intro}>
-        {/* Badge de bienvenida */}
-        <span className={styles.badge}>
-          <span>🌾</span> Sistema de recomendación de cultivos
-        </span>
-
-        <h1 className={styles.titulo}>
-          ¿Cómo quieres <span className={styles.tituloAcento}>ingresar?</span>
-        </h1>
-        <p className={styles.subtitulo}>
-          Selecciona tu perfil para continuar. Cada acceso está diseñado
-          para darte exactamente lo que necesitas.
-        </p>
-      </div>
-
-      {/* ── Tarjetas de perfil ── */}
-      <div className={styles.tarjetasGrid} role="list">
-
-        {/* === PERFIL PRODUCTOR === */}
-        <article className={`${styles.tarjeta} ${styles.tarjetaProductor}`} role="listitem">
-          {/* Ícono grande visible desde el celular */}
-          <div className={styles.tarjetaIcono} aria-hidden="true">🧑‍🌾</div>
-
-          <div className={styles.tarjetaContenido}>
-            <span className={styles.tarjetaBadge}>Acceso rápido · Sin registro</span>
-            <h2 className={styles.tarjetaTitulo}>Soy Productor</h2>
-            <p className={styles.tarjetaDesc}>
-              Entra directo al mapa y descubre qué sembrar en tu parcela.
-              Rápido, fácil y sin complicaciones.
+      {/* AI Insight Footer */}
+      <footer className={styles.footer}>
+        <div className={styles.insightBox}>
+          <span className={`material-symbols-outlined ${styles.insightIcon}`}>lightbulb</span>
+          <div>
+            <h4 className={styles.insightTitle}>Dato del día</h4>
+            <p className={styles.insightText}>
+              "La agricultura de precisión puede aumentar el rendimiento de los cultivos en un 20% reduciendo el uso de agua en el Caribe."
             </p>
-
-            {/* Beneficios clave en lenguaje sencillo */}
-            <ul className={styles.beneficios} aria-label="Beneficios del perfil productor">
-              <li><span className={styles.checkmark}>✓</span> Sin contraseñas</li>
-              <li><span className={styles.checkmark}>✓</span> Mapa interactivo</li>
-              <li><span className={styles.checkmark}>✓</span> Recomendación inmediata</li>
-            </ul>
           </div>
-
-          {/* CTA principal — va directo al frontend existente */}
-          <Link
-            to="/consulta"
-            className={styles.btnProductor}
-            id="btn-acceso-productor"
-            aria-label="Ingresar como productor agrícola"
-          >
-            <span>🗺️</span>
-            <span>¡Quiero saber qué sembrar!</span>
-          </Link>
-        </article>
-
-        {/* === PERFIL INVESTIGADOR === */}
-        <article className={`${styles.tarjeta} ${styles.tarjetaInvestigador}`} role="listitem">
-          <div className={styles.tarjetaIcono} aria-hidden="true">🔬</div>
-
-          <div className={styles.tarjetaContenido}>
-            <span className={styles.tarjetaBadgeInv}>Acceso completo · Con autenticación</span>
-            <h2 className={styles.tarjetaTituloInv}>Soy Investigador</h2>
-            <p className={styles.tarjetaDescInv}>
-              Accede al panel de métricas del modelo, exporta datos históricos
-              y analiza el rendimiento del sistema de IA.
-            </p>
-
-            <ul className={styles.beneficiosInv} aria-label="Beneficios del perfil investigador">
-              <li><span className={styles.checkmarkInv}>✓</span> Dashboard de métricas</li>
-              <li><span className={styles.checkmarkInv}>✓</span> Datos históricos</li>
-              <li><span className={styles.checkmarkInv}>✓</span> Exportar resultados</li>
-            </ul>
-          </div>
-
-          {/* CTA investigador — redirige al login */}
-          <Link
-            to="/investigador/login"
-            className={styles.btnInvestigador}
-            id="btn-acceso-investigador"
-            aria-label="Ingresar como investigador con autenticación"
-          >
-            <span>🔐</span>
-            <span>Iniciar sesión</span>
-          </Link>
-        </article>
-
-      </div>
-
-      {/* ── Nota de privacidad ── */}
-      <p className={styles.nota}>
-        🔒 Tus datos son tratados con confidencialidad según la Ley 1581 de 2012 · Colombia
-      </p>
+        </div>
+        <div className={styles.footerIcons}>
+          <span className="material-symbols-outlined">eco</span>
+          <span className="material-symbols-outlined">psychology</span>
+          <span className="material-symbols-outlined">travel_explore</span>
+        </div>
+      </footer>
     </main>
   </div>
 );
