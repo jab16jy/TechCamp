@@ -34,11 +34,10 @@
   gap: 2rem;
 }
 
-.logoText {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--m3-primary);
-  letter-spacing: -0.02em;
+.logoSvg {
+  height: 40px;
+  width: auto;
+  overflow: visible;
 }
 
 .topNav {

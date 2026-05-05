@@ -77,7 +77,12 @@ const DashboardInvestigador = () => {
       {/* Top Navigation Bar */}
       <header className={styles.topBar}>
         <div className={styles.topBarLeft}>
-          <span className={styles.logoText}>AgroCaribe IA</span>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 50" className={styles.logoSvg}>
+            <path d="M10 35c0-10 5-15 15-15s15 5 15 15" fill="none" stroke="#2D5A27" strokeWidth="3"/>
+            <circle cx="25" cy="20" r="4" fill="#2D5A27"/>
+            <path d="M45 25a10 10 0 1 1-20 0 10 10 0 0 1 20 0z" fill="none" stroke="#5D4037" strokeWidth="2" strokeDasharray="2 1"/>
+            <text x="60" y="35" fontFamily="Inter, sans-serif" fontWeight="bold" fontSize="24" fill="#2D5A27">AgroCaribe</text>
+          </svg>
           <nav className={styles.topNav}>
             <button 
               className={`${styles.topNavItem} ${tabActiva === 'metricas' ? styles.topNavItemActive : ''}`}

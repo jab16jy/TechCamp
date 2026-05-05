@@ -33,50 +33,11 @@
   text-decoration: none;
 }
 
-.logoIcono {
-  width: 36px;
+.logoSvg {
   height: 36px;
-  background: linear-gradient(135deg, var(--verde-medio), var(--verde-claro));
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.1rem;
-  position: relative;
-  flex-shrink: 0;
-}
-
-.logoPunto {
-  position: absolute;
-  top: -3px;
-  right: -3px;
-  width: 10px;
-  height: 10px;
-  background: var(--dorado);
-  border-radius: 50%;
-  border: 2px solid var(--verde-oscuro);
-}
-
-.logoTexto {
-  display: flex;
-  flex-direction: column;
-  line-height: 1;
-}
-
-.logoNombre {
-  font-family: var(--font-titulo);
-  font-size: 1.1rem;
-  font-weight: 700;
+  width: auto;
+  overflow: visible;
   color: var(--crema);
-  letter-spacing: -0.02em;
-}
-
-.logoSub {
-  font-size: 0.65rem;
-  font-weight: 500;
-  color: var(--dorado);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
 /* ── Links de navegación ── */

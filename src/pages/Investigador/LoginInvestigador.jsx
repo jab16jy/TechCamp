@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import useAppStore from '../../context/useAppStore';
+import loginImg from '../../assets/images/login-investigador.jpg';
 import styles from './LoginInvestigador.module.css';
 
 // ── Credenciales demo (en producción usar JWT/API real) ──
@@ -25,8 +26,6 @@ const LoginInvestigador = () => {
     }
     if (!form.clave.trim()) {
       nuevosErrores.clave = 'La contraseña es obligatoria';
-    } else if (form.clave.length < 6) {
-      nuevosErrores.clave = 'Mínimo 6 caracteres';
     }
     return nuevosErrores;
   };
@@ -48,7 +47,7 @@ const LoginInvestigador = () => {
     }
 
     setCargando(true);
-
+    // Simulación de delay de API
     await new Promise((r) => setTimeout(r, 1200));
 
     if (
@@ -56,107 +55,78 @@ const LoginInvestigador = () => {
       form.clave === USUARIO_DEMO.clave
     ) {
       sessionStorage.setItem('rol', 'investigador');
-      agregarToast('Bienvenido al panel de investigación 🔬', 'exito');
+      agregarToast('¡Bienvenido al panel de investigación! 🔬', 'exito');
       navigate('/investigador/dashboard');
     } else {
-      setErrores({ general: 'Credenciales incorrectas. Verifica tu usuario y contraseña.' });
+      setErrores({ general: 'Credenciales incorrectas. Intente de nuevo.' });
       agregarToast('Acceso denegado', 'error');
     }
-
     setCargando(false);
   };
 
   return (
     <div className={styles.page}>
-      {/* Left Side: Immersive Visual */}
-      <section className={styles.leftSection}>
-        <img 
-          className={styles.heroImage}
-          alt="Granja sostenible" 
-          src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfrp3H79E2ymZvrFwEw4sM4S7KK4ukvw01eODI2zxw6ZHBvac_JOotcY-pioZw3UqL6gIIDiss3qt-KG6INouaAebPkMcB9YDzSUZFhhTlXIrhhYztfDVCrvaFfdhRFfKNlaHDUK49p_Iy-5NGcYTPtycP-J1DFMYqgtFlFI6pzzcnL3XX-GVwfGkOfby96qDKXVAEl-ckUJlYXophfR5Hf3XjyQHl07VLTNO8L0m0L15KcTJnlaczIiA5UB5yKWQx_ZA37V6uzxc"
-        />
-        <div className={styles.heroContent}>
-          <div className={styles.heroTextContainer}>
-            <h2 className={styles.heroTitle}>AgroCaribe IA</h2>
-            <p className={styles.heroDesc}>
-              El futuro de la agricultura sostenible potenciado por inteligencia artificial. Monitoreo en tiempo real y análisis predictivo para el Caribe.
-            </p>
-            <div className={styles.heroBadges}>
-              <div className={styles.badgePrimary}>
-                <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>energy_savings_leaf</span>
-                <span>Tecnología de Punta</span>
-              </div>
-              <div className={styles.badgeTertiary}>
-                <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>eco</span>
-                <span>Impacto Ecológico</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* ── PANEL IZQUIERDO: LOGIN ── */}
+      <section className={styles.formSection}>
+        <header className={styles.logoHeader}>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 50" className={styles.logoSvg}>
+            <path d="M10 35c0-10 5-15 15-15s15 5 15 15" fill="none" stroke="#2D5A27" strokeWidth="3" />
+            <circle cx="25" cy="20" r="4" fill="#2D5A27" />
+            <path d="M45 25a10 10 0 1 1-20 0 10 10 0 0 1 20 0z" fill="none" stroke="#5D4037" strokeWidth="2" strokeDasharray="2 1" />
+            <text x="60" y="35" fontFamily="Inter, sans-serif" fontWeight="bold" fontSize="24" fill="#2D5A27">AgroCaribe</text>
+          </svg>
+        </header>
 
-      {/* Right Side: Login Form */}
-      <main className={styles.mainContent}>
-        <div className={styles.loginCard}>
-          {/* Subtle Organic Decoration */}
-          <div className={styles.decorTopRight}></div>
-          <div className={styles.decorBottomLeft}></div>
-
-          <div className={styles.cardHeader}>
-            <h1 className={styles.title}>Bienvenido</h1>
-            <p className={styles.subtitle}>Ingrese sus credenciales para acceder al portal del investigador.</p>
+        <div className={styles.formContainer}>
+          <div className={styles.headerContent}>
+            <p className={styles.preTitle}>IMPULSANDO EL FUTURO DEL CAMPO</p>
+            <h1 className={styles.title}>Inicio de Sesión</h1>
+            <p className={styles.subtitle}>Acceda a sus métricas y predicciones de cultivo en tiempo real.</p>
           </div>
 
-          <form onSubmit={handleSubmit} className={styles.form}>
-            {/* Error General */}
+          <form className={styles.form} onSubmit={handleSubmit}>
             {errores.general && (
-              <div className={styles.errorGeneral}>
+              <div style={{ color: 'var(--m3-error)', fontSize: '0.875rem', marginBottom: '1rem', textAlign: 'center' }}>
                 {errores.general}
               </div>
             )}
 
-            {/* Email Input */}
             <div className={styles.inputGroup}>
-              <label htmlFor="usuario" className={styles.label}>Correo Electrónico</label>
+              <label className={styles.label} htmlFor="usuario">Correo Electrónico de Usuario</label>
               <div className={styles.inputWrapper}>
                 <span className={`material-symbols-outlined ${styles.inputIcon}`}>mail</span>
-                <input 
+                <input
+                  className={`${styles.input} ${errores.usuario ? styles.inputError : ''}`}
                   id="usuario"
                   name="usuario"
-                  type="email" 
-                  className={`${styles.input} ${errores.usuario ? styles.inputError : ''}`}
-                  placeholder="investigador@agrocaribe.ia"
+                  type="email"
+                  placeholder="nombre@agrocaribe.com"
                   value={form.usuario}
                   onChange={handleChange}
-                  required 
+                  required
                 />
               </div>
               {errores.usuario && <span className={styles.errorText}>{errores.usuario}</span>}
             </div>
 
-            {/* Password Input */}
             <div className={styles.inputGroup}>
-              <div className={styles.labelRow}>
-                <label htmlFor="clave" className={styles.label}>Contraseña</label>
-                <a href="#" className={styles.forgotLink}>¿Olvidó su contraseña?</a>
-              </div>
+              <label className={styles.label} htmlFor="clave">Contraseña</label>
               <div className={styles.inputWrapper}>
-                <span className={`material-symbols-outlined ${styles.inputIcon}`}>key</span>
-                <input 
+                <span className={`material-symbols-outlined ${styles.inputIcon}`}>lock</span>
+                <input
+                  className={`${styles.input} ${errores.clave ? styles.inputError : ''}`}
                   id="clave"
                   name="clave"
                   type={mostrarClave ? 'text' : 'password'}
-                  className={`${styles.input} ${errores.clave ? styles.inputError : ''}`}
-                  placeholder="••••••••••••"
+                  placeholder="••••••••"
                   value={form.clave}
                   onChange={handleChange}
-                  required 
+                  required
                 />
                 <button
-                  type="button"
                   className={styles.toggleClave}
-                  onClick={() => setMostrarClave((v) => !v)}
-                  aria-label={mostrarClave ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  type="button"
+                  onClick={() => setMostrarClave(!mostrarClave)}
                 >
                   <span className="material-symbols-outlined">
                     {mostrarClave ? 'visibility_off' : 'visibility'}
@@ -166,50 +136,71 @@ const LoginInvestigador = () => {
               {errores.clave && <span className={styles.errorText}>{errores.clave}</span>}
             </div>
 
-            {/* Remember Me */}
-            <div className={styles.rememberGroup}>
-              <input type="checkbox" id="remember" className={styles.checkbox} />
-              <label htmlFor="remember" className={styles.rememberLabel}>Mantener sesión iniciada</label>
+            <div className={styles.formOptions}>
+              <label className={styles.remember}>
+                <input className={styles.checkbox} type="checkbox" />
+                <span className={styles.rememberLabel}>Recordar dispositivo</span>
+              </label>
+              <a className={styles.forgotLink} href="#">¿Olvidó su contraseña?</a>
             </div>
 
-            {/* Login Button */}
-            <button type="submit" className={styles.submitBtn} disabled={cargando}>
-              <span>{cargando ? 'Verificando...' : 'Entrar'}</span>
-              {!cargando && <span className={`material-symbols-outlined ${styles.submitIcon}`}>chevron_right</span>}
+            <button className={styles.submitBtn} type="submit" disabled={cargando}>
+              {cargando ? 'Accediendo...' : 'ENTRAR A LA PLATAFORMA'}
             </button>
-            
-            {/* Demo Credentials Hint */}
-            <div className={styles.demoHint}>
-              <span className={styles.demoBadge}>Demo</span> user: investigador@techcamp.co / pass: AgroCaribe2025
-            </div>
           </form>
 
-          {/* Registration Link */}
-          <div className={styles.registerContainer}>
-            <p className={styles.registerText}>
-              ¿No tiene una cuenta? 
-              <Link to="/consulta" className={styles.registerLink}>
-                Solicitar Acceso
-              </Link>
+          <div className={styles.divider}>
+            <div className={styles.dividerLine}></div>
+            <span className={styles.dividerText}>o inicia sesión con</span>
+          </div>
+
+          <button className={styles.googleBtn} type="button">
+            <svg height="20" viewBox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg">
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"></path>
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"></path>
+            </svg>
+            Continuar con Google
+          </button>
+
+          <div className={styles.footer}>
+            <p className={styles.footerText}>
+              ¿Nuevo en AgroCaribe? <Link className={styles.registerLink} to="/consulta">Regístrate aquí</Link>
             </p>
           </div>
 
-          {/* Branding Tag (Mobile/Fallback) */}
-          <div className={styles.mobileBranding}>
-            <span className="material-symbols-outlined" style={{ color: 'var(--primary)' }}>potted_plant</span>
-            <span className={styles.mobileBrandingText}>AgroCaribe IA</span>
+          <div style={{ marginTop: '1rem', fontSize: '10px', color: 'var(--m3-outline)', textAlign: 'center' }}>
+            User: investigador@techcamp.co / Pass: AgroCaribe2025
           </div>
         </div>
 
-        {/* Footer Help Links */}
-        <div className={styles.footerLinks}>
-          <a href="#">Términos de Servicio</a>
-          <span className={styles.footerDot}>•</span>
-          <a href="#">Privacidad</a>
-          <span className={styles.footerDot}>•</span>
-          <a href="#">Soporte Técnico</a>
+        <div className={styles.copyright}>
+          <p>© 2024 AgroCaribe S.A. Todos los derechos reservados.</p>
         </div>
-      </main>
+      </section>
+
+      {/* ── PANEL DERECHO: IDENTIDAD VISUAL ── */}
+      <section className={styles.imageSection}>
+        <img
+          className={styles.heroImage}
+          src={loginImg}
+          alt="Agricultura de precisión"
+        />
+        <div className={styles.imageOverlay}></div>
+        <div className={styles.topographicPattern}>
+          <div className={styles.quoteCard}>
+            <h2 className={styles.quote}>"La precisión del mañana, sembrada hoy."</h2>
+            <p className={styles.quoteAuthor}>Optimice sus procesos mediante el análisis predictivo de suelos y clima, garantizando una cosecha sostenible y rentable.</p>
+          </div>
+
+          <div className={styles.dots}>
+            <div className={`${styles.dot} ${styles.dotActive}`}></div>
+            <div className={styles.dot}></div>
+            <div className={styles.dot}></div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 };

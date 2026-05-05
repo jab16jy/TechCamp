@@ -26,14 +26,12 @@ const Navbar = () => {
       <div className={styles.inner}>
         {/* Logo */}
         <Link to="/" className={styles.logo}>
-          <div className={styles.logoIcono}>
-            🌿
-            <span className={styles.logoPunto} />
-          </div>
-          <div className={styles.logoTexto}>
-            <span className={styles.logoNombre}>AgroCaribe AI</span>
-            <span className={styles.logoSub}>TECHCAMP · 2025</span>
-          </div>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 50" className={styles.logoSvg}>
+            <path d="M10 35c0-10 5-15 15-15s15 5 15 15" fill="none" stroke="currentColor" strokeWidth="3"/>
+            <circle cx="25" cy="20" r="4" fill="currentColor"/>
+            <path d="M45 25a10 10 0 1 1-20 0 10 10 0 0 1 20 0z" fill="none" stroke="#E8B84B" strokeWidth="2" strokeDasharray="2 1"/>
+            <text x="60" y="35" fontFamily="Inter, sans-serif" fontWeight="bold" fontSize="24" fill="currentColor">AgroCaribe</text>
+          </svg>
         </Link>
 
         {/* Links de navegación */}
