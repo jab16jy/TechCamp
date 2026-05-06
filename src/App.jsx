@@ -27,6 +27,7 @@ import Historial from './pages/Historial/Historial';
 import Acceso from './pages/Acceso/Acceso';
 import LoginInvestigador from './pages/Investigador/LoginInvestigador';
 import DashboardInvestigador from './pages/Investigador/DashboardInvestigador';
+import AnalisisCultivosInvestigador from './pages/Investigador/AnalisisCultivos';
 
 // ── Layout con Navbar + Footer (para las páginas del app) ──
 const LayoutApp = ({ children }) => (
@@ -49,6 +50,7 @@ const App = () => (
       {/* ── Rutas del investigador (sin Navbar/Footer, tienen su propio layout) ── */}
       <Route path="/investigador/login"     element={<LoginInvestigador />} />
       <Route path="/investigador/dashboard" element={<DashboardInvestigador />} />
+      <Route path="/investigador/analisis"  element={<AnalisisCultivosInvestigador />} />
 
       {/* ── Rutas del app principal (con Navbar + Footer) ── */}
       <Route path="/home" element={

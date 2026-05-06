@@ -185,150 +185,232 @@ const Consulta = () => {
 
   return (
     <div className="consulta-page container">
-      <div className="consulta-header">
-        <h1>Nueva Consulta</h1>
-        <p>Ingresa los detalles de tu parcela para recibir recomendaciones impulsadas por IA.</p>
+      <header className="consulta-header">
+        <h1>Análisis de Cultivos</h1>
+        <p>Configure los parámetros de su parcela para obtener recomendaciones agronómicas de precisión.</p>
+      </header>
+
+      {/* Tabs Navigation */}
+      <div className="consulta-tabs">
+        <button className="tab-btn active">
+          <span className="material-symbols-outlined">description</span>
+          Datos de la Parcela
+        </button>
+        <button className="tab-btn">
+          <span className="material-symbols-outlined">science</span>
+          Calidad del Suelo
+          <span className="tab-badge">MODO AVANZADO</span>
+        </button>
       </div>
 
-      <form className="consulta-grid" onSubmit={handleSubmit}>
-        {/* Columna Izquierda: Formulario */}
-        <div className="formulario-seccion">
-          <h2>Datos de la Parcela</h2>
-          
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="departamento">Departamento *</label>
-              <select 
-                className="form-control" 
-                name="departamento" 
-                id="departamento" 
-                value={departamento} 
-                onChange={(e) => {
-                  handleChange(e);
-                  actualizarFormulario({ municipio: '' }); // Resetear municipio al cambiar departamento
-                }} 
-                required
+      <form className="consulta-grid-main" onSubmit={handleSubmit}>
+        {/* Left Column: Map (5 columns) */}
+        <section className="map-section-col">
+          <div className="premium-card">
+            <div className="card-title-row">
+              <span className="material-symbols-outlined">map</span>
+              <h3>Ubicación en el Mapa</h3>
+            </div>
+            <p className="card-subtitle">Haz clic en el mapa o arrastra el marcador para precisar las coordenadas.</p>
+            
+            <div className="map-wrapper">
+              <MapContainer 
+                center={[lat || 10.5, lng || -74.8]} 
+                zoom={11} 
+                style={{ height: '100%', width: '100%' }}
+                scrollWheelZoom={true}
               >
-                <option value="">Selecciona...</option>
-                {departamentosUnicos.map(d => (
-                  <option key={d} value={d}>{d}</option>
-                ))}
-              </select>
+                {/* Satellite View Layer */}
+                <TileLayer
+                  attribution='Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EBP, and the GIS User Community'
+                  url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                />
+                <TileLayer
+                  attribution='&copy; OpenStreetMap contributors'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  opacity={0.3} // Subtle overlay for labels
+                />
+                <LocationMarker position={{ lat, lng }} setPosition={handleMapChange} />
+              </MapContainer>
+
+              <div className="map-coords-badge">
+                <p className="coords-label">Región seleccionada</p>
+                <p className="coords-value">{lat?.toFixed(2)}° N, {lng?.toFixed(2)}° W</p>
+              </div>
+            </div>
+
+            {/* Insight IA Box */}
+            <div className="insight-box">
+              <span className="material-symbols-outlined">lightbulb</span>
+              <p className="insight-text">
+                <strong>Insight IA:</strong> Humedad de suelo favorable detectada por sensores Sentinel-2 para el área seleccionada.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Right Column: Detailed Form (7 columns) */}
+        <section className="form-section-col">
+          <div className="premium-card">
+            <div className="card-title-row">
+              <span className="material-symbols-outlined">experiment</span>
+              <h3>Información Detallada de la Parcela</h3>
             </div>
             
-            <div className="form-group">
-              <label htmlFor="municipio">Municipio *</label>
-              <select 
-                className="form-control" 
-                name="municipio" 
-                id="municipio" 
-                value={municipio} 
-                onChange={handleChange} 
-                required 
-                disabled={!departamento}
-              >
-                <option value="">Selecciona...</option>
-                {municipiosFiltrados.map(m => (
-                  <option key={m.id} value={m.nombre}>{m.nombre}</option>
-                ))}
-              </select>
+            <div className="agro-form">
+              <div className="form-field">
+                <label>Departamento</label>
+                <select 
+                  className="form-input-premium" 
+                  name="departamento" 
+                  value={departamento} 
+                  onChange={(e) => {
+                    handleChange(e);
+                    actualizarFormulario({ municipio: '' });
+                  }} 
+                  required
+                >
+                  <option value="">Selecciona...</option>
+                  {departamentosUnicos.map(d => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-field">
+                <label>Municipio</label>
+                <select 
+                  className="form-input-premium" 
+                  name="municipio" 
+                  value={municipio} 
+                  onChange={handleChange} 
+                  required 
+                  disabled={!departamento}
+                >
+                  <option value="">Selecciona...</option>
+                  {municipiosFiltrados.map(m => (
+                    <option key={m.id} value={m.nombre}>{m.nombre}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-field">
+                <label>Tipo de Suelo</label>
+                <select className="form-input-premium" name="tipo_suelo" value={tipo_suelo} onChange={handleChange} required>
+                  <option value="">Selecciona...</option>
+                  <option value="Arcilloso">Arcilloso</option>
+                  <option value="Arenoso">Arenoso</option>
+                  <option value="Franco">Franco</option>
+                  <option value="Franco-Arcilloso">Franco-Arcilloso</option>
+                  <option value="Limoso">Limoso</option>
+                </select>
+              </div>
+
+              <div className="form-field">
+                <label>Mes de Siembra</label>
+                <select className="form-input-premium" name="mes_siembra" value={mes_siembra} onChange={handleChange} required>
+                  <option value="">Selecciona...</option>
+                  {['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'].map(mes => (
+                    <option key={mes} value={mes}>{mes}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-field">
+                <label>Área (hectáreas)</label>
+                <input 
+                  type="number" step="0.1" min="0" 
+                  className="form-input-premium" 
+                  name="area_hectareas" 
+                  value={area_hectareas} 
+                  onChange={handleChange} 
+                  placeholder="Ej: 15.5" 
+                  required 
+                />
+              </div>
+
+              <div className="form-field">
+                <label>¿Acceso a Riego?</label>
+                <select className="form-input-premium" name="acceso_riego" value={acceso_riego} onChange={(e) => actualizarFormulario({ acceso_riego: e.target.value === 'true' })}>
+                  <option value="false">No, dependiente de lluvia</option>
+                  <option value="true">Sí, sistema activo</option>
+                </select>
+              </div>
+
+              <div className="form-field">
+                <label>pH del Suelo <span>(opcional)</span></label>
+                <input 
+                  type="number" step="0.1" min="0" max="14" 
+                  className="form-input-premium" 
+                  name="ph_suelo" 
+                  value={ph_suelo} 
+                  onChange={handleChange} 
+                  placeholder="Ej: 6.5" 
+                />
+              </div>
+
+              <div className="form-field">
+                <label>Textura <span>(opcional)</span></label>
+                <input 
+                  type="text" 
+                  className="form-input-premium" 
+                  name="textura_suelo" 
+                  value={textura_suelo} 
+                  onChange={handleChange} 
+                  placeholder="Ej: Fina" 
+                />
+              </div>
+
+              <div className="form-field" style={{ gridColumn: 'span 2' }}>
+                <label>Materia Orgánica (%) <span>(opcional)</span></label>
+                <input 
+                  type="number" step="0.1" min="0" max="100" 
+                  className="form-input-premium" 
+                  name="materia_organica" 
+                  value={materia_organica} 
+                  onChange={handleChange} 
+                  placeholder="Ej: 3.2" 
+                />
+              </div>
             </div>
           </div>
+        </section>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="tipo_suelo">Tipo de Suelo *</label>
-              <select className="form-control" name="tipo_suelo" id="tipo_suelo" value={tipo_suelo} onChange={handleChange} required>
-                <option value="">Selecciona...</option>
-                <option value="Arcilloso">Arcilloso</option>
-                <option value="Arenoso">Arenoso</option>
-                <option value="Franco">Franco</option>
-                <option value="Franco-Arcilloso">Franco-Arcilloso</option>
-                <option value="Limoso">Limoso</option>
-              </select>
+        {/* Footer Row: CTA + Status (12 columns) */}
+        <div className="footer-cards-row">
+          <div className="cta-ai-card">
+            <span className="material-symbols-outlined cta-bg-icon">auto_awesome</span>
+            <div className="cta-content">
+              <div className="cta-icon-wrapper">
+                <span className="material-symbols-outlined">auto_awesome</span>
+              </div>
+              <div className="cta-text">
+                <h4>¿Listo para el análisis?</h4>
+                <p>Nuestra IA procesará 24 variables agroclimáticas, imágenes satelitales y datos históricos para generar su recomendación en segundos.</p>
+              </div>
             </div>
-
-            <div className="form-group">
-              <label htmlFor="mes_siembra">Mes de Siembra *</label>
-              <select className="form-control" name="mes_siembra" id="mes_siembra" value={mes_siembra} onChange={handleChange} required>
-                <option value="">Selecciona...</option>
-                {['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'].map(mes => (
-                  <option key={mes} value={mes}>{mes}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="area_hectareas">Área (hectáreas) *</label>
-              <input type="number" step="0.1" min="0" className="form-control" name="area_hectareas" id="area_hectareas" value={area_hectareas} onChange={handleChange} placeholder="Ej. 5.5" required />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="acceso_riego">¿Acceso a Riego?</label>
-              <select className="form-control" name="acceso_riego" id="acceso_riego" value={acceso_riego} onChange={(e) => actualizarFormulario({ acceso_riego: e.target.value === 'true' })}>
-                <option value="false">No</option>
-                <option value="true">Sí</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="ph_suelo">pH del Suelo (opcional)</label>
-              <input type="number" step="0.1" min="0" max="14" className="form-control" name="ph_suelo" id="ph_suelo" value={ph_suelo} onChange={handleChange} placeholder="Ej. 6.5" />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="textura_suelo">Textura (opcional)</label>
-              <input type="text" className="form-control" name="textura_suelo" id="textura_suelo" value={textura_suelo} onChange={handleChange} placeholder="Ej. Fina, Gruesa" />
-            </div>
-          </div>
-          
-          <div className="form-group">
-            <label htmlFor="materia_organica">Materia Orgánica (%) (opcional)</label>
-            <input type="number" step="0.1" min="0" max="100" className="form-control" name="materia_organica" id="materia_organica" value={materia_organica} onChange={handleChange} placeholder="Ej. 2.5" />
-          </div>
-
-        </div>
-
-        {/* Columna Derecha: Mapa */}
-        <div className="mapa-seccion">
-          <h2>Ubicación en el Mapa</h2>
-          <p style={{ fontSize: '0.9rem', marginBottom: '0.5rem' }}>
-            Haz clic en el mapa, arrastra el marcador o ingresa las coordenadas directamente.
-          </p>
-          
-          <div className="form-group" style={{ marginBottom: '0.5rem' }}>
-            <input 
-              type="text" 
-              className="form-control" 
-              value={coordsInput} 
-              onChange={handleCoordsInputChange} 
-              placeholder="Ej. 10.9685, -74.7813" 
-            />
-          </div>
-
-          <div className="mapa-container">
-            <MapContainer 
-              center={[10.5, -74.8]} 
-              zoom={7} 
-              style={{ height: '100%', width: '100%' }}
-              scrollWheelZoom={true}
-            >
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
-              <LocationMarker position={{ lat, lng }} setPosition={handleMapChange} />
-            </MapContainer>
-          </div>
-          
-          <div className="btn-container">
-            <button type="submit" className="btn-primario">
-              Analizar zona 🚜
+            <button type="submit" className="btn-analyze-premium">
+              Analizar con IA
             </button>
+          </div>
+
+          <div className="status-card">
+            <div className="status-card-inner">
+              <div className="status-header">
+                <p className="status-label">ESTADO DEL MODELO</p>
+                <span className="status-badge">ÓPTIMO</span>
+              </div>
+              <div className="status-body">
+                <div className="accuracy-row">
+                  <span className="accuracy-label">Precisión actual</span>
+                  <span className="accuracy-value">94.2%</span>
+                </div>
+                <div className="progress-bar-container">
+                  <div className="progress-fill" style={{ width: '94.2%' }}></div>
+                </div>
+                <p className="status-footer">Última actualización: Hace 14 minutos</p>
+              </div>
+            </div>
           </div>
         </div>
       </form>
