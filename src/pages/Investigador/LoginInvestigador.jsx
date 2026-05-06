@@ -176,7 +176,7 @@ const LoginInvestigador = () => {
         </div>
 
         <div className={styles.copyright}>
-          <p>© 2024 AgroCaribe S.A. Todos los derechos reservados.</p>
+          <p>© 2026 AgroCaribe S.A. Todos los derechos reservados.</p>
         </div>
       </section>
 
