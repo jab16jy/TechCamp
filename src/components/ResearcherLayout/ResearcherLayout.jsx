@@ -31,11 +31,19 @@ const ResearcherLayout = ({ children, activeTab, onTabChange }) => {
     { id: 'reportes', icon: 'assessment', label: 'Reportes', path: '#', roles: ['investigador', 'productor'] },
   ].filter(item => item.roles.includes(rol));
 
-  const topNavItems = [
-    { id: 'metricas', label: 'Métricas del modelo', roles: ['investigador'] },
-    { id: 'historial', label: 'Historial de consultas', roles: ['investigador', 'productor'] },
-    { id: 'exportar', label: 'Exportar datos', roles: ['investigador'] },
-  ].filter(item => item.roles.includes(rol));
+  let topNavItems = [];
+  
+  if (location.pathname === '/investigador/dashboard') {
+    topNavItems = [
+      { id: 'metricas', label: 'Métricas del modelo', roles: ['investigador'] },
+      { id: 'exportar', label: 'Exportar datos', roles: ['investigador'] },
+    ].filter(item => item.roles.includes(rol));
+  } else if (location.pathname === '/investigador/analisis' || location.pathname === '/resultado') {
+    topNavItems = [
+      { id: 'analisis', label: 'Análisis', roles: ['investigador', 'productor'] },
+      { id: 'historial', label: 'Historial de consultas', roles: ['investigador', 'productor'] },
+    ].filter(item => item.roles.includes(rol));
+  }
 
   return (
     <div className={styles.dashboardLayout}>
@@ -55,7 +63,17 @@ const ResearcherLayout = ({ children, activeTab, onTabChange }) => {
               <button 
                 key={item.id}
                 className={`${styles.topNavItem} ${activeTab === item.id ? styles.topNavItemActive : ''}`}
-                onClick={() => onTabChange ? onTabChange(item.id) : navigate('/investigador/dashboard')}
+                onClick={() => {
+                  if (onTabChange) {
+                    onTabChange(item.id);
+                  }
+                  
+                  if (item.id === 'analisis' && location.pathname !== '/investigador/analisis') {
+                    navigate('/investigador/analisis');
+                  } else if (item.id !== 'analisis' && location.pathname === '/investigador/dashboard') {
+                    // Stay in dashboard but change tab
+                  }
+                }}
               >
                 {item.label}
               </button>

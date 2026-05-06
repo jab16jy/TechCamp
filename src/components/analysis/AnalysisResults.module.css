@@ -834,6 +834,7 @@
   line-height: 1.6;
   position: relative;
   z-index: 10;
+  color: var(--blanco);
 }
 
 .insightImage {

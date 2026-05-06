@@ -22,11 +22,19 @@
 
 .field label {
   font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--m3-on-surface);
+  font-weight: 700;
+  color: var(--m3-primary);
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.formColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 .optional {

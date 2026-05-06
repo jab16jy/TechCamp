@@ -57,40 +57,6 @@ const AnalysisResults = ({ data, onNewAnalysis, onDownloadPDF }) => {
       <div className={styles.dashboardGrid}>
         {/* Left Column */}
         <div className={styles.mainCol}>
-          {/* Main Recommendation Card */}
-          <section className={styles.recommendedSection}>
-            <div className={styles.topographicBg}></div>
-            <div className={styles.recommendedContent}>
-              <div className={styles.recommendedInfo}>
-                <div className={styles.recommendedTitle}>
-                  <h2 className="premium-font">{mainCrop.cultivo}</h2>
-                  <span className={styles.riskBadge}>Riesgo {mainCrop.riesgo}</span>
-                </div>
-                <p className={styles.recommendedDesc}>{mainCrop.justificacion}</p>
-                <div className={styles.recommendedMeta}>
-                  <span>Proyectado para siembra en: {data.ubicacion?.mes_siembra}</span>
-                </div>
-              </div>
-
-              <div className={styles.progressWrapper}>
-                <div className={styles.progressRing}>
-                  <svg className={styles.progressRingSvg}>
-                    <circle className={styles.progressRingCircleBg} cx="64" cy="64" r={radius} />
-                    <circle 
-                      className={styles.progressRingCircle} 
-                      cx="64" cy="64" r={radius} 
-                      style={{ strokeDasharray: circumference, strokeDashoffset: offset }}
-                    />
-                  </svg>
-                  <div className={styles.progressValue}>
-                    <span className={styles.progressNumber}>{mainCrop.score}%</span>
-                    <span className={styles.progressLabel}>Afinidad</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
           {/* Quick Metrics */}
           <div className={styles.metricsGrid}>
             <MetricCard 
@@ -182,6 +148,40 @@ const AnalysisResults = ({ data, onNewAnalysis, onDownloadPDF }) => {
                 <div className={styles.legendItem}>
                   <div className={`${styles.dot} bg-red-400`}></div>
                   <span className={styles.legendText}>Estrés hídrico</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Main Recommendation Card - MOVED BELOW MAP */}
+          <section className={styles.recommendedSection}>
+            <div className={styles.topographicBg}></div>
+            <div className={styles.recommendedContent}>
+              <div className={styles.recommendedInfo}>
+                <div className={styles.recommendedTitle}>
+                  <h2 className="premium-font">{mainCrop.cultivo}</h2>
+                  <span className={styles.riskBadge}>Riesgo {mainCrop.riesgo}</span>
+                </div>
+                <p className={styles.recommendedDesc}>{mainCrop.justificacion}</p>
+                <div className={styles.recommendedMeta}>
+                  <span>Proyectado para siembra en: {data.ubicacion?.mes_siembra}</span>
+                </div>
+              </div>
+
+              <div className={styles.progressWrapper}>
+                <div className={styles.progressRing}>
+                  <svg className={styles.progressRingSvg}>
+                    <circle className={styles.progressRingCircleBg} cx="64" cy="64" r={radius} />
+                    <circle 
+                      className={styles.progressRingCircle} 
+                      cx="64" cy="64" r={radius} 
+                      style={{ strokeDasharray: circumference, strokeDashoffset: offset }}
+                    />
+                  </svg>
+                  <div className={styles.progressValue}>
+                    <span className={styles.progressNumber}>{mainCrop.score}%</span>
+                    <span className={styles.progressLabel}>Afinidad</span>
+                  </div>
                 </div>
               </div>
             </div>

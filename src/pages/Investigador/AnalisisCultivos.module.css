@@ -182,8 +182,8 @@
   color: white;
 }
 
-.ctaText h4 { color: white; font-size: 1.25rem; margin-bottom: 4px; }
-.ctaText p { color: var(--m3-on-primary-container); font-size: 0.85rem; max-width: 400px; }
+.ctaText h4 { color: white; font-size: 1.25rem; margin-bottom: 4px; font-family: var(--font-cuerpo); font-weight: 700; }
+.ctaText p { color: white; font-size: 0.85rem; max-width: 400px; opacity: 1; font-family: var(--font-cuerpo); }
 
 .btnAnalyze {
   background: white;
@@ -222,7 +222,517 @@
 .progressFill { height: 100%; background: linear-gradient(90deg, var(--m3-secondary), var(--m3-primary)); }
 .statusFooter { font-size: 10px; color: var(--gris-400); text-align: center; margin: 0; }
 
+
+/* ── Historial Section ── */
+.historialSection {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.tableCard {
+  background-color: white;
+  border-radius: 12px;
+  border: 1px solid var(--m3-surface-container);
+  box-shadow: 0 4px 20px rgba(45, 90, 39, 0.05);
+  overflow: hidden;
+}
+
+.tableHeader {
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--m3-surface-container);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: rgba(242, 244, 242, 0.5);
+}
+
+.tableTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--m3-primary);
+  margin: 0;
+}
+
+.searchWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.searchWrapper span {
+  position: absolute;
+  left: 0.75rem;
+  color: var(--m3-outline);
+  font-size: 1.125rem;
+}
+
+.searchInput {
+  padding: 0.5rem 1rem 0.5rem 2.5rem;
+  border: 1px solid var(--m3-outline-variant);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  width: 256px;
+  background-color: white;
+  transition: all 0.2s ease;
+}
+
+.tableScroll {
+  overflow-x: auto;
+}
+
+.mainTable {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.mainTable th {
+  padding: 1rem 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--m3-outline);
+  background-color: rgba(242, 244, 242, 0.3);
+  border-bottom: 1px solid var(--m3-surface-container);
+}
+
+.mainTable td {
+  padding: 1rem 1.5rem;
+  font-size: 0.875rem;
+  border-bottom: 1px solid var(--m3-surface-container);
+}
+
+.rowId { font-weight: 600; color: var(--m3-primary); }
+.rowDate { color: var(--m3-outline); }
+.rowLocation { font-weight: 500; }
+
+.cropInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.scoreText { font-weight: 700; color: var(--m3-primary); }
+.scoreLow { color: var(--m3-tertiary); }
+
+.statusBadge {
+  padding: 0.25rem 0.75rem;
+  background-color: var(--m3-secondary-container);
+  color: var(--m3-on-secondary-container);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.statusWarning {
+  background-color: var(--m3-tertiary-fixed);
+  color: var(--m3-on-tertiary-fixed);
+}
+
+.viewBtn {
+  background: none;
+  border: none;
+  color: var(--m3-primary);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+
+.textCenter { text-align: center; }
+.textRight { text-align: right; }
+
+
 @media (max-width: 1024px) {
   .colMap, .colForm, .colCta, .colStatus { grid-column: span 12; }
   .formGrid { grid-template-columns: 1fr; }
+}
+
+/* ── Advanced Mode Styles ── */
+.historyBanner {
+  background-color: var(--m3-surface-container-lowest);
+  border: 1px solid var(--m3-primary-container);
+  border-radius: 12px;
+  padding: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 12px rgba(45, 90, 39, 0.05);
+}
+
+.historyIcon {
+  padding: 0.75rem;
+  background-color: white;
+  border-radius: 10px;
+  color: var(--m3-primary);
+  display: flex;
+  align-items: center;
+}
+
+.historyText h4 {
+  margin: 0;
+  font-size: 14px;
+  color: var(--m3-primary);
+}
+
+.historyText p {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--m3-outline);
+}
+
+.historySelectWrapper {
+  margin-left: auto;
+  position: relative;
+  min-width: 240px;
+}
+
+.historySelect {
+  width: 100%;
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--m3-outline-variant);
+  border-radius: 8px;
+  font-size: 14px;
+  background-color: white;
+  appearance: none;
+}
+
+.historySelect:focus {
+  outline: none;
+  border-color: var(--m3-primary);
+}
+
+.selectArrow {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--m3-outline);
+}
+
+.dataOrigin {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--m3-surface-container-low);
+  padding: 4px 12px;
+  border-radius: 999px;
+}
+
+.dataOrigin span {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--m3-outline);
+}
+
+.advancedFormGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fieldGroup label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--m3-on-surface-variant);
+}
+
+.advancedInput {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--m3-outline-variant);
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--m3-primary);
+  background-color: white;
+}
+
+.optionalRow {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  padding: 1.25rem;
+  background-color: rgba(242, 244, 242, 0.4);
+  border: 1px dashed var(--m3-outline-variant);
+  border-radius: 12px;
+}
+
+.optionalInput {
+  border: none;
+  border-bottom: 1px solid var(--m3-outline-variant);
+  background: transparent;
+  padding: 4px 0;
+  font-size: 14px;
+}
+
+.optionalInput:focus {
+  outline: none;
+  border-color: var(--m3-primary);
+}
+
+/* Climate Sliders */
+.climateSection {
+  margin-top: 2rem;
+  border-top: 1px solid var(--m3-surface-container);
+  padding-top: 2rem;
+}
+
+.climateTitle {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--m3-outline);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 2rem;
+}
+
+.sliderGroup {
+  margin-bottom: 2rem;
+}
+
+.sliderHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 12px;
+}
+
+.sliderLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--m3-on-surface-variant);
+}
+
+.sliderValue {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.sliderValue strong {
+  font-size: 24px;
+  color: var(--m3-primary);
+}
+
+.sliderValue span {
+  font-size: 14px;
+  color: var(--m3-outline);
+}
+
+.rangeInput {
+  width: 100%;
+  height: 8px;
+  background-color: var(--m3-surface-container);
+  border-radius: 999px;
+  appearance: none;
+  cursor: pointer;
+}
+
+.rangeInput::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  background: var(--m3-primary);
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 0 0 4px rgba(21, 66, 18, 0.1);
+}
+
+.sliderLegend {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 4px 0;
+}
+
+.sliderLegend span {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--m3-outline);
+}
+
+.sliderLegend span:nth-child(2) {
+  color: var(--m3-secondary);
+}
+
+/* Satellite Preview */
+.satellitePreview {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--m3-primary-container);
+  margin-bottom: 1.5rem;
+}
+
+.satelliteImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.satelliteOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 1.25rem;
+}
+
+.satelliteOverlay h4 {
+  margin: 0;
+  color: white;
+  font-size: 16px;
+}
+
+.satelliteOverlay p {
+  margin: 4px 0 0;
+  color: rgba(255,255,255,0.8);
+  font-size: 12px;
+}
+
+/* Large CTA */
+.largeCta {
+  background-color: var(--m3-primary);
+  color: white;
+  padding: 2rem;
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(21, 66, 18, 0.2);
+}
+
+.ctaDecor {
+  position: absolute;
+  top: -20px;
+  right: -20px;
+  width: 120px;
+  height: 120px;
+  background-color: rgba(255,255,255,0.1);
+  border-radius: 50%;
+  filter: blur(20px);
+}
+
+.ctaTop {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.ctaIconCircle {
+  width: 48px;
+  height: 48px;
+  background-color: rgba(255,255,255,0.2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.largeCta h3 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: white;
+  font-family: var(--font-cuerpo);
+}
+
+.largeCta p {
+  margin: 0 0 2rem;
+  color: white;
+  opacity: 1;
+  font-size: 16px;
+  font-family: var(--font-cuerpo);
+  line-height: 1.6;
+}
+
+.btnExecuteLarge {
+  width: 100%;
+  padding: 1.25rem;
+  background-color: var(--m3-secondary-container);
+  color: var(--m3-on-secondary-container);
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 16px;
+  font-size: 20px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+
+.btnExecuteLarge:hover {
+  background-color: var(--m3-secondary);
+  color: white;
+}
+
+/* ── Connection Status ── */
+.connectionStatus {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 1rem;
+}
+
+.pulseDot {
+  width: 8px;
+  height: 8px;
+  background-color: #10b981;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+
+.statusText {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--m3-secondary);
+}
+
+.stickyColumn {
+  position: sticky;
+  top: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Fix for soil parameters overflow */
+.advancedFormGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.premiumCard {
+  background: white;
+  border-radius: 1rem;
+  border: 1px solid var(--m3-surface-container-high);
+  box-shadow: var(--sombra-sm);
+  padding: 1.5rem; /* Reduced padding slightly to prevent overflow */
+  height: auto; /* Allow height to adjust to content */
 }
