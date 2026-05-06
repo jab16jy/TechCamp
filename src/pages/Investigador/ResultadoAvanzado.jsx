@@ -56,7 +56,7 @@ const ResultadoAvanzado = () => {
                 <span className={styles.cardUnit}>mg/kg</span>
               </div>
               <div className={styles.progressBar}>
-                <div className={styles.progressFill} style={{ width: '75%', backgroundColor: 'var(--m3-primary)' }}></div>
+                <div className={styles.progressFill} style={{ width: '75%', backgroundColor: '#2d9e4f' }}></div>
               </div>
               <div className={styles.cardFooter}>
                 <span>35</span>
@@ -76,7 +76,7 @@ const ResultadoAvanzado = () => {
                 <span className={styles.cardUnit}>mg/kg</span>
               </div>
               <div className={styles.progressBar}>
-                <div className={styles.progressFill} style={{ width: '40%', backgroundColor: 'var(--m3-primary)' }}></div>
+                <div className={styles.progressFill} style={{ width: '40%', backgroundColor: '#4ab86a' }}></div>
               </div>
               <div className={styles.cardFooter}>
                 <span>15</span>
@@ -96,7 +96,7 @@ const ResultadoAvanzado = () => {
                 <span className={styles.cardUnit}>mg/kg</span>
               </div>
               <div className={styles.progressBar}>
-                <div className={styles.progressFill} style={{ width: '60%', backgroundColor: 'var(--m3-secondary)' }}></div>
+                <div className={styles.progressFill} style={{ width: '60%', backgroundColor: '#1A4D3A' }}></div>
               </div>
               <div className={styles.cardFooter}>
                 <span>140</span>
@@ -116,7 +116,7 @@ const ResultadoAvanzado = () => {
                 <span className={styles.cardUnit}>pH</span>
               </div>
               <div className={styles.progressBar}>
-                <div className={styles.progressFill} style={{ width: '65%', backgroundColor: 'var(--m3-primary)' }}></div>
+                <div className={styles.progressFill} style={{ width: '65%', backgroundColor: '#2d9e4f' }}></div>
               </div>
               <div className={styles.cardFooter}>
                 <span>5.5</span>
@@ -136,7 +136,7 @@ const ResultadoAvanzado = () => {
                 <span className={styles.cardUnit}>dS/m</span>
               </div>
               <div className={styles.progressBar}>
-                <div className={styles.progressFill} style={{ width: '30%', backgroundColor: 'var(--m3-secondary)' }}></div>
+                <div className={styles.progressFill} style={{ width: '30%', backgroundColor: '#8e6b5e' }}></div>
               </div>
               <div className={styles.cardFooter}>
                 <span>0.8</span>
@@ -156,7 +156,7 @@ const ResultadoAvanzado = () => {
                 <span className={styles.cardUnit}>%</span>
               </div>
               <div className={styles.progressBar}>
-                <div className={styles.progressFill} style={{ width: '80%', backgroundColor: 'var(--m3-primary)' }}></div>
+                <div className={styles.progressFill} style={{ width: '80%', backgroundColor: '#2d9e4f' }}></div>
               </div>
               <div className={styles.cardFooter}>
                 <span>2.5</span>
@@ -185,18 +185,43 @@ const ResultadoAvanzado = () => {
               </div>
             </div>
             <div className={styles.radarContainer}>
-              <svg className={styles.radarSvg} viewBox="0 0 100 100">
+              <svg className={styles.radarSvg} viewBox="-40 -40 180 180">
+                {/* Concentric Grid Lines */}
                 <polygon className={styles.radarGrid} points="50,5 93,30 93,80 50,95 7,80 7,30"></polygon>
+                <polygon className={styles.radarGrid} points="50,12.5 82.25,31.25 82.25,68.75 50,80 17.75,68.75 17.75,31.25"></polygon>
                 <polygon className={styles.radarGrid} points="50,20 80,37 80,72 50,83 20,72 20,37"></polygon>
+                <polygon className={styles.radarGrid} points="50,27.5 72.25,40.75 72.25,59.25 50,67.5 27.75,59.25 27.75,40.75"></polygon>
                 <polygon className={styles.radarGrid} points="50,35 65,44 65,64 50,71 35,64 35,44"></polygon>
+
+                {/* Axis lines */}
+                <line x1="50" y1="50" x2="50" y2="5" className={styles.radarGrid} />
+                <line x1="50" y1="50" x2="93" y2="30" className={styles.radarGrid} />
+                <line x1="50" y1="50" x2="93" y2="80" className={styles.radarGrid} />
+                <line x1="50" y1="50" x2="50" y2="95" className={styles.radarGrid} />
+                <line x1="50" y1="50" x2="7" y2="80" className={styles.radarGrid} />
+                <line x1="50" y1="50" x2="7" y2="30" className={styles.radarGrid} />
+
+                {/* Target Area */}
                 <polygon className={styles.radarAreaTarget} points="50,10 85,35 85,75 50,90 15,75 15,35"></polygon>
+
+                {/* Current Area */}
                 <polygon className={styles.radarAreaCurrent} points="50,15 90,40 70,70 50,85 20,65 15,45"></polygon>
-                <text className={styles.radarText} textAnchor="middle" x="50" y="2">NITRÓGENO</text>
-                <text className={styles.radarText} textAnchor="start" x="95" y="32">FÓSFORO</text>
-                <text className={styles.radarText} textAnchor="start" x="95" y="82">POTASIO</text>
-                <text className={styles.radarText} textAnchor="middle" x="50" y="99">pH</text>
-                <text className={styles.radarText} textAnchor="end" x="5" y="82">CONDUCTIVIDAD</text>
-                <text className={styles.radarText} textAnchor="end" x="5" y="32">M. ORGÁNICA</text>
+
+                {/* Vertex Markers for Current */}
+                <circle cx="50" cy="15" r="1.5" fill="#1A4D3A" />
+                <circle cx="90" cy="40" r="1.5" fill="#1A4D3A" />
+                <circle cx="70" cy="70" r="1.5" fill="#1A4D3A" />
+                <circle cx="50" cy="85" r="1.5" fill="#1A4D3A" />
+                <circle cx="20" cy="65" r="1.5" fill="#1A4D3A" />
+                <circle cx="15" cy="45" r="1.5" fill="#1A4D3A" />
+
+                {/* Labels and Values - Positions adjusted to be outside the radar even more */}
+                <text className={styles.radarText} textAnchor="middle" x="50" y="-15">NITRÓGENO (85%)</text>
+                <text className={styles.radarText} textAnchor="start" x="100" y="25">FÓSFORO (90%)</text>
+                <text className={styles.radarText} textAnchor="start" x="100" y="85">POTASIO (75%)</text>
+                <text className={styles.radarText} textAnchor="middle" x="50" y="115">pH (92%)</text>
+                <text className={styles.radarText} textAnchor="end" x="0" y="85">COND. (60%)</text>
+                <text className={styles.radarText} textAnchor="end" x="0" y="25">M.ORG. (80%)</text>
               </svg>
             </div>
           </div>

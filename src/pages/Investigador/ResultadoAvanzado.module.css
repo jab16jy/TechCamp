@@ -244,11 +244,11 @@
   color: var(--m3-on-surface-variant);
 }
 
-.statusOptimo { color: var(--m3-primary); }
-.statusEstable { color: var(--m3-secondary); }
-.statusAlto { color: var(--m3-primary); }
-.statusBajo { color: var(--m3-secondary); }
-.statusExcelente { color: var(--m3-primary); }
+.statusOptimo { color: #2d9e4f; }
+.statusEstable { color: #4ab86a; }
+.statusAlto { color: #1A4D3A; }
+.statusBajo { color: #8e6b5e; }
+.statusExcelente { color: #2d9e4f; font-weight: 800; }
 
 /* Visualization Section */
 .vizGrid {
@@ -299,14 +299,15 @@
   color: var(--m3-on-surface-variant);
 }
 
-.dotActual { width: 12px; height: 12px; border-radius: 50%; background: var(--m3-primary); }
-.dotObjetivo { width: 12px; height: 12px; border-radius: 50%; background: var(--m3-tertiary); }
+.dotActual { width: 12px; height: 12px; border-radius: 50%; background: #91f78e; }
+.dotObjetivo { width: 12px; height: 12px; border-radius: 50%; background: #e0bbae; }
 
 .radarContainer {
   position: relative;
   width: 100%;
-  max-width: 320px;
+  max-width: 480px;
   aspect-ratio: 1;
+  margin: 0 auto;
 }
 
 .radarSvg {
@@ -315,27 +316,28 @@
 }
 
 .radarGrid {
-  stroke: var(--m3-surface-variant);
+  stroke: var(--m3-outline-variant);
   stroke-width: 0.5;
   fill: none;
 }
 
 .radarAreaTarget {
-  fill: rgba(76, 51, 42, 0.1);
+  fill: rgba(76, 51, 42, 0.15);
   stroke: var(--m3-tertiary);
-  stroke-width: 1.5;
+  stroke-width: 2;
+  stroke-dasharray: 4;
 }
 
 .radarAreaCurrent {
-  fill: rgba(21, 66, 18, 0.2);
-  stroke: var(--m3-primary);
-  stroke-width: 2;
+  fill: rgba(145, 247, 142, 0.3);
+  stroke: #1A4D3A;
+  stroke-width: 2.5;
 }
 
 .radarText {
-  font-size: 4px;
-  fill: var(--m3-on-surface-variant);
-  font-weight: 700;
+  font-size: 5px;
+  fill: var(--m3-on-surface);
+  font-weight: 800;
 }
 
 /* Heatmap Card */
@@ -576,7 +578,7 @@
 /* CTA Section */
 .ctaSection {
   margin-top: 4rem;
-  background: var(--m3-primary);
+  background: #1A4D3A;
   padding: 3rem;
   border-radius: 20px;
   text-align: center;
@@ -589,22 +591,22 @@
 
 .ctaTitle {
   color: white;
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: 1.75rem;
+  font-weight: 800;
   margin: 0;
 }
 
 .ctaDesc {
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.9);
   max-width: 600px;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
   margin: 0 0 2rem 0;
 }
 
 .ctaActions {
   display: flex;
-  gap: 1rem;
+  gap: 1.5rem;
   flex-wrap: wrap;
   justify-content: center;
 }
@@ -613,19 +615,20 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.85rem 2rem;
-  background: white;
-  color: var(--m3-primary);
+  padding: 1rem 2.5rem;
+  background: #91f78e;
+  color: #00390a;
   border-radius: 12px;
-  font-weight: 700;
-  font-size: 14px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transition: all 0.2s ease;
+  font-weight: 800;
+  font-size: 16px;
+  box-shadow: 0 8px 24px rgba(145, 247, 142, 0.4);
+  transition: all 0.3s ease;
+  border: none;
 }
 
 .btnCtaWhite:hover {
-  background: var(--m3-surface-container-low);
-  transform: translateY(-1px);
+  background: #ffffff;
+  transform: translateY(-2px);
 }
 
 .glassButtonLarge {

@@ -191,11 +191,11 @@
 
 .newSimulationBtn {
   width: 100%;
-  background-color: var(--m3-primary);
-  color: var(--m3-on-primary);
+  background-color: #1A4D3A;
+  color: white;
   padding: 0.75rem;
   border-radius: 12px;
-  font-weight: 600;
+  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -207,7 +207,8 @@
 }
 
 .newSimulationBtn:hover {
-  opacity: 0.9;
+  background-color: #2D5A27;
+  opacity: 0.95;
   transform: translateY(-1px);
 }
 
