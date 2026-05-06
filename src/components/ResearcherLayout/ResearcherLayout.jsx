@@ -10,10 +10,12 @@ const ResearcherLayout = ({ children, activeTab, onTabChange }) => {
 
   useEffect(() => {
     const rol = sessionStorage.getItem('rol');
-    if (rol !== 'investigador') {
+    if (rol !== 'investigador' && rol !== 'productor') {
       navigate('/investigador/login');
     }
   }, [navigate]);
+
+  const rol = sessionStorage.getItem('rol');
 
   const cerrarSesion = () => {
     sessionStorage.removeItem('rol');
@@ -22,18 +24,18 @@ const ResearcherLayout = ({ children, activeTab, onTabChange }) => {
   };
 
   const menuItems = [
-    { id: 'dashboard', icon: 'dashboard', label: 'Dashboard', path: '/investigador/dashboard' },
-    { id: 'analisis', icon: 'potted_plant', label: 'Análisis de Cultivos', path: '/investigador/analisis' },
-    { id: 'sensores', icon: 'sensors', label: 'Sensores IoT', path: '#' },
-    { id: 'ia', icon: 'psychology', label: 'IA Predictiva', path: '#' },
-    { id: 'reportes', icon: 'assessment', label: 'Reportes', path: '#' },
-  ];
+    { id: 'dashboard', icon: 'dashboard', label: 'Dashboard', path: '/investigador/dashboard', roles: ['investigador'] },
+    { id: 'analisis', icon: 'potted_plant', label: 'Análisis de Cultivos', path: '/investigador/analisis', roles: ['investigador', 'productor'] },
+    { id: 'sensores', icon: 'sensors', label: 'Sensores IoT', path: '#', roles: ['investigador'] },
+    { id: 'ia', icon: 'psychology', label: 'IA Predictiva', path: '#', roles: ['investigador'] },
+    { id: 'reportes', icon: 'assessment', label: 'Reportes', path: '#', roles: ['investigador', 'productor'] },
+  ].filter(item => item.roles.includes(rol));
 
   const topNavItems = [
-    { id: 'metricas', label: 'Métricas del modelo' },
-    { id: 'historial', label: 'Historial de consultas' },
-    { id: 'exportar', label: 'Exportar datos' },
-  ];
+    { id: 'metricas', label: 'Métricas del modelo', roles: ['investigador'] },
+    { id: 'historial', label: 'Historial de consultas', roles: ['investigador', 'productor'] },
+    { id: 'exportar', label: 'Exportar datos', roles: ['investigador'] },
+  ].filter(item => item.roles.includes(rol));
 
   return (
     <div className={styles.dashboardLayout}>

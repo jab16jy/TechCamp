@@ -1,0 +1,81 @@
+.formContainer {
+  width: 100%;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .formGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.field label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--m3-on-surface);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.optional {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--m3-outline);
+}
+
+.field select,
+.field input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radio-md);
+  border: 1px solid var(--m3-outline-variant);
+  background-color: var(--blanco);
+  color: var(--m3-on-surface);
+  font-family: inherit;
+  font-size: 0.875rem;
+  transition: all var(--transicion);
+}
+
+.field select:focus,
+.field input:focus {
+  outline: none;
+  border-color: var(--m3-primary);
+  box-shadow: 0 0 0 3px var(--m3-primary-container);
+}
+
+.field select:disabled {
+  background-color: var(--m3-surface-container-low);
+  cursor: not-allowed;
+}
+
+.toggleGroup {
+  display: flex;
+  gap: 1rem;
+  padding: 0.25rem 0;
+}
+
+.toggleOption {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.toggleOption input {
+  width: 1.25rem;
+  height: 1.25rem;
+  cursor: pointer;
+}

@@ -19,9 +19,7 @@ import Toast from './components/Toast/Toast';
 
 // Páginas del flujo principal (con Navbar/Footer)
 import Home from './pages/Home/Home';
-import Consulta from './pages/Consulta/Consulta';
 import Resultado from './pages/Resultado/Resultado';
-import Historial from './pages/Historial/Historial';
 
 // ── Nuevas páginas de acceso y panel investigador ──
 import Acceso from './pages/Acceso/Acceso';
@@ -48,22 +46,16 @@ const App = () => (
       <Route path="/" element={<Acceso />} />
 
       {/* ── Rutas del investigador (sin Navbar/Footer, tienen su propio layout) ── */}
-      <Route path="/investigador/login"     element={<LoginInvestigador />} />
+      <Route path="/investigador/login" element={<LoginInvestigador />} />
       <Route path="/investigador/dashboard" element={<DashboardInvestigador />} />
-      <Route path="/investigador/analisis"  element={<AnalisisCultivosInvestigador />} />
+      <Route path="/investigador/analisis" element={<AnalisisCultivosInvestigador />} />
 
-      {/* ── Rutas del app principal (con Navbar + Footer) ── */}
+      {/* ── Rutas compartidas (usadas por investigador y productor) ── */}
+      <Route path="/resultado" element={<Resultado />} />
+
+      {/* ── Rutas del app principal (Landing/Home) ── */}
       <Route path="/home" element={
         <LayoutApp><Home /></LayoutApp>
-      } />
-      <Route path="/consulta" element={
-        <LayoutApp><Consulta /></LayoutApp>
-      } />
-      <Route path="/resultado" element={
-        <LayoutApp><Resultado /></LayoutApp>
-      } />
-      <Route path="/historial" element={
-        <LayoutApp><Historial /></LayoutApp>
       } />
 
       {/* ── 404 ── */}

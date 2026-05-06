@@ -47,10 +47,16 @@ const Acceso = () => (
               Entra directo al mapa y descubre qué sembrar en tu parcela. Rápida, fácil y sin complicaciones.
             </p>
             <div className={styles.cardFooter}>
-              <Link to="/consulta" className={styles.btnProducer}>
+              <button 
+                onClick={() => {
+                  sessionStorage.setItem('rol', 'productor');
+                  window.location.href = '/investigador/analisis';
+                }} 
+                className={styles.btnProducer}
+              >
                 ¡Quiero saber qué sembrar!
                 <span className={`material-symbols-outlined ${styles.btnIcon}`}>arrow_forward</span>
-              </Link>
+              </button>
             </div>
           </div>
         </div>

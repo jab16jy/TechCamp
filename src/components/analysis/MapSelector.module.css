@@ -1,0 +1,55 @@
+.mapContainer {
+  width: 100%;
+  position: relative;
+  border-radius: var(--radio-md);
+  overflow: hidden;
+  border: 1px solid var(--m3-outline-variant);
+  box-shadow: var(--sombra-sm);
+}
+
+.coordsBadge {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  right: 1rem;
+  background-color: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(8px);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radio-md);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  z-index: 1000;
+  border: 1px solid var(--m3-outline-variant);
+  box-shadow: var(--sombra-md);
+}
+
+.coordsIcon {
+  width: 2.5rem;
+  height: 2.5rem;
+  background-color: var(--m3-primary-container);
+  color: var(--m3-on-primary-container);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.coordsText {
+  display: flex;
+  flex-direction: column;
+}
+
+.coordsLabel {
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--m3-outline);
+  font-weight: 700;
+}
+
+.coordsValue {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--m3-primary);
+}
