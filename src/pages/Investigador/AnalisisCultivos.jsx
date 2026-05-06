@@ -59,7 +59,12 @@ const AnalisisCultivos = () => {
       const resultado = await AnalysisService.performAnalysis(formulario);
       setResultado(resultado);
       agregarToast('Análisis completado exitosamente', 'success');
-      navigate('/resultado');
+      
+      if (mode === 'advanced') {
+        navigate('/investigador/resultado-avanzado');
+      } else {
+        navigate('/resultado');
+      }
     } catch (error) {
       agregarToast('Error al procesar el análisis. Inténtalo de nuevo.', 'error');
     } finally {

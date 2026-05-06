@@ -114,7 +114,7 @@ const ResearcherLayout = ({ children, activeTab, onTabChange }) => {
               <Link 
                 key={item.id}
                 to={item.path} 
-                className={`${styles.sidebarNavItem} ${location.pathname === item.path ? styles.sidebarNavItemActive : ''}`}
+                className={`${styles.sidebarNavItem} ${location.pathname === item.path || activeTab === item.id ? styles.sidebarNavItemActive : ''}`}
               >
                 <span className="material-symbols-outlined">{item.icon}</span>
                 <span>{item.label}</span>
