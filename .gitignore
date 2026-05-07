@@ -1,1 +1,8 @@
 .agents/
+.agent/
+scratch/
+node_modules/
+dist/
+.env
+.env.local
+.env.*.local
