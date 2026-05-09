@@ -3,7 +3,12 @@
 Bienvenido a la documentación técnica y de diseño de AgroCaribe IA. Aquí encontrarás los detalles sobre la arquitectura, el flujo de datos y la implementación de los modelos de inteligencia artificial.
 
 ## Índice de Contenidos
+
 - [Documentación Inicial (Diseño y Desarrollo)](./diseño-desarrollo/DOCUMENTACION_INICIAL.md): Visión general, arquitectura técnica, requerimientos y fases de implementación.
+
+- [Fase de Diseño: Arquitectura y Estrategia](./diseño/DOCUMENTACION_INICIAL.md): Visión general, flujo de trabajo (Flowchart) y fuentes de datos (NASA/Sentinel).
+- [Fase de Desarrollo: IA Predictiva](./desarrollo/IA_PREDICTIVA.md): Implementación del modelo de predicción, Agro-Asesor y simulador de escenarios.
+
 - [Troubleshooting (Frontend)](./FRONT/TROUBLESHOOTING.md): Guía de resolución de problemas para la interfaz web.
 
 ## Objetivos del Proyecto
