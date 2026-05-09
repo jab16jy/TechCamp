@@ -27,6 +27,7 @@ import LoginInvestigador from './pages/Investigador/LoginInvestigador';
 import DashboardInvestigador from './pages/Investigador/DashboardInvestigador';
 import AnalisisCultivosInvestigador from './pages/Investigador/AnalisisCultivos';
 import ResultadoAvanzado from './pages/Investigador/ResultadoAvanzado';
+import IAPredictiva from './pages/Investigador/IAPredictiva';
 
 // ── Layout con Navbar + Footer (para las páginas del app) ──
 const LayoutApp = ({ children }) => (
@@ -51,6 +52,7 @@ const App = () => (
       <Route path="/investigador/dashboard" element={<DashboardInvestigador />} />
       <Route path="/investigador/analisis" element={<AnalisisCultivosInvestigador />} />
       <Route path="/investigador/resultado-avanzado" element={<ResultadoAvanzado />} />
+      <Route path="/investigador/ia" element={<IAPredictiva />} />
 
       {/* ── Rutas compartidas (usadas por investigador y productor) ── */}
       <Route path="/resultado" element={<Resultado />} />
