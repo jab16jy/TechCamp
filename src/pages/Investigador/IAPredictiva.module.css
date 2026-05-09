@@ -425,8 +425,8 @@
   font-size: 120px;
 }
 
-.promoTitle { font-size: 1.125rem; font-weight: 700; line-height: 1.2; margin: 0; }
-.promoText { font-size: 0.875rem; opacity: 0.9; margin: 0; }
+.promoTitle { font-size: 1.125rem; font-weight: 700; line-height: 1.2; margin: 0; color: #ffffff; }
+.promoText { font-size: 0.875rem; color: #ffffff; opacity: 1; margin: 0; }
 .promoBtn {
   background-color: var(--m3-on-primary-container);
   color: var(--m3-primary-container);

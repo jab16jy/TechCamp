@@ -26,7 +26,7 @@ const ResearcherLayout = ({ children, activeTab, onTabChange }) => {
   const menuItems = [
     { id: 'dashboard', icon: 'dashboard', label: 'Dashboard', path: '/investigador/dashboard', roles: ['investigador'] },
     { id: 'analisis', icon: 'potted_plant', label: 'Análisis de Cultivos', path: '/investigador/analisis', roles: ['investigador', 'productor'] },
-    { id: 'sensores', icon: 'sensors', label: 'Sensores IoT', path: '#', roles: ['investigador'] },
+    { id: 'sensores', icon: 'sensors', label: 'Sensores IoT', path: '/investigador/sensores', roles: ['investigador'] },
     { id: 'ia', icon: 'psychology', label: 'IA Predictiva', path: '/investigador/ia', roles: ['investigador'] },
     { id: 'reportes', icon: 'assessment', label: 'Reportes', path: '#', roles: ['investigador', 'productor'] },
   ].filter(item => item.roles.includes(rol));
