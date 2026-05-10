@@ -87,7 +87,10 @@ El backend utiliza la ubicación para consultar NASA POWER en un rango de fechas
 ### Módulo 4: Motor de Recomendación
 Corazón del sistema que utiliza un **modelo híbrido**:
 1.  **Reglas Agronómicas:** Validación de rangos óptimos para cultivos específicos (ej. Maíz: 24-30°C).
-2.  **Scoring & IA:** Modelo de clasificación (Random Forest / Decision Tree) para calcular el puntaje de compatibilidad.
+2.  **Scoring & IA (Random Forest):** 
+    *   **Sinopsis:** Se utiliza el algoritmo de **Random Forest** (Bosques Aleatorios) para la clasificación de aptitud. Este modelo combina múltiples árboles de decisión para reducir el riesgo de sobreajuste y proporcionar una "Importancia de Variables", permitiendo identificar si el clima o el suelo están afectando más la recomendación.
+    *   **Estado en Prototipado:** En la fase actual de **Prototipo (MVP)**, la lógica del modelo está *simulada* mediante funciones de puntuación estáticas (mock data) para validar la experiencia de usuario. La integración del modelo entrenado con datos reales se realizará en la **Fase 2**.
+
 
 ---
 
@@ -120,7 +123,7 @@ agro-recommender-api/
 ---
 
 ## 6. Hoja de Ruta (Roadmap MVP)
-1.  **MVP Funcional:** Selección de municipio → Consulta NASA POWER → Carga de NDVI pre-procesado → Recomendación por reglas básicas.
-2.  **Fase 2:** Integración de modelo de Machine Learning entrenado.
+1.  **MVP Funcional (Fase 1):** Selección de municipio → Consulta NASA POWER → Carga de NDVI pre-procesado → Recomendación por reglas básicas y lógica mock de IA.
+2.  **Fase 2 (IA Integrada):** Entrenamiento e integración del modelo **Random Forest** con datasets históricos regionales.
 3.  **Fase 3:** Mapas de calor de rendimiento e historial de consultas persistente.
 4.  **Fase 4:** Descarga de reportes técnicos en PDF.

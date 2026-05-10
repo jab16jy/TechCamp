@@ -29,7 +29,7 @@ import AnalisisCultivosInvestigador from './pages/Investigador/AnalisisCultivos'
 import ResultadoAvanzado from './pages/Investigador/ResultadoAvanzado';
 import IAPredictiva from './pages/Investigador/IAPredictiva';
 import SensoresIoT from './pages/Investigador/SensoresIoT';
-
+import GestionReportes from './pages/Investigador/GestionReportes';
 // ── Layout con Navbar + Footer (para las páginas del app) ──
 const LayoutApp = ({ children }) => (
   <>
@@ -55,6 +55,7 @@ const App = () => (
       <Route path="/investigador/resultado-avanzado" element={<ResultadoAvanzado />} />
       <Route path="/investigador/ia" element={<IAPredictiva />} />
       <Route path="/investigador/sensores" element={<SensoresIoT />} />
+      <Route path="/investigador/reportes" element={<GestionReportes />} />
 
       {/* ── Rutas compartidas (usadas por investigador y productor) ── */}
       <Route path="/resultado" element={<Resultado />} />

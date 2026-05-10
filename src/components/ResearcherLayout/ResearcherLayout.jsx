@@ -28,7 +28,7 @@ const ResearcherLayout = ({ children, activeTab, onTabChange }) => {
     { id: 'analisis', icon: 'potted_plant', label: 'Análisis de Cultivos', path: '/investigador/analisis', roles: ['investigador', 'productor'] },
     { id: 'sensores', icon: 'sensors', label: 'Sensores IoT', path: '/investigador/sensores', roles: ['investigador'] },
     { id: 'ia', icon: 'psychology', label: 'IA Predictiva', path: '/investigador/ia', roles: ['investigador'] },
-    { id: 'reportes', icon: 'assessment', label: 'Reportes', path: '#', roles: ['investigador', 'productor'] },
+    { id: 'reportes', icon: 'assessment', label: 'Reportes', path: '/investigador/reportes', roles: ['investigador', 'productor'] },
   ].filter(item => item.roles.includes(rol));
 
   let topNavItems = [];
