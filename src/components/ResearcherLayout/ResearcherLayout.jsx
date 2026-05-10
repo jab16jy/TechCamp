@@ -35,6 +35,7 @@ const ResearcherLayout = ({ children, activeTab, onTabChange }) => {
   
   if (location.pathname === '/investigador/dashboard') {
     topNavItems = [
+      { id: 'asesor', label: 'Centro de Mando', roles: ['investigador'] },
       { id: 'metricas', label: 'Métricas del modelo', roles: ['investigador'] },
       { id: 'exportar', label: 'Exportar datos', roles: ['investigador'] },
     ].filter(item => item.roles.includes(rol));

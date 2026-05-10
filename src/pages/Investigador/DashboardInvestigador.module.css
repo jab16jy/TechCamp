@@ -1290,3 +1290,442 @@
   line-height: 1.6;
 }
 
+/* ── Asesor Layout (Stitch Premium) ── */
+.asesorGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  height: calc(100vh - 120px);
+}
+@media (min-width: 1024px) {
+  .asesorGrid {
+    grid-template-columns: 2.5fr 1fr;
+  }
+}
+
+.chatSection, .controlSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.chatContainer {
+  position: relative;
+  background-color: var(--m3-surface-container-lowest);
+  border-radius: 24px;
+  border: 1px solid var(--m3-surface-container);
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.grainyBg {
+  position: absolute;
+  inset: 0;
+  opacity: 0.05;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+.chatHeader {
+  padding: 1.5rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--m3-surface-container);
+  background-color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  z-index: 10;
+}
+
+.chatHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.botAvatar {
+  width: 48px;
+  height: 48px;
+  background-color: var(--m3-primary);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(21, 66, 18, 0.2);
+}
+
+.botAvatar span {
+  color: white;
+}
+
+.botTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--m3-primary);
+  margin: 0 0 0.25rem 0;
+}
+
+.botStatus {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--m3-outline);
+  margin: 0;
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  background-color: #10b981;
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+}
+
+.chatHistory {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.chatMessageWrapper {
+  display: flex;
+  gap: 1rem;
+  max-width: 85%;
+}
+
+.chatIconBox {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--m3-secondary-container);
+  color: var(--m3-on-secondary-container);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.chatMessageBubble {
+  background-color: var(--m3-surface-container-low);
+  padding: 1.5rem;
+  border-radius: 20px;
+  border-top-left-radius: 0;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+}
+
+.chatMessageBubble p {
+  margin: 0;
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  color: var(--m3-on-surface);
+}
+
+.chatTime {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--m3-outline);
+  margin-top: 1rem;
+  letter-spacing: 0.05em;
+}
+
+.chatFooter {
+  padding: 1.5rem 2rem;
+  background-color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid var(--m3-surface-container);
+  z-index: 10;
+}
+
+.quickSuggestions {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+.suggestionBtn {
+  white-space: nowrap;
+  padding: 0.5rem 1rem;
+  background-color: transparent;
+  border: 1px solid var(--m3-outline-variant);
+  border-radius: 999px;
+  font-size: 0.875rem;
+  color: var(--m3-primary);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.suggestionBtn:hover {
+  background-color: var(--m3-surface-container);
+  border-color: var(--m3-primary);
+}
+
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.chatInput {
+  width: 100%;
+  padding: 1rem 4rem 1rem 1.5rem;
+  border-radius: 16px;
+  border: 1px solid var(--m3-outline-variant);
+  background-color: var(--m3-surface-container-lowest);
+  font-size: 1rem;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+  transition: border-color 0.2s;
+}
+
+.chatInput:focus {
+  outline: none;
+  border-color: var(--m3-primary);
+}
+
+.inputActions {
+  position: absolute;
+  right: 0.75rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.iconBtn {
+  background: none;
+  border: none;
+  color: var(--m3-outline);
+  padding: 0.5rem;
+  cursor: pointer;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s, background-color 0.2s;
+}
+.iconBtn:hover {
+  background-color: var(--m3-surface-container);
+  color: var(--m3-primary);
+}
+
+.sendBtn {
+  background-color: var(--m3-primary);
+  color: white;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(21, 66, 18, 0.3);
+  transition: transform 0.2s, opacity 0.2s;
+}
+.sendBtn:hover {
+  transform: translateY(-2px);
+  opacity: 0.95;
+}
+
+/* Control Panel Sidebar */
+.controlCard {
+  background-color: var(--m3-surface-container-lowest);
+  border-radius: 20px;
+  padding: 1.5rem;
+  border: 1px solid var(--m3-surface-container);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+}
+
+.controlTitle {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--m3-primary);
+  margin: 0 0 1.5rem 0;
+}
+
+.gaugeRelative {
+  position: relative;
+  width: 192px;
+  height: 192px;
+  margin: 0 auto;
+}
+
+.gaugeSvg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.gaugeBgCircle {
+  stroke: var(--m3-surface-container);
+}
+
+.gaugeFillCircle {
+  stroke: #10b981;
+  transition: stroke-dashoffset 1s ease-out;
+}
+
+.gaugeCenter {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.gaugeValue {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--m3-on-surface);
+  line-height: 1;
+}
+
+.gaugeLabel {
+  font-size: 0.875rem;
+  color: var(--m3-outline);
+  margin-top: 0.25rem;
+}
+
+.miniMetricsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.miniMetric {
+  background-color: var(--m3-surface-container-low);
+  padding: 1rem;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.miniMetricLabel {
+  font-size: 0.75rem;
+  color: var(--m3-outline);
+  text-transform: uppercase;
+  margin: 0 0 0.5rem 0;
+}
+
+.miniMetricValue {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--m3-primary);
+  margin: 0;
+}
+
+.actionsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.actionItemBtn {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 1rem;
+  background-color: var(--m3-surface-container-lowest);
+  border: 1px solid var(--m3-outline-variant);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.actionItemBtn:hover {
+  border-color: var(--m3-primary);
+  background-color: var(--m3-surface-container-low);
+}
+
+.actionItemLeft {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-weight: 600;
+  color: var(--m3-on-surface);
+  font-size: 0.9375rem;
+}
+
+.actionItemLeft span:first-child {
+  color: var(--m3-primary);
+}
+
+.fieldPreviewCard {
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid var(--m3-surface-container);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+}
+
+.fieldImgWrapper {
+  position: relative;
+  height: 160px;
+}
+
+.fieldImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fieldImgOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+}
+
+.fieldImgText {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.fieldStatus {
+  background-color: var(--m3-surface-container-lowest);
+  padding: 1.5rem;
+}
+
+.fieldStatusHeader {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.fieldStatusTitle {
+  font-weight: 600;
+  color: var(--m3-on-surface);
+  font-size: 0.875rem;
+}
+
+.fieldStatusValue {
+  font-weight: 700;
+  color: var(--m3-secondary);
+  font-size: 0.875rem;
+}
+
+.fieldStatusTrack {
+  height: 6px;
+  background-color: var(--m3-surface-container);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.fieldStatusFill {
+  height: 100%;
+  background-color: var(--m3-secondary);
+}

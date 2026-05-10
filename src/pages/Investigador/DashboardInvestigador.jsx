@@ -39,7 +39,7 @@ const EXPORTACIONES = [
 
 const DashboardInvestigador = () => {
   const navigate = useNavigate();
-  const [tabActiva, setTabActiva] = useState('metricas');
+  const [tabActiva, setTabActiva] = useState('asesor');
   const agregarToast = useAppStore((s) => s.agregarToast);
 
   // ── Simular exportación ──
@@ -50,6 +50,135 @@ const DashboardInvestigador = () => {
   return (
     <ResearcherLayout activeTab={tabActiva} onTabChange={setTabActiva}>
       {/* ── SECCIÓN: Métricas del modelo ── */}
+
+          {tabActiva === 'asesor' && (
+            <div className={styles.asesorGrid}>
+              {/* 70% Chatbot Area */}
+              <section className={styles.chatSection}>
+                <div className={styles.chatContainer}>
+                  {/* Subtle Grain Overlay */}
+                  <div className={styles.grainyBg}></div>
+                  {/* Chat Header */}
+                  <div className={styles.chatHeader}>
+                    <div className={styles.chatHeaderLeft}>
+                      <div className={styles.botAvatar}>
+                        <span className="material-symbols-outlined text-on-primary">smart_toy</span>
+                      </div>
+                      <div>
+                        <h3 className={styles.botTitle}>Agro-Asesor Inteligente</h3>
+                        <p className={styles.botStatus}>
+                          <span className={styles.statusDot}></span> En línea • Modelo v4.2 Pro
+                        </p>
+                      </div>
+                    </div>
+                    <span className="material-symbols-outlined cursor-pointer">more_vert</span>
+                  </div>
+                  {/* Chat History */}
+                  <div className={styles.chatHistory}>
+                    <div className={styles.chatMessageWrapper}>
+                      <div className={styles.chatIconBox}>
+                        <span className="material-symbols-outlined">auto_awesome</span>
+                      </div>
+                      <div className={styles.chatMessageBubble}>
+                        <p>Hola, he analizado los datos de Sentinel-2 y tus sensores IoT. Hoy la humedad en Turbaco está en niveles óptimos (28%). ¿En qué puedo ayudarte?</p>
+                        <span className={styles.chatTime}>10:24 AM • PROCESADO POR IA</span>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Chat Footer / Input */}
+                  <div className={styles.chatFooter}>
+                    {/* Quick Suggestions */}
+                    <div className={styles.quickSuggestions}>
+                      <button className={styles.suggestionBtn}>Ver riesgos climáticos</button>
+                      <button className={styles.suggestionBtn}>Estado de sensores</button>
+                      <button className={styles.suggestionBtn}>Optimizar fertilización</button>
+                    </div>
+                    <div className={styles.inputWrapper}>
+                      <input className={styles.chatInput} placeholder="Pregúntale a la IA sobre tus cultivos..." type="text"/>
+                      <div className={styles.inputActions}>
+                        <button className={styles.iconBtn}>
+                          <span className="material-symbols-outlined">mic</span>
+                        </button>
+                        <button className={styles.sendBtn}>
+                          <span className="material-symbols-outlined">send</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* 30% Panel Control Técnico */}
+              <section className={styles.controlSection}>
+                {/* Metrics Card */}
+                <div className={styles.controlCard}>
+                  <h4 className={styles.controlTitle}>Salud del Modelo IA</h4>
+                  <div className={styles.gaugeRelative}>
+                    {/* SVG Gauge */}
+                    <svg className={styles.gaugeSvg}>
+                      <circle className={styles.gaugeBgCircle} cx="96" cy="96" r="88" strokeWidth="12" fill="transparent"></circle>
+                      <circle className={styles.gaugeFillCircle} cx="96" cy="96" r="88" strokeWidth="12" fill="transparent" strokeDasharray="552.92" strokeDashoffset="32" strokeLinecap="round"></circle>
+                    </svg>
+                    <div className={styles.gaugeCenter}>
+                      <span className={styles.gaugeValue}>94.2%</span>
+                      <span className={styles.gaugeLabel}>Precisión</span>
+                    </div>
+                  </div>
+                  <div className={styles.miniMetricsGrid}>
+                    <div className={styles.miniMetric}>
+                      <p className={styles.miniMetricLabel}>Latencia</p>
+                      <p className={styles.miniMetricValue}>124ms</p>
+                    </div>
+                    <div className={styles.miniMetric}>
+                      <p className={styles.miniMetricLabel}>Confianza</p>
+                      <p className={styles.miniMetricValue}>Alta</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Quick Actions */}
+                <div className={styles.controlCard}>
+                  <h4 className={styles.controlTitle}>Acciones Rápidas</h4>
+                  <div className={styles.actionsList}>
+                    <button className={styles.actionItemBtn} onClick={() => setTabActiva('exportar')}>
+                      <div className={styles.actionItemLeft}>
+                        <span className="material-symbols-outlined text-primary">description</span>
+                        <span>Exportar Reporte General</span>
+                      </div>
+                      <span className="material-symbols-outlined">chevron_right</span>
+                    </button>
+                    <button className={styles.actionItemBtn} onClick={() => setTabActiva('metricas')}>
+                      <div className={styles.actionItemLeft}>
+                        <span className="material-symbols-outlined text-primary">model_training</span>
+                        <span>Métricas de entrenamiento</span>
+                      </div>
+                      <span className="material-symbols-outlined">chevron_right</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Field View Preview */}
+                <div className={styles.fieldPreviewCard}>
+                  <div className={styles.fieldImgWrapper}>
+                    <img className={styles.fieldImg} src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkRiuTuLPfG1E0Kzq99oA_lQTXVQdYEZsGjaFKXaFNLvQO56A3VbxQzWwCGNIez9PMGvlo0vqrpKvsd1yGeYr5Mq3ix9QSDslr8inZk8fWjkupEsxFs-zm3dt8U-80uQm3ROCsg9UN-xIwBICc0egrcmZCBIdy5J3WKroTzN98Row2QT7uC5jV-rGdhI_X92Riln0ric69xD3F6YWVbsteTddQMBv360q2aOwP0eT755s4QU1xPXeWzs7xU-Fo0kbB0vep2AAVyUE" alt="Field"/>
+                    <div className={styles.fieldImgOverlay}></div>
+                    <div className={styles.fieldImgText}>
+                      <span className="material-symbols-outlined">location_on</span> Sector Norte, Turbaco
+                    </div>
+                  </div>
+                  <div className={styles.fieldStatus}>
+                    <div className={styles.fieldStatusHeader}>
+                      <span className={styles.fieldStatusTitle}>Estado de Suelo</span>
+                      <span className={styles.fieldStatusValue}>28% Humedad</span>
+                    </div>
+                    <div className={styles.fieldStatusTrack}>
+                      <div className={styles.fieldStatusFill} style={{ width: '28%' }}></div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </div>
+          )}
 
           {tabActiva === 'metricas' && (
             <div className={styles.metricasSection}>
