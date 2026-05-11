@@ -1,502 +1,365 @@
 // ============================================================
-// DashboardInvestigador.jsx — Centro de Mando AgroCaribe IA
-// Diseño: Scientific Brutalist Precision | Bento-Grid
+// DashboardInvestigador.jsx — Hub de Actualizaciones AgroCaribe IA
+// Layout: Bento-Grid responsive de alta densidad informativa
 // ============================================================
-
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Circle, LayersControl } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import useAppStore from '../../context/useAppStore';
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import ResearcherLayout from '../../components/ResearcherLayout/ResearcherLayout';
-import styles from './DashboardInvestigador.module.css';
+import {
+  BrainCircuit, Leaf, Zap, Thermometer, Droplets, Wind, Sun,
+  TrendingUp, TrendingDown, AlertTriangle, CheckCircle2,
+  MapPin, Radio, FileText, ArrowRight, Sprout, FlaskConical,
+  Activity, RefreshCw,
+} from 'lucide-react';
 
-// Fix Leaflet default icon
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-});
-
-// ── IoT Node Icon ──────────────────────────────────────────
-const iotIcon = L.divIcon({
-  className: '',
-  html: `<div style="
-    width:14px;height:14px;border-radius:50%;
-    background:#10b981;border:2px solid #fff;
-    box-shadow:0 0 0 3px rgba(16,185,129,0.35);
-    animation: pulse-iot 2s ease-in-out infinite;
-  "></div>`,
-  iconSize: [14, 14],
-  iconAnchor: [7, 7],
-});
-
-// ── Datos Estáticos ───────────────────────────────────────
-const IOT_NODES = [
-  { id: 'N01', lat: 10.383, lng: -75.477, nombre: 'Nodo Norte-01', hum: 72, temp: 28.4 },
-  { id: 'N02', lat: 10.371, lng: -75.461, nombre: 'Nodo Sur-02',   hum: 61, temp: 29.8 },
-  { id: 'N03', lat: 10.377, lng: -75.450, nombre: 'Nodo Este-03',  hum: 55, temp: 31.2 },
+// ── Static demo data ────────────────────────────────────────
+const FIELD_UPDATES = [
+  { id: 'u1', lote: 'Lote A – Norte',   status: 'ok',   msg: 'Humedad estable al 74%. Sin intervención necesaria.',              icon: <Droplets size={14} />,     time: '5 min ago',  color: 'emerald' },
+  { id: 'u2', lote: 'Sector Este – B2', status: 'warn', msg: 'Temperatura en ascenso: 31.2°C. Riesgo moderado de estrés térmico.', icon: <Thermometer size={14} />,  time: '12 min ago', color: 'amber'   },
+  { id: 'u3', lote: 'Lote C – Sur',     status: 'ok',   msg: 'NDVI 0.71 — Salud foliar en rango óptimo (0.65–0.80).',             icon: <Leaf size={14} />,         time: '28 min ago', color: 'emerald' },
+  { id: 'u4', lote: 'Nodo S-04 – B',    status: 'alert',msg: 'Humedad de suelo crítica: 34%. Activar riego en próximas 2 horas.',  icon: <AlertTriangle size={14} />, time: '1 h ago',    color: 'red'    },
+  { id: 'u5', lote: 'Sentinel-2 Sync',  status: 'ok',   msg: 'Nuevas imágenes NDVI disponibles. Análisis de cobertura completado.', icon: <Radio size={14} />,        time: '2 h ago',    color: 'blue'   },
 ];
 
-const SUGERENCIAS = [
-  { icono: 'cloud_alert',       texto: 'Riesgos climáticos' },
-  { icono: 'science',           texto: 'Optimizar fertilización' },
-  { icono: 'satellite_alt',     texto: 'Ver mapas NDVI' },
-  { icono: 'water_drop',        texto: 'Estado de riego' },
+const AI_METRICS = [
+  { label: 'Precisión del Modelo', value: '94.2%', delta: '+1.3%', up: true,  icon: <BrainCircuit size={18} />, color: 'emerald' },
+  { label: 'Latencia de Inferencia', value: '124 ms', delta: '-8ms',  up: true,  icon: <Zap size={18} />,          color: 'blue'    },
+  { label: 'Muestras Procesadas',  value: '12,847', delta: '+247',  up: true,  icon: <Activity size={18} />,     color: 'purple'  },
+  { label: 'Alertas Activas',      value: '3',      delta: '+1',    up: false, icon: <AlertTriangle size={18} />, color: 'amber'  },
 ];
 
-const CHAT_INICIAL = [
-  {
-    rol: 'ia',
-    texto: 'He sincronizado los últimos datos de **Sentinel-2** y tus sensores. 🛰️\n\nEl NDVI en Sector Norte es **0.73** (salud foliar óptima). Detecto una anomalía térmica leve en el Nodo Este-03. ¿Analizamos el riesgo de estrés hídrico?',
-    hora: '10:24 AM',
-  },
-  {
-    rol: 'usuario',
-    texto: '¿Cuál es la recomendación de fertilización para el lote B?',
-    hora: '10:26 AM',
-  },
-  {
-    rol: 'ia',
-    texto: 'Para el **Lote B** recomiendo:\n- **N:** +12 kg/ha (déficit detectado)\n- **P:** Nivel adecuado ✅\n- **K:** +5 kg/ha (leve déficit)\n\nAplicar en las próximas 48h antes del frente de lluvia previsto.',
-    hora: '10:26 AM',
-  },
+const WEATHER = [
+  { label: 'Temperatura', value: '28.6°C', icon: <Thermometer size={15} className="text-amber-500" /> },
+  { label: 'Humedad',     value: '72%',    icon: <Droplets size={15} className="text-blue-500" />     },
+  { label: 'Viento',      value: '12 km/h',icon: <Wind size={15} className="text-slate-400" />        },
+  { label: 'Radiación',   value: '847 W/m²',icon: <Sun size={15} className="text-yellow-500" />      },
 ];
 
-// ── Radar Nutricional SVG ─────────────────────────────────
-const RadarNutricional = ({ actual, objetivo }) => {
-  const cx = 100, cy = 100, r = 75;
-  const labels = ['N', 'P', 'K', 'Ca', 'Mg', 'S'];
-  const n = labels.length;
-
-  const polarToXY = (angle, radius) => ({
-    x: cx + radius * Math.sin(angle),
-    y: cy - radius * Math.cos(angle),
-  });
-
-  const makePolygon = (values) =>
-    values
-      .map((v, i) => {
-        const pt = polarToXY((2 * Math.PI * i) / n, (v / 100) * r);
-        return `${pt.x},${pt.y}`;
-      })
-      .join(' ');
-
-  return (
-    <svg viewBox="0 0 200 200" className={styles.radarSvg}>
-      {/* Grid rings */}
-      {[25, 50, 75, 100].map((pct) => (
-        <polygon
-          key={pct}
-          points={makePolygon(Array(n).fill(pct))}
-          fill="none"
-          stroke="rgba(100,116,139,0.2)"
-          strokeWidth="0.8"
-        />
-      ))}
-      {/* Axes */}
-      {labels.map((_, i) => {
-        const end = polarToXY((2 * Math.PI * i) / n, r);
-        return <line key={i} x1={cx} y1={cy} x2={end.x} y2={end.y} stroke="rgba(100,116,139,0.25)" strokeWidth="0.8" />;
-      })}
-      {/* Objetivo */}
-      <polygon
-        points={makePolygon(objetivo)}
-        fill="rgba(16,185,129,0.08)"
-        stroke="rgba(16,185,129,0.5)"
-        strokeWidth="1.5"
-        strokeDasharray="4 2"
-      />
-      {/* Actual */}
-      <polygon
-        points={makePolygon(actual)}
-        fill="rgba(16,185,129,0.2)"
-        stroke="#10b981"
-        strokeWidth="2"
-      />
-      {/* Labels */}
-      {labels.map((label, i) => {
-        const pt = polarToXY((2 * Math.PI * i) / n, r + 12);
-        return (
-          <text key={i} x={pt.x} y={pt.y} textAnchor="middle" dominantBaseline="middle" className={styles.radarLabel}>
-            {label}
-          </text>
-        );
-      })}
-    </svg>
-  );
+const TOP_CROP = {
+  nombre: 'Maíz Amarillo',
+  score: 89,
+  riesgo: 'Bajo',
+  justificacion: 'Condiciones de humedad (72%), temperatura (28.6°C) y NDVI (0.73) óptimas para inicio de ciclo. Suelo con alta conductividad y sin riesgo de encharcamiento.',
+  tips: [
+    'Aplicar fertilización nitrogenada (+12 kg N/ha) en las próximas 48 horas.',
+    'Mantener riego por goteo a 65% de capacidad de campo.',
+    'Monitorear Nodo S-04 — posible déficit hídrico localizado.',
+  ],
+  icon: '🌽',
 };
 
-// ── Gauge OEE ────────────────────────────────────────────
-const GaugeOEE = ({ valor = 82 }) => {
-  const angulo = -120 + (valor / 100) * 240;
-  const r = 52, cx = 70, cy = 70;
-  const arcLength = (240 / 360) * 2 * Math.PI * r;
-  const offset = arcLength - (valor / 100) * arcLength;
-
-  const color = valor >= 80 ? '#10b981' : valor >= 60 ? '#f59e0b' : '#ef4444';
-
-  return (
-    <svg viewBox="0 0 140 100" className={styles.gaugeSvg}>
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(100,116,139,0.15)" strokeWidth="10"
-        strokeDasharray={`${(240 / 360) * 2 * Math.PI * r} ${2 * Math.PI * r}`}
-        strokeDashoffset={0}
-        transform={`rotate(150 ${cx} ${cy})`}
-        strokeLinecap="round"
-      />
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke={color} strokeWidth="10"
-        strokeDasharray={`${(240 / 360) * 2 * Math.PI * r} ${2 * Math.PI * r}`}
-        strokeDashoffset={offset}
-        transform={`rotate(150 ${cx} ${cy})`}
-        strokeLinecap="round"
-        style={{ transition: 'stroke-dashoffset 1s ease, stroke 0.5s ease' }}
-      />
-      <text x={cx} y={cy - 4} textAnchor="middle" className={styles.gaugeValue}>{valor}%</text>
-      <text x={cx} y={cy + 12} textAnchor="middle" className={styles.gaugeLabel}>OEE Parcela</text>
-    </svg>
-  );
-};
-
-// ── Sparkline SVG ─────────────────────────────────────────
-const Sparkline = ({ data, color = '#10b981' }) => {
-  const w = 80, h = 28;
+// ── Sparkline minimalista ────────────────────────────────────
+const MiniSparkline = ({ data, color = '#10b981' }) => {
+  const w = 60, h = 22;
   const min = Math.min(...data), max = Math.max(...data);
-  const pts = data
-    .map((v, i) => {
-      const x = (i / (data.length - 1)) * w;
-      const y = h - ((v - min) / (max - min + 0.001)) * h;
-      return `${x},${y}`;
-    })
-    .join(' ');
+  const pts = data.map((v, i) => {
+    const x = (i / (data.length - 1)) * w;
+    const y = h - ((v - min) / (max - min + 0.001)) * h;
+    return `${x},${y}`;
+  }).join(' ');
   return (
-    <svg width={w} height={h} className={styles.sparkline}>
+    <svg width={w} height={h}>
       <polyline points={pts} fill="none" stroke={color} strokeWidth="1.8" strokeLinejoin="round" />
     </svg>
   );
 };
 
-// ── Componente Principal ──────────────────────────────────
+// ── Progress ring ────────────────────────────────────────────
+const ScoreRing = ({ value }) => {
+  const r = 28, circ = 2 * Math.PI * r;
+  const offset = circ - (value / 100) * circ;
+  return (
+    <svg width="72" height="72" viewBox="0 0 72 72">
+      <circle cx="36" cy="36" r={r} fill="none" stroke="#e2e8f0" strokeWidth="6" />
+      <circle
+        cx="36" cy="36" r={r} fill="none"
+        stroke="#10b981" strokeWidth="6"
+        strokeDasharray={circ} strokeDashoffset={offset}
+        strokeLinecap="round"
+        transform="rotate(-90 36 36)"
+        style={{ transition: 'stroke-dashoffset 1s ease' }}
+      />
+      <text x="36" y="40" textAnchor="middle" fontSize="13" fontWeight="800" fill="#0f172a">{value}</text>
+    </svg>
+  );
+};
+
+const colorMap = {
+  emerald: { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700', dot: 'bg-emerald-500' },
+  amber:   { bg: 'bg-amber-50',   border: 'border-amber-200',   text: 'text-amber-700',   dot: 'bg-amber-500'   },
+  red:     { bg: 'bg-red-50',     border: 'border-red-200',     text: 'text-red-700',     dot: 'bg-red-500'     },
+  blue:    { bg: 'bg-blue-50',    border: 'border-blue-200',    text: 'text-blue-700',    dot: 'bg-blue-500'    },
+  purple:  { bg: 'bg-purple-50',  border: 'border-purple-200',  text: 'text-purple-700',  dot: 'bg-purple-500'  },
+};
+
+const card = 'bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300 transition-all';
+
+// ── Main Component ───────────────────────────────────────────
 const DashboardInvestigador = () => {
-  const agregarToast = useAppStore((s) => s.agregarToast);
-
-  // Chat state
-  const [mensajes, setMensajes] = useState(CHAT_INICIAL);
-  const [inputChat, setInputChat] = useState('');
-  const chatEndRef = useRef(null);
-
-  // Slider simulador
-  const [riego, setRiego] = useState(65);
-  const [fertilizacion, setFertilizacion] = useState(80);
-  const cosechaProyectada = (4.2 + (riego - 50) * 0.03 + (fertilizacion - 50) * 0.04).toFixed(1);
-
-  // Válvulas IoT
-  const [valvulas, setValvulas] = useState({ v1: true, v2: false, v3: true });
-
-  // Telemetría dinámica
-  const [telemetria, setTelemetria] = useState({
-    humedad: [68, 70, 72, 71, 69, 72, 74, 72],
-    temperatura: [27.8, 28.1, 28.4, 28.9, 29.1, 28.7, 28.4, 28.6],
+  const navigate = useNavigate();
+  const [sparkData] = useState({
+    acc:  [90.1, 91.8, 92.4, 93.0, 93.9, 94.2],
+    lat:  [148, 140, 136, 131, 127, 124],
+    proc: [12200, 12380, 12540, 12640, 12780, 12847],
   });
+  const [timestamp, setTimestamp] = useState(new Date());
 
-  // NPK actual vs objetivo
-  const [npkActual] = useState([72, 85, 68, 90, 60, 75]);
-  const [npkObjetivo] = useState([85, 85, 80, 90, 75, 80]);
-
-  // Telemetría simulada cada 4s
   useEffect(() => {
-    const id = setInterval(() => {
-      setTelemetria((prev) => ({
-        humedad: [...prev.humedad.slice(1), Math.round(65 + Math.random() * 15)],
-        temperatura: [...prev.temperatura.slice(1), +(27 + Math.random() * 4).toFixed(1)],
-      }));
-    }, 4000);
+    const id = setInterval(() => setTimestamp(new Date()), 60000);
     return () => clearInterval(id);
   }, []);
 
-  // Autoscroll chat
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [mensajes]);
-
-  const enviarMensaje = useCallback(() => {
-    if (!inputChat.trim()) return;
-    const nuevo = { rol: 'usuario', texto: inputChat, hora: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }) };
-    setMensajes((prev) => [...prev, nuevo]);
-    setInputChat('');
-    setTimeout(() => {
-      setMensajes((prev) => [
-        ...prev,
-        { rol: 'ia', texto: 'Procesando tu consulta con los datos satelitales más recientes… 🛰️ Dame un momento.', hora: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }) },
-      ]);
-    }, 1200);
-  }, [inputChat]);
-
-  const toggleValvula = (key) => {
-    setValvulas((prev) => {
-      const next = { ...prev, [key]: !prev[key] };
-      agregarToast(`Válvula ${key.toUpperCase()}: ${next[key] ? 'Abierta' : 'Cerrada'}`, next[key] ? 'success' : 'info');
-      return next;
-    });
-  };
+  const fadeUp = (delay = 0) => ({
+    initial: { opacity: 0, y: 16 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.4, delay, ease: 'easeOut' },
+  });
 
   return (
     <ResearcherLayout activeTab="dashboard">
-      <div className={styles.comandoWrapper}>
+      {/* Scroll sucede aquí ─ el parent tiene overflow-y-auto */}
+      <div className="p-6 space-y-6" style={{ fontFamily: "'DM Sans', sans-serif" }}>
 
-        {/* ══ COLUMNA IZQUIERDA: Copiloto IA ══════════════════════ */}
-        <aside className={styles.copiloColumn}>
-          {/* Header Agro-Asesor */}
-          <div className={styles.copiloHeader}>
-            <div className={styles.copiloAvatar}>
-              <span className="material-symbols-outlined">smart_toy</span>
-              <span className={styles.onlineIndicator} />
-            </div>
-            <div>
-              <p className={styles.copiloTitle}>Agro-Asesor</p>
-              <p className={styles.copiloStatus}>
-                <span className={styles.pulseDot} />
-                Conectado · Sentinel-2 activo
-              </p>
-            </div>
+        {/* ── TOP ROW: Timestamp + Refresh ── */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h2
+              className="text-xl font-black text-slate-800"
+              style={{ fontFamily: "'Montserrat', sans-serif" }}
+            >
+              Centro de Inteligencia
+            </h2>
+            <p className="text-[12px] text-slate-500 mt-0.5">
+              Última sincronización: {timestamp.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })} · Turbaco, Bolívar
+            </p>
           </div>
+          <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 text-[12px] font-bold transition-all">
+            <RefreshCw size={13} /> Actualizar
+          </button>
+        </div>
 
-          {/* Badges IA Metrics */}
-          <div className={styles.iaBadges}>
-            <span className={styles.badge}>
-              <span className="material-symbols-outlined" style={{ fontSize: '12px' }}>insights</span>
-              94.2% precisión
-            </span>
-            <span className={`${styles.badge} ${styles.badgeBlue}`}>
-              <span className="material-symbols-outlined" style={{ fontSize: '12px' }}>speed</span>
-              124ms
-            </span>
-          </div>
-
-          {/* Chat History */}
-          <div className={styles.chatHistory}>
-            {mensajes.map((msg, i) => (
-              <div key={i} className={`${styles.chatMsg} ${msg.rol === 'usuario' ? styles.chatMsgUser : styles.chatMsgIA}`}>
-                {msg.rol === 'ia' && (
-                  <div className={styles.chatAvatar}>
-                    <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>auto_awesome</span>
+        {/* ── AI HEALTH METRICS ── */}
+        <motion.div {...fadeUp(0)} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {AI_METRICS.map((m, i) => {
+            const c = colorMap[m.color];
+            const sparkColors = { emerald: '#10b981', blue: '#3b82f6', purple: '#8b5cf6', amber: '#f59e0b' };
+            const sparkSeries = [sparkData.acc, sparkData.lat, sparkData.proc, [1, 2, 1, 3, 2, 3]][i];
+            return (
+              <div key={i} className={`${card} p-4`}>
+                <div className="flex items-start justify-between mb-3">
+                  <div className={`p-2 rounded-xl ${c.bg} ${c.text}`}>{m.icon}</div>
+                  <div className={`flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${m.up ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
+                    {m.up ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
+                    {m.delta}
                   </div>
-                )}
-                <div className={styles.chatBubble}>
-                  <p dangerouslySetInnerHTML={{
-                    __html: msg.texto
-                      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                      .replace(/\n/g, '<br/>')
-                  }} />
-                  <span className={styles.chatHora}>{msg.hora}</span>
+                </div>
+                <p className="text-2xl font-black text-slate-800 leading-none">{m.value}</p>
+                <p className="text-[11px] text-slate-500 mt-1 font-medium">{m.label}</p>
+                <div className="mt-2">
+                  <MiniSparkline data={sparkSeries} color={sparkColors[m.color]} />
                 </div>
               </div>
-            ))}
-            <div ref={chatEndRef} />
-          </div>
+            );
+          })}
+        </motion.div>
 
-          {/* Sugerencias */}
-          <div className={styles.sugerenciasRow}>
-            {SUGERENCIAS.map((s, i) => (
-              <button
-                key={i}
-                className={styles.sugerenciaBtn}
-                onClick={() => setInputChat(s.texto)}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>{s.icono}</span>
-                {s.texto}
-              </button>
-            ))}
-          </div>
+        {/* ── BENTO MAIN GRID ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
-          {/* Input Chat */}
-          <div className={styles.chatInputRow}>
-            <input
-              type="text"
-              value={inputChat}
-              onChange={(e) => setInputChat(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && enviarMensaje()}
-              placeholder="Consulta al Agro-Asesor…"
-              className={styles.chatInput}
-            />
-            <button onClick={enviarMensaje} className={styles.chatSendBtn} aria-label="Enviar">
-              <span className="material-symbols-outlined">send</span>
-            </button>
-          </div>
-        </aside>
+          {/* LEFT: Recomendación Maestra — 2/3 width */}
+          <motion.div {...fadeUp(0.05)} className="lg:col-span-2 space-y-5">
 
-        {/* ══ COLUMNA CENTRAL: Mapa Maestro ═══════════════════════ */}
-        <section className={styles.mapColumn}>
-          {/* Overlay superior glassmorphism */}
-          <div className={styles.mapOverlayTop}>
-            <div className={styles.mapInfoChip}>
-              <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>satellite_alt</span>
-              Sector Norte · Turbaco, Bolívar
-            </div>
-            <div className={styles.mapInfoChip}>
-              <span className="material-symbols-outlined" style={{ fontSize: '14px', color: '#10b981' }}>eco</span>
-              NDVI: 0.73 · Salud óptima
-            </div>
-            <div className={styles.mapInfoChip}>
-              <span className="material-symbols-outlined" style={{ fontSize: '14px', color: '#f59e0b' }}>thermostat</span>
-              28.6°C · 72% HR
-            </div>
-          </div>
+            {/* Hero Card: ¿Qué plantar hoy? */}
+            <div className="bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-700 rounded-2xl p-6 text-white shadow-lg shadow-emerald-500/20 relative overflow-hidden">
+              {/* Decorative blob */}
+              <div className="absolute -top-8 -right-8 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+              <div className="absolute bottom-0 left-0 w-32 h-32 bg-black/10 rounded-full blur-3xl pointer-events-none" />
 
-          {/* Leaflet Map */}
-          <MapContainer
-            center={[10.377, -75.461]}
-            zoom={14}
-            className={styles.leafletMap}
-            zoomControl={false}
-          >
-            <LayersControl position="topright">
-              <LayersControl.BaseLayer checked name="Satélite">
-                <TileLayer
-                  url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                  attribution="Esri, Maxar, Earthstar Geographics"
-                />
-              </LayersControl.BaseLayer>
-              <LayersControl.BaseLayer name="Mapa estándar">
-                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-              </LayersControl.BaseLayer>
-            </LayersControl>
-
-            {/* NDVI Overlay (simulado con círculo coloreado) */}
-            <Circle
-              center={[10.377, -75.461]}
-              radius={600}
-              pathOptions={{ color: '#10b981', fillColor: '#10b981', fillOpacity: 0.18, weight: 1.5, dashArray: '6 4' }}
-            />
-            <Circle
-              center={[10.371, -75.450]}
-              radius={300}
-              pathOptions={{ color: '#f59e0b', fillColor: '#f59e0b', fillOpacity: 0.15, weight: 1.5 }}
-            />
-
-            {/* Nodos IoT */}
-            {IOT_NODES.map((node) => (
-              <Marker key={node.id} position={[node.lat, node.lng]} icon={iotIcon}>
-                <Popup className={styles.iotPopup}>
-                  <strong>{node.nombre}</strong><br />
-                  💧 Humedad: {node.hum}%<br />
-                  🌡️ Temp: {node.temp}°C
-                </Popup>
-              </Marker>
-            ))}
-          </MapContainer>
-
-          {/* Leyenda NDVI */}
-          <div className={styles.ndviLegend}>
-            <span className={styles.legendTitle}>NDVI</span>
-            <div className={styles.legendBar} />
-            <div className={styles.legendLabels}>
-              <span>0.0 Estrés</span>
-              <span>0.5</span>
-              <span>1.0 Óptimo</span>
-            </div>
-          </div>
-        </section>
-
-        {/* ══ COLUMNA DERECHA: Analítica ═══════════════════════════ */}
-        <aside className={styles.analyticsColumn}>
-
-          {/* GAUGE OEE */}
-          <div className={styles.analyticsCard}>
-            <p className={styles.cardLabel}>
-              <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>donut_large</span>
-              Eficiencia de Parcela
-            </p>
-            <GaugeOEE valor={82} />
-          </div>
-
-          {/* RADAR NPK */}
-          <div className={styles.analyticsCard}>
-            <div className={styles.cardLabelRow}>
-              <p className={styles.cardLabel}>
-                <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>radar</span>
-                Radar Nutricional
-              </p>
-              <div className={styles.radarLegend}>
-                <span className={styles.legendDot} style={{ background: '#10b981' }} /> Actual
-                <span className={styles.legendDot} style={{ background: 'rgba(16,185,129,0.4)', border: '1px dashed #10b981' }} /> Objetivo
-              </div>
-            </div>
-            <RadarNutricional actual={npkActual} objetivo={npkObjetivo} />
-          </div>
-
-          {/* SIMULADOR PREDICTIVO */}
-          <div className={styles.analyticsCard}>
-            <p className={styles.cardLabel}>
-              <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>model_training</span>
-              Simulador Predictivo
-            </p>
-            <div className={styles.simulatorBody}>
-              <div className={styles.sliderRow}>
-                <label className={styles.sliderLabel}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>water_drop</span>
-                  Riego <strong>{riego}%</strong>
-                </label>
-                <input type="range" min="0" max="100" value={riego} onChange={(e) => setRiego(+e.target.value)} className={styles.slider} />
-              </div>
-              <div className={styles.sliderRow}>
-                <label className={styles.sliderLabel}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>science</span>
-                  Fertilización <strong>{fertilizacion}%</strong>
-                </label>
-                <input type="range" min="0" max="100" value={fertilizacion} onChange={(e) => setFertilizacion(+e.target.value)} className={styles.slider} />
-              </div>
-              <div className={styles.proyeccionBox}>
-                <span className={styles.proyeccionLabel}>Cosecha proyectada</span>
-                <span className={styles.proyeccionValor}>{cosechaProyectada} <small>ton/ha</small></span>
-              </div>
-            </div>
-          </div>
-
-          {/* TELEMETRÍA IOT */}
-          <div className={styles.analyticsCard}>
-            <p className={styles.cardLabel}>
-              <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>sensors</span>
-              Telemetría en Tiempo Real
-            </p>
-            <div className={styles.telemetriaGrid}>
-              <div className={styles.telemetriaItem}>
-                <div className={styles.telemetriaTop}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '14px', color: '#3b82f6' }}>water_drop</span>
-                  <span className={styles.telemetriaValor}>{telemetria.humedad.at(-1)}%</span>
+              <div className="relative">
+                <div className="flex items-center gap-2 mb-4">
+                  <Sprout size={16} className="text-emerald-200" />
+                  <span className="text-[10.5px] font-black uppercase tracking-[0.2em] text-emerald-200">Recomendación Maestra · HOY</span>
                 </div>
-                <p className={styles.telemetriaLabel}>Humedad</p>
-                <Sparkline data={telemetria.humedad} color="#3b82f6" />
-              </div>
-              <div className={styles.telemetriaItem}>
-                <div className={styles.telemetriaTop}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '14px', color: '#f59e0b' }}>thermostat</span>
-                  <span className={styles.telemetriaValor}>{telemetria.temperatura.at(-1)}°C</span>
+                <p className="text-[11px] font-bold text-emerald-200 uppercase tracking-widest mb-1">¿Qué plantar hoy?</p>
+                <div className="flex items-center gap-4 mb-4">
+                  <span className="text-5xl">{TOP_CROP.icon}</span>
+                  <div>
+                    <h3
+                      className="text-2xl font-black text-white leading-tight"
+                      style={{ fontFamily: "'Montserrat', sans-serif" }}
+                    >
+                      {TOP_CROP.nombre}
+                    </h3>
+                    <div className="flex items-center gap-3 mt-1">
+                      <ScoreRing value={TOP_CROP.score} />
+                      <div>
+                        <p className="text-[11px] text-emerald-200 font-bold uppercase tracking-wide">Afinidad</p>
+                        <p className="text-[11px] text-white font-semibold mt-1">
+                          Riesgo: <span className="text-emerald-200 font-black">{TOP_CROP.riesgo}</span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <p className={styles.telemetriaLabel}>Temperatura</p>
-                <Sparkline data={telemetria.temperatura} color="#f59e0b" />
-              </div>
-            </div>
-
-            {/* Válvulas de riego */}
-            <div className={styles.valvulasGrid}>
-              {Object.entries(valvulas).map(([key, open]) => (
+                <p className="text-[12.5px] text-emerald-100 leading-relaxed mb-4">{TOP_CROP.justificacion}</p>
+                <div className="space-y-1.5">
+                  {TOP_CROP.tips.map((tip, i) => (
+                    <div key={i} className="flex items-start gap-2 text-[11.5px] text-emerald-100">
+                      <CheckCircle2 size={13} className="text-emerald-300 mt-0.5 shrink-0" />
+                      {tip}
+                    </div>
+                  ))}
+                </div>
                 <button
-                  key={key}
-                  onClick={() => toggleValvula(key)}
-                  className={`${styles.valvulaBtn} ${open ? styles.valvulaOpen : styles.valvulaClosed}`}
+                  onClick={() => navigate('/investigador/analisis')}
+                  className="mt-5 flex items-center gap-2 px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 text-white text-[12px] font-bold transition-all"
                 >
-                  <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>
-                    {open ? 'valve' : 'valve'}
-                  </span>
-                  <span>{key.toUpperCase()}</span>
-                  <span className={styles.valvulaStatus}>{open ? 'ABIERTA' : 'CERRADA'}</span>
+                  Análisis completo <ArrowRight size={13} />
+                </button>
+              </div>
+            </div>
+
+            {/* Weather Row */}
+            <div className={`${card} p-4`}>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-[10.5px] font-black text-slate-500 uppercase tracking-widest">Condiciones Meteorológicas · Ahora</p>
+                <span className="text-[9px] text-slate-400 font-bold">NASA POWER API</span>
+              </div>
+              <div className="grid grid-cols-4 gap-3">
+                {WEATHER.map((w, i) => (
+                  <div key={i} className="text-center">
+                    <div className="flex justify-center mb-1">{w.icon}</div>
+                    <p className="text-[15px] font-black text-slate-800">{w.value}</p>
+                    <p className="text-[9.5px] text-slate-400 font-bold uppercase tracking-wide mt-0.5">{w.label}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Quick links */}
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { label: 'Ver Agro-Asesor', icon: <BrainCircuit size={15} />, path: '/investigador/mapas',  color: 'bg-emerald-600 text-white hover:bg-emerald-700' },
+                { label: 'Análisis de Suelos', icon: <FlaskConical size={15} />, path: '/investigador/analisis', color: 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200' },
+                { label: 'IA Predictiva',   icon: <Activity size={15} />,     path: '/investigador/ia',      color: 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200' },
+              ].map((btn) => (
+                <button
+                  key={btn.label}
+                  onClick={() => navigate(btn.path)}
+                  className={`flex items-center justify-center gap-2 py-3 rounded-xl text-[12px] font-bold transition-all shadow-sm ${btn.color}`}
+                >
+                  {btn.icon} {btn.label}
                 </button>
               ))}
             </div>
+          </motion.div>
+
+          {/* RIGHT: Feed de Actualizaciones de Parcelas */}
+          <motion.div {...fadeUp(0.1)}>
+            <div className={`${card} p-0 overflow-hidden h-full flex flex-col`}>
+              <div className="px-5 py-4 border-b border-slate-100 bg-slate-50/60 shrink-0">
+                <div className="flex items-center justify-between">
+                  <p className="text-[11px] font-black text-slate-700 uppercase tracking-widest">Actualizaciones de Parcelas</p>
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                </div>
+                <p className="text-[10px] text-slate-400 mt-0.5 font-medium">Feed en tiempo real · Turbaco</p>
+              </div>
+
+              {/* Feed items — this column scrolls independently */}
+              <div className="flex-1 overflow-y-auto custom-scrollbar-light divide-y divide-slate-50">
+                {FIELD_UPDATES.map((u) => {
+                  const c = colorMap[u.color];
+                  return (
+                    <div key={u.id} className="flex gap-3 px-5 py-4 hover:bg-slate-50/80 transition-colors cursor-pointer group">
+                      <div className={`shrink-0 mt-0.5 w-7 h-7 rounded-lg flex items-center justify-center ${c.bg} ${c.text}`}>
+                        {u.icon}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2 mb-0.5">
+                          <p className="text-[11.5px] font-bold text-slate-800 truncate">{u.lote}</p>
+                          <span className={`shrink-0 text-[8.5px] font-black uppercase px-2 py-0.5 rounded-full ${c.bg} ${c.text}`}>
+                            {u.status === 'ok' ? 'OK' : u.status === 'warn' ? 'AVISO' : 'ALERTA'}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 leading-snug">{u.msg}</p>
+                        <p className="text-[9.5px] text-slate-400 font-bold mt-1">{u.time}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="px-5 py-3 border-t border-slate-100 bg-slate-50/60 shrink-0">
+                <button
+                  onClick={() => navigate('/investigador/sensores')}
+                  className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-bold transition-all"
+                >
+                  Ver todos los nodos <ArrowRight size={12} />
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* ── BOTTOM ROW: Reportes + Accesos Rápidos ── */}
+        <motion.div {...fadeUp(0.15)} className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+          {/* Resumen semanal */}
+          <div className={`${card} p-5`}>
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-[11px] font-black text-slate-600 uppercase tracking-widest">Resumen Semanal</p>
+              <span className="text-[9px] text-slate-400 font-bold bg-slate-100 px-2 py-0.5 rounded-full">Semana 19</span>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { label: 'Análisis realizados', val: '24',  color: 'text-emerald-600' },
+                { label: 'Alertas gestionadas', val: '7',   color: 'text-amber-600'   },
+                { label: 'Reportes exportados', val: '3',   color: 'text-blue-600'    },
+              ].map((s, i) => (
+                <div key={i} className="text-center p-3 rounded-xl bg-slate-50 border border-slate-100">
+                  <p className={`text-2xl font-black ${s.color}`}>{s.val}</p>
+                  <p className="text-[9.5px] text-slate-400 font-bold mt-1 uppercase tracking-wide leading-tight">{s.label}</p>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => navigate('/investigador/reportes')}
+              className="mt-4 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-[12px] font-bold transition-all"
+            >
+              <FileText size={13} /> Ir a Reportes
+            </button>
           </div>
 
-        </aside>
+          {/* Accesos rápidos a módulos */}
+          <div className={`${card} p-5`}>
+            <p className="text-[11px] font-black text-slate-600 uppercase tracking-widest mb-4">Módulos del Sistema</p>
+            <div className="grid grid-cols-2 gap-2.5">
+              {[
+                { label: 'Agro-Asesor IA',   sub: 'Mapa + Chatbot',       path: '/investigador/mapas',    icon: <BrainCircuit size={14} />, color: 'emerald' },
+                { label: 'Análisis Suelos',   sub: 'Laboratorio digital',   path: '/investigador/analisis', icon: <FlaskConical size={14} />, color: 'blue'    },
+                { label: 'IA Predictiva',      sub: 'Modelos de ML',        path: '/investigador/ia',       icon: <Activity size={14} />,     color: 'purple'  },
+                { label: 'Nodos IoT',          sub: 'Sensores en campo',    path: '/investigador/sensores', icon: <Radio size={14} />,        color: 'amber'   },
+              ].map((mod) => {
+                const c = colorMap[mod.color];
+                return (
+                  <button
+                    key={mod.label}
+                    onClick={() => navigate(mod.path)}
+                    className={`flex items-start gap-3 p-3 rounded-xl text-left border transition-all hover:-translate-y-0.5 hover:shadow-sm ${c.bg} ${c.border}`}
+                  >
+                    <span className={`shrink-0 mt-0.5 ${c.text}`}>{mod.icon}</span>
+                    <div>
+                      <p className={`text-[12px] font-bold ${c.text}`}>{mod.label}</p>
+                      <p className="text-[10px] text-slate-500 font-medium">{mod.sub}</p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </motion.div>
+
       </div>
     </ResearcherLayout>
   );

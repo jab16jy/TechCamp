@@ -7,10 +7,11 @@ import FloatingAIButton from './components/FloatingAIButton/FloatingAIButton';
 // Páginas del flujo principal
 import Resultado from './pages/Resultado/Resultado';
 
-// ── Nuevas páginas de acceso y panel investigador ──
+// ── Páginas de acceso y panel investigador ──
 import Acceso from './pages/Acceso/Acceso';
 import LoginInvestigador from './pages/Investigador/LoginInvestigador';
 import DashboardInvestigador from './pages/Investigador/DashboardInvestigador';
+import AgroAsesor from './pages/Investigador/AgroAsesor';
 import AnalisisCultivosInvestigador from './pages/Investigador/AnalisisCultivos';
 import ResultadoAvanzado from './pages/Investigador/ResultadoAvanzado';
 import IAPredictiva from './pages/Investigador/IAPredictiva';
@@ -29,17 +30,18 @@ const App = () => (
       {/* ── Pantalla de selección de perfil (landing principal) ── */}
       <Route path="/" element={<Acceso />} />
 
-      {/* ── Rutas del investigador (sin Navbar/Footer, tienen su propio layout) ── */}
-      <Route path="/investigador/login" element={<LoginInvestigador />} />
-      <Route path="/investigador/dashboard" element={<DashboardInvestigador />} />
-      <Route path="/dashboard" element={<DashboardInvestigador />} /> {/* Atajo solicitado */}
-      <Route path="/investigador/analisis" element={<AnalisisCultivosInvestigador />} />
+      {/* ── Rutas del investigador ── */}
+      <Route path="/investigador/login"            element={<LoginInvestigador />} />
+      <Route path="/investigador/dashboard"        element={<DashboardInvestigador />} />
+      <Route path="/dashboard"                     element={<DashboardInvestigador />} />
+      <Route path="/investigador/mapas"            element={<AgroAsesor />} />
+      <Route path="/investigador/analisis"         element={<AnalisisCultivosInvestigador />} />
       <Route path="/investigador/resultado-avanzado" element={<ResultadoAvanzado />} />
-      <Route path="/investigador/ia" element={<IAPredictiva />} />
-      <Route path="/investigador/sensores" element={<SensoresIoT />} />
-      <Route path="/investigador/reportes" element={<GestionReportes />} />
+      <Route path="/investigador/ia"               element={<IAPredictiva />} />
+      <Route path="/investigador/sensores"         element={<SensoresIoT />} />
+      <Route path="/investigador/reportes"         element={<GestionReportes />} />
 
-      {/* ── Rutas compartidas (usadas por investigador y productor) ── */}
+      {/* ── Rutas compartidas ── */}
       <Route path="/resultado" element={<Resultado />} />
 
       {/* ── 404 ── */}
