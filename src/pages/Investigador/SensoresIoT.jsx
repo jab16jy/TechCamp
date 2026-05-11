@@ -1,263 +1,398 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ResearcherLayout from '../../components/ResearcherLayout/ResearcherLayout';
-import styles from './SensoresIoT.module.css';
+import './SensoresIoT.css';
+// Note: SensoresIoT.module.css retained for legacy compatibility but not used here
 
+// ── Static Data ──
+const NODES = [
+  { id: '01', sector: 'Sector Norte', rssi: -72, battery: 96, online: true,  hum: 42, temp: 26.1, ce: 1.4 },
+  { id: '02', sector: 'Sector Norte', rssi: -88, battery: 12, online: true,  hum: 38, temp: 26.8, ce: 1.3 },
+  { id: '03', sector: 'Sector Centro',rssi: -81, battery: 71, online: true,  hum: 51, temp: 27.2, ce: 1.1 },
+  { id: '04', sector: 'Sector Sur',   rssi: -93, battery: 85, online: true,  hum: 24, temp: 28.0, ce: 1.2 },
+  { id: '05', sector: 'Sector Este',  rssi: -78, battery: 63, online: true,  hum: 45, temp: 27.5, ce: 1.5 },
+  { id: '06', sector: 'Sector Oeste', rssi: -99, battery: 34, online: false, hum: 0,  temp: 0,    ce: 0   },
+];
+
+const LOGS = [
+  { icon: 'battery_alert',  type: 'error',   title: 'Nodo 02 · Batería Crítica (12%)', desc: 'Reemplazo sugerido. Sin acción → pérdida de datos.', time: 'hace 12 min' },
+  { icon: 'sprinkler',      type: 'success',  title: 'Riego Sector Norte · Activado',   desc: 'Iniciado automáticamente por IA Predictiva.', time: 'hace 28 min' },
+  { icon: 'sync_alt',       type: 'info',     title: 'Sincronización Completa',          desc: '12 nodos reportando sin pérdida de paquetes.', time: 'hace 1h' },
+  { icon: 'satellite_alt',  type: 'info',     title: 'Sentinel-2 · Imagen Actualizada', desc: 'NDVI recalculado. Cobertura 100%.', time: 'hace 2h' },
+];
+
+// ── Mini Sparkline ──
+function Spark({ vals, color }) {
+  const h = 28, w = 60;
+  const max = Math.max(...vals), min = Math.min(...vals);
+  const pts = vals.map((v, i) => {
+    const x = (i / (vals.length - 1)) * w;
+    const y = h - ((v - min) / (max - min || 1)) * h;
+    return `${x},${y}`;
+  }).join(' ');
+  return (
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}>
+      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+// ── RSSI bar ──
+function RssiBar({ rssi }) {
+  const pct = Math.max(0, Math.min(100, (rssi + 110) / 40 * 100));
+  const color = pct > 60 ? '#10b981' : pct > 30 ? '#f59e0b' : '#ef4444';
+  return (
+    <div className="iot-rssi-wrap">
+      <div className="iot-rssi-track">
+        <div className="iot-rssi-fill" style={{ width: `${pct}%`, background: color }}></div>
+      </div>
+      <span className="iot-rssi-val">{rssi} dBm</span>
+    </div>
+  );
+}
+
+// ── Heatmap map overlay SVG ──
+function FarmMap({ showNdvi }) {
+  return (
+    <svg viewBox="0 0 500 320" className="iot-map-svg" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <radialGradient id="ndvi1" cx="40%" cy="35%" r="40%">
+          <stop offset="0%" stopColor="#166534" stopOpacity="0.85" />
+          <stop offset="60%" stopColor="#4ade80" stopOpacity="0.55" />
+          <stop offset="100%" stopColor="#fde68a" stopOpacity="0.2" />
+        </radialGradient>
+        <radialGradient id="ndvi2" cx="72%" cy="62%" r="32%">
+          <stop offset="0%" stopColor="#ca8a04" stopOpacity="0.8" />
+          <stop offset="70%" stopColor="#fde68a" stopOpacity="0.45" />
+          <stop offset="100%" stopColor="#fde68a" stopOpacity="0" />
+        </radialGradient>
+        <filter id="mapBlur"><feGaussianBlur stdDeviation="8" /></filter>
+      </defs>
+
+      {/* Farm background */}
+      <rect width="500" height="320" fill="#2d4a1e" />
+      <ellipse cx="250" cy="160" rx="220" ry="140" fill="#3a5c26" />
+      {/* Grid lines (field rows) */}
+      {[0,1,2,3,4,5,6,7].map(i => (
+        <line key={i} x1="30" y1={40 + i * 35} x2="470" y2={40 + i * 35} stroke="rgba(255,255,255,.04)" strokeWidth="1" />
+      ))}
+      {/* Parcel border */}
+      <rect x="30" y="30" width="440" height="260" rx="8" fill="none" stroke="rgba(255,255,255,.12)" strokeWidth="1.5" strokeDasharray="6 4" />
+
+      {/* NDVI heatmap overlay */}
+      {showNdvi && (
+        <>
+          <ellipse cx="200" cy="110" rx="160" ry="100" fill="url(#ndvi1)" filter="url(#mapBlur)" />
+          <ellipse cx="360" cy="200" rx="120" ry="90"  fill="url(#ndvi2)" filter="url(#mapBlur)" />
+        </>
+      )}
+
+      {/* Node markers */}
+      {[
+        { id:'01', x:100, y:80,  online:true,  warn:false },
+        { id:'02', x:200, y:70,  online:true,  warn:true  },
+        { id:'03', x:260, y:165, online:true,  warn:false },
+        { id:'04', x:170, y:235, online:true,  warn:true  },
+        { id:'05', x:380, y:110, online:true,  warn:false },
+        { id:'06', x:410, y:240, online:false, warn:false },
+      ].map(n => (
+        <g key={n.id}>
+          {n.online && !n.warn && (
+            <circle cx={n.x} cy={n.y} r="14" fill="rgba(16,185,129,.15)" />
+          )}
+          {n.warn && (
+            <circle cx={n.x} cy={n.y} r="14" fill="rgba(245,158,11,.2)" />
+          )}
+          <circle cx={n.x} cy={n.y} r="9"
+            fill={n.online ? (n.warn ? '#f59e0b' : '#10b981') : '#6b7280'}
+            stroke="white" strokeWidth="1.5" />
+          <text x={n.x} y={n.y + 4} textAnchor="middle" fill="white"
+            fontSize="6.5" fontWeight="700" fontFamily="'IBM Plex Mono', monospace">{n.id}</text>
+          <text x={n.x} y={n.y + 20} textAnchor="middle"
+            fill="rgba(255,255,255,.6)" fontSize="6" fontFamily="sans-serif">N{n.id}</text>
+        </g>
+      ))}
+
+      {/* Scale bar */}
+      <line x1="40" y1="298" x2="100" y2="298" stroke="rgba(255,255,255,.4)" strokeWidth="1.5" />
+      <text x="70" y="312" textAnchor="middle" fill="rgba(255,255,255,.45)" fontSize="7" fontFamily="sans-serif">50m</text>
+
+      {/* NDVI Legend */}
+      {showNdvi && (
+        <>
+          <defs>
+            <linearGradient id="ndviLeg" x1="0" x2="1">
+              <stop offset="0%" stopColor="#fde68a" />
+              <stop offset="50%" stopColor="#4ade80" />
+              <stop offset="100%" stopColor="#166534" />
+            </linearGradient>
+          </defs>
+          <rect x="350" y="290" width="110" height="7" rx="3.5" fill="url(#ndviLeg)" opacity="0.9" />
+          <text x="350" y="308" fill="rgba(255,255,255,.55)" fontSize="6.5" fontFamily="sans-serif">Bajo NDVI</text>
+          <text x="460" y="308" textAnchor="end" fill="rgba(255,255,255,.55)" fontSize="6.5" fontFamily="sans-serif">Alto NDVI</text>
+        </>
+      )}
+    </svg>
+  );
+}
+
+// ── Main Component ──
 const SensoresIoT = () => {
+  const navigate = useNavigate();
+  const [showNdvi, setShowNdvi] = useState(false);
+  const [pulse, setPulse]       = useState(true);
+  const [valveActive, setValveActive] = useState(false);
+  const [selectedNode, setSelectedNode] = useState('04');
+
+  useEffect(() => {
+    const id = setInterval(() => setPulse(p => !p), 900);
+    return () => clearInterval(id);
+  }, []);
+
+  const sel = NODES.find(n => n.id === selectedNode) || NODES[3];
+  const humSpark = [38, 35, 32, 30, 27, 25, 24, 24];
+  const tempSpark = [26.5, 27, 27.3, 27.8, 28, 28.1, 28, 28];
+  const ceSpark = [1.1, 1.1, 1.2, 1.2, 1.2, 1.3, 1.2, 1.2];
+
   return (
     <ResearcherLayout activeTab="sensores">
-      <div className={styles.container}>
-        {/* Header Section */}
-        <section className={styles.header}>
-          <div>
-            <h2 className={styles.title}>Monitoreo de Red IoT en Tiempo Real</h2>
-            <div className={styles.badges}>
-              <span className={styles.badge}>
-                <span className={styles.dot}></span>
-                12 Nodos Activos
-              </span>
-              <span className={styles.badge}>
-                <span className={`material-symbols-outlined ${styles.iconSmall}`}>battery_5_bar</span>
-                Batería Promedio: 85%
-              </span>
-              <span className={styles.badge}>
-                <span className={`material-symbols-outlined ${styles.iconSmall}`}>sync</span>
-                Sincronización Local: Activa
-              </span>
-              <span className={`${styles.badge} ${styles.badgePrimary}`}>
-                <span className={`material-symbols-outlined ${styles.iconSmall}`}>cloud_off</span>
-                Datos Offline Disponibles
-              </span>
-            </div>
-          </div>
-        </section>
+      <div className="iot-root">
 
-        {/* Layout Central: Bento Grid Style */}
-        <div className={styles.grid}>
-          {/* Mapa Satelital (Left) */}
-          <div className={styles.col8}>
-            <div className={styles.mapHeader}>
-              <span className={styles.mapTitle}>Mapa de Despliegue de Nodos</span>
-              <div className={styles.mapControls}>
-                <button className={styles.mapBtn}><span className="material-symbols-outlined">layers</span></button>
-                <button className={styles.mapBtn}><span className="material-symbols-outlined">zoom_in</span></button>
-                <button className={styles.mapBtn}><span className="material-symbols-outlined">zoom_out</span></button>
-              </div>
+        {/* ── HEADER ── */}
+        <header className="iot-header">
+          <div className="iot-header-left">
+            <div className="iot-nav-row">
+              <button className="iot-back-btn" onClick={() => navigate('/investigador/dashboard')}>
+                <span className="material-symbols-outlined">arrow_back</span>
+                Volver al Dashboard
+              </button>
+              <nav className="iot-breadcrumb">
+                <span>Reportes</span>
+                <span className="material-symbols-outlined">chevron_right</span>
+                <span className="iot-crumb-active">Sensores IoT</span>
+              </nav>
             </div>
-            <div className={styles.mapArea}>
-              <img 
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCx_cG7Kgc-peGNPtiEINazJ99iQtoOYsefVvTaxAjhh-QzeUQzMDlzd5YPenFrfJRFUrTQXMvLXCKecrEjnoY5bmntzNxUmeMe31B8HoeYvvinVMfW_uiItqErM9p0DB21M9exNTqWeQS2TF7CVMqU-oIcTjjze24WKhMHsVtqhdVzSbXUmIcfQGpIPv4tj-1rzX-7UHSgwXjXQsBjSZh_SKDh5Fm33WasGmHX7BghZssbFXMI46qdGTsqqCVFtTtz0cs8Kdl-lZw" 
-                alt="Vista satelital de parcela agrícola" 
-                className={styles.mapImage}
-              />
-              {/* Pulse/Node Markers */}
-              <div className={styles.mapPulse1}></div>
-              <div className={styles.mapPulse2}></div>
-              <div className={styles.mapDotWarning}></div>
-              <div className={styles.mapDotInactive}></div>
-              
-              <div className={styles.mapLayerPanel}>
-                <p className={styles.mapLayerTitle}>Capas</p>
-                <label className={styles.mapLayerLabel}>
-                  <input type="checkbox" defaultChecked className={styles.mapLayerInput} />
-                  <span className={styles.mapLayerText}>Nodos IoT</span>
-                </label>
-                <label className={styles.mapLayerLabel}>
-                  <input type="checkbox" className={styles.mapLayerInput} />
-                  <span className={styles.mapLayerText}>Capa Satelital NDVI</span>
-                </label>
+            <div className="iot-title-row">
+              <h1 className="iot-title">Monitoreo de Red IoT <span className="iot-title-light">en Tiempo Real</span></h1>
+              <div className="iot-meta-badges">
+                <span className="iot-badge-mode">RED ACTIVA</span>
+                <span className="iot-badge-ref">REF: #IOT-NET-2024</span>
+                <span className="iot-badge-coords">
+                  <span className="material-symbols-outlined" style={{fontSize:'0.75rem'}}>location_on</span>
+                  Lote Norte · Turbaco
+                </span>
               </div>
             </div>
           </div>
-
-          {/* Panel de Telemetría (Right) */}
-          <div className={styles.col4}>
-            {/* Humidity Card */}
-            <div className={styles.telemetryCard}>
-              <div className={styles.tcHeader}>
-                <div className={styles.tcIconBlue}>
-                  <span className="material-symbols-outlined">water_drop</span>
-                </div>
-                <div className={styles.tcMeta}>
-                  <div className={styles.tcSignal}>
-                    <span className="material-symbols-outlined iconSmall">signal_cellular_alt</span>
-                    <span className={styles.tcSignalText}>-92 dBm</span>
-                    <span className="material-symbols-outlined iconSmall" style={{marginLeft: '4px'}}>battery_full</span>
-                  </div>
-                  <div className={styles.tcAuto}>
-                    <span className={styles.tcAutoText}>Auto</span>
-                    <button className={styles.switchOn}>
-                      <div className={styles.switchKnobOn}></div>
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <p className={styles.tcLabel}>Humedad del Suelo</p>
-              <div className={styles.tcValues}>
-                <span className={styles.tcMainBlue}>24%</span>
-                <span className={styles.tcSubBlue}>+1.2% últ. hora</span>
-              </div>
-              <div className={styles.barContainerBlue}>
-                <div className={styles.barGradient}>
-                  <div className={styles.barItem1}></div>
-                  <div className={styles.barItem2}></div>
-                  <div className={styles.barItem3}></div>
-                  <div className={styles.barItem4}></div>
-                  <div className={styles.barItem5}></div>
-                </div>
+          <div className="iot-header-right">
+            {/* Algo badge */}
+            <div className="iot-algo-badge">
+              <span className="iot-algo-score">94.2<small>%</small></span>
+              <div>
+                <p className="iot-algo-label">Precisión IA</p>
+                <p className="iot-algo-ver">v4.2.0 · RF</p>
               </div>
             </div>
-
-            {/* Temperature Card */}
-            <div className={styles.telemetryCard}>
-              <div className={styles.tcHeader}>
-                <div className={styles.tcIconOrange}>
-                  <span className="material-symbols-outlined">thermostat</span>
-                </div>
-                <div className={styles.tcMeta}>
-                  <div className={styles.tcSignal}>
-                    <span className="material-symbols-outlined iconSmall">signal_cellular_alt_2_bar</span>
-                    <span className={styles.tcSignalText}>-105 dBm</span>
-                    <span className="material-symbols-outlined iconSmall" style={{marginLeft: '4px'}}>battery_4_bar</span>
-                  </div>
-                  <div className={styles.tcAuto}>
-                    <span className={styles.tcAutoText}>Auto</span>
-                    <button className={styles.switchOff}>
-                      <div className={styles.switchKnobOff}></div>
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <p className={styles.tcLabel}>Temperatura Ambiente</p>
-              <div className={styles.tcValues}>
-                <span className={styles.tcMainOrange}>28°C</span>
-                <span className={styles.tcSubOrange}>vs 27.2°C NASA Hist.</span>
-              </div>
-              <div className={styles.barContainerOrange}>
-                <div className={styles.barFillOrange}></div>
+            {/* Sensor pulse */}
+            <div className="iot-pulse-badge">
+              <span className={`iot-pulse-dot ${pulse ? 'iot-pulse-on' : 'iot-pulse-dim'}`}></span>
+              <div>
+                <p className="iot-pulse-label">12 Nodos Activos</p>
+                <p className="iot-pulse-sub">Bat. Promedio: 85%</p>
               </div>
             </div>
-
-            {/* Salinity Card */}
-            <div className={styles.telemetryCard}>
-              <div className={styles.tcHeader}>
-                <div className={styles.tcIconPrimary}>
-                  <span className="material-symbols-outlined">bolt</span>
-                </div>
-                <div className={styles.tcMeta}>
-                  <div className={styles.tcSignal}>
-                    <span className="material-symbols-outlined iconSmall">signal_cellular_alt</span>
-                    <span className={styles.tcSignalText}>-88 dBm</span>
-                    <span className="material-symbols-outlined iconSmall" style={{marginLeft: '4px'}}>battery_6_bar</span>
-                  </div>
-                  <div className={styles.tcAuto}>
-                    <span className={styles.tcAutoText}>Auto</span>
-                    <button className={styles.switchOn}>
-                      <div className={styles.switchKnobOn}></div>
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <p className={styles.tcLabel}>Conductividad Eléctrica</p>
-              <div className={styles.tcValues} style={{marginBottom: '0.5rem'}}>
-                <span className={styles.tcMainPrimary}>1.2 dS/m</span>
-              </div>
-              <span className={styles.badgeOptimal}>Óptimo</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Sección Inferior */}
-        <div className={styles.bottomGrid}>
-          {/* Comparative Chart Area */}
-          <div className={styles.chartCard}>
-            <div className={styles.chartCardHeader}>
-              <h3 className={styles.chartCardTitle}>Análisis de Tendencias</h3>
-              <div className={styles.chartButtons}>
-                <button className={styles.chartBtnActive}>Humedad</button>
-                <button className={styles.chartBtnInactive}>NASA POWER Prec.</button>
-              </div>
-            </div>
-            <div className={styles.chartLegend}>
-              <div className={styles.legendItems}>
-                <div className={styles.legendItem}><span className={styles.legendLineBlue}></span> Sensor Suelo</div>
-                <div className={styles.legendItem}><span className={styles.legendLineGreen}></span> Precipitación NASA</div>
-              </div>
-            </div>
-            <div className={styles.chartGraphic}>
-              <div className={styles.chartAxisLabelLeft}>Marzo 10</div>
-              <div className={styles.chartAxisLabelRight}>Marzo 17</div>
-              <svg className={styles.chartSvg} preserveAspectRatio="none">
-                <polyline fill="none" points="0,180 100,160 200,190 300,140 400,120 500,150 600,100" stroke="#2196F3" strokeWidth="3"></polyline>
-                <polyline fill="none" points="0,210 100,210 200,210 300,180 400,100 500,210 600,210" stroke="#006e1c" strokeDasharray="4" strokeWidth="3"></polyline>
-              </svg>
-              <div className={styles.chartIconBg}>
-                <span className="material-symbols-outlined">query_stats</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Log de Eventos */}
-          <div className={styles.logCard}>
-            <div className={styles.logHeader}>
-              <h3 className={styles.logTitle}>Log de Eventos</h3>
-              <span className="material-symbols-outlined" style={{color: 'var(--m3-on-surface-variant)', cursor: 'pointer'}}>history</span>
-            </div>
-            <div className={styles.logList}>
-              <div className={`${styles.logItem} ${styles.logItemError}`}>
-                <span className={`material-symbols-outlined ${styles.logIconError}`}>battery_alert</span>
-                <div>
-                  <p className={styles.logTextTitle}>Sensor 02: Batería baja</p>
-                  <p className={styles.logTextDesc}>Nivel crítico: 12%. Reemplazo sugerido.</p>
-                  <span className={styles.logTextTime}>Hace 12 min</span>
-                </div>
-              </div>
-              <div className={`${styles.logItem} ${styles.logItemSuccess}`}>
-                <span className={`material-symbols-outlined ${styles.logIconSuccess}`}>sprinkler</span>
-                <div>
-                  <p className={styles.logTextTitle}>Riego Sector Norte: Activado</p>
-                  <p className={styles.logTextDesc}>Iniciado por: Modo Automático (IA).</p>
-                  <span className={styles.logTextTime}>Hace 28 min</span>
-                </div>
-              </div>
-              <div className={`${styles.logItem} ${styles.logItemInfo}`}>
-                <span className={`material-symbols-outlined ${styles.logIconInfo}`}>sync_alt</span>
-                <div>
-                  <p className={styles.logTextTitle}>Sincronización Completa</p>
-                  <p className={styles.logTextDesc}>12 nodos reportando sin pérdida.</p>
-                  <span className={styles.logTextTime}>Hace 1 hora</span>
-                </div>
-              </div>
-            </div>
-            <div className={styles.logFooter}>
-              <button className={styles.logBtn}>
-                Ver historial completo <span className="material-symbols-outlined" style={{fontSize: '16px'}}>chevron_right</span>
+            <div className="iot-header-btns">
+              <button className="iot-btn-ghost">
+                <span className="material-symbols-outlined">download</span>
+                CSV / JSON
+              </button>
+              <button className="iot-btn-primary">
+                <span className="material-symbols-outlined">satellite_alt</span>
+                Sentinel-2
               </button>
             </div>
           </div>
-        </div>
+        </header>
 
-        {/* Insight Box */}
-        <div className={styles.insightBox}>
-          <div className={styles.insightHeader}>
-            <span className="material-symbols-outlined" style={{color: 'var(--m3-secondary)', fontVariationSettings: "'FILL' 1"}}>psychology_alt</span>
-            <h3 className={styles.insightTitle}>Recomendación del Asistente</h3>
+        {/* ── MAIN 3-COLUMN GRID ── */}
+        <div className="iot-main-grid">
+
+          {/* ── COL 1: Node List ── */}
+          <aside className="iot-node-col">
+            <div className="iot-node-col-header">
+              <span className="material-symbols-outlined iot-col-icon">hub</span>
+              <h2 className="iot-col-title">Estado de Nodos</h2>
+            </div>
+            <div className="iot-node-list">
+              {NODES.map(n => (
+                <button
+                  key={n.id}
+                  onClick={() => setSelectedNode(n.id)}
+                  className={`iot-node-item ${selectedNode === n.id ? 'iot-node-selected' : ''} ${!n.online ? 'iot-node-offline' : ''}`}
+                >
+                  <div className="iot-node-top">
+                    <div className="iot-node-id-wrap">
+                      <span className={`iot-node-status-dot ${n.online ? (n.battery < 20 ? 'dot-warn' : 'dot-ok') : 'dot-off'}`}></span>
+                      <span className="iot-node-id">Nodo {n.id}</span>
+                    </div>
+                    <span className="iot-node-sector">{n.sector}</span>
+                  </div>
+                  <RssiBar rssi={n.rssi} />
+                  <div className="iot-node-stats">
+                    <span className="iot-node-stat">
+                      <span className="material-symbols-outlined" style={{fontSize:'0.75rem',color:'#64748b'}}>battery_std</span>
+                      {n.online ? `${n.battery}%` : '–'}
+                    </span>
+                    <span className={`iot-node-tag ${n.online ? (n.battery < 20 ? 'tag-warn' : 'tag-ok') : 'tag-off'}`}>
+                      {n.online ? (n.battery < 20 ? 'BATERÍA BAJA' : 'ONLINE') : 'OFFLINE'}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </aside>
+
+          {/* ── COL 2: Map ── */}
+          <div className="iot-map-col">
+            <div className="iot-map-card">
+              <div className="iot-map-topbar">
+                <div>
+                  <span className="iot-map-badge">MAPA DE DESPLIEGUE · ISOLÍNEAS NDVI</span>
+                  <h2 className="iot-map-title">Mapa de Nodos y Capas Satelitales</h2>
+                </div>
+                <div className="iot-map-controls">
+                  <label className="iot-layer-toggle">
+                    <input type="checkbox" checked={showNdvi} onChange={e => setShowNdvi(e.target.checked)} />
+                    <span className="iot-toggle-track">
+                      <span className="iot-toggle-knob"></span>
+                    </span>
+                    <span>Sentinel-2 NDVI</span>
+                  </label>
+                  <button className="iot-map-btn"><span className="material-symbols-outlined">zoom_in</span></button>
+                  <button className="iot-map-btn"><span className="material-symbols-outlined">zoom_out</span></button>
+                </div>
+              </div>
+              <div className="iot-map-body">
+                <FarmMap showNdvi={showNdvi} />
+              </div>
+            </div>
+
+            {/* AI Recommendation Card */}
+            <div className="iot-ai-card">
+              <div className="iot-ai-header">
+                <div className="iot-ai-icon-box">
+                  <span className="material-symbols-outlined">psychology</span>
+                </div>
+                <div>
+                  <span className="iot-ai-badge">RECOMENDACIÓN DEL ASISTENTE</span>
+                  <h3 className="iot-ai-title">Estrés hídrico detectado en Sector Sur (Nodo 04)</h3>
+                </div>
+                <span className="iot-ai-confidence">65% riesgo</span>
+              </div>
+              <p className="iot-ai-desc">
+                El modelo detecta descenso continuo de humedad en el <strong>Nodo 04</strong> (24%). Probabilidad de estrés hídrico severo en 48h según IA Predictiva. Se recomienda activar el sistema de riego de manera inmediata para compensar la evapotranspiración.
+              </p>
+              <div className="iot-ai-footer">
+                <button
+                  className={`iot-valve-btn ${valveActive ? 'iot-valve-active' : ''}`}
+                  onClick={() => setValveActive(v => !v)}
+                >
+                  <span className="material-symbols-outlined">sprinkler</span>
+                  {valveActive ? '✓ Válvula B-12 Activa' : 'Activar Válvula B-12 (Riego)'}
+                </button>
+                <button className="iot-ghost-sm">
+                  Ver Sector Sur <span className="material-symbols-outlined" style={{fontSize:'0.8rem'}}>arrow_forward</span>
+                </button>
+              </div>
+            </div>
           </div>
-          <p className={styles.insightText}>
-            Se detecta descenso de humedad en el <span className={styles.textSecondary}>Sector Sur (Nodo 04)</span>. 
-            Probabilidad de estrés hídrico según IA Predictiva: <span className={styles.textError}>65%</span>. 
-            Se sugiere activar riego en la válvula B-12 para compensar la evaporación.
-          </p>
-          <div className={styles.insightButtons}>
-            <button className={styles.insightBtnPrimary}>
-              <span className="material-symbols-outlined">sync</span>
-              Sincronizar Datos Locales
-            </button>
-            <button className={styles.insightBtnSecondary}>
-              Ver Detalles Sector Sur
-            </button>
-          </div>
-          <div className={styles.insightFooter}>
-            <span className={styles.insightFooterText}>Última actualización: hace 4 minutos</span>
+
+          {/* ── COL 3: Telemetry + Logs ── */}
+          <div className="iot-right-col">
+
+            {/* Gauge Cards */}
+            <div className="iot-gauge-card">
+              <div className="iot-gauge-row">
+                <div className="iot-gauge-icon-box blue">
+                  <span className="material-symbols-outlined">water_drop</span>
+                </div>
+                <div className="iot-gauge-info">
+                  <p className="iot-gauge-label">Humedad del Suelo</p>
+                  <div className="iot-gauge-val-row">
+                    <span className="iot-gauge-val blue">{sel.hum}%</span>
+                    <span className="iot-gauge-trend down">↓</span>
+                    <span className="iot-gauge-compare">vs NASA Hist.</span>
+                  </div>
+                </div>
+                <Spark vals={humSpark} color="#3b82f6" />
+              </div>
+              <div className="iot-mini-bar">
+                <div className="iot-mini-fill blue" style={{width:`${sel.hum}%`}}></div>
+              </div>
+            </div>
+
+            <div className="iot-gauge-card">
+              <div className="iot-gauge-row">
+                <div className="iot-gauge-icon-box amber">
+                  <span className="material-symbols-outlined">thermostat</span>
+                </div>
+                <div className="iot-gauge-info">
+                  <p className="iot-gauge-label">Temperatura Ambiente</p>
+                  <div className="iot-gauge-val-row">
+                    <span className="iot-gauge-val amber">{sel.temp}°C</span>
+                    <span className="iot-gauge-trend up">↑</span>
+                    <span className="iot-gauge-compare">vs 27.2°C NASA</span>
+                  </div>
+                </div>
+                <Spark vals={tempSpark} color="#f59e0b" />
+              </div>
+              <div className="iot-mini-bar">
+                <div className="iot-mini-fill amber" style={{width:`${(sel.temp/40)*100}%`}}></div>
+              </div>
+            </div>
+
+            <div className="iot-gauge-card">
+              <div className="iot-gauge-row">
+                <div className="iot-gauge-icon-box green">
+                  <span className="material-symbols-outlined">bolt</span>
+                </div>
+                <div className="iot-gauge-info">
+                  <p className="iot-gauge-label">Conductividad Eléctrica</p>
+                  <div className="iot-gauge-val-row">
+                    <span className="iot-gauge-val green">{sel.ce} dS/m</span>
+                    <span className="iot-tag-optimal">ÓPTIMO</span>
+                  </div>
+                </div>
+                <Spark vals={ceSpark} color="#10b981" />
+              </div>
+              <div className="iot-mini-bar">
+                <div className="iot-mini-fill green" style={{width:`${(sel.ce/3)*100}%`}}></div>
+              </div>
+            </div>
+
+            {/* Event Log */}
+            <div className="iot-log-card">
+              <div className="iot-log-header">
+                <span className="material-symbols-outlined iot-col-icon">history</span>
+                <h2 className="iot-col-title">Log de Eventos</h2>
+              </div>
+              <div className="iot-log-list">
+                {LOGS.map((l, i) => (
+                  <div key={i} className={`iot-log-item iot-log-${l.type}`}>
+                    <span className={`material-symbols-outlined iot-log-icon iot-log-icon-${l.type}`}>{l.icon}</span>
+                    <div className="iot-log-body">
+                      <p className="iot-log-title">{l.title}</p>
+                      <p className="iot-log-desc">{l.desc}</p>
+                      <span className="iot-log-time">{l.time}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <button className="iot-log-more">
+                Ver historial completo <span className="material-symbols-outlined" style={{fontSize:'0.8rem'}}>chevron_right</span>
+              </button>
+            </div>
+
           </div>
         </div>
       </div>
