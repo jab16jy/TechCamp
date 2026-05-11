@@ -1,255 +1,416 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ResearcherLayout from '../../components/ResearcherLayout/ResearcherLayout';
-import styles from './IAPredictiva.module.css';
+import './IAPredictiva.css';
 
+// ── XAI Bar Chart ──
+const FEATURES = [
+  { label: 'Precipitación',      pct: 91, color: '#2563eb' },
+  { label: 'Nitrógeno (N)',       pct: 78, color: '#10b981' },
+  { label: 'Temperatura Máx.',    pct: 62, color: '#f59e0b' },
+  { label: 'Humedad del Suelo',   pct: 54, color: '#3b82f6' },
+  { label: 'Fósforo (P)',         pct: 41, color: '#6ee7b7' },
+  { label: 'Radiación Solar',     pct: 33, color: '#fcd34d' },
+  { label: 'Potasio (K)',         pct: 27, color: '#86efac' },
+];
+
+function FeatureChart() {
+  return (
+    <div className="ia-feature-list">
+      {FEATURES.map((f, i) => (
+        <div key={i} className="ia-feature-row">
+          <span className="ia-feature-label">{f.label}</span>
+          <div className="ia-feature-track">
+            <div
+              className="ia-feature-fill"
+              style={{ width: `${f.pct}%`, background: f.color, animationDelay: `${i * 0.07}s` }}
+            ></div>
+          </div>
+          <span className="ia-feature-pct">{f.pct}%</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── Growth Chart SVG ──
+function GrowthChart({ riego, npk }) {
+  const months = ['Oct', 'Nov', 'Dic', 'Ene', 'Feb', 'Mar'];
+  const boost = riego * 0.3 + npk * 0.08;
+  const growthPts = [
+    [0, 185], [160, 155], [320, 120], [480, 75 - boost * 0.3], [640, 45 - boost * 0.2], [800, 20 - boost * 0.1]
+  ];
+  const stressPts = [
+    [0, 195], [160, 197], [320, 188], [480, 192], [640, 170], [800, 175]
+  ];
+  const toPath = pts => pts.map(([x, y], i) => `${i === 0 ? 'M' : 'L'} ${x} ${Math.max(10, y)}`).join(' ');
+  const toArea = (pts, base = 210) => toPath(pts) + ` L ${pts[pts.length-1][0]} ${base} L 0 ${base} Z`;
+
+  return (
+    <svg viewBox="0 0 800 210" className="ia-chart-svg" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="growthGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#10b981" stopOpacity="0.22" />
+          <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
+        </linearGradient>
+        <linearGradient id="stressGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#ef4444" stopOpacity="0.1" />
+          <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      {/* Grid */}
+      {[50, 100, 150, 200].map(y => (
+        <line key={y} x1="0" y1={y} x2="800" y2={y} stroke="#f1f5f9" strokeWidth="1" />
+      ))}
+      {/* Month markers */}
+      {months.map((_, i) => (
+        <line key={i} x1={i * 160} y1="0" x2={i * 160} y2="210" stroke="#f8fafc" strokeWidth="1" />
+      ))}
+      {/* Area fills */}
+      <path d={toArea(growthPts)} fill="url(#growthGrad)" />
+      <path d={toArea(stressPts)} fill="url(#stressGrad)" />
+      {/* Lines */}
+      <path d={toPath(growthPts)} fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d={toPath(stressPts)} fill="none" stroke="#ef4444" strokeWidth="1.8" strokeDasharray="6 4" strokeLinecap="round" />
+      {/* Growth dots */}
+      {growthPts.map(([x, y], i) => (
+        <circle key={i} cx={x} cy={Math.max(10, y)} r="4" fill="#10b981" stroke="white" strokeWidth="1.5" />
+      ))}
+    </svg>
+  );
+}
+
+// ── Field Map ──
+function FieldMap({ timeIdx }) {
+  const opacity = 0.4 + timeIdx * 0.12;
+  return (
+    <svg viewBox="0 0 500 220" className="ia-map-svg" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <radialGradient id="yield1" cx="40%" cy="45%" r="40%">
+          <stop offset="0%" stopColor="#166534" stopOpacity={opacity + 0.1} />
+          <stop offset="50%" stopColor="#4ade80" stopOpacity={opacity - 0.05} />
+          <stop offset="100%" stopColor="#fde68a" stopOpacity="0.2" />
+        </radialGradient>
+        <radialGradient id="yield2" cx="72%" cy="60%" r="32%">
+          <stop offset="0%" stopColor="#ca8a04" stopOpacity={opacity} />
+          <stop offset="70%" stopColor="#fde68a" stopOpacity="0.3" />
+          <stop offset="100%" stopColor="transparent" />
+        </radialGradient>
+        <filter id="fm-blur"><feGaussianBlur stdDeviation="10" /></filter>
+        <linearGradient id="mapLegGrad" x1="0" x2="1">
+          <stop offset="0%" stopColor="#fde68a" />
+          <stop offset="50%" stopColor="#4ade80" />
+          <stop offset="100%" stopColor="#166534" />
+        </linearGradient>
+      </defs>
+      <rect width="500" height="220" fill="#1a3a0f" />
+      <ellipse cx="250" cy="110" rx="220" ry="105" fill="#2a5218" />
+      {[0,1,2,3,4,5].map(i => (
+        <line key={i} x1="20" y1={30 + i * 32} x2="480" y2={30 + i * 32} stroke="rgba(255,255,255,.04)" strokeWidth="1" />
+      ))}
+      <rect x="20" y="15" width="460" height="190" rx="6" fill="none" stroke="rgba(255,255,255,.1)" strokeWidth="1.5" strokeDasharray="5 4" />
+      <ellipse cx="195" cy="95" rx="150" ry="95" fill="url(#yield1)" filter="url(#fm-blur)" />
+      <ellipse cx="355" cy="145" rx="110" ry="80" fill="url(#yield2)" filter="url(#fm-blur)" />
+      {/* Legend */}
+      <rect x="15" y="198" width="100" height="6" rx="3" fill="url(#mapLegGrad)" opacity="0.9" />
+      <text x="15" y="213" fill="rgba(255,255,255,.5)" fontSize="6.5" fontFamily="sans-serif">Baja Productividad</text>
+      <text x="115" y="213" textAnchor="end" fill="rgba(255,255,255,.5)" fontSize="6.5" fontFamily="sans-serif">Alta</text>
+    </svg>
+  );
+}
+
+// ── Tooltip ──
+function InfoTip({ text }) {
+  const [show, setShow] = useState(false);
+  return (
+    <span className="ia-tooltip-wrap"
+      onMouseEnter={() => setShow(true)}
+      onMouseLeave={() => setShow(false)}
+    >
+      <span className="material-symbols-outlined ia-info-icon">info</span>
+      {show && <div className="ia-tooltip">{text}</div>}
+    </span>
+  );
+}
+
+// ── Main ──
 const IAPredictiva = () => {
-  const [riego, setRiego] = useState(75);
-  const [npk, setNpk] = useState(120);
+  const navigate = useNavigate();
+  const [riego, setRiego]         = useState(75);
+  const [npk, setNpk]             = useState(120);
+  const [compare, setCompare]     = useState(false);
+  const [timeIdx, setTimeIdx]     = useState(2);
+
+  const rendimiento = (3.8 + riego * 0.012 + npk * 0.004).toFixed(1);
+  const prob        = Math.min(98, Math.round(72 + riego * 0.18 + npk * 0.06));
+  const riesgo      = Math.max(4,  Math.round(28 - riego * 0.1 - npk * 0.04));
+
+  const MONTHS = ['Oct', 'Nov', 'Dic', 'Ene', 'Feb', 'Mar'];
 
   return (
     <ResearcherLayout activeTab="ia">
-      <div className={styles.container}>
-        {/* Top Info Header */}
-        <header className={styles.header}>
-          <div>
-            <h2 className={styles.headerTitle}>IA Predictiva y Proyección de Cosecha</h2>
-            <div className={styles.headerMeta}>
-              <span className={styles.metaItem}>
-                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>calendar_today</span> Octubre 24, 2023
-              </span>
-              <span className={styles.metaItem}>
-                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>location_on</span> Zona Norte - Lote A4
-              </span>
+      <div className="ia-root">
+
+        {/* ── HEADER ── */}
+        <header className="ia-header">
+          <div className="ia-header-left">
+            <div className="ia-nav-row">
+              <button className="ia-back-btn" onClick={() => navigate('/investigador/dashboard')}>
+                <span className="material-symbols-outlined">arrow_back</span>
+                Volver al Dashboard
+              </button>
+              <nav className="ia-breadcrumb">
+                <span>Módulos</span>
+                <span className="material-symbols-outlined">chevron_right</span>
+                <span className="ia-crumb-active">IA Predictiva</span>
+              </nav>
+            </div>
+            <div className="ia-title-row">
+              <h1 className="ia-title">IA Predictiva <span className="ia-title-light">· Proyección de Cosecha</span></h1>
+              <div className="ia-meta-badges">
+                <span className="ia-badge-mode">MODELO ACTIVO</span>
+                <span className="ia-badge-ref">
+                  <span className="material-symbols-outlined" style={{fontSize:'0.75rem'}}>calendar_today</span>
+                  Oct 24, 2023
+                </span>
+                <span className="ia-badge-ref">
+                  <span className="material-symbols-outlined" style={{fontSize:'0.75rem'}}>location_on</span>
+                  Zona Norte · Lote A4
+                </span>
+              </div>
             </div>
           </div>
-          <div className={styles.headerRight}>
-            <div className={styles.statusBadge}>
-              <span className="material-symbols-outlined" style={{ color: 'var(--m3-outline)' }}>cloud_off</span>
-              <span className={styles.statusText}>Modo Local Activo</span>
+          <div className="ia-header-right">
+            <div className="ia-algo-badge">
+              <span className="ia-algo-score">94.2<small>%</small></span>
+              <div>
+                <p className="ia-algo-label">Precisión Algorítmica</p>
+                <p className="ia-algo-ver">v4.2.0 · Random Forest</p>
+              </div>
+            </div>
+            <div className="ia-header-btns">
+              <button className="ia-btn-ghost">
+                <span className="material-symbols-outlined">download</span>
+                Exportar
+              </button>
+              <button className="ia-btn-primary">
+                <span className="material-symbols-outlined">share</span>
+                Informe
+              </button>
             </div>
           </div>
         </header>
 
-        {/* Bento Grid Layout */}
-        <div className={styles.grid}>
-          {/* Left: Simulation Panel */}
-          <section className={`${styles.card} ${styles.col4}`}>
-            <div className={styles.cardHeader}>
-              <span className={`material-symbols-outlined ${styles.iconBox}`}>search</span>
-              <h3 className={styles.cardTitle}>Simulador de Rendimiento y Riesgos</h3>
-            </div>
-            
-            <form onSubmit={(e) => e.preventDefault()}>
-              <div className={styles.formGroup}>
-                <label className={styles.label}>Fecha de Siembra</label>
-                <input className={styles.input} type="date" />
+        {/* ── METRICS ROW ── */}
+        <div className="ia-metrics-row">
+          {[
+            { icon: 'agriculture', label: 'Rendimiento Estimado', val: `${rendimiento}`, unit: 't/ha', sub: 'Proyectadas', color: '#10b981', tip: 'Calculado con NASA POWER + Sentinel-2 NDVI' },
+            { icon: 'verified',    label: 'Probabilidad de Éxito',val: `${prob}`,         unit: '%',    sub: 'Estado: Óptimo',  color: '#2563eb', tip: 'Modelo Random Forest con 94.2% de precisión' },
+            { icon: 'warning',     label: 'Riesgo Climático',     val: `${riesgo}`,       unit: '%',    sub: 'Amenaza Baja',    color: '#f59e0b', tip: 'Basado en pronóstico ECMWF + alertas Sentinel-2' },
+          ].map(m => (
+            <div key={m.label} className="ia-metric-card" style={{'--accent': m.color}}>
+              <div className="ia-metric-left">
+                <div className="ia-metric-icon-box" style={{background: m.color + '18', color: m.color}}>
+                  <span className="material-symbols-outlined">{m.icon}</span>
+                </div>
+                <div>
+                  <div className="ia-metric-label-row">
+                    <p className="ia-metric-label">{m.label}</p>
+                    <InfoTip text={m.tip} />
+                  </div>
+                  <p className="ia-metric-sub">{m.sub}</p>
+                </div>
               </div>
-              <div className={styles.formGroup}>
-                <label className={styles.label}>Variedad de Semilla</label>
-                <select className={styles.select}>
+              <div className="ia-metric-val" style={{color: m.color}}>{m.val}<span className="ia-metric-unit">{m.unit}</span></div>
+            </div>
+          ))}
+        </div>
+
+        {/* ── MAIN GRID ── */}
+        <div className="ia-main-grid">
+
+          {/* ── LEFT: Simulator + XAI ── */}
+          <div className="ia-left-col">
+
+            {/* Simulator */}
+            <div className="ia-card">
+              <div className="ia-card-header">
+                <span className="material-symbols-outlined ia-card-icon">tune</span>
+                <h2 className="ia-card-title">Simulador de Rendimiento</h2>
+              </div>
+
+              <div className="ia-form-group">
+                <label className="ia-form-label">Fecha de Siembra</label>
+                <input type="date" className="ia-input" defaultValue="2023-10-24" />
+              </div>
+              <div className="ia-form-group">
+                <label className="ia-form-label">Variedad de Semilla</label>
+                <select className="ia-select">
                   <option>Híbrido Premium Maíz A-21</option>
                   <option>Bio-Resistente Soja G-90</option>
                   <option>Variedad Tradicional</option>
                 </select>
               </div>
 
-              <div style={{ paddingTop: '1rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                <div>
-                  <div className={styles.rangeRow}>
-                    <label className={styles.label} style={{ marginBottom: 0, fontWeight: 500 }}>Ajuste de Riego</label>
-                    <span className={styles.rangeValue}>{riego}%</span>
-                  </div>
-                  <input 
-                    className={styles.range} 
-                    max="100" min="0" 
-                    type="range" 
-                    value={riego} 
-                    onChange={(e) => setRiego(e.target.value)} 
-                  />
-                </div>
-                <div>
-                  <div className={styles.rangeRow}>
-                    <label className={styles.label} style={{ marginBottom: 0, fontWeight: 500 }}>Fertilización NPK</label>
-                    <span className={styles.rangeValue}>{npk}kg/ha</span>
-                  </div>
-                  <input 
-                    className={styles.range} 
-                    max="250" min="0" 
-                    type="range" 
-                    value={npk} 
-                    onChange={(e) => setNpk(e.target.value)} 
-                  />
-                </div>
+              <div className="ia-slider-group">
+                <label className="ia-slider-label">
+                  <span className="material-symbols-outlined" style={{color:'#3b82f6',fontSize:'0.9rem'}}>water_drop</span>
+                  Ajuste de Riego
+                  <span className="ia-slider-val">{riego}%</span>
+                </label>
+                <input type="range" min="0" max="100" value={riego}
+                  onChange={e => setRiego(+e.target.value)} className="ia-slider ia-slider-blue" />
               </div>
 
-              <button className={styles.btnPrimary} type="button">
+              <div className="ia-slider-group">
+                <label className="ia-slider-label">
+                  <span className="material-symbols-outlined" style={{color:'#10b981',fontSize:'0.9rem'}}>science</span>
+                  Fertilización NPK
+                  <span className="ia-slider-val">{npk} kg/ha</span>
+                </label>
+                <input type="range" min="0" max="250" value={npk}
+                  onChange={e => setNpk(+e.target.value)} className="ia-slider ia-slider-green" />
+              </div>
+
+              <button className="ia-btn-execute">
                 <span className="material-symbols-outlined">auto_awesome</span>
                 Ejecutar Simulación Predictiva
               </button>
-            </form>
-          </section>
 
-          {/* Right: Results & Chart */}
-          <div className={styles.col8}>
-            {/* Metrics Bar */}
-            <div className={styles.metricsGrid}>
-              <div className={styles.metricCard}>
-                <div className={styles.metricCircle}>
-                  <span className={`${styles.metricValue} ${styles.val1}`}>4.5</span>
-                </div>
-                <div>
-                  <p className={styles.metricLabel}>Rendimiento Estimado</p>
-                  <p className={styles.metricDesc}>t/ha proyectadas</p>
-                </div>
-              </div>
-              <div className={styles.metricCard}>
-                <div className={`${styles.metricCircle} ${styles.metricCircle2}`}>
-                  <span className={`${styles.metricValue} ${styles.val2}`}>88%</span>
-                </div>
-                <div>
-                  <p className={styles.metricLabel}>Probabilidad Éxito</p>
-                  <p className={`${styles.metricDesc} ${styles.val2}`}>Estado: Óptimo</p>
-                </div>
-              </div>
-              <div className={styles.metricCard}>
-                <div className={`${styles.metricCircle} ${styles.metricCircle3}`}>
-                  <span className={`${styles.metricValue} ${styles.val3}`}>15%</span>
-                </div>
-                <div>
-                  <p className={styles.metricLabel}>Riesgo Climático</p>
-                  <p className={`${styles.metricDesc} ${styles.val3}`}>Amenaza Baja</p>
-                </div>
+              <div className="ia-compare-row">
+                <label className="ia-compare-label">
+                  <span>Comparar Escenarios</span>
+                  <button
+                    className={`ia-toggle ${compare ? 'ia-toggle-on' : ''}`}
+                    onClick={() => setCompare(c => !c)}
+                    aria-pressed={compare}
+                  >
+                    <span className="ia-toggle-knob"></span>
+                  </button>
+                </label>
+                {compare && <span className="ia-compare-hint">Escenario A vs B activo</span>}
               </div>
             </div>
 
-            {/* Projection Chart */}
-            <div className={styles.chartArea}>
-              <div className={styles.chartHeader}>
-                <h3 className={styles.chartTitle}>Proyección de Crecimiento (6 meses)</h3>
-                <div className={styles.chartLegend}>
-                  <div className={styles.legendItem}>
-                    <div className={`${styles.dot} ${styles.dot1}`}></div>
-                    <span>Crecimiento</span>
-                  </div>
-                  <div className={styles.legendItem}>
-                    <div className={`${styles.dot} ${styles.dot2}`}></div>
-                    <span>Estrés Climático</span>
-                  </div>
+            {/* XAI Feature Importance */}
+            <div className="ia-card">
+              <div className="ia-card-header">
+                <span className="material-symbols-outlined ia-card-icon">bar_chart</span>
+                <h2 className="ia-card-title">Factores de Influencia (Random Forest)</h2>
+              </div>
+              <p className="ia-xai-sub">Importancia relativa de variables en la predicción actual</p>
+              <FeatureChart />
+            </div>
+          </div>
+
+          {/* ── CENTER: Charts ── */}
+          <div className="ia-center-col">
+
+            {/* Growth Projection */}
+            <div className="ia-card ia-chart-card">
+              <div className="ia-card-header">
+                <span className="material-symbols-outlined ia-card-icon">trending_up</span>
+                <h2 className="ia-card-title">Proyección de Crecimiento (6 meses)</h2>
+                <div className="ia-chart-legend">
+                  <span className="ia-leg-dot" style={{background:'#10b981'}}></span><span>Crecimiento</span>
+                  <span className="ia-leg-dot" style={{background:'#ef4444'}}></span><span>Estrés Climático</span>
                 </div>
               </div>
-              
-              <div className={styles.chartContainer}>
-                <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} preserveAspectRatio="none" viewBox="0 0 800 200">
-                  {/* Growth Curve */}
-                  <path d="M0,180 Q100,160 200,140 T400,80 T600,40 T800,20" fill="none" stroke="var(--m3-primary)" strokeLinecap="round" strokeWidth="4"></path>
-                  {/* Stress Curve */}
-                  <path d="M0,190 Q100,195 200,180 T400,190 T600,160 T800,170" fill="none" stroke="var(--m3-error)" strokeDasharray="8 4" strokeLinecap="round" strokeWidth="2"></path>
-                </svg>
-                <div className={styles.chartXAxis}>
-                  <span className={styles.axisLabel}>Oct</span>
-                  <span className={styles.axisLabel}>Nov</span>
-                  <span className={styles.axisLabel}>Dic</span>
-                  <span className={styles.axisLabel}>Ene</span>
-                  <span className={styles.axisLabel}>Feb</span>
-                  <span className={styles.axisLabel}>Mar</span>
+              <div className="ia-chart-wrap">
+                <GrowthChart riego={riego} npk={npk} />
+              </div>
+              <div className="ia-chart-x-axis">
+                {['Oct','Nov','Dic','Ene','Feb','Mar'].map(m => (
+                  <span key={m} className="ia-axis-label">{m}</span>
+                ))}
+              </div>
+            </div>
+
+            {/* Productivity Map */}
+            <div className="ia-card ia-map-card">
+              <div className="ia-card-header">
+                <span className="material-symbols-outlined ia-card-icon">map</span>
+                <h2 className="ia-card-title">Capa de Productividad Futura</h2>
+                <div className="ia-map-legend">
+                  <span className="ia-map-leg-label">Baja</span>
+                  <div className="ia-map-grad-bar"></div>
+                  <span className="ia-map-leg-label">Alta</span>
+                </div>
+              </div>
+              <div className="ia-map-body">
+                <FieldMap timeIdx={timeIdx} />
+              </div>
+              {/* Time Slider */}
+              <div className="ia-time-slider-wrap">
+                <span className="material-symbols-outlined" style={{color:'#64748b',fontSize:'0.9rem'}}>schedule</span>
+                <span className="ia-time-label">Mes: <strong>{MONTHS[timeIdx]}</strong></span>
+                <input
+                  type="range" min="0" max="5" value={timeIdx}
+                  onChange={e => setTimeIdx(+e.target.value)}
+                  className="ia-slider ia-slider-emerald ia-time-range"
+                />
+                <div className="ia-time-ticks">
+                  {MONTHS.map((m, i) => <span key={m} className={`ia-tick ${i === timeIdx ? 'ia-tick-active' : ''}`}>{m}</span>)}
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Projection Map */}
-          <section className={`${styles.mapCard} ${styles.col8}`}>
-            <div className={styles.chartHeader}>
-              <h3 className={styles.chartTitle} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span className="material-symbols-outlined">map</span> Capa de Productividad Futura
-              </h3>
-              <div className={styles.chartLegend}>
-                <span className={styles.axisLabel}>Baja</span>
-                <div className={styles.gradientBar}></div>
-                <span className={styles.axisLabel}>Alta</span>
-              </div>
+          {/* ── RIGHT: Alerts ── */}
+          <div className="ia-right-col">
+            <div className="ia-card-header" style={{marginBottom:'8px'}}>
+              <span className="material-symbols-outlined ia-card-icon">notifications_active</span>
+              <h2 className="ia-card-title">Alertas de IA</h2>
             </div>
-            
-            <div className={styles.mapArea}>
-              <img 
-                className={styles.mapImg}
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDUMdDBxU37Dk3LkbzQFCMGwXwYTatU5m7cZNMi84Q8y1jPrBliha-Q_bhzfmyqr66vcW9AM6RzpWI7MOSQtYEKLWv6f8zTYBt2htsc2JH_Sq29u3QJrA3gTkt6ilR03Ow4wlGOVzjxJOINKm0uSTAB5rlkogxKcG8byxyXJuWMBsQMA0xqqQY2l_eNFeAfxusYgRhsaKWRVQl2Vun8m_YbapfJyY_9DxThpU66LEZ8XXePDA_jU3uAGkXYRh9PjsLJTq97CqeeUJs" 
-                alt="Plantation heatmap" 
-              />
-              <div className={styles.mapOverlay}></div>
-              
-              <div className={styles.mapControls}>
-                <button className={styles.mapBtn}><span className="material-symbols-outlined">layers</span></button>
-                <button className={styles.mapBtn}><span className="material-symbols-outlined">zoom_in</span></button>
-                <button className={styles.mapBtn}><span className="material-symbols-outlined">zoom_out</span></button>
-              </div>
-            </div>
-          </section>
 
-          {/* AI Push Insights */}
-          <section className={`${styles.alertsCol} ${styles.col4}`}>
-            <h3 className={styles.cardTitle} style={{ marginBottom: '0.5rem' }}>Alertas de IA</h3>
-            
-            <div className={styles.alertCard}>
-              <div className={styles.alertIcon}>
-                <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>water_drop</span>
+            <div className="ia-alert-card ia-alert-red">
+              <div className="ia-alert-icon red">
+                <span className="material-symbols-outlined" style={{fontVariationSettings:"'FILL' 1"}}>water_drop</span>
               </div>
               <div>
-                <h4 className={styles.alertTitle}>Alerta de Estrés Hídrico</h4>
-                <p className={styles.alertText}>Sector B-12 muestra niveles críticos. Recomendado riego de emergencia en 24h.</p>
+                <h4 className="ia-alert-title">Estrés Hídrico</h4>
+                <p className="ia-alert-desc">Sector B-12 en nivel crítico. Riego de emergencia recomendado en 24h.</p>
+                <button className="ia-alert-action">Activar Riego →</button>
               </div>
             </div>
-            
-            <div className={`${styles.alertCard} ${styles.alertCardPrimary}`}>
-              <div className={`${styles.alertIcon} ${styles.alertIconPrimary}`}>
-                <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>eco</span>
+
+            <div className="ia-alert-card ia-alert-green">
+              <div className="ia-alert-icon green">
+                <span className="material-symbols-outlined" style={{fontVariationSettings:"'FILL' 1"}}>eco</span>
               </div>
               <div>
-                <h4 className={styles.alertTitlePrimary}>Ventana de Cosecha Óptima</h4>
-                <p className={styles.alertText}>Predicción de maduración máxima entre el 12 y 15 de Noviembre.</p>
+                <h4 className="ia-alert-title">Ventana de Cosecha Óptima</h4>
+                <p className="ia-alert-desc">Maduración máxima proyectada: 12–15 Noviembre.</p>
+                <button className="ia-alert-action green">Ver Calendario →</button>
               </div>
             </div>
-            
-            <div className={styles.promoCard}>
-              <div className={styles.promoBgIcon}>
-                <span className="material-symbols-outlined">psychology</span>
-              </div>
-              <h4 className={styles.promoTitle}>¿Deseas optimizar tu fertilización?</h4>
-              <p className={styles.promoText}>Nuestra IA puede recalcular tus costos basados en los precios actuales del mercado y la salud del suelo.</p>
-              <button className={styles.promoBtn}>Ver Plan Optimizado</button>
-            </div>
-          </section>
-        </div>
-      </div>
 
-      {/* Agro-Asesor IA Chat Window */}
-      <div className={styles.chatContainer}>
-        <div className={styles.chatBalloon}>
-          <div className={styles.chatHeader}>
-            <div className={styles.chatAvatar}>
-              <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>smart_toy</span>
+            <div className="ia-promo-card">
+              <span className="material-symbols-outlined ia-promo-bg-icon">psychology</span>
+              <h4 className="ia-promo-title">¿Optimizar fertilización?</h4>
+              <p className="ia-promo-desc">La IA puede recalcular costos según precios actuales de mercado y salud del suelo.</p>
+              <button className="ia-promo-btn">Ver Plan Optimizado</button>
             </div>
-            <div>
-              <h5 className={styles.chatName}>Agro-Asesor IA</h5>
-              <span className={styles.chatStatus}>
-                <span className={styles.statusDot}></span> En línea
-              </span>
+
+            {/* Data Sources */}
+            <div className="ia-sources-card">
+              <p className="ia-sources-title">Fuentes de datos</p>
+              {[
+                { icon: 'satellite_alt', name: 'Sentinel-2', desc: 'NDVI · Última imagen: hace 6h' },
+                { icon: 'public',        name: 'NASA POWER',  desc: 'Clima histórico y actual' },
+                { icon: 'biotech',       name: 'Laboratorio', desc: 'Suelo · Calibración: 24/05' },
+              ].map(s => (
+                <div key={s.name} className="ia-source-row">
+                  <span className="material-symbols-outlined ia-source-icon">{s.icon}</span>
+                  <div>
+                    <p className="ia-source-name">{s.name}</p>
+                    <p className="ia-source-desc">{s.desc}</p>
+                  </div>
+                </div>
+              ))}
             </div>
-          </div>
-          <p className={styles.chatText}>
-            Hola, soy tu asistente IA. He analizado tus datos de NDVI y el pH actual. ¿Quieres saber cómo afectarán las lluvias de la próxima semana a tu cosecha?
-          </p>
-          <div className={styles.chatInputRow}>
-            <input className={styles.chatInput} placeholder="Escribe tu duda..." type="text" />
-            <button className={styles.chatMicBtn}>
-              <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>mic</span>
-            </button>
           </div>
         </div>
-        
-        <button className={styles.chatToggleBtn}>
-          <span className="material-symbols-outlined" style={{ fontSize: '32px' }}>psychology</span>
-        </button>
       </div>
     </ResearcherLayout>
   );
