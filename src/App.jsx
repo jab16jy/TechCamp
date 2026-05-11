@@ -1,26 +1,10 @@
-// App.jsx — Raíz de la aplicación AgroCaribe AI
-// ─────────────────────────────────────────────────────────────
-// Estructura de rutas:
-//   /                       → Acceso (selección de perfil) ← NUEVO
-//   /consulta               → Consulta (mapa + formulario)
-//   /resultado              → Resultado del análisis
-//   /historial              → Historial de consultas
-//   /home                   → Home / Landing informativa
-//   /investigador/login     → Login investigador ← NUEVO
-//   /investigador/dashboard → Dashboard investigador ← NUEVO
-// ─────────────────────────────────────────────────────────────
-
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
 // Componentes compartidos
-import Navbar from './components/Navbar/Navbar';
-import Footer from './components/Footer/Footer';
 import Toast from './components/Toast/Toast';
-
 import FloatingAIButton from './components/FloatingAIButton/FloatingAIButton';
 
-// Páginas del flujo principal (con Navbar/Footer)
-import Home from './pages/Home/Home';
+// Páginas del flujo principal
 import Resultado from './pages/Resultado/Resultado';
 
 // ── Nuevas páginas de acceso y panel investigador ──
@@ -32,15 +16,6 @@ import ResultadoAvanzado from './pages/Investigador/ResultadoAvanzado';
 import IAPredictiva from './pages/Investigador/IAPredictiva';
 import SensoresIoT from './pages/Investigador/SensoresIoT';
 import GestionReportes from './pages/Investigador/GestionReportes';
-
-// ── Layout con Navbar + Footer (para las páginas del app) ──
-const LayoutApp = ({ children }) => (
-  <>
-    <Navbar />
-    <main style={{ flex: 1 }}>{children}</main>
-    <Footer />
-  </>
-);
 
 const App = () => (
   <BrowserRouter>
@@ -67,20 +42,16 @@ const App = () => (
       {/* ── Rutas compartidas (usadas por investigador y productor) ── */}
       <Route path="/resultado" element={<Resultado />} />
 
-      {/* ── Rutas del app principal (Landing/Home) ── */}
-      <Route path="/home" element={
-        <LayoutApp><Home /></LayoutApp>
-      } />
-
       {/* ── 404 ── */}
       <Route path="*" element={
-        <LayoutApp>
-          <div style={{ paddingTop: 'var(--navbar-h)', minHeight: '60vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
-            <p style={{ fontSize: '3rem' }}>🌾</p>
-            <h2 style={{ fontFamily: 'var(--font-titulo)' }}>Página no encontrada</h2>
-            <a href="/" className="btn-primario">Volver al inicio</a>
-          </div>
-        </LayoutApp>
+        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1rem', background: '#f8fafc' }}>
+          <p style={{ fontSize: '3rem' }}>🌾</p>
+          <h2 style={{ fontFamily: 'Montserrat, sans-serif', color: '#1e293b' }}>Página no encontrada</h2>
+          <p style={{ color: '#64748b' }}>Lo sentimos, la ruta que buscas no existe o ha sido movida.</p>
+          <a href="/" style={{ marginTop: '1rem', padding: '0.75rem 1.5rem', background: '#059669', color: 'white', borderRadius: '0.5rem', fontWeight: 'bold', textDecoration: 'none' }}>
+            Volver al inicio
+          </a>
+        </div>
       } />
     </Routes>
   </BrowserRouter>

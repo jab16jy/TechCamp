@@ -27,9 +27,6 @@ const useAppStore = create((set, get) => ({
   cargandoAnalisis: false,
   errorAnalisis: null,
 
-  // ── Estado de la API ──
-  apiConectada: false,
-
   // ── Toast notifications ──
   toasts: [],
 
@@ -61,9 +58,6 @@ const useAppStore = create((set, get) => ({
   setCargandoAnalisis: (valor) => set({ cargandoAnalisis: valor }),
   setErrorAnalisis: (error) => set({ errorAnalisis: error, cargandoAnalisis: false }),
   resetearResultado: () => set({ resultado: null, errorAnalisis: null }),
-
-  // ── Estado de conexión API ──
-  setApiConectada: (valor) => set({ apiConectada: valor }),
 
   // ── Sistema de toasts ──
   agregarToast: (mensaje, tipo = 'info') => {
