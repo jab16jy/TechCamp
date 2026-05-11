@@ -1,236 +1,383 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ResearcherLayout from '../../components/ResearcherLayout/ResearcherLayout';
-import styles from './GestionReportes.module.css';
+import './GestionReportes.css';
 
+// ── Data ──
+const NDVI_MONTHS = [
+  { month: 'Mar', value: '0.62', delta: '+3%', trend: 'up',   color: '#a3be8c' },
+  { month: 'Abr', value: '0.68', delta: '+5%', trend: 'up',   color: '#8fb97a' },
+  { month: 'May', value: '0.74', delta: '+7%', trend: 'up',   color: '#6ea055' },
+  { month: 'Jun', value: '0.81', delta: '+5%', trend: 'up',   color: '#4d8c3a' },
+  { month: 'Jul', value: '0.85', delta: '↑ MÁX', trend: 'max', color: '#166534' },
+  { month: 'Ago', value: '0.78', delta: '-8%', trend: 'down', color: '#ca8a04' },
+];
+
+const HYDRO = [
+  { label: 'Ene', rain: 42, soil: 38 },
+  { label: 'Feb', rain: 58, soil: 51 },
+  { label: 'Mar', rain: 74, soil: 65 },
+  { label: 'Abr', rain: 91, soil: 82 },
+  { label: 'May', rain: 110, soil: 95 },
+  { label: 'Jun', rain: 68, soil: 72 },
+];
+const RAIN_MAX = 120;
+
+const TASKS = [
+  {
+    title: 'Ajuste de Riego Sector B',
+    desc: 'Detección de saturación en suelo profundo. Reducir 15% el caudal.',
+    priority: 'ALTA', priorityClass: 'gr-priority-high',
+    icon: 'water_drop',
+  },
+  {
+    title: 'Fertilización Nitrogenada',
+    desc: 'Ventana de 48h basada en pronóstico de lluvia leve (NASA POWER).',
+    priority: 'MEDIA', priorityClass: 'gr-priority-med',
+    icon: 'science',
+  },
+  {
+    title: 'Revisión de Drenaje',
+    desc: 'Mantenimiento preventivo en canaleta principal sector sur.',
+    priority: 'BAJA', priorityClass: 'gr-priority-low',
+    icon: 'plumbing',
+  },
+];
+
+// ── Gauge ──
+function GaugeChart({ pct = 82 }) {
+  const R = 72, CX = 90, CY = 90;
+  const circumference = 2 * Math.PI * R;
+  // Semi-circle gauge: arc from 210° to -30° (240° sweep)
+  const sweep = 240;
+  const arcLen = (sweep / 360) * circumference;
+  const dash = (pct / 100) * arcLen;
+
+  // SVG arc path for a 240° arc centered at bottom
+  const toRad = d => (d * Math.PI) / 180;
+  const startAngle = 150; // degrees
+  const endAngle = startAngle + sweep;
+  const x1 = CX + R * Math.cos(toRad(startAngle));
+  const y1 = CY + R * Math.sin(toRad(startAngle));
+  const x2 = CX + R * Math.cos(toRad(endAngle));
+  const y2 = CY + R * Math.sin(toRad(endAngle));
+  const largeArc = sweep > 180 ? 1 : 0;
+
+  const trackD = `M ${x1} ${y1} A ${R} ${R} 0 ${largeArc} 1 ${x2} ${y2}`;
+
+  // Value arc
+  const valAngle = startAngle + (pct / 100) * sweep;
+  const vx2 = CX + R * Math.cos(toRad(valAngle));
+  const vy2 = CY + R * Math.sin(toRad(valAngle));
+  const valLargeArc = (pct / 100) * sweep > 180 ? 1 : 0;
+  const valueD = `M ${x1} ${y1} A ${R} ${R} 0 ${valLargeArc} 1 ${vx2} ${vy2}`;
+
+  return (
+    <svg viewBox="0 0 180 180" className="gr-gauge-svg">
+      <defs>
+        <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#f59e0b" />
+          <stop offset="50%" stopColor="#22c55e" />
+          <stop offset="100%" stopColor="#166534" />
+        </linearGradient>
+      </defs>
+      {/* Track */}
+      <path d={trackD} fill="none" stroke="#f1f5f9" strokeWidth="14" strokeLinecap="round" />
+      {/* Value */}
+      <path d={valueD} fill="none" stroke="url(#gaugeGrad)" strokeWidth="14" strokeLinecap="round"
+        className="gr-gauge-value-path" />
+      {/* Center text */}
+      <text x={CX} y={CY - 4} textAnchor="middle" className="gr-gauge-num">82</text>
+      <text x={CX} y={CY + 16} textAnchor="middle" className="gr-gauge-pct">%</text>
+      <text x={CX} y={CY + 34} textAnchor="middle" className="gr-gauge-sub">Índice OEE</text>
+    </svg>
+  );
+}
+
+// ── Micro NDVI Map SVG ──
+function NdviMiniMap({ color, selected }) {
+  return (
+    <svg viewBox="0 0 80 50" className="gr-mini-map-svg">
+      <defs>
+        <radialGradient id={`mg-${color.replace('#', '')}`} cx="40%" cy="45%" r="55%">
+          <stop offset="0%" stopColor={color} stopOpacity="0.9" />
+          <stop offset="70%" stopColor={color} stopOpacity="0.4" />
+          <stop offset="100%" stopColor="#ca8a04" stopOpacity="0.15" />
+        </radialGradient>
+        <filter id="mm-blur"><feGaussianBlur stdDeviation="3" /></filter>
+      </defs>
+      <rect width="80" height="50" fill="#1a3a0f" rx="5" />
+      <ellipse cx="38" cy="26" rx="32" ry="20" fill="#2a5218" />
+      <ellipse cx="35" cy="24" rx="24" ry="15"
+        fill={`url(#mg-${color.replace('#', '')})`} filter="url(#mm-blur)" />
+      {selected && <rect width="80" height="50" fill="none" stroke="white" strokeWidth="1.5" rx="5" opacity="0.5" />}
+    </svg>
+  );
+}
+
+// ── Hydro Combo Chart ──
+function HydroChart() {
+  const H = 120, W = 100;
+  // Normalise
+  const rainPts = HYDRO.map((d, i) => ({
+    x: (i / (HYDRO.length - 1)) * W,
+    y: H - (d.soil / RAIN_MAX) * H,
+    rain: d.rain,
+  }));
+  const linePts = rainPts.map(p => `${p.x},${p.y}`).join(' ');
+
+  return (
+    <div className="gr-hydro-chart-wrap">
+      {/* Bars */}
+      <div className="gr-bars">
+        {HYDRO.map((d, i) => (
+          <div key={i} className="gr-bar-col">
+            <div className="gr-bar-inner">
+              <div
+                className="gr-bar-fill"
+                style={{ height: `${(d.rain / RAIN_MAX) * 100}%` }}
+              >
+                <span className="gr-bar-tip">{d.rain}mm</span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      {/* Line overlay */}
+      <svg className="gr-hydro-line-svg" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#10b981" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <polygon
+          points={`0,${H} ${linePts} ${W},${H}`}
+          fill="url(#lineGrad)"
+        />
+        <polyline
+          points={linePts}
+          fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+        />
+        {rainPts.map((p, i) => (
+          <circle key={i} cx={p.x} cy={p.y} r="2.5" fill="#10b981" stroke="white" strokeWidth="1" />
+        ))}
+      </svg>
+    </div>
+  );
+}
+
+// ── Main ──
 const GestionReportes = () => {
-  // Estado para el mes activo del mini mapa NDVI
-  const [activeMonth, setActiveMonth] = useState('Julio');
+  const navigate = useNavigate();
+  const [activeMonth, setActiveMonth] = useState('Jul');
+  const [tasks, setTasks] = useState(TASKS.map(() => false));
 
-  // Datos de los minimapas
-  const miniMaps = [
-    { month: 'Marzo', value: '0.62', trend: 'up', active: false, img: 'https://cdn.discordapp.com/attachments/1113524673322123304/1336048184517656686/Captura_de_pantalla_2025-02-04_140026.png?ex=67a26244&is=67a110c4&hm=7a39ba4737d976daef472c918a2283eab998f4bbd0505bdf0e56689d04732dbf&' },
-    { month: 'Abril', value: '0.68', trend: 'up', active: false, img: 'https://cdn.discordapp.com/attachments/1113524673322123304/1336048184517656686/Captura_de_pantalla_2025-02-04_140026.png?ex=67a26244&is=67a110c4&hm=7a39ba4737d976daef472c918a2283eab998f4bbd0505bdf0e56689d04732dbf&' },
-    { month: 'Mayo', value: '0.74', trend: 'up', active: false, img: 'https://cdn.discordapp.com/attachments/1113524673322123304/1336048184517656686/Captura_de_pantalla_2025-02-04_140026.png?ex=67a26244&is=67a110c4&hm=7a39ba4737d976daef472c918a2283eab998f4bbd0505bdf0e56689d04732dbf&' },
-    { month: 'Junio', value: '0.81', trend: 'up', active: false, img: 'https://cdn.discordapp.com/attachments/1113524673322123304/1336048184517656686/Captura_de_pantalla_2025-02-04_140026.png?ex=67a26244&is=67a110c4&hm=7a39ba4737d976daef472c918a2283eab998f4bbd0505bdf0e56689d04732dbf&' },
-    { month: 'Julio', value: '0.85', trend: 'max', active: true, img: 'https://cdn.discordapp.com/attachments/1113524673322123304/1336048184517656686/Captura_de_pantalla_2025-02-04_140026.png?ex=67a26244&is=67a110c4&hm=7a39ba4737d976daef472c918a2283eab998f4bbd0505bdf0e56689d04732dbf&' },
-    { month: 'Agosto', value: '0.78', trend: 'down', active: false, img: 'https://cdn.discordapp.com/attachments/1113524673322123304/1336048184517656686/Captura_de_pantalla_2025-02-04_140026.png?ex=67a26244&is=67a110c4&hm=7a39ba4737d976daef472c918a2283eab998f4bbd0505bdf0e56689d04732dbf&' },
-  ];
-
-  // Datos para gráfico hidrológico
-  const hydroData = [
-    { label: 'Ene', value: 45, px: '10%', py: '70%' },
-    { label: 'Feb', value: 55, px: '25%', py: '55%' },
-    { label: 'Mar', value: 65, px: '40%', py: '40%' },
-    { label: 'Abr', value: 85, px: '55%', py: '25%' },
-    { label: 'May', value: 95, px: '70%', py: '15%' },
-    { label: 'Jun', value: 75, px: '85%', py: '30%' },
-  ];
-
-  const renderTrendIcon = (trend) => {
-    switch (trend) {
-      case 'up': return <span className={`material-symbols-outlined ${styles.trendIcon}`}>trending_up</span>;
-      case 'down': return <span className={`material-symbols-outlined ${styles.trendIcon}`}>trending_down</span>;
-      case 'max': return <span className={`material-symbols-outlined ${styles.trendIcon}`}>stars</span>;
-      default: return null;
-    }
-  };
-
-  const getTrendClass = (trend) => {
-    switch (trend) {
-      case 'up': return styles.trendUp;
-      case 'down': return styles.trendDown;
-      case 'max': return styles.trendMax;
-      default: return '';
-    }
-  };
+  const toggleTask = i => setTasks(t => t.map((v, j) => j === i ? !v : v));
 
   return (
     <ResearcherLayout activeTab="reportes">
-      <div className={styles.container}>
-        
-        {/* Header */}
-        <div className={styles.header}>
-          <div>
-            <h1 className={styles.title}>Gestión y Reportes</h1>
-            <p className={styles.subtitle}>Análisis consolidado del Sector Norte - Parcela 4</p>
-          </div>
-          <div className={styles.headerRight}>
-            <div className={styles.dateBadge}>
-              <span className={`material-symbols-outlined ${styles.dateIcon}`}>calendar_today</span>
-              <span className={styles.dateText}>Agosto 2024</span>
-            </div>
-            <div className={styles.headerActions}>
-              <button className={styles.iconBtn}>
-                <span className="material-symbols-outlined">print</span>
-              </button>
-              <button className={styles.iconBtn}>
-                <span className="material-symbols-outlined">share</span>
-              </button>
-            </div>
-          </div>
-        </div>
+      <div className="gr-root">
 
-        {/* Dashboard Grid */}
-        <div className={styles.grid}>
-          
-          {/* Eficiencia Global */}
-          <div className={`${styles.card} ${styles.col4} ${styles.efficiencyCard}`}>
-            <h2 className={styles.cardTitle}>Eficiencia de Parcela</h2>
-            <div className={styles.gaugeContainer}>
-              <svg className={styles.gaugeSvg} viewBox="0 0 180 180">
-                <circle cx="90" cy="90" r="80" className={styles.gaugeBg} />
-                <circle cx="90" cy="90" r="80" className={styles.gaugeValue} />
-              </svg>
-              <div className={styles.gaugeCenter}>
-                <span className={styles.gaugeScore}>82</span>
-                <span className={styles.gaugeLabel}>Índice OEE</span>
+        {/* ── HEADER ── */}
+        <header className="gr-header">
+          <div className="gr-header-left">
+            <div className="gr-nav-row">
+              <button className="gr-back-btn" onClick={() => navigate('/investigador/dashboard')}>
+                <span className="material-symbols-outlined">arrow_back</span>
+                Volver al Dashboard
+              </button>
+              <nav className="gr-breadcrumb">
+                <span>Reportes</span>
+                <span className="material-symbols-outlined">chevron_right</span>
+                <span className="gr-crumb-active">Gestión y Reportes</span>
+              </nav>
+            </div>
+            <div className="gr-title-row">
+              <h1 className="gr-title">Gestión <span className="gr-title-amp">&</span> Reportes</h1>
+              <div className="gr-meta-badges">
+                <span className="gr-badge-mode">ANÁLISIS CONSOLIDADO</span>
+                <span className="gr-badge-ref">
+                  <span className="material-symbols-outlined" style={{fontSize:'0.75rem'}}>location_on</span>
+                  Sector Norte · Parcela 4
+                </span>
+                <span className="gr-badge-ref">
+                  <span className="material-symbols-outlined" style={{fontSize:'0.75rem'}}>calendar_today</span>
+                  Agosto 2024
+                </span>
               </div>
             </div>
-            <div className={styles.badgeOptimal}>
+          </div>
+          <div className="gr-header-right">
+            <button className="gr-btn-ghost">
+              <span className="material-symbols-outlined">print</span>
+            </button>
+            <button className="gr-btn-ghost">
+              <span className="material-symbols-outlined">share</span>
+            </button>
+            <button className="gr-btn-primary">
+              <span className="material-symbols-outlined">download</span>
+              Exportar
+            </button>
+          </div>
+        </header>
+
+        {/* ── ROW 1: Gauge + NDVI Grid ── */}
+        <div className="gr-row-top">
+
+          {/* Gauge */}
+          <div className="gr-card gr-gauge-card">
+            <div className="gr-card-header">
+              <span className="material-symbols-outlined gr-card-icon">donut_large</span>
+              <h2 className="gr-card-title">Eficiencia de Parcela</h2>
+            </div>
+            <div className="gr-gauge-wrap">
+              <GaugeChart pct={82} />
+            </div>
+            <div className="gr-optimal-pill">
+              <span className="material-symbols-outlined" style={{fontSize:'0.75rem'}}>stars</span>
               Rendimiento Óptimo
             </div>
+            <div className="gr-gauge-stats">
+              <div className="gr-gauge-stat">
+                <span className="gr-gauge-stat-val" style={{color:'#10b981'}}>↑ 6%</span>
+                <span className="gr-gauge-stat-label">vs mes ant.</span>
+              </div>
+              <div className="gr-gauge-stat-divider"></div>
+              <div className="gr-gauge-stat">
+                <span className="gr-gauge-stat-val" style={{color:'#2563eb'}}>4.5 t/ha</span>
+                <span className="gr-gauge-stat-label">Rendimiento</span>
+              </div>
+              <div className="gr-gauge-stat-divider"></div>
+              <div className="gr-gauge-stat">
+                <span className="gr-gauge-stat-val" style={{color:'#f59e0b'}}>12 ha</span>
+                <span className="gr-gauge-stat-label">Área total</span>
+              </div>
+            </div>
           </div>
 
-          {/* Evolución NDVI */}
-          <div className={`${styles.card} ${styles.col8}`}>
-            <div className={styles.ndviHeader}>
-              <h2 className={styles.cardTitle} style={{marginBottom: 0}}>Evolución del Vigor (NDVI)</h2>
-              <span className={styles.ndviBadge}>Semestre I</span>
+          {/* NDVI Grid */}
+          <div className="gr-card gr-ndvi-card">
+            <div className="gr-card-header">
+              <span className="material-symbols-outlined gr-card-icon">satellite_alt</span>
+              <h2 className="gr-card-title">Evolución del Vigor NDVI</h2>
+              <span className="gr-badge-semester">Semestre I · 2024</span>
             </div>
-            <div className={styles.ndviGrid}>
-              {miniMaps.map((map, index) => (
-                <div 
-                  key={index} 
-                  className={activeMonth === map.month ? styles.miniMapCardActive : styles.miniMapCard}
-                  onClick={() => setActiveMonth(map.month)}
+            <div className="gr-ndvi-grid">
+              {NDVI_MONTHS.map((m, i) => (
+                <button
+                  key={i}
+                  className={`gr-ndvi-cell ${activeMonth === m.month ? 'gr-ndvi-active' : ''}`}
+                  onClick={() => setActiveMonth(m.month)}
                 >
-                  <img src={map.img} alt={`NDVI ${map.month}`} className={styles.miniMapImg} />
-                  <div className={styles.miniMapRow}>
-                    <span className={activeMonth === map.month ? styles.miniMapMonthActive : styles.miniMapMonth}>{map.month}</span>
-                    <span className={activeMonth === map.month ? styles.miniMapValueActive : styles.miniMapValue}>{map.value}</span>
+                  <NdviMiniMap color={m.color} selected={activeMonth === m.month} />
+                  <div className="gr-ndvi-info">
+                    <span className="gr-ndvi-month">{m.month}</span>
+                    <span className="gr-ndvi-val">{m.value}</span>
+                    <span className={`gr-ndvi-delta ${m.trend === 'down' ? 'gr-delta-down' : m.trend === 'max' ? 'gr-delta-max' : 'gr-delta-up'}`}>
+                      {m.trend === 'up' && '↑'}{m.trend === 'down' && '↓'} {m.delta}
+                    </span>
                   </div>
-                  <div className={`${styles.trendRow} ${getTrendClass(map.trend)}`}>
-                    {renderTrendIcon(map.trend)}
-                    <span style={{marginLeft: '0.125rem'}}>{map.trend === 'up' ? '+5%' : map.trend === 'down' ? '-8%' : 'Pico'}</span>
-                  </div>
-                </div>
+                </button>
               ))}
             </div>
           </div>
-
-          {/* Acciones Recomendadas */}
-          <div className={`${styles.card} ${styles.col5} ${styles.actionCard}`}>
-            <div className={styles.actionHeader}>
-              <span className={`material-symbols-outlined ${styles.actionHeaderIcon}`}>psychology</span>
-              <h2 className={styles.cardTitle} style={{marginBottom: 0}}>Acciones Recomendadas por IA</h2>
-            </div>
-            <div className={styles.actionList}>
-              <div className={styles.actionItem}>
-                <input type="checkbox" className={styles.actionCheckbox} />
-                <div className={styles.actionContent}>
-                  <div className={styles.actionRow}>
-                    <p className={styles.actionTitle}>Ajuste de Riego Sector B</p>
-                    <span className={styles.priorityHigh}>Alta</span>
-                  </div>
-                  <p className={styles.actionDesc}>Reducir 15% el caudal. Detección de saturación en suelo profundo.</p>
-                </div>
-              </div>
-
-              <div className={styles.actionItem}>
-                <input type="checkbox" className={styles.actionCheckbox} />
-                <div className={styles.actionContent}>
-                  <div className={styles.actionRow}>
-                    <p className={styles.actionTitleNormal}>Fertilización Nitrogenada</p>
-                    <span className={styles.priorityMed}>Media</span>
-                  </div>
-                  <p className={styles.actionDesc}>Aplicar en ventana de 48h según pronóstico de lluvia leve.</p>
-                </div>
-              </div>
-
-              <div className={styles.actionItem}>
-                <input type="checkbox" className={styles.actionCheckbox} />
-                <div className={styles.actionContent}>
-                  <div className={styles.actionRow}>
-                    <p className={styles.actionTitleNormal}>Revisión de Drenaje</p>
-                    <span className={styles.priorityLow}>Baja</span>
-                  </div>
-                  <p className={styles.actionDesc}>Mantenimiento preventivo en canaleta principal sur.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Análisis Hidrológico */}
-          <div className={`${styles.card} ${styles.col7}`}>
-            <div className={styles.hydroHeader}>
-              <div>
-                <h2 className={styles.hydroTitle}>Análisis Hidrológico Cruzado</h2>
-                <p className={styles.hydroSubtitle}>Precipitación vs. Humedad Retenida</p>
-              </div>
-              <div className={styles.hydroLegend}>
-                <div className={styles.legendItem}>
-                  <div className={styles.legendDotRain}></div>
-                  <span className={styles.legendLabel}>Lluvia (mm)</span>
-                </div>
-                <div className={styles.legendItem}>
-                  <div className={styles.legendDotSoil}></div>
-                  <span className={styles.legendLabel}>Humedad Suelo (%)</span>
-                </div>
-              </div>
-            </div>
-            
-            <div className={styles.chartContainer}>
-              {hydroData.map((data, idx) => (
-                <div key={idx} className={styles.chartBarContainer} style={{ height: `${data.value}%` }}>
-                  <div className={styles.chartBarTooltip}>{data.value}mm</div>
-                </div>
-              ))}
-
-              <svg className={styles.chartLineOverlay} preserveAspectRatio="none">
-                <path 
-                  d={`M ${hydroData.map(d => `${d.px} ${d.py}`).join(' L ')}`} 
-                  fill="none" 
-                  stroke="#a3c19b" 
-                  strokeWidth="3"
-                />
-                {hydroData.map((data, idx) => (
-                  <circle key={`c-${idx}`} cx={data.px} cy={data.py} r="4" fill="#1a4d3a" stroke="#ffffff" strokeWidth="2" />
-                ))}
-              </svg>
-            </div>
-            
-            <div className={styles.chartXAxis}>
-              {hydroData.map(d => <span key={d.label}>{d.label}</span>)}
-            </div>
-          </div>
-
-          {/* Exportar Reporte */}
-          <div className={`${styles.col12} ${styles.exportCard}`}>
-            <svg className={styles.exportBgPattern} viewBox="0 0 100 100" preserveAspectRatio="none">
-              <path d="M0,100 C30,80 70,120 100,50 L100,100 Z" fill="#ffffff"/>
-              <path d="M0,100 C40,60 60,140 100,30 L100,100 Z" fill="#ffffff" opacity="0.5"/>
-            </svg>
-            <div className={styles.exportContent}>
-              <div className={styles.exportTitleRow}>
-                <div className={styles.exportIconWrapper}>
-                  <span className="material-symbols-outlined">description</span>
-                </div>
-                <h2 className={styles.exportTitle}>Reporte Técnico Mensual</h2>
-              </div>
-              <p className={styles.exportDesc}>
-                Generar un documento consolidado (PDF) con todas las métricas, mapas NDVI alta resolución y log de acciones sugeridas por la IA para auditoría RSPO.
-              </p>
-            </div>
-            <div className={styles.exportAction}>
-              <button className={styles.exportBtn}>
-                <span className="material-symbols-outlined">download</span>
-                Descargar PDF
-              </button>
-              <span className={styles.exportMeta}>Generado con AgroCaribe IA</span>
-            </div>
-          </div>
-
         </div>
+
+        {/* ── ROW 2: Tasks + Hydro ── */}
+        <div className="gr-row-mid">
+
+          {/* AI Task Manager */}
+          <div className="gr-card gr-tasks-card">
+            <div className="gr-card-header">
+              <span className="material-symbols-outlined gr-card-icon">psychology</span>
+              <h2 className="gr-card-title">Acciones Recomendadas por IA</h2>
+              <span className="gr-task-count">{tasks.filter(Boolean).length}/{TASKS.length} completadas</span>
+            </div>
+            <div className="gr-task-list">
+              {TASKS.map((t, i) => (
+                <div key={i} className={`gr-task-item ${tasks[i] ? 'gr-task-done' : ''}`}>
+                  <label className="gr-task-check-wrap">
+                    <input
+                      type="checkbox"
+                      checked={tasks[i]}
+                      onChange={() => toggleTask(i)}
+                      className="gr-checkbox-hidden"
+                    />
+                    <span className={`gr-checkbox-custom ${tasks[i] ? 'gr-checkbox-checked' : ''}`}>
+                      {tasks[i] && <span className="material-symbols-outlined" style={{fontSize:'0.8rem',color:'white'}}>check</span>}
+                    </span>
+                  </label>
+                  <div className="gr-task-icon-box">
+                    <span className="material-symbols-outlined">{t.icon}</span>
+                  </div>
+                  <div className="gr-task-body">
+                    <div className="gr-task-top">
+                      <p className={`gr-task-title ${tasks[i] ? 'gr-task-title-done' : ''}`}>{t.title}</p>
+                      <span className={`gr-priority-badge ${t.priorityClass}`}>{t.priority}</span>
+                    </div>
+                    <p className="gr-task-desc">{t.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="gr-task-footer">
+              <div className="gr-task-progress-track">
+                <div className="gr-task-progress-fill" style={{width:`${(tasks.filter(Boolean).length / TASKS.length) * 100}%`}}></div>
+              </div>
+            </div>
+          </div>
+
+          {/* Hydrological Chart */}
+          <div className="gr-card gr-hydro-card">
+            <div className="gr-card-header">
+              <span className="material-symbols-outlined gr-card-icon">water</span>
+              <h2 className="gr-card-title">Análisis Hidrológico Cruzado</h2>
+              <div className="gr-hydro-legend">
+                <span className="gr-leg-bar"></span><span className="gr-leg-label">Precipitación NASA POWER</span>
+                <span className="gr-leg-line"></span><span className="gr-leg-label">Humedad Suelo NDWI</span>
+              </div>
+            </div>
+            <HydroChart />
+            <div className="gr-hydro-x-axis">
+              {HYDRO.map(d => <span key={d.label} className="gr-axis-label">{d.label}</span>)}
+            </div>
+          </div>
+        </div>
+
+        {/* ── EXPORT CARD ── */}
+        <div className="gr-export-card">
+          <div className="gr-export-bg-pattern">
+            <svg viewBox="0 0 400 120" preserveAspectRatio="none" style={{width:'100%',height:'100%'}}>
+              <circle cx="320" cy="60" r="90" fill="rgba(255,255,255,.04)" />
+              <circle cx="360" cy="20" r="55" fill="rgba(255,255,255,.03)" />
+              <circle cx="50"  cy="100" r="70" fill="rgba(255,255,255,.03)" />
+            </svg>
+          </div>
+          <div className="gr-export-icon-box">
+            <span className="material-symbols-outlined" style={{fontSize:'1.6rem',color:'#10b981'}}>description</span>
+          </div>
+          <div className="gr-export-text">
+            <span className="gr-export-eyebrow">REPORTE TÉCNICO MENSUAL</span>
+            <h3 className="gr-export-title">Informe Consolidado de Parcela · Agosto 2024</h3>
+            <p className="gr-export-desc">
+              Genera un PDF con mapas NDVI de alta resolución, métricas de laboratorio y recomendaciones de IA
+              para auditoría crediticia y cumplimiento RSPO.
+            </p>
+          </div>
+          <div className="gr-export-actions">
+            <button className="gr-export-btn">
+              <span className="material-symbols-outlined">download</span>
+              Descargar PDF
+            </button>
+            <button className="gr-export-btn-ghost">
+              <span className="material-symbols-outlined">share</span>
+              Compartir
+            </button>
+            <span className="gr-export-meta">Generado con AgroCaribe IA · v4.2</span>
+          </div>
+        </div>
+
       </div>
     </ResearcherLayout>
   );
