@@ -1,0 +1,742 @@
+/* ============================================================
+   DashboardInvestigador.module.css
+   Estética: Scientific Brutalist Precision
+   Fuente display: Syne | Fuente datos: JetBrains Mono
+   ============================================================ */
+
+/* ── Layout raíz ──────────────────────────────────────────── */
+.comandoWrapper {
+  display: grid;
+  grid-template-columns: 300px 1fr 288px;
+  grid-template-rows: calc(100vh - 70px);
+  width: 100%;
+  background: #f1f5f4;
+  overflow: hidden;
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* ══════════════════════════════════════════════════════════
+   COLUMNA IZQUIERDA — Copiloto IA
+   ══════════════════════════════════════════════════════════ */
+.copiloColumn {
+  display: flex;
+  flex-direction: column;
+  background: #0f1f17;
+  border-right: 1px solid rgba(16, 185, 129, 0.15);
+  overflow: hidden;
+  position: relative;
+}
+
+/* Ruido de fondo sutil */
+.copiloColumn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  opacity: 0.4;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.copiloColumn > * { position: relative; z-index: 1; }
+
+/* Header */
+.copiloHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid rgba(16, 185, 129, 0.12);
+  background: rgba(255,255,255,0.03);
+  flex-shrink: 0;
+}
+
+.copiloAvatar {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 20px;
+  box-shadow: 0 0 0 2px rgba(16,185,129,0.3), 0 4px 12px rgba(16,185,129,0.25);
+  flex-shrink: 0;
+}
+
+.onlineIndicator {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 9px;
+  height: 9px;
+  background: #34d399;
+  border: 2px solid #0f1f17;
+  border-radius: 50%;
+  animation: pulseGreen 2.5s ease-in-out infinite;
+}
+
+@keyframes pulseGreen {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(52,211,153,0.5); }
+  50%       { box-shadow: 0 0 0 4px rgba(52,211,153,0); }
+}
+
+.copiloTitle {
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #e2f5ed;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+}
+
+.copiloStatus {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: #34d399;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.pulseDot {
+  width: 5px;
+  height: 5px;
+  background: #34d399;
+  border-radius: 50%;
+  animation: blink 1.4s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.2; }
+}
+
+/* IA Badges */
+.iaBadges {
+  display: flex;
+  gap: 6px;
+  padding: 8px 16px;
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background: rgba(16,185,129,0.12);
+  border: 1px solid rgba(16,185,129,0.25);
+  border-radius: 20px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: #34d399;
+  letter-spacing: 0.03em;
+}
+
+.badgeBlue {
+  background: rgba(59,130,246,0.12);
+  border-color: rgba(59,130,246,0.25);
+  color: #93c5fd;
+}
+
+/* Chat History */
+.chatHistory {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 14px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  scroll-behavior: smooth;
+}
+
+.chatHistory::-webkit-scrollbar { width: 4px; }
+.chatHistory::-webkit-scrollbar-track { background: transparent; }
+.chatHistory::-webkit-scrollbar-thumb { background: rgba(16,185,129,0.25); border-radius: 2px; }
+
+.chatMsg {
+  display: flex;
+  gap: 8px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.chatMsgUser {
+  flex-direction: row-reverse;
+}
+
+.chatAvatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: rgba(16,185,129,0.15);
+  border: 1px solid rgba(16,185,129,0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #34d399;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.chatBubble {
+  max-width: 82%;
+  padding: 9px 11px;
+  border-radius: 12px;
+  font-size: 11.5px;
+  line-height: 1.55;
+}
+
+.chatMsgIA .chatBubble {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #c8ddd5;
+  border-radius: 4px 12px 12px 12px;
+}
+
+.chatMsgUser .chatBubble {
+  background: linear-gradient(135deg, #059669, #10b981);
+  color: #fff;
+  border-radius: 12px 4px 12px 12px;
+  text-align: right;
+}
+
+.chatHora {
+  display: block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8.5px;
+  color: rgba(255,255,255,0.28);
+  margin-top: 4px;
+  letter-spacing: 0.03em;
+}
+
+.chatMsgUser .chatHora { text-align: right; }
+
+/* Sugerencias */
+.sugerenciasRow {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 14px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  flex-shrink: 0;
+}
+
+.sugerenciaBtn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 10px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 7px;
+  color: #9bbfad;
+  font-size: 11px;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.sugerenciaBtn:hover {
+  background: rgba(16,185,129,0.1);
+  border-color: rgba(16,185,129,0.3);
+  color: #34d399;
+  transform: translateX(2px);
+}
+
+/* Chat Input */
+.chatInputRow {
+  display: flex;
+  gap: 6px;
+  padding: 12px 14px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  background: rgba(0,0,0,0.2);
+  flex-shrink: 0;
+}
+
+.chatInput {
+  flex: 1;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: #e2f5ed;
+  font-size: 12px;
+  font-family: 'DM Sans', sans-serif;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.chatInput::placeholder { color: rgba(255,255,255,0.25); }
+.chatInput:focus { border-color: rgba(16,185,129,0.45); }
+
+.chatSendBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.chatSendBtn:hover {
+  transform: scale(1.06);
+  box-shadow: 0 4px 12px rgba(16,185,129,0.4);
+}
+
+.chatSendBtn:active { transform: scale(0.96); }
+
+/* ══════════════════════════════════════════════════════════
+   COLUMNA CENTRAL — Mapa Maestro
+   ══════════════════════════════════════════════════════════ */
+.mapColumn {
+  position: relative;
+  overflow: hidden;
+  background: #1a2e24;
+}
+
+.leafletMap {
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+/* Overlay glassmorphism superior */
+.mapOverlayTop {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 500;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.mapInfoChip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  background: rgba(15, 23, 18, 0.72);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(16,185,129,0.25);
+  border-radius: 20px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: #a7f3d0;
+  white-space: nowrap;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+}
+
+/* Leyenda NDVI */
+.ndviLegend {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  z-index: 500;
+  background: rgba(15,23,18,0.75);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(16,185,129,0.2);
+  border-radius: 10px;
+  padding: 8px 12px;
+}
+
+.legendTitle {
+  font-family: 'Syne', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  color: #6ee7b7;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 5px;
+}
+
+.legendBar {
+  width: 120px;
+  height: 7px;
+  border-radius: 4px;
+  background: linear-gradient(to right, #ef4444, #f59e0b, #84cc16, #10b981);
+}
+
+.legendLabels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 3px;
+}
+
+.legendLabels span {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  color: rgba(167,243,208,0.6);
+}
+
+/* Popup IoT */
+:global(.leaflet-popup-content-wrapper) {
+  background: #0f1f17 !important;
+  color: #a7f3d0 !important;
+  border: 1px solid rgba(16,185,129,0.3) !important;
+  border-radius: 10px !important;
+  font-family: 'DM Sans', sans-serif !important;
+  font-size: 12px !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4) !important;
+}
+
+:global(.leaflet-popup-tip) { background: #0f1f17 !important; }
+
+/* ══════════════════════════════════════════════════════════
+   COLUMNA DERECHA — Analítica
+   ══════════════════════════════════════════════════════════ */
+.analyticsColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  background: #f8faf9;
+  border-left: 1px solid #e2e8e4;
+  overflow-y: auto;
+  padding: 10px;
+  gap: 8px;
+}
+
+.analyticsColumn::-webkit-scrollbar { width: 4px; }
+.analyticsColumn::-webkit-scrollbar-track { background: transparent; }
+.analyticsColumn::-webkit-scrollbar-thumb { background: #c8d9cf; border-radius: 2px; }
+
+/* Cards */
+.analyticsCard {
+  background: #fff;
+  border: 1px solid #e2e8e4;
+  border-radius: 12px;
+  padding: 12px;
+  flex-shrink: 0;
+  transition: box-shadow 0.2s ease;
+}
+
+.analyticsCard:hover {
+  box-shadow: 0 4px 16px rgba(16,185,129,0.08);
+  border-color: rgba(16,185,129,0.2);
+}
+
+.cardLabel {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'Syne', sans-serif;
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #64748b;
+  margin-bottom: 8px;
+}
+
+.cardLabelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.cardLabelRow .cardLabel { margin-bottom: 0; }
+
+/* ── Gauge OEE ─────────────────────────────────────────── */
+.gaugeSvg {
+  width: 100%;
+  max-width: 140px;
+  display: block;
+  margin: 0 auto;
+}
+
+.gaugeValue {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  fill: #0f172a;
+}
+
+.gaugeLabel {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 7px;
+  fill: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* ── Radar ─────────────────────────────────────────────── */
+.radarSvg {
+  width: 100%;
+  max-width: 180px;
+  display: block;
+  margin: 0 auto;
+}
+
+.radarLabel {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 7.5px;
+  fill: #64748b;
+  font-weight: 500;
+}
+
+.radarLegend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8.5px;
+  color: #94a3b8;
+}
+
+.legendDot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+
+/* ── Simulador ─────────────────────────────────────────── */
+.simulatorBody {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sliderRow {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sliderLabel {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px;
+  color: #64748b;
+}
+
+.sliderLabel strong {
+  color: #10b981;
+  font-weight: 600;
+  margin-left: auto;
+}
+
+.slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(to right, #10b981 0%, #10b981 var(--val, 50%), #e2e8e4 var(--val, 50%));
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  background: #10b981;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(16,185,129,0.4);
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+.proyeccionBox {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+  border: 1px solid rgba(16,185,129,0.25);
+  border-radius: 8px;
+  margin-top: 2px;
+}
+
+.proyeccionLabel {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: #059669;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.proyeccionValor {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  color: #065f46;
+  line-height: 1;
+}
+
+.proyeccionValor small {
+  font-size: 10px;
+  font-weight: 600;
+  color: #059669;
+  margin-left: 2px;
+}
+
+/* ── Telemetría ────────────────────────────────────────── */
+.telemetriaGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.telemetriaItem {
+  background: #f8faf9;
+  border: 1px solid #e2e8e4;
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.telemetriaTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+
+.telemetriaValor {
+  font-family: 'Syne', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.telemetriaLabel {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 5px;
+}
+
+.sparkline {
+  display: block;
+}
+
+/* ── Válvulas ──────────────────────────────────────────── */
+.valvulasGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.valvulaBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 7px 4px;
+  border-radius: 8px;
+  border: 1.5px solid;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.valvulaBtn:hover { transform: translateY(-1px); }
+.valvulaBtn:active { transform: translateY(0) scale(0.97); }
+
+.valvulaOpen {
+  background: rgba(16,185,129,0.08);
+  border-color: rgba(16,185,129,0.4);
+  color: #059669;
+}
+
+.valvulaOpen:hover {
+  background: rgba(16,185,129,0.15);
+  box-shadow: 0 4px 12px rgba(16,185,129,0.2);
+}
+
+.valvulaClosed {
+  background: rgba(239,68,68,0.06);
+  border-color: rgba(239,68,68,0.3);
+  color: #dc2626;
+}
+
+.valvulaClosed:hover {
+  background: rgba(239,68,68,0.12);
+  box-shadow: 0 4px 12px rgba(239,68,68,0.15);
+}
+
+.valvulaStatus {
+  font-size: 7.5px;
+  letter-spacing: 0.05em;
+  opacity: 0.75;
+}
+
+/* ══════════════════════════════════════════════════════════
+   ANIMACIONES GLOBALES
+   ══════════════════════════════════════════════════════════ */
+
+@keyframes pulse-iot {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.5); }
+  50%       { box-shadow: 0 0 0 6px rgba(16,185,129,0); }
+}
+
+/* Entrada escalonada */
+.copiloColumn,
+.mapColumn,
+.analyticsColumn {
+  animation: slideUp 0.4s ease both;
+}
+
+.mapColumn    { animation-delay: 0.05s; }
+.analyticsColumn { animation-delay: 0.1s; }
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Responsive mínimo ────────────────────────────────── */
+@media (max-width: 1200px) {
+  .comandoWrapper {
+    grid-template-columns: 260px 1fr 256px;
+  }
+}
+
+@media (max-width: 900px) {
+  .comandoWrapper {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    overflow-y: auto;
+    height: auto;
+  }
+
+  .copiloColumn  { height: 380px; }
+  .mapColumn     { height: 320px; }
+  .analyticsColumn { height: auto; overflow-y: visible; }
+}

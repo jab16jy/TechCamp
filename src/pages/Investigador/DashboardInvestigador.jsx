@@ -1,215 +1,505 @@
-// ============================================
-// DashboardInvestigador.jsx — Panel de Agro-Asesor
-// ============================================
+// ============================================================
+// DashboardInvestigador.jsx — Centro de Mando AgroCaribe IA
+// Diseño: Scientific Brutalist Precision | Bento-Grid
+// ============================================================
 
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, Circle, LayersControl } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import useAppStore from '../../context/useAppStore';
 import ResearcherLayout from '../../components/ResearcherLayout/ResearcherLayout';
+import styles from './DashboardInvestigador.module.css';
 
-// ── Datos de métricas del modelo (simulados) ──
-const METRICAS = [
-  { icono: 'insights', valor: '94.2%', label: 'Precisión', color: 'text-emerald-600' },
-  { icono: 'speed', valor: '124ms', label: 'Latencia', color: 'text-blue-600' },
-  { icono: 'database', valor: '4.2k', label: 'Muestras', color: 'text-amber-600' },
+// Fix Leaflet default icon
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+});
+
+// ── IoT Node Icon ──────────────────────────────────────────
+const iotIcon = L.divIcon({
+  className: '',
+  html: `<div style="
+    width:14px;height:14px;border-radius:50%;
+    background:#10b981;border:2px solid #fff;
+    box-shadow:0 0 0 3px rgba(16,185,129,0.35);
+    animation: pulse-iot 2s ease-in-out infinite;
+  "></div>`,
+  iconSize: [14, 14],
+  iconAnchor: [7, 7],
+});
+
+// ── Datos Estáticos ───────────────────────────────────────
+const IOT_NODES = [
+  { id: 'N01', lat: 10.383, lng: -75.477, nombre: 'Nodo Norte-01', hum: 72, temp: 28.4 },
+  { id: 'N02', lat: 10.371, lng: -75.461, nombre: 'Nodo Sur-02',   hum: 61, temp: 29.8 },
+  { id: 'N03', lat: 10.377, lng: -75.450, nombre: 'Nodo Este-03',  hum: 55, temp: 31.2 },
 ];
 
-const EXPORTACIONES = [
-  { icono: 'table_view', label: 'CSV Consultas', desc: 'Tabular' },
-  { icono: 'picture_as_pdf', label: 'Reporte PDF', desc: 'Resumen' },
+const SUGERENCIAS = [
+  { icono: 'cloud_alert',       texto: 'Riesgos climáticos' },
+  { icono: 'science',           texto: 'Optimizar fertilización' },
+  { icono: 'satellite_alt',     texto: 'Ver mapas NDVI' },
+  { icono: 'water_drop',        texto: 'Estado de riego' },
 ];
 
+const CHAT_INICIAL = [
+  {
+    rol: 'ia',
+    texto: 'He sincronizado los últimos datos de **Sentinel-2** y tus sensores. 🛰️\n\nEl NDVI en Sector Norte es **0.73** (salud foliar óptima). Detecto una anomalía térmica leve en el Nodo Este-03. ¿Analizamos el riesgo de estrés hídrico?',
+    hora: '10:24 AM',
+  },
+  {
+    rol: 'usuario',
+    texto: '¿Cuál es la recomendación de fertilización para el lote B?',
+    hora: '10:26 AM',
+  },
+  {
+    rol: 'ia',
+    texto: 'Para el **Lote B** recomiendo:\n- **N:** +12 kg/ha (déficit detectado)\n- **P:** Nivel adecuado ✅\n- **K:** +5 kg/ha (leve déficit)\n\nAplicar en las próximas 48h antes del frente de lluvia previsto.',
+    hora: '10:26 AM',
+  },
+];
+
+// ── Radar Nutricional SVG ─────────────────────────────────
+const RadarNutricional = ({ actual, objetivo }) => {
+  const cx = 100, cy = 100, r = 75;
+  const labels = ['N', 'P', 'K', 'Ca', 'Mg', 'S'];
+  const n = labels.length;
+
+  const polarToXY = (angle, radius) => ({
+    x: cx + radius * Math.sin(angle),
+    y: cy - radius * Math.cos(angle),
+  });
+
+  const makePolygon = (values) =>
+    values
+      .map((v, i) => {
+        const pt = polarToXY((2 * Math.PI * i) / n, (v / 100) * r);
+        return `${pt.x},${pt.y}`;
+      })
+      .join(' ');
+
+  return (
+    <svg viewBox="0 0 200 200" className={styles.radarSvg}>
+      {/* Grid rings */}
+      {[25, 50, 75, 100].map((pct) => (
+        <polygon
+          key={pct}
+          points={makePolygon(Array(n).fill(pct))}
+          fill="none"
+          stroke="rgba(100,116,139,0.2)"
+          strokeWidth="0.8"
+        />
+      ))}
+      {/* Axes */}
+      {labels.map((_, i) => {
+        const end = polarToXY((2 * Math.PI * i) / n, r);
+        return <line key={i} x1={cx} y1={cy} x2={end.x} y2={end.y} stroke="rgba(100,116,139,0.25)" strokeWidth="0.8" />;
+      })}
+      {/* Objetivo */}
+      <polygon
+        points={makePolygon(objetivo)}
+        fill="rgba(16,185,129,0.08)"
+        stroke="rgba(16,185,129,0.5)"
+        strokeWidth="1.5"
+        strokeDasharray="4 2"
+      />
+      {/* Actual */}
+      <polygon
+        points={makePolygon(actual)}
+        fill="rgba(16,185,129,0.2)"
+        stroke="#10b981"
+        strokeWidth="2"
+      />
+      {/* Labels */}
+      {labels.map((label, i) => {
+        const pt = polarToXY((2 * Math.PI * i) / n, r + 12);
+        return (
+          <text key={i} x={pt.x} y={pt.y} textAnchor="middle" dominantBaseline="middle" className={styles.radarLabel}>
+            {label}
+          </text>
+        );
+      })}
+    </svg>
+  );
+};
+
+// ── Gauge OEE ────────────────────────────────────────────
+const GaugeOEE = ({ valor = 82 }) => {
+  const angulo = -120 + (valor / 100) * 240;
+  const r = 52, cx = 70, cy = 70;
+  const arcLength = (240 / 360) * 2 * Math.PI * r;
+  const offset = arcLength - (valor / 100) * arcLength;
+
+  const color = valor >= 80 ? '#10b981' : valor >= 60 ? '#f59e0b' : '#ef4444';
+
+  return (
+    <svg viewBox="0 0 140 100" className={styles.gaugeSvg}>
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(100,116,139,0.15)" strokeWidth="10"
+        strokeDasharray={`${(240 / 360) * 2 * Math.PI * r} ${2 * Math.PI * r}`}
+        strokeDashoffset={0}
+        transform={`rotate(150 ${cx} ${cy})`}
+        strokeLinecap="round"
+      />
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke={color} strokeWidth="10"
+        strokeDasharray={`${(240 / 360) * 2 * Math.PI * r} ${2 * Math.PI * r}`}
+        strokeDashoffset={offset}
+        transform={`rotate(150 ${cx} ${cy})`}
+        strokeLinecap="round"
+        style={{ transition: 'stroke-dashoffset 1s ease, stroke 0.5s ease' }}
+      />
+      <text x={cx} y={cy - 4} textAnchor="middle" className={styles.gaugeValue}>{valor}%</text>
+      <text x={cx} y={cy + 12} textAnchor="middle" className={styles.gaugeLabel}>OEE Parcela</text>
+    </svg>
+  );
+};
+
+// ── Sparkline SVG ─────────────────────────────────────────
+const Sparkline = ({ data, color = '#10b981' }) => {
+  const w = 80, h = 28;
+  const min = Math.min(...data), max = Math.max(...data);
+  const pts = data
+    .map((v, i) => {
+      const x = (i / (data.length - 1)) * w;
+      const y = h - ((v - min) / (max - min + 0.001)) * h;
+      return `${x},${y}`;
+    })
+    .join(' ');
+  return (
+    <svg width={w} height={h} className={styles.sparkline}>
+      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.8" strokeLinejoin="round" />
+    </svg>
+  );
+};
+
+// ── Componente Principal ──────────────────────────────────
 const DashboardInvestigador = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const agregarToast = useAppStore((s) => s.agregarToast);
 
-  const handleExportar = (tipo) => {
-    agregarToast(`Preparando ${tipo}…`, 'info');
+  // Chat state
+  const [mensajes, setMensajes] = useState(CHAT_INICIAL);
+  const [inputChat, setInputChat] = useState('');
+  const chatEndRef = useRef(null);
+
+  // Slider simulador
+  const [riego, setRiego] = useState(65);
+  const [fertilizacion, setFertilizacion] = useState(80);
+  const cosechaProyectada = (4.2 + (riego - 50) * 0.03 + (fertilizacion - 50) * 0.04).toFixed(1);
+
+  // Válvulas IoT
+  const [valvulas, setValvulas] = useState({ v1: true, v2: false, v3: true });
+
+  // Telemetría dinámica
+  const [telemetria, setTelemetria] = useState({
+    humedad: [68, 70, 72, 71, 69, 72, 74, 72],
+    temperatura: [27.8, 28.1, 28.4, 28.9, 29.1, 28.7, 28.4, 28.6],
+  });
+
+  // NPK actual vs objetivo
+  const [npkActual] = useState([72, 85, 68, 90, 60, 75]);
+  const [npkObjetivo] = useState([85, 85, 80, 90, 75, 80]);
+
+  // Telemetría simulada cada 4s
+  useEffect(() => {
+    const id = setInterval(() => {
+      setTelemetria((prev) => ({
+        humedad: [...prev.humedad.slice(1), Math.round(65 + Math.random() * 15)],
+        temperatura: [...prev.temperatura.slice(1), +(27 + Math.random() * 4).toFixed(1)],
+      }));
+    }, 4000);
+    return () => clearInterval(id);
+  }, []);
+
+  // Autoscroll chat
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [mensajes]);
+
+  const enviarMensaje = useCallback(() => {
+    if (!inputChat.trim()) return;
+    const nuevo = { rol: 'usuario', texto: inputChat, hora: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }) };
+    setMensajes((prev) => [...prev, nuevo]);
+    setInputChat('');
+    setTimeout(() => {
+      setMensajes((prev) => [
+        ...prev,
+        { rol: 'ia', texto: 'Procesando tu consulta con los datos satelitales más recientes… 🛰️ Dame un momento.', hora: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }) },
+      ]);
+    }, 1200);
+  }, [inputChat]);
+
+  const toggleValvula = (key) => {
+    setValvulas((prev) => {
+      const next = { ...prev, [key]: !prev[key] };
+      agregarToast(`Válvula ${key.toUpperCase()}: ${next[key] ? 'Abierta' : 'Cerrada'}`, next[key] ? 'success' : 'info');
+      return next;
+    });
   };
 
   return (
     <ResearcherLayout activeTab="dashboard">
-      <div className="flex flex-row-reverse w-full h-[calc(100vh-70px)] bg-slate-50 overflow-hidden font-sans">
-        
-        {/* ── BARRA LATERAL DERECHA (Métricas y Exportar) ── */}
-        <aside className={`${sidebarOpen ? 'w-80' : 'w-0'} border-l bg-white flex flex-col transition-all duration-300 overflow-hidden relative shadow-xl z-10`}>
-          <div className="p-4 border-b bg-slate-50/50 flex justify-between items-center shrink-0">
-            <h3 className="font-bold text-slate-700 flex items-center gap-2">
-              <span className="material-symbols-outlined text-emerald-600">analytics</span>
-              Panel Técnico
-            </h3>
-            <button onClick={() => setSidebarOpen(false)} className="hover:bg-slate-200 p-1 rounded-full transition-colors">
-              <span className="material-symbols-outlined text-slate-500">chevron_right</span>
-            </button>
+      <div className={styles.comandoWrapper}>
+
+        {/* ══ COLUMNA IZQUIERDA: Copiloto IA ══════════════════════ */}
+        <aside className={styles.copiloColumn}>
+          {/* Header Agro-Asesor */}
+          <div className={styles.copiloHeader}>
+            <div className={styles.copiloAvatar}>
+              <span className="material-symbols-outlined">smart_toy</span>
+              <span className={styles.onlineIndicator} />
+            </div>
+            <div>
+              <p className={styles.copiloTitle}>Agro-Asesor</p>
+              <p className={styles.copiloStatus}>
+                <span className={styles.pulseDot} />
+                Conectado · Sentinel-2 activo
+              </p>
+            </div>
           </div>
-          
-          <div className="flex-1 overflow-y-auto p-5 space-y-8">
-            {/* Métricas del Modelo */}
-            <section>
-              <div className="flex items-center justify-between mb-4">
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Salud del Modelo IA</h4>
-                <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded-full uppercase">Estable</span>
-              </div>
-              <div className="grid grid-cols-1 gap-3">
-                {METRICAS.map((m, i) => (
-                  <div key={i} className="bg-slate-50 border border-slate-100 p-3 rounded-xl hover:border-emerald-200 transition-colors group">
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg bg-white shadow-sm ${m.color}`}>
-                        <span className="material-symbols-outlined text-lg">{m.icono}</span>
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-medium text-slate-500 uppercase">{m.label}</p>
-                        <p className="text-lg font-bold text-slate-800">{m.valor}</p>
-                      </div>
-                    </div>
+
+          {/* Badges IA Metrics */}
+          <div className={styles.iaBadges}>
+            <span className={styles.badge}>
+              <span className="material-symbols-outlined" style={{ fontSize: '12px' }}>insights</span>
+              94.2% precisión
+            </span>
+            <span className={`${styles.badge} ${styles.badgeBlue}`}>
+              <span className="material-symbols-outlined" style={{ fontSize: '12px' }}>speed</span>
+              124ms
+            </span>
+          </div>
+
+          {/* Chat History */}
+          <div className={styles.chatHistory}>
+            {mensajes.map((msg, i) => (
+              <div key={i} className={`${styles.chatMsg} ${msg.rol === 'usuario' ? styles.chatMsgUser : styles.chatMsgIA}`}>
+                {msg.rol === 'ia' && (
+                  <div className={styles.chatAvatar}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>auto_awesome</span>
                   </div>
-                ))}
-              </div>
-            </section>
-
-            {/* Acciones de Exportación */}
-            <section>
-              <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Herramientas de Datos</h4>
-              <div className="space-y-2">
-                {EXPORTACIONES.map((exp, i) => (
-                  <button 
-                    key={i}
-                    onClick={() => handleExportar(exp.label)}
-                    className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/30 transition-all group"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="material-symbols-outlined text-slate-400 group-hover:text-emerald-600 transition-colors">{exp.icono}</span>
-                      <div className="text-left">
-                        <p className="text-xs font-bold text-slate-700">{exp.label}</p>
-                        <p className="text-[10px] text-slate-400">{exp.desc}</p>
-                      </div>
-                    </div>
-                    <span className="material-symbols-outlined text-slate-300 text-sm group-hover:translate-x-1 transition-transform">download</span>
-                  </button>
-                ))}
-              </div>
-            </section>
-
-            {/* Quick Map Preview */}
-            <section className="pt-4">
-              <div className="rounded-2xl overflow-hidden relative group">
-                <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkRiuTuLPfG1E0Kzq99oA_lQTXVQdYEZsGjaFKXaFNLvQO56A3VbxQzWwCGNIez9PMGvlo0vqrpKvsd1yGeYr5Mq3ix9QSDslr8inZk8fWjkupEsxFs-zm3dt8U-80uQm3ROCsg9UN-xIwBICc0egrcmZCBIdy5J3WKroTzN98Row2QT7uC5jV-rGdhI_X92Riln0ric69xD3F6YWVbsteTddQMBv360q2aOwP0eT755s4QU1xPXeWzs7xU-Fo0kbB0vep2AAVyUE" alt="Turbaco Map" className="w-full h-32 object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-emerald-900/80 to-transparent flex items-end p-3">
-                  <p className="text-[10px] font-bold text-white flex items-center gap-1">
-                    <span className="material-symbols-outlined text-xs">location_on</span> Sector Norte, Turbaco
-                  </p>
+                )}
+                <div className={styles.chatBubble}>
+                  <p dangerouslySetInnerHTML={{
+                    __html: msg.texto
+                      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                      .replace(/\n/g, '<br/>')
+                  }} />
+                  <span className={styles.chatHora}>{msg.hora}</span>
                 </div>
               </div>
-            </section>
+            ))}
+            <div ref={chatEndRef} />
           </div>
 
-          <div className="p-4 border-t bg-slate-50 shrink-0">
-             <p className="text-[10px] text-center text-slate-400 font-medium italic">AgroCaribe Engine v4.2 Pro</p>
+          {/* Sugerencias */}
+          <div className={styles.sugerenciasRow}>
+            {SUGERENCIAS.map((s, i) => (
+              <button
+                key={i}
+                className={styles.sugerenciaBtn}
+                onClick={() => setInputChat(s.texto)}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>{s.icono}</span>
+                {s.texto}
+              </button>
+            ))}
+          </div>
+
+          {/* Input Chat */}
+          <div className={styles.chatInputRow}>
+            <input
+              type="text"
+              value={inputChat}
+              onChange={(e) => setInputChat(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && enviarMensaje()}
+              placeholder="Consulta al Agro-Asesor…"
+              className={styles.chatInput}
+            />
+            <button onClick={enviarMensaje} className={styles.chatSendBtn} aria-label="Enviar">
+              <span className="material-symbols-outlined">send</span>
+            </button>
           </div>
         </aside>
 
-        {/* Botón para reabrir sidebar si está cerrado */}
-        {!sidebarOpen && (
-          <button 
-            onClick={() => setSidebarOpen(true)}
-            className="absolute top-20 right-4 z-20 bg-white border shadow-md p-2 rounded-full hover:bg-slate-50 transition-all"
-          >
-            <span className="material-symbols-outlined text-slate-600">menu_open</span>
-          </button>
-        )}
-
-        {/* ── INTERFAZ DE CHAT FULL SCREEN (Agro-Asesor) ── */}
-        <main className="flex-1 flex flex-col relative bg-white h-full">
-          {/* Header del Chat */}
-          <header className="p-4 border-b flex items-center justify-between shrink-0 bg-white/80 backdrop-blur-sm z-10">
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <div className="w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center text-white shadow-lg">
-                  <span className="material-symbols-outlined">smart_toy</span>
-                </div>
-                <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 border-2 border-white rounded-full"></div>
-              </div>
-              <div>
-                <h2 className="font-bold text-slate-800 leading-tight">Agro-Asesor Inteligente</h2>
-                <p className="text-[10px] font-medium text-emerald-600 flex items-center gap-1 uppercase tracking-wider">
-                  <span className="animate-pulse block w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                  Conectado • Análisis Satelital Activo
-                </p>
-              </div>
+        {/* ══ COLUMNA CENTRAL: Mapa Maestro ═══════════════════════ */}
+        <section className={styles.mapColumn}>
+          {/* Overlay superior glassmorphism */}
+          <div className={styles.mapOverlayTop}>
+            <div className={styles.mapInfoChip}>
+              <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>satellite_alt</span>
+              Sector Norte · Turbaco, Bolívar
             </div>
-            <div className="flex items-center gap-2">
-               <button className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 transition-colors">
-                  <span className="material-symbols-outlined">more_vert</span>
-               </button>
+            <div className={styles.mapInfoChip}>
+              <span className="material-symbols-outlined" style={{ fontSize: '14px', color: '#10b981' }}>eco</span>
+              NDVI: 0.73 · Salud óptima
             </div>
-          </header>
-
-          {/* Historial de Mensajes */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-fixed">
-            
-            {/* Mensaje IA */}
-            <div className="flex gap-4 max-w-3xl">
-              <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0 border border-emerald-200">
-                <span className="material-symbols-outlined text-sm">auto_awesome</span>
-              </div>
-              <div className="space-y-1">
-                <div className="bg-white border border-slate-100 p-4 rounded-2xl rounded-tl-none shadow-sm text-sm text-slate-700 leading-relaxed">
-                  <p>Hola, he sincronizado los últimos datos de <strong>Sentinel-2</strong> y tus sensores de suelo. 🛰️</p>
-                  <p className="mt-2">Hoy la humedad en Turbaco es del <strong>28%</strong>. El NDVI muestra una salud foliar estable en el sector norte, pero detecto una anomalía térmica leve. ¿Quieres que analicemos el riesgo de estrés hídrico?</p>
-                </div>
-                <span className="text-[10px] font-bold text-slate-300 uppercase px-1 tracking-tighter">10:24 AM • Procesado por IA</span>
-              </div>
+            <div className={styles.mapInfoChip}>
+              <span className="material-symbols-outlined" style={{ fontSize: '14px', color: '#f59e0b' }}>thermostat</span>
+              28.6°C · 72% HR
             </div>
-
-            {/* Mensaje Usuario (Simulado) */}
-            <div className="flex gap-4 max-w-3xl ml-auto flex-row-reverse">
-               <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center text-white shrink-0 shadow-sm">
-                <span className="material-symbols-outlined text-sm">person</span>
-              </div>
-              <div className="space-y-1 text-right">
-                <div className="bg-emerald-600 text-white p-4 rounded-2xl rounded-tr-none shadow-md text-sm leading-relaxed">
-                  <p>¿Cuál es la recomendación de fertilización para el lote B?</p>
-                </div>
-                <span className="text-[10px] font-bold text-slate-300 uppercase px-1 tracking-tighter">10:26 AM • Enviado</span>
-              </div>
-            </div>
-
           </div>
 
-          {/* Footer / Entrada del Chat */}
-          <footer className="p-4 border-t bg-slate-50/80 backdrop-blur-md shrink-0">
-            <div className="max-w-4xl mx-auto space-y-4">
-              {/* Sugerencias Rápidas */}
-              <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-                {['Ver riesgos climáticos', 'Estado de sensores', 'Optimizar fertilización', 'Ver mapas NDVI'].map((s, i) => (
-                  <button key={i} className="whitespace-nowrap px-3 py-1.5 bg-white border border-slate-200 rounded-full text-[10px] font-bold text-slate-600 hover:border-emerald-500 hover:text-emerald-600 transition-all shadow-sm">
-                    {s}
-                  </button>
-                ))}
-              </div>
-              
-              <div className="relative group">
-                <input 
-                  type="text" 
-                  placeholder="Escribe tu consulta al Agro-Asesor..." 
-                  className="w-full bg-white border border-slate-200 pl-4 pr-24 py-4 rounded-2xl shadow-inner focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-sm"
+          {/* Leaflet Map */}
+          <MapContainer
+            center={[10.377, -75.461]}
+            zoom={14}
+            className={styles.leafletMap}
+            zoomControl={false}
+          >
+            <LayersControl position="topright">
+              <LayersControl.BaseLayer checked name="Satélite">
+                <TileLayer
+                  url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                  attribution="Esri, Maxar, Earthstar Geographics"
                 />
-                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
-                  <button className="p-2 text-slate-400 hover:text-emerald-600 transition-colors">
-                    <span className="material-symbols-outlined">mic</span>
-                  </button>
-                  <button className="bg-emerald-600 text-white p-2.5 rounded-xl hover:bg-emerald-700 shadow-md transition-all active:scale-95">
-                    <span className="material-symbols-outlined text-lg">send</span>
-                  </button>
-                </div>
+              </LayersControl.BaseLayer>
+              <LayersControl.BaseLayer name="Mapa estándar">
+                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+              </LayersControl.BaseLayer>
+            </LayersControl>
+
+            {/* NDVI Overlay (simulado con círculo coloreado) */}
+            <Circle
+              center={[10.377, -75.461]}
+              radius={600}
+              pathOptions={{ color: '#10b981', fillColor: '#10b981', fillOpacity: 0.18, weight: 1.5, dashArray: '6 4' }}
+            />
+            <Circle
+              center={[10.371, -75.450]}
+              radius={300}
+              pathOptions={{ color: '#f59e0b', fillColor: '#f59e0b', fillOpacity: 0.15, weight: 1.5 }}
+            />
+
+            {/* Nodos IoT */}
+            {IOT_NODES.map((node) => (
+              <Marker key={node.id} position={[node.lat, node.lng]} icon={iotIcon}>
+                <Popup className={styles.iotPopup}>
+                  <strong>{node.nombre}</strong><br />
+                  💧 Humedad: {node.hum}%<br />
+                  🌡️ Temp: {node.temp}°C
+                </Popup>
+              </Marker>
+            ))}
+          </MapContainer>
+
+          {/* Leyenda NDVI */}
+          <div className={styles.ndviLegend}>
+            <span className={styles.legendTitle}>NDVI</span>
+            <div className={styles.legendBar} />
+            <div className={styles.legendLabels}>
+              <span>0.0 Estrés</span>
+              <span>0.5</span>
+              <span>1.0 Óptimo</span>
+            </div>
+          </div>
+        </section>
+
+        {/* ══ COLUMNA DERECHA: Analítica ═══════════════════════════ */}
+        <aside className={styles.analyticsColumn}>
+
+          {/* GAUGE OEE */}
+          <div className={styles.analyticsCard}>
+            <p className={styles.cardLabel}>
+              <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>donut_large</span>
+              Eficiencia de Parcela
+            </p>
+            <GaugeOEE valor={82} />
+          </div>
+
+          {/* RADAR NPK */}
+          <div className={styles.analyticsCard}>
+            <div className={styles.cardLabelRow}>
+              <p className={styles.cardLabel}>
+                <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>radar</span>
+                Radar Nutricional
+              </p>
+              <div className={styles.radarLegend}>
+                <span className={styles.legendDot} style={{ background: '#10b981' }} /> Actual
+                <span className={styles.legendDot} style={{ background: 'rgba(16,185,129,0.4)', border: '1px dashed #10b981' }} /> Objetivo
               </div>
             </div>
-          </footer>
-        </main>
+            <RadarNutricional actual={npkActual} objetivo={npkObjetivo} />
+          </div>
 
+          {/* SIMULADOR PREDICTIVO */}
+          <div className={styles.analyticsCard}>
+            <p className={styles.cardLabel}>
+              <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>model_training</span>
+              Simulador Predictivo
+            </p>
+            <div className={styles.simulatorBody}>
+              <div className={styles.sliderRow}>
+                <label className={styles.sliderLabel}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>water_drop</span>
+                  Riego <strong>{riego}%</strong>
+                </label>
+                <input type="range" min="0" max="100" value={riego} onChange={(e) => setRiego(+e.target.value)} className={styles.slider} />
+              </div>
+              <div className={styles.sliderRow}>
+                <label className={styles.sliderLabel}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>science</span>
+                  Fertilización <strong>{fertilizacion}%</strong>
+                </label>
+                <input type="range" min="0" max="100" value={fertilizacion} onChange={(e) => setFertilizacion(+e.target.value)} className={styles.slider} />
+              </div>
+              <div className={styles.proyeccionBox}>
+                <span className={styles.proyeccionLabel}>Cosecha proyectada</span>
+                <span className={styles.proyeccionValor}>{cosechaProyectada} <small>ton/ha</small></span>
+              </div>
+            </div>
+          </div>
+
+          {/* TELEMETRÍA IOT */}
+          <div className={styles.analyticsCard}>
+            <p className={styles.cardLabel}>
+              <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>sensors</span>
+              Telemetría en Tiempo Real
+            </p>
+            <div className={styles.telemetriaGrid}>
+              <div className={styles.telemetriaItem}>
+                <div className={styles.telemetriaTop}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '14px', color: '#3b82f6' }}>water_drop</span>
+                  <span className={styles.telemetriaValor}>{telemetria.humedad.at(-1)}%</span>
+                </div>
+                <p className={styles.telemetriaLabel}>Humedad</p>
+                <Sparkline data={telemetria.humedad} color="#3b82f6" />
+              </div>
+              <div className={styles.telemetriaItem}>
+                <div className={styles.telemetriaTop}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '14px', color: '#f59e0b' }}>thermostat</span>
+                  <span className={styles.telemetriaValor}>{telemetria.temperatura.at(-1)}°C</span>
+                </div>
+                <p className={styles.telemetriaLabel}>Temperatura</p>
+                <Sparkline data={telemetria.temperatura} color="#f59e0b" />
+              </div>
+            </div>
+
+            {/* Válvulas de riego */}
+            <div className={styles.valvulasGrid}>
+              {Object.entries(valvulas).map(([key, open]) => (
+                <button
+                  key={key}
+                  onClick={() => toggleValvula(key)}
+                  className={`${styles.valvulaBtn} ${open ? styles.valvulaOpen : styles.valvulaClosed}`}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>
+                    {open ? 'valve' : 'valve'}
+                  </span>
+                  <span>{key.toUpperCase()}</span>
+                  <span className={styles.valvulaStatus}>{open ? 'ABIERTA' : 'CERRADA'}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+        </aside>
       </div>
     </ResearcherLayout>
   );
 };
 
 export default DashboardInvestigador;
-
