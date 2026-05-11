@@ -17,6 +17,8 @@ import Navbar from './components/Navbar/Navbar';
 import Footer from './components/Footer/Footer';
 import Toast from './components/Toast/Toast';
 
+import FloatingAIButton from './components/FloatingAIButton/FloatingAIButton';
+
 // Páginas del flujo principal (con Navbar/Footer)
 import Home from './pages/Home/Home';
 import Resultado from './pages/Resultado/Resultado';
@@ -30,6 +32,7 @@ import ResultadoAvanzado from './pages/Investigador/ResultadoAvanzado';
 import IAPredictiva from './pages/Investigador/IAPredictiva';
 import SensoresIoT from './pages/Investigador/SensoresIoT';
 import GestionReportes from './pages/Investigador/GestionReportes';
+
 // ── Layout con Navbar + Footer (para las páginas del app) ──
 const LayoutApp = ({ children }) => (
   <>
@@ -44,6 +47,9 @@ const App = () => (
     {/* Toast global — disponible en todas las rutas */}
     <Toast />
 
+    {/* Botón flotante persistente para Agro-Asesor */}
+    <FloatingAIButton />
+
     <Routes>
       {/* ── Pantalla de selección de perfil (landing principal) ── */}
       <Route path="/" element={<Acceso />} />
@@ -51,6 +57,7 @@ const App = () => (
       {/* ── Rutas del investigador (sin Navbar/Footer, tienen su propio layout) ── */}
       <Route path="/investigador/login" element={<LoginInvestigador />} />
       <Route path="/investigador/dashboard" element={<DashboardInvestigador />} />
+      <Route path="/dashboard" element={<DashboardInvestigador />} /> {/* Atajo solicitado */}
       <Route path="/investigador/analisis" element={<AnalisisCultivosInvestigador />} />
       <Route path="/investigador/resultado-avanzado" element={<ResultadoAvanzado />} />
       <Route path="/investigador/ia" element={<IAPredictiva />} />

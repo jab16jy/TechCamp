@@ -1,390 +1,215 @@
 // ============================================
-// DashboardInvestigador.jsx — Panel de métricas para investigadores
-// Accessible only after authentication via LoginInvestigador.
-// Shows: model KPIs, prediction charts (placeholder), historical
-// queries table, quick access to the map/form, and export options.
+// DashboardInvestigador.jsx — Panel de Agro-Asesor
 // ============================================
 
-import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import useAppStore from '../../context/useAppStore';
 import ResearcherLayout from '../../components/ResearcherLayout/ResearcherLayout';
-import styles from './DashboardInvestigador.module.css';
 
-// ── Datos de métricas del modelo (simulados / placeholder) ──
+// ── Datos de métricas del modelo (simulados) ──
 const METRICAS = [
-  { icono: '🎯', valor: '91.3%', label: 'Accuracy global', delta: '+2.1%', positivo: true },
-  { icono: '📊', valor: '0.887', label: 'F1-Score macro', delta: '+0.04', positivo: true },
-  { icono: '🗂️', valor: '4 218', label: 'Consultas totales', delta: '+134 este mes', positivo: true },
-  { icono: '⚡', valor: '1.2 s', label: 'Latencia media', delta: '-0.3 s', positivo: true },
+  { icono: 'insights', valor: '94.2%', label: 'Precisión', color: 'text-emerald-600' },
+  { icono: 'speed', valor: '124ms', label: 'Latencia', color: 'text-blue-600' },
+  { icono: 'database', valor: '4.2k', label: 'Muestras', color: 'text-amber-600' },
 ];
 
-// ── Rendimiento por cultivo (placeholder para gráfico de barras) ──
-const RENDIMIENTO_CULTIVOS = [
-  { cultivo: 'Maíz',    precision: 94, recall: 91, color: '#e8b84b' },
-  { cultivo: 'Yuca',    precision: 89, recall: 87, color: '#4ab86a' },
-  { cultivo: 'Plátano', precision: 92, recall: 95, color: '#2d9e4f' },
-  { cultivo: 'Arroz',   precision: 88, recall: 83, color: '#0d3d1c' },
-  { cultivo: 'Frijol',  precision: 86, recall: 84, color: '#f96167' },
-  { cultivo: 'Ñame',    precision: 90, recall: 88, color: '#7b61ff' },
-];
-
-
-// ── Íconos para los tipos de exportación ──
 const EXPORTACIONES = [
-  { icono: '📄', label: 'CSV de consultas', desc: 'Todas las predicciones en formato tabular' },
-  { icono: '📊', label: 'Reporte PDF', desc: 'Resumen ejecutivo del modelo y métricas' },
-  { icono: '🗃️', label: 'Dataset JSON', desc: 'Datos crudos para re-entrenamiento' },
+  { icono: 'table_view', label: 'CSV Consultas', desc: 'Tabular' },
+  { icono: 'picture_as_pdf', label: 'Reporte PDF', desc: 'Resumen' },
 ];
 
 const DashboardInvestigador = () => {
-  const navigate = useNavigate();
-  const [tabActiva, setTabActiva] = useState('asesor');
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const agregarToast = useAppStore((s) => s.agregarToast);
 
-  // ── Simular exportación ──
   const handleExportar = (tipo) => {
-    agregarToast(`Preparando ${tipo}… (función en desarrollo)`, 'info');
+    agregarToast(`Preparando ${tipo}…`, 'info');
   };
 
   return (
-    <ResearcherLayout activeTab={tabActiva} onTabChange={setTabActiva}>
-      {/* ── SECCIÓN: Métricas del modelo ── */}
-
-          {tabActiva === 'asesor' && (
-            <div className={styles.asesorGrid}>
-              {/* 70% Chatbot Area */}
-              <section className={styles.chatSection}>
-                <div className={styles.chatContainer}>
-                  {/* Subtle Grain Overlay */}
-                  <div className={styles.grainyBg}></div>
-                  {/* Chat Header */}
-                  <div className={styles.chatHeader}>
-                    <div className={styles.chatHeaderLeft}>
-                      <div className={styles.botAvatar}>
-                        <span className="material-symbols-outlined text-on-primary">smart_toy</span>
+    <ResearcherLayout activeTab="dashboard">
+      <div className="flex flex-row-reverse w-full h-[calc(100vh-70px)] bg-slate-50 overflow-hidden font-sans">
+        
+        {/* ── BARRA LATERAL DERECHA (Métricas y Exportar) ── */}
+        <aside className={`${sidebarOpen ? 'w-80' : 'w-0'} border-l bg-white flex flex-col transition-all duration-300 overflow-hidden relative shadow-xl z-10`}>
+          <div className="p-4 border-b bg-slate-50/50 flex justify-between items-center shrink-0">
+            <h3 className="font-bold text-slate-700 flex items-center gap-2">
+              <span className="material-symbols-outlined text-emerald-600">analytics</span>
+              Panel Técnico
+            </h3>
+            <button onClick={() => setSidebarOpen(false)} className="hover:bg-slate-200 p-1 rounded-full transition-colors">
+              <span className="material-symbols-outlined text-slate-500">chevron_right</span>
+            </button>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto p-5 space-y-8">
+            {/* Métricas del Modelo */}
+            <section>
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Salud del Modelo IA</h4>
+                <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded-full uppercase">Estable</span>
+              </div>
+              <div className="grid grid-cols-1 gap-3">
+                {METRICAS.map((m, i) => (
+                  <div key={i} className="bg-slate-50 border border-slate-100 p-3 rounded-xl hover:border-emerald-200 transition-colors group">
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg bg-white shadow-sm ${m.color}`}>
+                        <span className="material-symbols-outlined text-lg">{m.icono}</span>
                       </div>
                       <div>
-                        <h3 className={styles.botTitle}>Agro-Asesor Inteligente</h3>
-                        <p className={styles.botStatus}>
-                          <span className={styles.statusDot}></span> En línea • Modelo v4.2 Pro
-                        </p>
+                        <p className="text-[10px] font-medium text-slate-500 uppercase">{m.label}</p>
+                        <p className="text-lg font-bold text-slate-800">{m.valor}</p>
                       </div>
                     </div>
-                    <span className="material-symbols-outlined cursor-pointer">more_vert</span>
-                  </div>
-                  {/* Chat History */}
-                  <div className={styles.chatHistory}>
-                    <div className={styles.chatMessageWrapper}>
-                      <div className={styles.chatIconBox}>
-                        <span className="material-symbols-outlined">auto_awesome</span>
-                      </div>
-                      <div className={styles.chatMessageBubble}>
-                        <p>Hola, he analizado los datos de Sentinel-2 y tus sensores IoT. Hoy la humedad en Turbaco está en niveles óptimos (28%). ¿En qué puedo ayudarte?</p>
-                        <span className={styles.chatTime}>10:24 AM • PROCESADO POR IA</span>
-                      </div>
-                    </div>
-                  </div>
-                  {/* Chat Footer / Input */}
-                  <div className={styles.chatFooter}>
-                    {/* Quick Suggestions */}
-                    <div className={styles.quickSuggestions}>
-                      <button className={styles.suggestionBtn}>Ver riesgos climáticos</button>
-                      <button className={styles.suggestionBtn}>Estado de sensores</button>
-                      <button className={styles.suggestionBtn}>Optimizar fertilización</button>
-                    </div>
-                    <div className={styles.inputWrapper}>
-                      <input className={styles.chatInput} placeholder="Pregúntale a la IA sobre tus cultivos..." type="text"/>
-                      <div className={styles.inputActions}>
-                        <button className={styles.iconBtn}>
-                          <span className="material-symbols-outlined">mic</span>
-                        </button>
-                        <button className={styles.sendBtn}>
-                          <span className="material-symbols-outlined">send</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </section>
-
-              {/* 30% Panel Control Técnico */}
-              <section className={styles.controlSection}>
-                {/* Metrics Card */}
-                <div className={styles.controlCard}>
-                  <h4 className={styles.controlTitle}>Salud del Modelo IA</h4>
-                  <div className={styles.gaugeRelative}>
-                    {/* SVG Gauge */}
-                    <svg className={styles.gaugeSvg}>
-                      <circle className={styles.gaugeBgCircle} cx="96" cy="96" r="88" strokeWidth="12" fill="transparent"></circle>
-                      <circle className={styles.gaugeFillCircle} cx="96" cy="96" r="88" strokeWidth="12" fill="transparent" strokeDasharray="552.92" strokeDashoffset="32" strokeLinecap="round"></circle>
-                    </svg>
-                    <div className={styles.gaugeCenter}>
-                      <span className={styles.gaugeValue}>94.2%</span>
-                      <span className={styles.gaugeLabel}>Precisión</span>
-                    </div>
-                  </div>
-                  <div className={styles.miniMetricsGrid}>
-                    <div className={styles.miniMetric}>
-                      <p className={styles.miniMetricLabel}>Latencia</p>
-                      <p className={styles.miniMetricValue}>124ms</p>
-                    </div>
-                    <div className={styles.miniMetric}>
-                      <p className={styles.miniMetricLabel}>Confianza</p>
-                      <p className={styles.miniMetricValue}>Alta</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Quick Actions */}
-                <div className={styles.controlCard}>
-                  <h4 className={styles.controlTitle}>Acciones Rápidas</h4>
-                  <div className={styles.actionsList}>
-                    <button className={styles.actionItemBtn} onClick={() => setTabActiva('exportar')}>
-                      <div className={styles.actionItemLeft}>
-                        <span className="material-symbols-outlined text-primary">description</span>
-                        <span>Exportar Reporte General</span>
-                      </div>
-                      <span className="material-symbols-outlined">chevron_right</span>
-                    </button>
-                    <button className={styles.actionItemBtn} onClick={() => setTabActiva('metricas')}>
-                      <div className={styles.actionItemLeft}>
-                        <span className="material-symbols-outlined text-primary">model_training</span>
-                        <span>Métricas de entrenamiento</span>
-                      </div>
-                      <span className="material-symbols-outlined">chevron_right</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Field View Preview */}
-                <div className={styles.fieldPreviewCard}>
-                  <div className={styles.fieldImgWrapper}>
-                    <img className={styles.fieldImg} src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkRiuTuLPfG1E0Kzq99oA_lQTXVQdYEZsGjaFKXaFNLvQO56A3VbxQzWwCGNIez9PMGvlo0vqrpKvsd1yGeYr5Mq3ix9QSDslr8inZk8fWjkupEsxFs-zm3dt8U-80uQm3ROCsg9UN-xIwBICc0egrcmZCBIdy5J3WKroTzN98Row2QT7uC5jV-rGdhI_X92Riln0ric69xD3F6YWVbsteTddQMBv360q2aOwP0eT755s4QU1xPXeWzs7xU-Fo0kbB0vep2AAVyUE" alt="Field"/>
-                    <div className={styles.fieldImgOverlay}></div>
-                    <div className={styles.fieldImgText}>
-                      <span className="material-symbols-outlined">location_on</span> Sector Norte, Turbaco
-                    </div>
-                  </div>
-                  <div className={styles.fieldStatus}>
-                    <div className={styles.fieldStatusHeader}>
-                      <span className={styles.fieldStatusTitle}>Estado de Suelo</span>
-                      <span className={styles.fieldStatusValue}>28% Humedad</span>
-                    </div>
-                    <div className={styles.fieldStatusTrack}>
-                      <div className={styles.fieldStatusFill} style={{ width: '28%' }}></div>
-                    </div>
-                  </div>
-                </div>
-              </section>
-            </div>
-          )}
-
-          {tabActiva === 'metricas' && (
-            <div className={styles.metricasSection}>
-              {/* Background Effects */}
-              <div className={styles.ecoGrain}></div>
-              <div className={styles.topographicBg}></div>
-
-              {/* Hero Header */}
-              <section className={styles.metricasHero}>
-                <h1 className={styles.metricasTitle}>Rendimiento del Modelo IA</h1>
-                <p className={styles.metricasSubtitle}>
-                  Analítica de rendimiento en tiempo real para la predicción de cultivos. Estos datos reflejan la precisión operativa del motor de AgroCaribe IA en toda la región.
-                </p>
-              </section>
-
-              {/* KPI Grid */}
-              <section className={styles.kpiGrid}>
-                {METRICAS.map((m, idx) => (
-                  <div key={idx} className={styles.kpiCard}>
-                    <div className={styles.kpiHeader}>
-                      <span className={`${styles.kpiIconBox} ${idx === 1 ? styles.kpiIconBoxAlt : idx === 2 ? styles.kpiIconBoxSecondary : idx === 3 ? styles.kpiIconBoxHighest : ''}`}>
-                        <span className="material-symbols-outlined">
-                          {idx === 0 ? 'insights' : idx === 1 ? 'query_stats' : idx === 2 ? 'database' : 'speed'}
-                        </span>
-                      </span>
-                      <div className={styles.kpiTrend}>
-                        <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
-                          {idx === 2 ? 'history' : idx === 3 ? 'bolt' : 'trending_up'}
-                        </span>
-                        <span>{m.delta}</span>
-                      </div>
-                    </div>
-                    <p className={styles.kpiLabel}>{m.label}</p>
-                    <h2 className={styles.kpiValue}>{m.valor}</h2>
                   </div>
                 ))}
-              </section>
+              </div>
+            </section>
 
-              {/* Visualization Section */}
-              <section className={styles.vizSection}>
-                <div className={styles.vizCard}>
-                  <div className={styles.vizHeader}>
-                    <div className={styles.vizHeaderLeft}>
-                      <h3 className={styles.vizTitle}>Precisión y Recall por Cultivo</h3>
-                      <p className={styles.vizSubtitle}>Análisis detallado de la eficiencia predictiva categorizada por tipo de plantación.</p>
-                    </div>
-                    <div className={styles.vizLegend}>
-                      <div className={styles.legendItem}>
-                        <div className={styles.legendDotPrimary}></div>
-                        <span>Precisión</span>
-                      </div>
-                      <div className={styles.legendItem}>
-                        <div className={styles.legendDotSecondary}></div>
-                        <span>Recall</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className={styles.vizBody}>
-                    {RENDIMIENTO_CULTIVOS.map((c, idx) => (
-                      <div key={idx} className={styles.cropRow}>
-                        <div className={styles.cropInfoBox}>
-                          <div className={styles.cropIconCircle}>
-                            <span className="material-symbols-outlined">
-                              {idx === 0 ? 'grass' : idx === 1 ? 'potted_plant' : idx === 2 ? 'nature_people' : idx === 3 ? 'eco' : 'agriculture'}
-                            </span>
-                          </div>
-                          <span className={styles.cropName}>{c.cultivo}</span>
-                        </div>
-                        <div className={styles.cropBars}>
-                          <div className={styles.barWrapper}>
-                            <div className={styles.barTrack}>
-                              <div className={styles.barFillPrimary} style={{ width: `${c.precision}%` }}></div>
-                            </div>
-                            <span className={styles.barValueLabel}>{c.precision}% Precisión</span>
-                          </div>
-                          <div className={styles.barWrapper}>
-                            <div className={styles.barTrack}>
-                              <div className={styles.barFillSecondary} style={{ width: `${c.recall}%` }}></div>
-                            </div>
-                            <span className={styles.barValueLabelSecondary}>{c.recall}% Recall</span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-
-                    {/* AI Insight Sidebar */}
-                    <div className={styles.metricAIInsight}>
-                      <span className="material-symbols-outlined text-primary">auto_awesome</span>
-                      <div>
-                        <h4 className={styles.insightTitle}>AI Optimization Insight</h4>
-                        <p className={styles.insightText}>
-                          El modelo muestra una mayor estabilidad en cultivos de ciclo corto (Arroz, Maíz) con una reducción de falsos positivos del 4.2% este mes. Se recomienda recalibrar el dataset para Ñame durante la transición estacional.
-                        </p>
+            {/* Acciones de Exportación */}
+            <section>
+              <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Herramientas de Datos</h4>
+              <div className="space-y-2">
+                {EXPORTACIONES.map((exp, i) => (
+                  <button 
+                    key={i}
+                    onClick={() => handleExportar(exp.label)}
+                    className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/30 transition-all group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="material-symbols-outlined text-slate-400 group-hover:text-emerald-600 transition-colors">{exp.icono}</span>
+                      <div className="text-left">
+                        <p className="text-xs font-bold text-slate-700">{exp.label}</p>
+                        <p className="text-[10px] text-slate-400">{exp.desc}</p>
                       </div>
                     </div>
-                  </div>
+                    <span className="material-symbols-outlined text-slate-300 text-sm group-hover:translate-x-1 transition-transform">download</span>
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            {/* Quick Map Preview */}
+            <section className="pt-4">
+              <div className="rounded-2xl overflow-hidden relative group">
+                <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkRiuTuLPfG1E0Kzq99oA_lQTXVQdYEZsGjaFKXaFNLvQO56A3VbxQzWwCGNIez9PMGvlo0vqrpKvsd1yGeYr5Mq3ix9QSDslr8inZk8fWjkupEsxFs-zm3dt8U-80uQm3ROCsg9UN-xIwBICc0egrcmZCBIdy5J3WKroTzN98Row2QT7uC5jV-rGdhI_X92Riln0ric69xD3F6YWVbsteTddQMBv360q2aOwP0eT755s4QU1xPXeWzs7xU-Fo0kbB0vep2AAVyUE" alt="Turbaco Map" className="w-full h-32 object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-emerald-900/80 to-transparent flex items-end p-3">
+                  <p className="text-[10px] font-bold text-white flex items-center gap-1">
+                    <span className="material-symbols-outlined text-xs">location_on</span> Sector Norte, Turbaco
+                  </p>
                 </div>
-              </section>
+              </div>
+            </section>
+          </div>
+
+          <div className="p-4 border-t bg-slate-50 shrink-0">
+             <p className="text-[10px] text-center text-slate-400 font-medium italic">AgroCaribe Engine v4.2 Pro</p>
+          </div>
+        </aside>
+
+        {/* Botón para reabrir sidebar si está cerrado */}
+        {!sidebarOpen && (
+          <button 
+            onClick={() => setSidebarOpen(true)}
+            className="absolute top-20 right-4 z-20 bg-white border shadow-md p-2 rounded-full hover:bg-slate-50 transition-all"
+          >
+            <span className="material-symbols-outlined text-slate-600">menu_open</span>
+          </button>
+        )}
+
+        {/* ── INTERFAZ DE CHAT FULL SCREEN (Agro-Asesor) ── */}
+        <main className="flex-1 flex flex-col relative bg-white h-full">
+          {/* Header del Chat */}
+          <header className="p-4 border-b flex items-center justify-between shrink-0 bg-white/80 backdrop-blur-sm z-10">
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <div className="w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center text-white shadow-lg">
+                  <span className="material-symbols-outlined">smart_toy</span>
+                </div>
+                <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 border-2 border-white rounded-full"></div>
+              </div>
+              <div>
+                <h2 className="font-bold text-slate-800 leading-tight">Agro-Asesor Inteligente</h2>
+                <p className="text-[10px] font-medium text-emerald-600 flex items-center gap-1 uppercase tracking-wider">
+                  <span className="animate-pulse block w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                  Conectado • Análisis Satelital Activo
+                </p>
+              </div>
             </div>
-          )}
+            <div className="flex items-center gap-2">
+               <button className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 transition-colors">
+                  <span className="material-symbols-outlined">more_vert</span>
+               </button>
+            </div>
+          </header>
 
-          {tabActiva === 'exportar' && (
-            <div className={styles.exportSection}>
-              {/* Download Cards Grid */}
-              <div className={styles.downloadGrid}>
-                {/* CSV Card */}
-                <div className={styles.downloadCard}>
-                  <div className={styles.iconBox}>
-                    <span className="material-symbols-outlined">table_view</span>
-                  </div>
-                  <h3 className={styles.cardTitle}>Predicciones en formato tabular (CSV)</h3>
-                  <p className={styles.cardDesc}>Descargar todas las predicciones registradas para análisis externo y visualización en herramientas BI.</p>
-                  <button className={`${styles.downloadBtn} ${styles.btnOutline}`} onClick={() => handleExportar('CSV')}>
-                    <span className="material-symbols-outlined">download</span>
-                    Descargar CSV
-                  </button>
+          {/* Historial de Mensajes */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-fixed">
+            
+            {/* Mensaje IA */}
+            <div className="flex gap-4 max-w-3xl">
+              <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0 border border-emerald-200">
+                <span className="material-symbols-outlined text-sm">auto_awesome</span>
+              </div>
+              <div className="space-y-1">
+                <div className="bg-white border border-slate-100 p-4 rounded-2xl rounded-tl-none shadow-sm text-sm text-slate-700 leading-relaxed">
+                  <p>Hola, he sincronizado los últimos datos de <strong>Sentinel-2</strong> y tus sensores de suelo. 🛰️</p>
+                  <p className="mt-2">Hoy la humedad en Turbaco es del <strong>28%</strong>. El NDVI muestra una salud foliar estable en el sector norte, pero detecto una anomalía térmica leve. ¿Quieres que analicemos el riesgo de estrés hídrico?</p>
                 </div>
+                <span className="text-[10px] font-bold text-slate-300 uppercase px-1 tracking-tighter">10:24 AM • Procesado por IA</span>
+              </div>
+            </div>
 
-                {/* PDF Card */}
-                <div className={styles.downloadCard}>
-                  <div className={styles.iconBox}>
-                    <span className="material-symbols-outlined">picture_as_pdf</span>
-                  </div>
-                  <h3 className={styles.cardTitle}>Reporte PDF Ejecutivo</h3>
-                  <p className={styles.cardDesc}>Resumen visual y ejecutivo del rendimiento del modelo, tendencias de cultivo y métricas clave de salud foliar.</p>
-                  <button className={`${styles.downloadBtn} ${styles.btnFilled}`} onClick={() => handleExportar('PDF')}>
-                    <span className="material-symbols-outlined">download</span>
-                    Descargar PDF
-                  </button>
+            {/* Mensaje Usuario (Simulado) */}
+            <div className="flex gap-4 max-w-3xl ml-auto flex-row-reverse">
+               <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center text-white shrink-0 shadow-sm">
+                <span className="material-symbols-outlined text-sm">person</span>
+              </div>
+              <div className="space-y-1 text-right">
+                <div className="bg-emerald-600 text-white p-4 rounded-2xl rounded-tr-none shadow-md text-sm leading-relaxed">
+                  <p>¿Cuál es la recomendación de fertilización para el lote B?</p>
                 </div>
+                <span className="text-[10px] font-bold text-slate-300 uppercase px-1 tracking-tighter">10:26 AM • Enviado</span>
+              </div>
+            </div>
 
-                {/* JSON Card */}
-                <div className={styles.downloadCard}>
-                  <div className={styles.iconBox}>
-                    <span className="material-symbols-outlined">data_object</span>
-                  </div>
-                  <h3 className={styles.cardTitle}>Dataset JSON</h3>
-                  <p className={styles.cardDesc}>Datos crudos estructurados ideales para procesos de re-entrenamiento de modelos y auditoría técnica profunda.</p>
-                  <button className={`${styles.downloadBtn} ${styles.btnOutline}`} onClick={() => handleExportar('JSON')}>
-                    <span className="material-symbols-outlined">download</span>
-                    Descargar JSON
+          </div>
+
+          {/* Footer / Entrada del Chat */}
+          <footer className="p-4 border-t bg-slate-50/80 backdrop-blur-md shrink-0">
+            <div className="max-w-4xl mx-auto space-y-4">
+              {/* Sugerencias Rápidas */}
+              <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                {['Ver riesgos climáticos', 'Estado de sensores', 'Optimizar fertilización', 'Ver mapas NDVI'].map((s, i) => (
+                  <button key={i} className="whitespace-nowrap px-3 py-1.5 bg-white border border-slate-200 rounded-full text-[10px] font-bold text-slate-600 hover:border-emerald-500 hover:text-emerald-600 transition-all shadow-sm">
+                    {s}
+                  </button>
+                ))}
+              </div>
+              
+              <div className="relative group">
+                <input 
+                  type="text" 
+                  placeholder="Escribe tu consulta al Agro-Asesor..." 
+                  className="w-full bg-white border border-slate-200 pl-4 pr-24 py-4 rounded-2xl shadow-inner focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-sm"
+                />
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
+                  <button className="p-2 text-slate-400 hover:text-emerald-600 transition-colors">
+                    <span className="material-symbols-outlined">mic</span>
+                  </button>
+                  <button className="bg-emerald-600 text-white p-2.5 rounded-xl hover:bg-emerald-700 shadow-md transition-all active:scale-95">
+                    <span className="material-symbols-outlined text-lg">send</span>
                   </button>
                 </div>
               </div>
-
-              {/* Advanced Configuration */}
-              <div className={styles.advancedCard}>
-                <div className={styles.bgIcon}>
-                  <span className="material-symbols-outlined">precision_manufacturing</span>
-                </div>
-                <div className={styles.advancedHeader}>
-                  <div>
-                    <div className={styles.advancedTitleRow}>
-                      <span className="material-symbols-outlined">tune</span>
-                      <h2 className={styles.advancedTitle}>Configurar exportación avanzada</h2>
-                    </div>
-                    <p className={styles.advancedDesc}>Refine sus datos mediante filtros granulares por rango de fecha, municipio, departamento y tipo de cultivo específico. Ideal para investigadores que requieren segmentaciones territoriales precisas.</p>
-                  </div>
-                  <div>
-                    <span className={styles.devBadge}>
-                      <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>build_circle</span>
-                      En desarrollo (Próxima versión)
-                    </span>
-                  </div>
-                </div>
-
-                <div className={styles.filterGrid}>
-                  <div className={styles.filterItem}>
-                    <span className={styles.filterLabel}>Rango Fecha</span>
-                    <span className={styles.filterValue}>Últimos 30 días</span>
-                  </div>
-                  <div className={styles.filterItem}>
-                    <span className={styles.filterLabel}>Territorio</span>
-                    <span className={styles.filterValue}>Antioquia</span>
-                  </div>
-                  <div className={styles.filterItem}>
-                    <span className={styles.filterLabel}>Municipio</span>
-                    <span className={styles.filterValue}>Sonsón</span>
-                  </div>
-                  <div className={styles.filterItem}>
-                    <span className={styles.filterLabel}>Cultivo</span>
-                    <span className={styles.filterValue}>Aguacate Hass</span>
-                  </div>
-                </div>
-              </div>
-
-
-              {/* Page Footer */}
-              <footer className={styles.dashboardFooter}>
-                <div className={styles.footerContent}>
-                  <span className={styles.footerBrand}>AgroCaribe IA Portal de Investigador</span>
-                  <p className={styles.footerCopy}>© 2024 Innovación Sostenible. Todos los derechos reservados.</p>
-                </div>
-              </footer>
             </div>
-          )}
-      {/* Floating Action Button */}
-      <div className={styles.fabContainer}>
-        <button className={styles.fab}>
-          <span className="material-symbols-outlined">add_chart</span>
-          <span className={styles.fabTooltip}>Nueva Analítica</span>
-        </button>
+          </footer>
+        </main>
+
       </div>
     </ResearcherLayout>
   );
 };
 
 export default DashboardInvestigador;
+
