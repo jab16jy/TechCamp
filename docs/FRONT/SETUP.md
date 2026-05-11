@@ -1,49 +1,52 @@
-# 🚀 Guía de Configuración (Setup)
+# Configuración y Ejecución
 
-Sigue estos pasos para poner en marcha el proyecto en tu entorno local.
+Guía para preparar el entorno de desarrollo e iniciar el frontend de **AgroCaribe IA**.
 
-## 📋 Prerrequisitos
+## 📋 Requisitos Previos
 
-- **Node.js** (v16 o superior recomendado)
-- **npm** o **yarn**
-- Conexión a internet (para descargar dependencias y cargar mapas/imágenes)
+- **Node.js:** Versión 18.0.0 o superior.
+- **npm:** Versión 9.0.0 o superior.
 
 ## 🛠️ Instalación
 
-1. **Clonar el repositorio** (o abrir la carpeta del proyecto).
-2. **Instalar dependencias**:
-   ```bash
-   npm install
-   ```
-3. **Configurar variables de entorno**:
-   Crea un archivo `.env` en la raíz (si no existe) y define la URL del API (opcional):
-   ```env
-   VITE_API_URL=http://localhost:8000
-   ```
-   *Nota: Si el API no está disponible, el sistema usará automáticamente [[SERVICES#Mocks|Datos Mock]].*
+1.  Clonar el repositorio.
+2.  Navegar a la carpeta del proyecto.
+3.  Instalar dependencias:
+    ```bash
+    npm install
+    ```
 
-## 🏃 Ejecución
+## 🚀 Ejecución en Local
 
-Para iniciar el servidor de desarrollo:
+Para iniciar el servidor de desarrollo con recarga en caliente:
+
 ```bash
 npm run dev
 ```
-La aplicación estará disponible en `http://localhost:5173` (o el puerto que asigne Vite).
 
-## 🏗️ Construcción para Producción
+La aplicación estará disponible por defecto en `http://localhost:5173`.
 
-Para generar los archivos optimizados para despliegue:
+## ⚙️ Variables de Entorno
+
+Crea un archivo `.env` en la raíz del proyecto (basado en `.env.example` si existe) con las siguientes variables:
+
+| Variable | Descripción | Valor por Defecto |
+| :--- | :--- | :--- |
+| `VITE_API_URL` | URL base del backend (FastAPI). | `http://localhost:8000` |
+
+*Nota: Si la API no está disponible, el sistema activará automáticamente el modo de datos simulados (Mock).*
+
+## 📦 Scripts Disponibles
+
+| Comando | Descripción |
+| :--- | :--- |
+| `npm run dev` | Inicia Vite en modo desarrollo. |
+| `npm run build` | Genera el bundle optimizado para producción en `dist/`. |
+| `npm run lint` | Ejecuta ESLint para verificar errores de código. |
+| `npm run preview` | Previsualiza la build de producción localmente. |
+
+## 🌐 Despliegue (Wrangler)
+El proyecto incluye configuración para **Cloudflare Pages** via `wrangler.toml`.
 ```bash
-npm run build
+npx wrangler pages deploy dist
 ```
-Los archivos se generarán en la carpeta `/dist`.
-
----
-
-## 🔑 Cuentas de Prueba (Mocks)
-
-Actualmente, como el sistema es mayormente Frontend, puedes usar cualquier credencial en el login de investigador o simplemente avanzar en los flujos, ya que la validación es simulada en esta etapa.
-
----
-
-[[INDEX|⬅️ Volver al Índice]]

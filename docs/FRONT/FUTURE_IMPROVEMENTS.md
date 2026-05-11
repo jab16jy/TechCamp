@@ -1,31 +1,23 @@
-# 🚀 Mejoras Futuras y Hoja de Ruta
+# Futuras Mejoras Técnicas
 
-Lista de funcionalidades y mejoras técnicas identificadas para el crecimiento del proyecto.
+Roadmap de optimizaciones y funcionalidades planeadas para elevar la calidad técnica del frontend de **AgroCaribe IA**.
 
-## 🛠️ Implementación Inmediata (Planeado)
+## 🛠️ Optimización y Rendimiento
+- **Code Splitting:** Implementar `React.lazy` y `Suspense` para cargar las páginas del investigador solo cuando sea necesario, reduciendo el bundle inicial.
+- **Image Optimization:** Implementar formatos modernos (WebP) y lazy loading para assets de gran tamaño en la landing page.
+- **Memoización:** Refinar el uso de `useMemo` y `useCallback` en los componentes de gráficos complejos (Radar, Gauges) para evitar re-renders costosos.
 
-- [ ] **Autenticación Real**: Integrar JWT con el backend para proteger las rutas del investigador.
-- [ ] **Persistencia de Consultas**: Guardar los formularios de los productores en base de datos real (PostgreSQL/MongoDB).
-- [ ] **Exportación de PDF**: Generar reportes técnicos descargables desde la página de resultados.
+## 📱 Experiencia de Usuario (UX/UI)
+- **Modo Offline:** Implementar Service Workers para permitir la consulta de datos cacheados en zonas rurales con baja conectividad.
+- **Soporte Mobile:** Aunque los dashboards son de alta densidad para desktop, se planea una vista simplificada para tablets y smartphones.
+- **Accesibilidad (a11y):** Auditoría completa de contraste, etiquetas ARIA y navegación por teclado en los formularios de consulta.
 
-## 🔬 Herramientas Avanzadas (Futuro)
+## 🧪 Calidad de Software
+- **Testing Unitario:** Introducir **Vitest** y **React Testing Library** para asegurar que la lógica de los servicios y el store de Zustand sea robusta.
+- **E2E Testing:** Implementar pruebas de flujo completo (Selección de mapa -> Análisis -> Resultado) con **Playwright**.
+- **TypeScript:** Migración progresiva de `.jsx` a `.tsx` para mejorar la seguridad de tipos en la gestión de datos de IA.
 
-- [ ] **Integración con Sensores IoT**: Capacidad de recibir datos en tiempo real de estaciones climáticas locales.
-- [ ] **Modelos de IA Propios**: Migrar de reglas simples a modelos de Deep Learning entrenados con datos históricos del Caribe.
-- [ ] **Modo Offline**: Sincronización de datos para áreas rurales con baja conectividad.
-
-## 🏗️ Mejoras de Infraestructura (No implementado aún)
-
-- [ ] **Dockerización**: Crear contenedores para facilitar el despliegue tanto del frontend como del backend.
-- [ ] **Tests Automatizados**: Implementar pruebas unitarias (Vitest) y de integración (Cypress/Playwright).
-- [ ] **Internacionalización (i18n)**: Soporte para múltiples idiomas.
-
----
-
-## 💡 Ideas de Negocio
-- Marketplace de insumos sugeridos según el cultivo recomendado.
-- Sistema de alertas tempranas vía WhatsApp para plagas o sequías extremas.
-
----
-
-[[INDEX|⬅️ Volver al Índice]]
+## 🌐 Funcionalidades de Datos
+- **Persistencia Local:** Sincronizar el store de Zustand con `localStorage` para que el usuario no pierda su progreso en los formularios al refrescar.
+- **Exportación Avanzada:** Implementar la generación de PDF del lado del cliente (`jspdf`) para los reportes de `GestionReportes`.
+- **Integración Real de API:** Transición completa de datos Mock a endpoints de producción una vez el backend esté desplegado.

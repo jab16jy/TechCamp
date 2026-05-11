@@ -1,74 +1,38 @@
-# 🛰️ AgroCaribe IA: Módulo de Sensores IoT y Telemetría
+# Monitoreo de Red IoT en Tiempo Real
 
-## 1. Visión del Sistema de Sensores
-El módulo de Sensores IoT no es solo un visor de datos; es el **sistema nervioso central** de la parcela. Su propósito es fusionar la precisión de los datos físicos en tierra con la visión macroscópica de los satélites para ofrecer una verdad única sobre el estado del cultivo.
+Documentación técnica del sistema de telemetría y control de actuadores en campo de **AgroCaribe IA**.
 
----
+## 1. Visión General
+Módulo diseñado para el seguimiento en vivo de la red de sensores desplegada en la plantación. Integra visualización geoespacial con datos de salud de hardware y control remoto de sistemas de riego.
 
-## 2. Arquitectura de Conectividad (Health Check)
-Dado que el entorno agrícola es hostil para las telecomunicaciones, el sistema implementa un monitoreo de salud constante:
+## 2. Arquitectura de la Interfaz
 
-### 2.1 Monitoreo de Nodo (Heartbeat)
-- **Estado de Batería:** Indicador visual (⚡) con niveles críticos por debajo del 20%.
-- **Calidad de Señal (RSSI):** Monitoreo de intensidad de señal LoRaWAN o 4G/NB-IoT.
-- **Lógica de Estimación:** Si un nodo pierde conexión por más de 12 horas, la IA marca la zona como **"Dato Estimado"**, utilizando proyecciones basadas en estaciones vecinas y datos satelitales Sentinel-2 para "llenar el vacío".
+### 2.1. Panel de Salud de Nodos (Sidebar Izquierdo)
+*   **Métricas por Nodo:**
+    *   **RSSI:** Calidad de señal (dBm).
+    *   **Batería:** Estado de carga de celdas solares.
+    *   **Estado:** Online / Offline.
+*   **Agrupación:** Lista vertical compacta con indicadores visuales de alerta.
 
----
+### 2.2. Mapa Interactivo de Parcelas
+*   **Capas (Layer Toggle):**
+    *   **Marcadores IoT:** Posición exacta de los nodos numerados.
+    *   **Sentinel-2 NDVI Overlay:** Mapa de calor de salud vegetal (gradiente amarillo → verde esmeralda con blur dinámico).
+*   **Interactividad:** Al hacer clic en un nodo se actualiza el panel de telemetría detallada.
 
-## 3. Visualización Geoespacial y Mapa de Calor
-En lugar de tablas estáticas, el usuario interactúa con un gemelo digital de su parcela.
+### 2.3. Control de Actuadores (Válvula de Riego)
+*   **Simulación de Control:** Interruptor para apertura/cierre de electro-válvulas.
+*   **Feedback Visual:** Animación de "flujo de agua" en la interfaz cuando el riego está activo.
 
-### 3.1 Nodos Interactivos
-- **Ubicación en Mapa:** Los sensores se renderizan como puntos georreferenciados sobre una capa de mapa base (Satelital/Híbrido).
-- **Interacción Hover:** Al pasar el cursor, se despliega una tarjeta flotante con:
-  - Humedad del suelo actual vs. promedio de 7 días (Gráfico Sparkline).
-  - Temperatura de la zona radicular.
-  - Tiempo desde la última actualización.
+### 2.4. Telemetría Detallada (Panel Derecho)
+*   **Gauges Técnicos:** Humedad de suelo (%), Temperatura ambiente (°C), Humedad relativa (%).
+*   **Sparklines:** Gráficos de línea miniatura mostrando la tendencia de los últimos 15 minutos.
 
-### 3.2 Generación de Mapa de Calor (Heatmap)
-- **Interpolación Espacial:** Se utiliza el algoritmo **IDW (Inverse Distance Weighting)** para generar un gradiente de color entre sensores, permitiendo identificar "bolsas" de sequía o exceso de humedad que un solo sensor no detectaría.
-- **Frecuencia:** Actualización en tiempo real (vía MQTT) o cada 3 horas para conservar energía en nodos de batería.
+## 3. Especificaciones Técnicas
+*   **Frecuencia de Actualización:** Simulación de datos cada 3 segundos.
+*   **Estética:** Layout de alta densidad, bordes redondeados (14px), paleta técnica esmeralda y pizarra.
+*   **Tecnología:** SVG para mapas y gráficos, React hooks para manejo de estados de sensores.
 
----
-
-## 4. Alertas de Umbral Crítico y Acción Directa
-El sistema pasa de ser informativo a ser **operativo**.
-
-### 4.1 Modo Alerta de Parcela
-- **Disparador:** Humedad < 15% o Temperatura Suelo > 35°C.
-- **Efecto Visual:** La tarjeta del sensor y el borde de la sección en la UI cambian a un estilo de "Alerta Ámbar" con pulsación visual.
-- **Vínculo de Acción:** Se genera un botón directo de **"Programar Riego"** o **"Consultar Agro-Asesor"** que ya viene precargado con el contexto de la alerta.
-
----
-
-## 5. Telemetría Comparativa: Sensor vs. Satélite
-Esta es la funcionalidad de validación cruzada que garantiza la máxima fiabilidad.
-
-| Capa de Datos | Fuente | Resolución | Propósito |
-| :--- | :--- | :--- | :--- |
-| **Dato Físico** | Sensor IoT (Humedad) | Puntual (Real) | Verdad absoluta en el punto exacto de la raíz. |
-| **Dato Satelital** | Sentinel-2 (NDWI) | 10m x 10m | Ver tendencia de hidratación en toda la biomasa. |
-
-- **Análisis de Discrepancia:** Si el satélite muestra vigor alto (NDVI > 0.7) pero el sensor muestra sequía, la IA alerta sobre una posible **obstrucción del sensor** o una necesidad inminente de riego profundo antes de que la planta muestre estrés visual.
-
----
-
-## 6. Especificaciones Técnicas del Stack IoT
-- **Protocolo de Comunicación:** MQTT (Message Queuing Telemetry Transport) para bajo consumo.
-- **Gateway:** Concentrador LoRaWAN con capacidad de almacenamiento local (Buffer) para evitar pérdida de datos durante caídas de red.
-- **Formato de Mensaje:** JSON comprimido para optimizar el ancho de banda.
-  ```json
-  {
-    "sensor_id": "SN-TRB-001",
-    "timestamp": "2026-05-09T22:00:00Z",
-    "payload": {
-      "hum_suelo": 18.5,
-      "temp_suelo": 28.2,
-      "bateria": 85,
-      "signal_dbm": -92
-    }
-  }
-  ```
-
----
-*AgroCaribe IA - Integrando la tierra con la nube.*
+## 4. Resultados Generados
+*   **Logs de Eventos:** Registro cronológico de cambios de estado (e.g., "Válvula Sector B abierta por IA").
+*   **Alertas de Mantenimiento:** Detección de baja señal o batería crítica en nodos específicos.

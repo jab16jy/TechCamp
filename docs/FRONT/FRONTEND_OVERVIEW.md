@@ -1,54 +1,34 @@
-# 🏗️ Arquitectura Frontend
+# Visión General del Frontend
 
-Esta sección describe cómo está organizado el frontend de **AgroCaribe AI** y cómo interactúan sus diferentes capas.
+**AgroCaribe IA** es una plataforma avanzada de análisis agrícola que utiliza inteligencia artificial y datos satelitales para optimizar la toma de decisiones en el Caribe colombiano.
 
-## 🛰️ Flujo General de la Aplicación
+## 🚀 Stack Tecnológico
 
-La aplicación sigue un flujo unidireccional de datos apoyado por un estado global centralizado.
+El frontend está construido con tecnologías modernas que priorizan el rendimiento y la experiencia de desarrollo.
 
-```mermaid
-graph TD
-    A[Usuario] -->|Interactúa| B(Pages)
-    B -->|Usa| C(Components)
-    B -->|Acción| D[useAppStore]
-    D -->|Llamada| E(Services / API)
-    E -->|Respuesta| D
-    D -->|Actualiza| B
-```
+| Tecnología | Propósito |
+| :--- | :--- |
+| **React 19** | Biblioteca principal para la interfaz de usuario. |
+| **Vite 8** | Herramienta de construcción y servidor de desarrollo ultra-rápido. |
+| **Tailwind CSS 3** | Framework de estilos utility-first para diseño responsivo. |
+| **Zustand 5** | Gestión de estado global ligera y eficiente. |
+| **React Router 6** | Manejo de navegación y rutas dinámicas. |
+| **Leaflet** | Visualización de mapas e indicadores geoespaciales. |
+| **Axios** | Cliente HTTP para comunicación con servicios externos. |
 
-## 📂 Responsabilidades de Capas
+## 🏗️ Arquitectura General
 
-### 1. [[PAGES]]
-Son los contenedores de nivel superior. Se encargan de:
-- Definir el layout de la vista.
-- Suscribirse al estado necesario de `useAppStore`.
-- Orquestar la lógica específica de la página.
+El proyecto sigue un patrón **Modular y Basado en Componentes**, con una separación clara entre lógica de negocio y presentación.
 
-### 2. [[COMPONENTS]]
-Bloques de construcción reutilizables y atómicos. Se encargan de:
-- Representar la interfaz visual (UI).
-- Recibir datos vía `props`.
-- Emitir eventos hacia las páginas.
+1.  **Capa de Presentación (Components/Pages):** JSX y Tailwind para la interfaz.
+2.  **Capa de Estado (Context/Zustand):** Almacén centralizado para datos de usuario y resultados.
+3.  **Capa de Servicios (Services):** Abstracción de llamadas API con lógica de "Fallback" a datos simulados (Mock).
+4.  **Capa de Navegación (Router):** Orquestación de vistas mediante layouts específicos.
 
-### 3. [[CONTEXT]] (Zustand)
-El "cerebro" de la aplicación.
-- Mantiene el estado del formulario de consulta.
-- Almacena los resultados del análisis.
-- Gestiona notificaciones (Toasts).
+## 🎯 Propósito del Proyecto
 
-### 4. [[SERVICES]]
-Capa de abstracción para la comunicación externa.
-- `api.js`: Configuración de Axios e interceptores.
-- `analysisService.js`: Lógica de negocio pura (cálculos, validaciones, mapeo de datos).
-
----
-
-## 🎨 Sistema de Diseño
-El proyecto utiliza un sistema de diseño propio basado en variables CSS (`index.css`) con una estética **Premium Organic-Lab**:
-- **Colores**: Verdes profundos, acentos dorados y fondos limpios (Glassmorphism).
-- **Tipografía**: Fuentes modernas configuradas globalmente.
-- **Animaciones**: Micro-interacciones suaves para mejorar la experiencia de usuario.
-
----
-
-[[INDEX|⬅️ Volver al Índice]]
+Facilitar a productores e investigadores agrícolas el acceso a:
+- Recomendaciones de cultivos basadas en IA.
+- Monitoreo satelital (NDVI, NDWI, Calidad de suelo).
+- Análisis técnico detallado de parcelas.
+- Simulación de escenarios climáticos y de fertilización.

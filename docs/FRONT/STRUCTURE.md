@@ -1,43 +1,49 @@
-# 📁 Estructura del Proyecto
+# Estructura del Proyecto
 
-Organización detallada de los directorios y archivos principales en `src/`.
+El proyecto sigue una organización modular diseñada para escalar y facilitar el mantenimiento de componentes de UI y lógica de IA.
 
-## 🌳 Árbol de Directorios Principal
+## 📂 Directorio Raíz
 
-```text
-src/
-├── assets/             # Imágenes, iconos y recursos estáticos
-├── components/         # Componentes de UI reutilizables
-│   ├── Navbar/         # Barra de navegación principal
-│   ├── Footer/         # Pie de página
-│   ├── analysis/       # Componentes específicos del flujo de análisis
-│   └── ...             # Otros componentes (Cards, Spinners, Toasts)
-├── context/            # Gestión de estado (useAppStore.js)
-├── pages/              # Vistas completas de la aplicación (Rutas)
-│   ├── Acceso/         # Selección de perfil inicial
-│   ├── Home/           # Landing informativa
-│   ├── Investigador/   # Panel y herramientas para investigadores
-│   └── Resultado/      # Visualización de resultados del análisis
-├── services/           # Comunicación con API y lógica externa
-│   ├── api.js          # Cliente Axios y Mocks
-│   └── analysisService.js # Lógica de procesamiento de datos
-├── App.jsx             # Raíz de rutas y layouts
-└── main.jsx            # Punto de entrada de React
-```
+| Carpeta / Archivo | Propósito |
+| :--- | :--- |
+| `src/` | Código fuente principal de la aplicación. |
+| `public/` | Assets estáticos (íconos, fuentes, imágenes públicas). |
+| `docs/` | Documentación técnica del proyecto (Markdown). |
+| `package.json` | Definición de dependencias y scripts de npm. |
+| `tailwind.config.js` | Configuración de temas, colores y fuentes de Tailwind. |
+| `vite.config.js` | Configuración del bundler Vite. |
+| `.env` | Variables de entorno (URL de la API, etc.). |
 
-## 📄 Archivos Clave en la Raíz
+## 📂 Directorio `src/`
 
-- `index.html`: Plantilla base de la SPA.
-- `index.css`: **Core Design System**. Contiene todas las variables de color, fuentes y estilos globales.
-- `vite.config.js`: Configuración del bundler Vite.
-- `.env`: Variables de entorno para apuntar a diferentes backends.
+| Carpeta | Contenido |
+| :--- | :--- |
+| `assets/` | Imágenes, logotipos y recursos multimedia locales. |
+| `components/` | Componentes de React reutilizables (Botones, Cards, Modals). |
+| `context/` | Estado global gestionado con **Zustand** (`useAppStore.js`). |
+| `pages/` | Vistas principales de la aplicación (Home, Dashboard, Resultados). |
+| `services/` | Lógica de peticiones API y manejo de datos (Axios). |
+| `index.css` | Estilos globales y configuración base de Tailwind. |
+| `App.jsx` | Configuración de rutas y estructura base. |
+| `main.jsx` | Punto de entrada de la aplicación. |
 
----
+## 📂 Directorio `src/components/`
 
-## 🏛️ Convenciones
-- **Componentes**: Se organizan en carpetas con su archivo `.jsx` y opcionalmente su `.css` o assets específicos.
-- **Nomenclatura**: Se usa `PascalCase` para componentes y carpetas de componentes/páginas, y `camelCase` para funciones y servicios.
+Los componentes se organizan en subcarpetas para mayor orden:
+- `AIInsightCard/`: Tarjetas de observaciones proactivas de la IA.
+- `Navbar/` & `Footer/`: Navegación y pie de página persistentes.
+- `ResearcherLayout/`: Layout específico para el panel de investigador.
+- `analysis/`: Componentes atómicos para formularios de consulta.
+- `Toast/`: Sistema de notificaciones flotantes.
 
----
+## 📂 Directorio `src/pages/`
 
-[[INDEX|⬅️ Volver al Índice]]
+- `Acceso/`: Pantalla inicial de selección de perfil.
+- `Home/`: Landing informativa para el público general.
+- `Investigador/`: Dashboards avanzados, login y herramientas de IA Predictiva.
+- `Resultado/`: Vista de resultados estándar para productores.
+
+## 🛠️ Convenciones
+- **Componentes:** `NombreComponente.jsx` y `NombreComponente.css` (o `.module.css`).
+- **Páginas:** Se agrupan en carpetas por funcionalidad.
+- **Zustand Store:** Prefijo `use` (ej. `useAppStore.js`).

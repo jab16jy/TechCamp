@@ -1,36 +1,22 @@
-# 🌾 AgroCaribe AI - Índice de Documentación
+# Índice de Documentación Frontend - AgroCaribe IA
 
-Bienvenido a la documentación técnica de **AgroCaribe AI**. Este proyecto es una plataforma inteligente diseñada para el análisis de cultivos y recomendaciones agrícolas en la región del Caribe colombiano.
+Bienvenido a la documentación técnica del frontend de **AgroCaribe IA**. Esta documentación está diseñada para ser navegada fácilmente en herramientas como **Obsidian** o directamente en el repositorio.
 
----
+## 📂 Contenido de la Documentación
 
-## 📑 Navegación Principal
-
-- [[FRONTEND_OVERVIEW]]: Arquitectura general y flujo de la aplicación.
-- [[SETUP]]: Guía de instalación y ejecución local.
-- [[STRUCTURE]]: Organización de archivos y carpetas.
-- [[ROUTING]]: Mapa de rutas y navegación de la app.
-- [[COMPONENTS]]: Catálogo de componentes reutilizables.
-- [[PAGES]]: Detalle de cada vista de la aplicación.
-- [[CONTEXT]]: Gestión del estado global con Zustand.
-- [[SERVICES]]: Lógica de negocio y consumo de APIs.
-- [[TROUBLESHOOTING]]: Solución a problemas comunes.
-- [[FUTURE_IMPROVEMENTS]]: Hoja de ruta y mejoras planificadas.
-
----
-
-## 🛠️ Tecnologías Core
-
-| Tecnología       | Propósito                                |
-| :--------------- | :--------------------------------------- |
-| **React 18**     | Biblioteca base del frontend             |
-| **Vite**         | Herramienta de construcción y dev server |
-| **Zustand**      | Gestión de estado global (Context)       |
-| **React Router** | Enrutamiento SPA                         |
-| **Axios**        | Cliente HTTP para servicios              |
-| **Mermaid**      | Diagramas de arquitectura                |
+| Archivo | Descripción |
+| :--- | :--- |
+| [**README.md**](./README.md) | Introducción general, scripts y ejecución rápida. |
+| [**FRONTEND_OVERVIEW.md**](./FRONTEND_OVERVIEW.md) | Stack tecnológico, arquitectura y propósito del proyecto. |
+| [**SETUP.md**](./SETUP.md) | Requisitos, instalación y variables de entorno. |
+| [**STRUCTURE.md**](./STRUCTURE.md) | Organización de carpetas y convenciones de archivos. |
+| [**ROUTING.md**](./ROUTING.md) | Definición de rutas, layouts y navegación. |
+| [**PAGES.md**](./PAGES.md) | Detalle de cada página y vista del sistema. |
+| [**COMPONENTS.md**](./COMPONENTS.md) | Inventario de componentes reutilizables y UI. |
+| [**CONTEXT.md**](./CONTEXT.md) | Estado global con Zustand y flujo de datos. |
+| [**SERVICES.md**](./SERVICES.md) | Integración con API (Axios) y lógica de datos. |
+| [**FUTURE_IMPROVEMENTS.md**](./FUTURE_IMPROVEMENTS.md) | Roadmap de mejoras técnicas y optimizaciones. |
+| [**TROUBLESHOOTING.md**](./TROUBLESHOOTING.md) | Soluciones a problemas comunes de desarrollo. |
 
 ---
-
-> [!TIP]
-> Si estás usando **Obsidian**, puedes navegar entre estas notas usando `Ctrl + Clic` en los enlaces destacados arriba.
+*Última actualización: Mayo 2026*

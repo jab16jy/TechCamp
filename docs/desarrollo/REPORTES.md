@@ -1,54 +1,41 @@
-# AgroCaribe IA: Gestión y Reportes Consolidados
+# Gestión y Reportes Consolidados
 
-## 1. Propósito del Módulo
-El módulo de Gestión y Reportes centraliza la analítica histórica y proactiva de una parcela específica (ej. Sector Norte - Parcela 4). Su función es proporcionar al administrador de la finca o al investigador un resumen ejecutivo del estado del cultivo y las acciones pendientes sugeridas por la IA.
+Documentación técnica del módulo de reportería técnica y auditoría de **AgroCaribe IA**.
 
----
+## 1. Visión General
+Centro de mando para la revisión mensual de métricas de eficiencia, seguimiento de tareas recomendadas por IA y exportación de informes técnicos de alta resolución.
 
-## 2. Indicadores de Gestión
+## 2. Componentes Visuales
 
-### 2.1 Eficiencia de Parcela (OEE)
-Un indicador visual estilo "Gauge" (Velocímetro) que muestra el **Índice OEE** (Overall Equipment Effectiveness / Eficiencia Global de la Parcela).
-*   **Significado:** Integra salud foliar, uso de recursos y rendimiento proyectado.
-*   **Estado:** Clasifica el rendimiento (ej. "Óptimo", "Bajo Alerta").
+### 2.1. Gauge de Eficiencia de Parcela (OEE)
+*   **Diseño:** Gráfico circular de 240° con gradiente dinámico.
+*   **Métrica:** Índice de eficiencia operativa (82% actual).
+*   **Contexto:** Compara el rendimiento actual contra el potencial histórico y metas de sostenibilidad.
 
-### 2.2 Evolución del Vigor (NDVI Histórico)
-Visualización secuencial de la salud de la planta a lo largo de los meses (Marzo - Agosto).
-*   **Mini-Mapas:** Tarjetas interactivas con capturas satelitales mensuales.
-*   **Tendencias:** Indicadores de crecimiento (`trending_up`) o declive (`trending_down`) porcentual del vigor vegetativo.
+### 2.2. Grid de Evolución NDVI
+*   **Estructura:** Cuadrícula de 6 micro-mapas interactivos.
+*   **Detalle:** Cada celda muestra un mini-heatmap del vigor vegetal del mes correspondiente, permitiendo ver la tendencia semestral de un vistazo.
+*   **Trend Labels:** Indicadores de delta porcentual mensual (`+5% vs mes anterior`).
 
----
+### 2.3. Gestor de Tareas IA (Actionable Insights)
+*   **Funcionalidad:** Lista de tareas críticas generadas por el motor predictivo.
+*   **Atributos:**
+    *   Prioridad con código de colores (Rojo: Alta, Amarillo: Media, Verde: Baja).
+    *   Checkboxes para seguimiento de cumplimiento en campo.
+    *   Barra de progreso general de ejecución.
 
-## 3. Inteligencia Proactiva
+### 2.4. Análisis Hidrológico Cruzado
+*   **Gráfico:** Combo Chart (Barras + Línea).
+*   **Datos:** 
+    *   **Barras:** Precipitación capturada (NASA POWER).
+    *   **Línea:** Humedad de suelo detectada por NDWI.
+*   **Objetivo:** Identificar correlaciones entre clima y retención hídrica del suelo.
 
-### 3.1 Acciones Recomendadas por IA
-Un listado de tareas prioritarias derivadas del análisis de datos de sensores y satélite:
-*   **Prioridad Alta (Roja):** Ajustes críticos inmediatos (ej. saturación de riego).
-*   **Prioridad Media (Amarilla):** Ventanas óptimas de fertilización.
-*   **Prioridad Baja (Verde):** Mantenimiento preventivo.
+## 3. Sistema de Exportación
+*   **Formato:** PDF Técnico optimizado para auditoría crediticia y RSPO.
+*   **Contenido:** Incluye mapas de alta resolución, métricas de laboratorio y registro de acciones tomadas.
 
-### 3.2 Análisis Hidrológico Cruzado
-Gráfica combinada que muestra la correlación entre:
-1.  **Precipitación (Barras):** Milímetros de lluvia registrados.
-2.  **Humedad Retenida (Línea):** Porcentaje de agua que el suelo conserva.
-*   **Utilidad:** Identificar deficiencias en el drenaje o la necesidad de aumentar la frecuencia de riego artificial.
-
----
-
-## 4. Salida de Datos y Exportación
-El sistema culmina en la generación del **Reporte Técnico Mensual**:
-*   **Contenido:** Documento consolidado (PDF) con métricas, mapas NDVI de alta resolución y el log de acciones sugeridas.
-*   **Auditoría:** Diseñado para cumplir con los requisitos de certificación de sostenibilidad (ej. RSPO para palma).
-
----
-
-## 5. Diseño y UX (Gestión)
-*   **Header Dinámico:** Muestra la fecha del reporte y acciones rápidas (Imprimir/Compartir).
-*   **Interacción de Mini-Mapas:** Al seleccionar un mes, el sistema resalta el mapa correspondiente, permitiendo un análisis temporal fluido.
-*   **Estilo:** Basado en el sistema de diseño "Tropical-Tech" con bordes redondeados y sombras sutiles sobre fondos claros (`surface-container-lowest`).
-
----
-**Documentación de Desarrollo**
-*   **Componente:** `GestionReportes.jsx`
-*   **Estilos:** `GestionReportes.module.css`
-*   **Visualización:** Gráficas Gauge y Gráficos Hidrológicos en SVG.
+## 4. Estética y Diseño
+*   **Paleta:** Fondo `slate-100` con tarjetas blancas bordeadas en `slate-200`.
+*   **Tipografía de Títulos:** Playfair Display (Estilo Serif Premium).
+*   **Alta Densidad:** Elementos optimizados para visibilidad máxima sin scroll excesivo.

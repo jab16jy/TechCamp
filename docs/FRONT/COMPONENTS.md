@@ -1,51 +1,50 @@
-# 🧩 Catálogo de Componentes
+# Inventario de Componentes
 
-Componentes reutilizables que forman la interfaz de **AgroCaribe AI**.
+Los componentes de **AgroCaribe IA** están diseñados bajo una arquitectura atómica y modular, priorizando la reutilización y el diseño de alta densidad.
 
-## 🏗️ Estructura y Navegación
-
-### `Navbar`
-- **Ubicación**: `src/components/Navbar`
-- **Propósito**: Navegación principal, logo y estado de conexión de la API.
-- **Props**: N/A (usa `useAppStore` para el estado del API).
-
-### `Footer`
-- **Ubicación**: `src/components/Footer`
-- **Propósito**: Enlaces informativos y créditos de la aplicación.
+## 🏗️ Layouts y Estructura
 
 ### `ResearcherLayout`
-- **Ubicación**: `src/components/ResearcherLayout`
-- **Propósito**: Wrapper para las páginas del investigador, proporcionando una barra lateral de navegación y estilo de dashboard.
+Layout principal para las vistas de investigador.
+- **Props:** `children`, `activeTab`.
+- **Elementos:** Sidebar lateral con navegación técnica y área de scroll optimizada.
 
-## 📊 Visualización de Datos
+### `Navbar` & `Footer`
+Componentes de navegación global para el flujo estándar y landing pages.
+
+## 📊 Visualización de Datos (UI)
 
 ### `MetricCard`
-- **Propósito**: Tarjeta pequeña para mostrar indicadores rápidos (Temperatura, pH, Humedad).
-- **Props**: `icon`, `label`, `value`, `unit`, `color`.
+Tarjeta compacta para mostrar métricas individuales (Humedad, Temperatura, etc.).
+- **Props:** `icono`, `valor`, `label`, `color`, `info` (tooltip).
 
 ### `AIInsightCard`
-- **Propósito**: Presenta una recomendación generada por la IA con un diseño premium.
-- **Props**: `title`, `description`, `score`, `emoji`.
-
-### `AnalysisMap`
-- **Propósito**: Mapa interactivo para selección de coordenadas y visualización de polígonos.
-- **Tecnología**: Integra Leaflet o similar (según implementación).
-
-### `SatelliteAnalysis`
-- **Propósito**: Visualización de capas satelitales (NDVI, Humedad de suelo) con controles deslizantes.
-
-## 🛠️ Utilidades
+Panel lateral que muestra observaciones proactivas generadas por la IA ("IA Insight").
 
 ### `LoadingSpinner`
-- **Propósito**: Feedback visual durante llamadas asíncronas o procesamiento de IA.
+Pantalla de carga personalizada con animaciones de branding y mensajes dinámicos de procesamiento.
 
 ### `Toast`
-- **Propósito**: Sistema de notificaciones flotantes para errores, éxitos o avisos informativos.
-- **Estado**: Controlado globalmente por `useAppStore`.
+Componente persistente en `App.jsx` que consume la cola de notificaciones de `useAppStore`.
 
-### `ParticleCanvas`
-- **Propósito**: Fondo animado sutil usado en pantallas de acceso para el efecto visual "premium".
+## 🗺️ Geoespacial (Maps)
 
----
+### `AnalysisMap`
+Integración de Leaflet para la selección de coordenadas.
+- **Funciones:** Marcadores dinámicos y captura automática de Lat/Lng para el store global.
 
-[[INDEX|⬅️ Volver al Índice]]
+### `SatelliteAnalysis`
+Componente avanzado que renderiza capas satelitales (NDVI/NDWI) y gauges de salud vegetal.
+
+## 🧬 Componentes Específicos de IA
+
+### `CropRecommendation`
+Tarjeta de gran formato que destaca el cultivo sugerido, su score de afinidad y la justificación técnica.
+
+### `RadarNutricional` (SVG)
+Gráfico de araña dinámico usado en `ResultadoAvanzado` para comparar NPK actual vs objetivos.
+
+## 🎨 Estilos y Temas
+- **Tailwind CSS:** Se utilizan clases utilitarias para el 90% del estilo.
+- **CSS Modules:** Usados en componentes complejos (`.module.css`) para evitar colisiones de nombres y manejar animaciones específicas.
+- **Material Symbols:** Iconografía estandarizada mediante Google Fonts.

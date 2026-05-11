@@ -1,41 +1,46 @@
-# 🖼️ Detalle de Páginas
+# Documentación de Páginas y Vistas
 
-Descripción de las vistas principales de **AgroCaribe AI**.
+Esta sección describe el propósito y la funcionalidad de cada vista principal del sistema **AgroCaribe IA**.
 
-## 🔑 Pantallas de Acceso
+## 🏠 Home / Acceso
 
-### `Acceso.jsx`
-- **Ruta**: `/`
-- **Descripción**: Puerta de entrada. Permite elegir entre entrar como Productor o como Investigador. Presenta una estética minimalista con fondo animado.
+### `Acceso.jsx` (Ruta: `/`)
+- **Propósito:** Puerta de entrada principal. Permite al usuario identificarse como "Productor" o "Investigador".
+- **UX:** Diseño minimalista con dos tarjetas de gran formato para bifurcar la experiencia del usuario.
 
-### `LoginInvestigador.jsx`
-- **Ruta**: `/investigador/login`
-- **Descripción**: Formulario de autenticación para profesionales. Diseño dividido en panel informativo y panel de formulario.
+### `Home.jsx` (Ruta: `/home`)
+- **Propósito:** Landing page informativa.
+- **Contenido:** Propuesta de valor, descripción de tecnologías y contacto.
 
-## 🚜 Flujo del Productor
+## 🌾 Flujo Productor (Estándar)
 
-### `Home.jsx`
-- **Ruta**: `/home`
-- **Descripción**: Landing page informativa para el agricultor. Explica los beneficios de la plataforma y ofrece el acceso al formulario de consulta simplificado.
+### `AnalisisCultivos.jsx` (Ruta: `/investigador/analisis`)
+*Nota: Este componente se comparte pero tiene variantes de interfaz.*
+- **Propósito:** Configuración de la parcela y captura de datos.
+- **Componentes Clave:** `AnalysisMap` (Leaflet) y formulario dinámico.
 
-### `Resultado.jsx`
-- **Ruta**: `/resultado`
-- **Descripción**: Dashboard de resultados. Muestra métricas clave, indicadores satelitales resumidos y la lista de cultivos recomendados con su justificación técnica.
+### `Resultado.jsx` (Ruta: `/resultado`)
+- **Propósito:** Visualización de la recomendación de cultivo ganadora.
+- **Métricas:** Temperatura, Humedad, Score de afinidad y resumen satelital simplificado.
 
-## 🔬 Flujo del Investigador
+## 🔬 Flujo Investigador (Avanzado)
 
-### `DashboardInvestigador.jsx`
-- **Ruta**: `/investigador/dashboard`
-- **Descripción**: Panel de control con estadísticas globales, historial de todas las consultas y accesos rápidos a herramientas de exportación y configuración.
+### `DashboardInvestigador.jsx` (Ruta: `/investigador/dashboard`)
+- **Propósito:** Centro de control principal con el **Agro-Asesor Inteligente** (Chat IA).
+- **Funciones:** Monitoreo de salud del modelo y exportación de reportes técnicos.
 
-### `AnalisisCultivos.jsx`
-- **Ruta**: `/investigador/analisis`
-- **Descripción**: Formulario técnico avanzado. Permite ajustar parámetros precisos de suelo (pH, NPK) y clima para simulaciones de alta fidelidad.
+### `ResultadoAvanzado.jsx` (Ruta: `/investigador/resultado-avanzado`)
+- **Propósito:** Análisis técnico profundo de suelos.
+- **Visuales:** Radar Nutricional (N-P-K-pH) y Mapa de calor de Nitrógeno.
 
-### `ResultadoAvanzado.jsx`
-- **Ruta**: `/investigador/resultado-avanzado`
-- **Descripción**: Visualización técnica profunda. Incluye mapas de calor, análisis de isolinas satelitales y comparativas gráficas detalladas entre diferentes escenarios.
+### `IAPredictiva.jsx` (Ruta: `/investigador/ia`)
+- **Propósito:** Simulación y proyección futura.
+- **Visuales:** Gráfico XAI (Explainable IA) y simulador de fertilización NPK.
 
----
+### `SensoresIoT.jsx` (Ruta: `/investigador/sensores`)
+- **Propósito:** Monitoreo de hardware en campo.
+- **Visuales:** Salud de nodos (RSSI, Batería) y telemetría en tiempo real.
 
-[[INDEX|⬅️ Volver al Índice]]
+### `GestionReportes.jsx` (Ruta: `/investigador/reportes`)
+- **Propósito:** Gestión administrativa y auditoría.
+- **Visuales:** Gauge de eficiencia OEE, histórico NDVI y exportación masiva.

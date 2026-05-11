@@ -1,60 +1,41 @@
-# AgroCaribe IA: Panel de Control del Investigador (Dashboard)
+# Dashboard del Investigador - Agro-Asesor IA
 
-## 1. Visión del Dashboard
-El Dashboard es el centro neurálgico de AgroCaribe IA para el perfil de investigador. Su propósito es proporcionar una visión consolidada y de alto nivel sobre el rendimiento del motor de IA, la actividad de los usuarios en el territorio y facilitar la exportación de datos críticos para la investigación académica y técnica.
+Documentación técnica del centro de mando principal de **AgroCaribe IA**.
 
----
+## 1. Visión General
+El Dashboard del Investigador es la interfaz de entrada que combina capacidades de procesamiento de lenguaje natural (Agro-Asesor) con un panel técnico de monitoreo de modelos y acceso rápido a herramientas de datos.
 
-## 2. Componentes y Métricas Clave
+## 2. Arquitectura de Componentes
 
-### 2.1 KPIs de Rendimiento del Modelo
-El sistema monitorea en tiempo real la salud del algoritmo predictivo:
-*   **Accuracy Global:** Porcentaje de acierto del modelo en todas las predicciones de la región (objetivo: >90%).
-*   **F1-Score Macro:** Balance entre precisión y recall, crucial para manejar clases de cultivos desbalanceadas.
-*   **Latencia Media:** Tiempo de respuesta del motor de inferencia (optimizado para < 1.5s).
-*   **Consultas Totales:** Volumen de actividad histórica y mensual acumulada.
+### 2.1. Centro de Mando (Agro-Asesor Inteligente)
+Interfaz de chat de pantalla completa que actúa como el núcleo interactivo del sistema.
+*   **Capacidades:** Procesamiento de datos satelitales (Sentinel-2) y telemetría de suelo en tiempo real.
+*   **Feedback de Estado:** Indicador animado de "Análisis Activo" y badges de procesamiento por IA.
+*   **Sugerencias Rápidas:** Botones contextuales para consultas frecuentes (Riesgos climáticos, Mapas NDVI, Optimización).
 
-### 2.2 Centro de Mando (Agro-Asesor Inteligente)
-El panel principal al que accede el usuario. Integra de manera fluida:
-*   **Agro-Asesor Inteligente:** Un asistente conversacional (Chatbot) que resume y analiza datos en tiempo real (ej. humedad del suelo, datos de Sentinel-2).
-*   **Salud del Modelo IA:** Un medidor visual (Gauge SVG) que muestra el rendimiento global del modelo de Machine Learning junto a métricas rápidas de latencia y nivel de confianza.
-*   **Acciones Rápidas:** Enlaces directos hacia las secciones de "Exportación de Datos" y "Métricas de Entrenamiento".
-*   **Vista de Campo (Field Preview):** Tarjeta visual del sector monitoreado con un indicador dinámico de estado (ej. 28% de humedad).
+### 2.2. Panel Técnico (Sidebar Derecha)
+Panel de alta densidad diseñado para el monitoreo de la infraestructura de IA y exportación selectiva.
 
-### 2.3 Analítica por Cultivo
-Visualización detallada del rendimiento segmentado por tipo de plantación (Maíz, Yuca, Plátano, etc.):
-*   **Precisión vs. Recall:** Barras comparativas que identifican en qué cultivos el modelo es más fiable.
-*   **AI Optimization Insight:** Un panel dinámico que utiliza IA para sugerir recalibraciones del dataset basadas en la estabilidad observada por cultivo.
+#### A. Salud del Modelo IA (Métricas Críticas)
+Visualización rápida del rendimiento del motor de inferencia:
+*   **Precisión (Accuracy):** 94.2% (Objetivo: >90%).
+*   **Latencia:** Tiempo de respuesta del modelo (124ms promedio).
+*   **Muestras:** Volumen de datos procesados para el entrenamiento y validación (4.2k).
 
----
+#### B. Herramientas de Datos (Exportación)
+Acciones directas para la descarga de información técnica:
+*   **CSV Consultas:** Exportación tabular del histórico de interacciones y datos crudos.
+*   **Reporte PDF:** Resumen ejecutivo de la salud del modelo y estado de parcelas.
 
-## 3. Centro de Exportación y Datos Crudos
-Diseñado para la interoperabilidad con herramientas externas (Python, R, PowerBI):
+#### C. Vista Previa de Campo (Field Preview)
+*   **Mapa Contextual:** Imagen satelital del sector bajo monitoreo activo (Sector Norte, Turbaco).
+*   **Overlay Informativo:** Ubicación y estado general de la zona.
 
-*   **Tabular (CSV):** Historial completo de predicciones y variables de entrada.
-*   **Resumen Ejecutivo (PDF):** Reporte visual con gráficas de tendencias y métricas de salud foliar.
-*   **Dataset (JSON):** Estructura ideal para procesos de re-entrenamiento de modelos (*Fine-tuning*).
+## 3. Especificaciones de Diseño
+*   **Layout:** Estructura de sidebar colapsable con transición suave (300ms).
+*   **Estética:** Uso de `slate-50` para fondos, acentos en `emerald-600` para identidad de marca agrícola y tipografía `sans-serif` moderna.
+*   **Interactividad:** Toasts informativos para acciones de exportación y scroll-smooth en el historial de chat.
 
-### 3.1 Filtros Avanzados (Segmentación Territorial)
-Permite extraer datos con granularidad específica por:
-*   Rango de fechas.
-*   Departamento y Municipio (Antioquia, Bolívar, Magdalena, etc.).
-*   Variedad específica de cultivo (ej. Aguacate Hass vs. Criollo).
-
----
-
-## 4. Tecnologías y Diseño (UX/UI)
-
-### 4.1 Arquitectura de Interfaz
-*   **Bento Grid Layout:** Organización modular de la información para una lectura jerárquica.
-*   **Eco-Glassmorphism:** Uso de efectos de transparencia y grano sutil (`ecoGrain`, `topographicBg`) que evocan texturas orgánicas y cartografía técnica.
-*   **Material Symbols:** Iconografía estandarizada para identificar rápidamente conceptos como `insights`, `query_stats` y `database`.
-
-### 4.2 Proactividad (FAB)
-El **Floating Action Button (FAB)** permite al investigador iniciar una "Nueva Analítica" desde cualquier punto del dashboard, agilizando el flujo de trabajo en laboratorio.
-
----
-**Documentación de Desarrollo**
-*   **Componente:** `DashboardInvestigador.jsx`
-*   **Estilos:** `DashboardInvestigador.module.css`
-*   **Layout:** `ResearcherLayout`
+## 4. Resultados Generados
+*   **Recomendaciones Agronómicas:** Insights accionables basados en anomalías térmicas y niveles de humedad.
+*   **Auditoría de IA:** Registro transparente de la confianza del modelo y latencia para control de calidad.

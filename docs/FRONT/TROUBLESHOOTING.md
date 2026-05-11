@@ -1,38 +1,43 @@
-# 🛠️ Solución de Problemas (Troubleshooting)
+# Resolución de Problemas (Troubleshooting)
 
-Guía para resolver errores comunes durante el desarrollo o uso de la aplicación.
+Guía rápida para diagnosticar y solucionar errores comunes en el desarrollo del frontend.
 
-## 📡 Conexión con el Backend
+## 🎨 Estilos y Tailwind CSS
 
-### El indicador del Navbar dice "API Desconectada"
-- **Causa**: El servidor FastAPI no está corriendo o la URL en `.env` es incorrecta.
-- **Solución**:
-    1. Verifica que el backend esté activo en el puerto 8000.
-    2. Comprueba que `VITE_API_URL` en tu archivo `.env` coincida con la dirección del servidor.
-    3. La aplicación seguirá funcionando usando **Mocks**, pero los datos no serán reales.
+### Problema: Los estilos de Tailwind no se aplican.
+- **Causa:** El servidor de desarrollo no ha detectado cambios o `postcss` falló.
+- **Solución:** 
+    1. Reinicia el servidor (`npm run dev`).
+    2. Verifica que el archivo esté incluido en `content` dentro de `tailwind.config.js`.
+    3. Asegúrate de que `index.css` tenga las directivas `@tailwind base;`, etc.
 
-## 🗺️ Problemas con Mapas
+### Problema: Fuentes desalineadas o íconos no cargan.
+- **Solución:** Verifica que el `index.html` tenga los links correctos a Google Fonts y Material Symbols.
 
-### El mapa no carga o se ve gris
-- **Causa**: Problemas de conexión con el proveedor de tiles (OpenStreetMap) o error en la carga de la librería Leaflet.
-- **Solución**: Revisa la consola del navegador por errores de `403` o `404` en la carga de imágenes del mapa. Asegúrate de tener conexión a internet.
+## 🧭 Rutas y Navegación
+
+### Problema: La página se queda en blanco al navegar.
+- **Causa:** Error en la definición de la ruta en `App.jsx` o componente que no exporta `default`.
+- **Solución:** Revisa la consola del navegador. Si hay un error de "matching route", verifica los paths en el componente `<Routes>`.
+
+### Problema: 404 inesperado en despliegue.
+- **Causa:** El servidor web no está configurado para manejar Single Page Applications (SPA).
+- **Solución:** Asegúrate de tener un archivo de redirección (ej. `_redirects` en Netlify o configuración de fallback en Cloudflare/Wrangler).
+
+## 📡 Datos y API
+
+### Problema: El sistema siempre muestra datos simulados (Mock).
+- **Causa:** El frontend no puede alcanzar el backend o la variable `VITE_API_URL` está mal configurada.
+- **Solución:** 
+    1. Revisa que el backend esté corriendo en el puerto indicado.
+    2. Verifica el archivo `.env`.
+    3. Revisa la pestaña "Network" del navegador para ver el estado de las peticiones.
+
+### Problema: Error de CORS al llamar a la API.
+- **Causa:** El backend no permite peticiones desde el dominio del frontend.
+- **Solución:** Configura los middlewares de CORS en el backend (FastAPI) para permitir el origen del frontend.
 
 ## 📦 Dependencias
 
-### Errores al ejecutar `npm run dev`
-- **Causa**: Dependencias mal instaladas o versiones incompatibles.
-- **Solución**:
-    ```bash
-    rm -rf node_modules package-lock.json
-    npm install
-    ```
-
-## 🎨 Estilos (CSS)
-
-### Los cambios en `index.css` no se reflejan
-- **Causa**: Caché del navegador o Vite.
-- **Solución**: Reinicia el servidor de desarrollo (`Ctrl+C` y `npm run dev`) y limpia la caché del navegador (`Ctrl+F5`).
-
----
-
-[[INDEX|⬅️ Volver al Índice]]
+### Problema: Errores de "Module not found".
+- **Solución:** Ejecuta `npm install` para asegurar que todas las librerías estén instaladas correctamente. Borra `node_modules` y reinstala si el error persiste.

@@ -1,20 +1,40 @@
-# 📖 Documentación de AgroCaribe AI
+# AgroCaribe IA - Frontend Documentation
 
-Este directorio contiene la documentación técnica completa del proyecto. Está diseñada para ser consumida preferiblemente en **Obsidian** para aprovechar la navegación mediante wiki-links.
+Bienvenido al repositorio del frontend de **AgroCaribe IA**. Esta carpeta contiene toda la lógica de interfaz, visualización de datos y simulación agrícola diseñada para el Caribe colombiano.
 
-## 📌 Guía Rápida de Inicio
+## 🌟 Tecnologías Principales
 
-1. Si es tu primera vez aquí, lee el [[INDEX]] para tener un mapa de todas las notas.
-2. Consulta el [[SETUP]] para saber cómo correr el proyecto.
-3. Explora [[FRONTEND_OVERVIEW]] para entender cómo funciona la arquitectura.
+- **React 19:** UI Declarativa.
+- **Vite 8:** Bundler de alto rendimiento.
+- **Tailwind CSS:** Diseño responsivo y moderno.
+- **Zustand:** Gestión de estado global.
+- **Leaflet:** Mapas interactivos de parcelas.
+
+## ⚙️ Inicio Rápido
+
+1.  **Instalar:** `npm install`
+2.  **Configurar:** Crear `.env` con `VITE_API_URL`.
+3.  **Ejecutar:** `npm run dev`
+
+## 📂 Estructura Resumida
+
+- `src/components`: UI atómica y layouts.
+- `src/pages`: Vistas de usuario y dashboards.
+- `src/context`: Almacén global de datos (Zustand).
+- `src/services`: Conexión API y datos mock.
+
+## 📖 Documentación Detallada
+
+Para una comprensión profunda del sistema, explora los archivos en esta carpeta:
+
+1.  [**Índice de Documentación**](./INDEX.md)
+2.  [**Visión General**](./FRONTEND_OVERVIEW.md)
+3.  [**Configuración (Setup)**](./SETUP.md)
+4.  [**Estructura de Carpetas**](./STRUCTURE.md)
+5.  [**Rutas y Navegación**](./ROUTING.md)
+6.  [**Componentes**](./COMPONENTS.md)
+7.  [**Estado Global**](./CONTEXT.md)
+8.  [**Servicios**](./SERVICES.md)
 
 ---
-
-## 🏗️ Estado Actual
-- **Frontend**: 95% Completado (Vistas, Lógica de UI, Mocks).
-- **Backend**: Planeado / Prototipo (Mocks en el frontend suplen la ausencia del servidor).
-- **Base de Datos**: No implementada aún.
-
----
-
-*Desarrollado para el análisis agrícola inteligente en el Caribe Colombiano.*
+Desarrollado para la optimización de la calidad del suelo y productividad agrícola mediante IA.

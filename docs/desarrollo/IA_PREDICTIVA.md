@@ -1,63 +1,36 @@
-# AgroCaribe IA: Módulo de Inteligencia Artificial Predictiva
+# Inteligencia Artificial Predictiva
 
-## 1. Visión de la IA Predictiva
-En AgroCaribe, la IA no solo recomienda qué sembrar, sino que actúa como una **ventana al futuro**. Su objetivo es proporcionar al agricultor una hoja de ruta clara sobre lo que sucederá con su cultivo una vez plantado, permitiéndole anticiparse a los desafíos climáticos y de mercado.
+Documentación del motor de predicción y simulación de escenarios de **AgroCaribe IA**.
 
----
+## 1. Visión General
+Este módulo utiliza algoritmos de Machine Learning (Random Forest y LSTM) para predecir el rendimiento del cultivo y simular el impacto de decisiones agronómicas en tiempo real.
 
-## 2. Pilares de la Capacidad Predictiva
+## 2. Herramientas de Análisis
 
-### 2.1 Estimación de Rendimiento (Yield Prediction)
-Utilizando datos históricos de **NASA POWER** y características específicas de la parcela:
-*   **Variables:** Área, tipo de suelo (textura), pH y nutrientes.
-*   **Resultado:** Predicción de toneladas por hectárea proyectadas al final del ciclo.
+### 2.1. Explainable IA (XAI) - Factores de Influencia
+*   **Gráfico:** Barras horizontales de importancia de variables.
+*   **Propósito:** Mostrar qué datos (Precipitación, Nitrógeno, pH) están impulsando la predicción actual.
+*   **Interpretación:** Permite al investigador validar la lógica del modelo "Caja Negra".
 
-### 2.2 Detección Anticipada de Riesgos
-Análisis de patrones climáticos a corto y mediano plazo para identificar:
-*   **Ventanas de Sequía:** Alertas de estrés hídrico.
-*   **Exceso de Lluvia:** Predicción de condiciones favorables para patógenos (ej. hongos por alta humedad).
+### 2.2. Simulador de Rendimiento
+*   **Controles:** Sliders de precisión para "Ajuste de Riego" y "Fertilización NPK".
+*   **Lógica:** Al modificar los parámetros, el gráfico de proyección se actualiza reactivamente para mostrar el rendimiento estimado (ton/ha).
 
-### 2.3 Simulador de Escenarios ("¿Qué pasaría si...?")
-Permite al usuario experimentar con variables críticas antes de actuar:
-*   **Temporalidad:** "¿Qué pasa si siembro 15 días después?"
-*   **Nutrición:** "¿Qué pasa si aplico un 10% más de fertilizante?"
-*   **Impacto:** El sistema recalcula automáticamente el puntaje de éxito y el rendimiento estimado.
+### 2.3. Proyección de Crecimiento vs Estrés
+*   **Gráfico:** Línea dual con marcadores mensuales.
+*   **Métricas:** 
+    *   **Crecimiento:** Índice de biomasa proyectado.
+    *   **Estrés:** Nivel de riesgo hídrico o térmico.
+*   **Propósito:** Identificar ventanas críticas de intervención.
 
----
+### 2.4. Mapa de Productividad con Time Slider
+*   **Funcionalidad:** Visualización 3D del campo con overlay de rendimiento esperado.
+*   **Time Slider:** Barra inferior para previsualizar la evolución del mapa en meses futuros (T+1, T+2, T+3).
 
-## 3. Agro-Asesor: Chatbot Contextual
-Un ingeniero agrónomo digital disponible 24/7 que responde basado en **datos reales**, no generalidades.
+## 3. Especificaciones Técnicas
+*   **Precisión Algorítmica:** 94.2% (Badge de salud de IA).
+*   **Estética:** Diseño científico con sombras suaves, gradientes en líneas de gráficos y tipografía Montserrat para métricas clave.
 
-*   **Conciencia Contextual:** Si el usuario pregunta por el crecimiento lento, la IA analiza el último índice **NDVI** y los niveles de **Nitrógeno** registrados.
-*   **Ejemplo de Respuesta:** *"Tu maíz tiene un vigor bajo (NDVI 0.42) probablemente porque el nivel de Nitrógeno en Turbaco está por debajo de los 42 mg/kg ideales."*
-*   **Interfaz Humana:** Botón flotante con soporte para **consultas por voz**, facilitando el uso en pleno campo.
-
----
-
-## 4. Ciclo de Acompañamiento (Horizonte de 6 Meses)
-Optimizado para cultivos transitorios del Caribe (Maíz, Yuca, Tubérculos).
-
-| Periodo | Función de la IA Predictiva | Beneficio para el Campesino |
-| :--- | :--- | :--- |
-| **Mes 1-2** | **Predicción de Germinación** | Alertas sobre heladas o inundaciones que afecten la semilla. |
-| **Mes 3-4** | **Optimización de Insumos** | Predice el momento exacto de mayor demanda de nutrientes. |
-| **Mes 5-6** | **Ventana de Cosecha** | Identifica los 5 días con menor probabilidad de lluvia para una recolección seca. |
-
----
-
-## 5. Recomendaciones de Diseño y UX
-
-### 5.1 Filosofía "Offline First"
-El sistema permite la carga de datos localmente. La sincronización con **NASA POWER** y **Sentinel-2** ocurre automáticamente cuando se detecta conexión, garantizando utilidad en zonas remotas.
-
-### 5.2 Lenguaje Visual Intuitivo
-Se eliminan los tecnicismos complejos para el usuario final, traduciendo índices (NDWI, NDVI) a un sistema de colores semafórico:
-*   🟢 **Verde:** Éxito / Óptimo.
-*   🟡 **Amarillo:** Precaución / Ajuste necesario.
-*   🔴 **Rojo:** Riesgo / Alerta crítica.
-
-### 5.3 Alertas Push Preventivas
-La IA es proactiva: *"Hola, detectamos una ola de calor en Magdalena en 3 días; aumenta el riego un 15% mañana."*
-
-### 5.4 Integración con Mapas Futuros
-La sección de ubicación "pintará" el mapa con una proyección visual de cómo se verá la vegetación en el futuro, basándose en el modelo de crecimiento seleccionado.
+## 4. Resultados Generados
+*   **Predicción de Cosecha:** Volumen estimado en toneladas para el final del ciclo.
+*   **Análisis de Escenarios:** Comparativa visual de resultados basados en diferentes niveles de fertilización.

@@ -1,44 +1,37 @@
-# 🛣️ Enrutamiento (Routing)
+# Sistema de Rutas y Navegación
 
-La navegación de la aplicación se gestiona mediante `react-router-dom`.
+**AgroCaribe IA** utiliza `react-router-dom` para la gestión de navegación, implementando un sistema de rutas declarativas y layouts diferenciados.
 
-## 🗺️ Mapa de Rutas
+## 🛤️ Estructura de Rutas Actual
 
-| Ruta | Página | Perfil | Descripción |
+| Ruta | Página | Acceso | Layout |
 | :--- | :--- | :--- | :--- |
-| `/` | [[PAGES#Acceso\|Acceso]] | Público | Selección inicial entre Productor e Investigador. |
-| `/home` | [[PAGES#Home\|Home]] | Productor | Landing page con información general. |
-| `/resultado` | [[PAGES#Resultado\|Resultado]] | Compartido | Visualización de los resultados de un análisis. |
-| `/investigador/login` | [[PAGES#Investigador\|Login]] | Investigador | Formulario de acceso para investigadores. |
-| `/investigador/dashboard` | [[PAGES#Investigador\|Dashboard]] | Investigador | Panel principal de herramientas avanzadas. |
-| `/investigador/analisis` | [[PAGES#Investigador\|Análisis]] | Investigador | Formulario avanzado de simulación de cultivos. |
-| `/investigador/resultado-avanzado`| [[PAGES#Investigador\|Resultado Avanzado]] | Investigador | Detalle técnico profundo con mapas satelitales. |
+| `/` | `Acceso` | Público | Ninguno |
+| `/home` | `Home` | Público | `LayoutApp` |
+| `/resultado` | `Resultado` | Compartido | Ninguno |
+| `/investigador/login` | `LoginInvestigador` | Investigador | Ninguno |
+| `/investigador/dashboard` | `DashboardInvestigador` | Investigador | `ResearcherLayout` |
+| `/dashboard` | `DashboardInvestigador` | Atajo | `ResearcherLayout` |
+| `/investigador/analisis` | `AnalisisCultivos` | Investigador | `ResearcherLayout` |
+| `/investigador/resultado-avanzado`| `ResultadoAvanzado` | Investigador | `ResearcherLayout` |
+| `/investigador/ia` | `IAPredictiva` | Investigador | `ResearcherLayout` |
+| `/investigador/sensores` | `SensoresIoT` | Investigador | `ResearcherLayout` |
+| `/investigador/reportes` | `GestionReportes` | Investigador | `ResearcherLayout` |
 
-## 🏗️ Layouts
+## 📐 Layouts
 
-La aplicación utiliza un sistema de layouts definido en `App.jsx`:
+### 1. Layout Principal (`LayoutApp`)
+Aplica `Navbar` y `Footer` a las páginas informativas y de resultados estándar.
+- **Uso:** `/home`.
 
-1. **LayoutApp**: Incluye `Navbar` y `Footer`. Usado para las rutas de Productor y Landing.
-2. **Layout Investigador**: (Interno en las páginas de investigador) Suele tener una barra lateral o un estilo más orientado a panel de control.
-3. **Páginas de Acceso**: (`/`, `/investigador/login`) No utilizan el layout estándar para centrar la atención en los formularios de entrada.
+### 2. Layout del Investigador (`ResearcherLayout`)
+Proporciona una barra lateral de navegación técnica (Sidebar) y un área de contenido optimizada para dashboards de alta densidad.
+- **Uso:** Todas las rutas bajo `/investigador/*` (excepto login).
 
-## 🔄 Flujo de Navegación Típico
+## 🖱️ Navegación
+La navegación se realiza mediante el hook `useNavigate` de React Router o componentes `<Link>`.
+- **Botones de Retroceso:** Muchos dashboards incluyen botones manuales de "Volver" para mejorar la UX en flujos de análisis.
+- **404:** Cualquier ruta no definida redirige a una página de error personalizada con un botón de retorno al inicio.
 
-```mermaid
-graph LR
-    Start[/] --> Prod[Productor]
-    Start --> Inv[Investigador]
-    
-    Prod --> Home[/home]
-    Home --> Form[Formulario Consulta]
-    Form --> Res[/resultado]
-    
-    Inv --> Login[/investigador/login]
-    Login --> Dash[/investigador/dashboard]
-    Dash --> AdvAnalisis[/investigador/analisis]
-    AdvAnalisis --> AdvRes[/investigador/resultado-avanzado]
-```
-
----
-
-[[INDEX|⬅️ Volver al Índice]]
+## 🔐 Protección de Rutas (Status)
+Actualmente, las rutas están definidas de forma abierta en el frontend. La lógica de autenticación está en proceso de integración profunda con el backend.
