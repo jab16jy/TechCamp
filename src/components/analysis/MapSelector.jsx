@@ -49,7 +49,7 @@ const MapSelector = ({ position, onPositionChange, height = 400 }) => {
   const initialCenter = position.lat && position.lng ? [position.lat, position.lng] : [10.5, -74.8];
 
   return (
-    <div className={styles.mapContainer} style={{ height: `${height}px` }}>
+    <div className={styles.mapContainer} style={{ height: typeof height === 'number' ? `${height}px` : height }}>
       <MapContainer 
         center={initialCenter} 
         zoom={11} 
