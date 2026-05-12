@@ -4,7 +4,8 @@ import useAppStore from '../../context/useAppStore';
 import AnalysisService from '../../services/analysisService';
 import ResearcherLayout from '../../components/ResearcherLayout/ResearcherLayout';
 import MapSelector from '../../components/analysis/MapSelector';
-import { MapPin, Mountain, CalendarDays, Sparkles, Zap } from 'lucide-react';
+import AnalysisForm from '../../components/analysis/AnalysisForm';
+import styles from './AnalisisCultivos.module.css';
 
 const AnalisisCultivos = () => {
   const navigate = useNavigate();
@@ -17,33 +18,21 @@ const AnalisisCultivos = () => {
   } = useAppStore();
 
   const [municipiosLista, setMunicipiosLista] = useState([]);
-  const [departamentos, setDepartamentos] = useState([]);
-  const [municipiosFiltrados, setMunicipiosFiltrados] = useState([]);
+  const rol = sessionStorage.getItem('rol');
+  const isProductor = rol === 'productor';
+  const [mode, setMode] = useState(isProductor ? 'simple' : 'simple'); // default to simple
+  const [activeTab, setActiveTab] = useState('analisis');
 
   useEffect(() => {
-    AnalysisService.getAvailableLocations().then((data) => {
-      setMunicipiosLista(data);
-      if (data.length > 0) {
-        const uniqueDeps = [...new Set(data.map(m => m.departamento))].sort();
-        setDepartamentos(uniqueDeps);
-      }
-    });
+    if (isProductor) setMode('simple');
+  }, [isProductor]);
+
+  useEffect(() => {
+    AnalysisService.getAvailableLocations().then(setMunicipiosLista);
   }, []);
 
-  useEffect(() => {
-    if (formulario.departamento && municipiosLista.length > 0) {
-      const filtered = municipiosLista
-        .filter(m => m.departamento === formulario.departamento)
-        .sort((a, b) => a.nombre.localeCompare(b.nombre));
-      setMunicipiosFiltrados(filtered);
-    } else {
-      setMunicipiosFiltrados([]);
-    }
-  }, [formulario.departamento, municipiosLista]);
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    actualizarFormulario({ [name]: value });
+  const handleFormChange = (newFields) => {
+    actualizarFormulario(newFields);
   };
 
   const handleMapChange = (latlng) => {
@@ -61,7 +50,7 @@ const AnalisisCultivos = () => {
     const missing = required.filter(f => !formulario[f]);
     
     if (missing.length > 0 || !formulario.lat || !formulario.lng) {
-      agregarToast('Faltan campos obligatorios o ubicación en el mapa', 'error');
+      agregarToast('Por favor, completa todos los campos y selecciona la ubicación en el mapa', 'error');
       return;
     }
 
@@ -69,207 +58,409 @@ const AnalisisCultivos = () => {
     try {
       const resultado = await AnalysisService.performAnalysis(formulario);
       setResultado(resultado);
-      agregarToast('Análisis completado', 'success');
-      navigate('/resultado');
+      agregarToast('Análisis completado exitosamente', 'success');
+      
+      if (mode === 'advanced') {
+        navigate('/investigador/resultado-avanzado');
+      } else {
+        navigate('/resultado');
+      }
     } catch (error) {
-      agregarToast('Error al procesar el análisis', 'error');
+      agregarToast('Error al procesar el análisis. Inténtalo de nuevo.', 'error');
     } finally {
       setCargandoAnalisis(false);
     }
   };
 
+
+  const [clima, setClima] = useState({
+    temperatura: 24,
+    humedad: 75,
+    precipitacion: 1200
+  });
+
+  const handleClimaChange = (e) => {
+    const { name, value } = e.target;
+    setClima(prev => ({ ...prev, [name]: parseInt(value) }));
+  };
+
   return (
-    <ResearcherLayout activeTab="analisis">
-      <div className="p-8 max-w-[1400px] mx-auto w-full h-full flex flex-col">
-        {/* Header Title */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-serif text-slate-900 tracking-tight leading-tight">
-            Análisis de Cultivos Estándar
-          </h1>
-          <p className="text-sm font-medium text-slate-500 mt-1">
-            Configure los parámetros de su parcela para el análisis geolocalizado.
-          </p>
-        </div>
+    <ResearcherLayout activeTab={activeTab} onTabChange={setActiveTab}>
+      <div className={styles.container}>
+        <header className={styles.header}>
+          <h1 className="premium-font">Análisis de Cultivos</h1>
+          <p>Potencie su producción con recomendaciones basadas en IA y datos geoespaciales.</p>
+        </header>
 
-        {/* Bento Grid Form */}
-        <form onSubmit={handleSubmit} className="grid grid-cols-12 gap-5 flex-1 min-h-0">
-          
-          {/* Left Column: Inputs */}
-          <div className="col-span-12 lg:col-span-4 flex flex-col gap-5">
+        {/* Mode Selector Tabs - Only for investigators and when in analysis tab */}
+        {!isProductor && activeTab === 'analisis' && (
+          <div className={styles.tabs}>
+            <button 
+              className={`${styles.tabBtn} ${mode === 'simple' ? styles.tabBtnActive : ''}`}
+              onClick={() => setMode('simple')}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: '20px', marginRight: '8px' }}>list_alt</span>
+              Datos de la Parcela
+            </button>
+            <button 
+              className={`${styles.tabBtn} ${mode === 'advanced' ? styles.tabBtnActive : ''}`}
+              onClick={() => setMode('advanced')}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: '20px', marginRight: '8px' }}>biotech</span>
+              Calidad del Suelo
+              <span className={styles.tabBadge}>MODO AVANZADO</span>
+            </button>
             
-            {/* Bento Card: Ubicación */}
-            <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex flex-col gap-4">
-              <div className="flex items-center gap-2 text-emerald-600 mb-1">
-                <MapPin size={18} strokeWidth={2.5} />
-                <h3 className="font-serif text-lg text-slate-900 font-bold tracking-tight">Ubicación</h3>
-              </div>
-              
-              <div className="space-y-3">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                    Departamento
-                  </label>
-                  <select 
-                    name="departamento" 
-                    value={formulario.departamento || ''} 
-                    onChange={handleInputChange} 
-                    required
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-[13px] text-slate-900 font-medium focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all appearance-none"
-                    style={{ backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'%3e%3c/polyline%3e%3c/svg%3e")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', backgroundSize: '1em' }}
-                  >
-                    <option value="" disabled>Seleccione...</option>
-                    {departamentos.map(d => <option key={d} value={d}>{d}</option>)}
-                  </select>
-                </div>
-                
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                    Municipio
-                  </label>
-                  <select 
-                    name="municipio" 
-                    value={formulario.municipio || ''} 
-                    onChange={handleInputChange} 
-                    required 
-                    disabled={!formulario.departamento}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-[13px] text-slate-900 font-medium focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all disabled:opacity-50 appearance-none"
-                    style={{ backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'%3e%3c/polyline%3e%3c/svg%3e")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', backgroundSize: '1em' }}
-                  >
-                    <option value="" disabled>Seleccione...</option>
-                    {municipiosFiltrados.map(m => <option key={m.id} value={m.nombre}>{m.nombre}</option>)}
-                  </select>
-                </div>
-              </div>
+            <div className={styles.connectionStatus}>
+              <span className={styles.pulseDot}></span>
+              <span className={styles.statusText}>Conectado a Red de Sensores</span>
             </div>
-
-            {/* Bento Card: Terreno */}
-            <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex flex-col gap-4">
-              <div className="flex items-center gap-2 text-amber-600 mb-1">
-                <Mountain size={18} strokeWidth={2.5} />
-                <h3 className="font-serif text-lg text-slate-900 font-bold tracking-tight">Terreno</h3>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-3">
-                <div className="flex flex-col gap-1.5 col-span-2">
-                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                    Tipo de Suelo
-                  </label>
-                  <select 
-                    name="tipo_suelo" 
-                    value={formulario.tipo_suelo || ''} 
-                    onChange={handleInputChange} 
-                    required
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-[13px] text-slate-900 font-medium focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all appearance-none"
-                    style={{ backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'%3e%3c/polyline%3e%3c/svg%3e")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', backgroundSize: '1em' }}
-                  >
-                    <option value="" disabled>Clasificación...</option>
-                    <option value="Arcilloso">Arcilloso</option>
-                    <option value="Arenoso">Arenoso</option>
-                    <option value="Francos">Francos</option>
-                    <option value="Franco-Arcilloso">Franco-Arcilloso</option>
-                    <option value="Limoso">Limoso</option>
-                  </select>
-                </div>
-
-                <div className="flex flex-col gap-1.5 col-span-2">
-                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                    Área (Hectáreas)
-                  </label>
-                  <input 
-                    type="number" 
-                    name="area_hectareas" 
-                    value={formulario.area_hectareas || ''} 
-                    onChange={handleInputChange} 
-                    placeholder="Ej. 15.5" 
-                    required 
-                    step="0.1"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-[13px] text-slate-900 font-medium focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all placeholder:text-slate-400"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Bento Card: Temporalidad */}
-            <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex flex-col gap-4">
-              <div className="flex items-center gap-2 text-blue-600 mb-1">
-                <CalendarDays size={18} strokeWidth={2.5} />
-                <h3 className="font-serif text-lg text-slate-900 font-bold tracking-tight">Temporalidad</h3>
-              </div>
-              
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                  Mes de Siembra
-                </label>
-                <div className="relative">
-                  <select 
-                    name="mes_siembra" 
-                    value={formulario.mes_siembra || ''} 
-                    onChange={handleInputChange} 
-                    required
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 pl-9 text-[13px] text-slate-900 font-medium focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all appearance-none"
-                    style={{ backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'%3e%3c/polyline%3e%3c/svg%3e")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', backgroundSize: '1em' }}
-                  >
-                    <option value="" disabled>Seleccione el mes...</option>
-                    {['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'].map(m => (
-                      <option key={m} value={m}>{m}</option>
-                    ))}
-                  </select>
-                  <CalendarDays size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                </div>
-              </div>
-            </div>
-
           </div>
+        )}
 
-          {/* Right Column: Map & CTA */}
-          <div className="col-span-12 lg:col-span-8 flex flex-col gap-5">
-            
-            {/* Bento Card: Map */}
-            <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex-1 flex flex-col relative min-h-[400px]">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2 text-indigo-600">
-                  <MapPin size={18} strokeWidth={2.5} />
-                  <h3 className="font-serif text-lg text-slate-900 font-bold tracking-tight">Geolocalización</h3>
+        {activeTab === 'analisis' && mode === 'simple' && (
+          <form className={styles.gridMain} onSubmit={handleSubmit}>
+            {/* Map Column */}
+            <div className={styles.colMap}>
+              <div className={styles.premiumCard}>
+                <div className={styles.cardHeader}>
+                  <span className="material-symbols-outlined">map</span>
+                  <h3>Ubicación Geográfica</h3>
                 </div>
-                {/* AI Insight Tooltip/Badge */}
-                <div className="hidden sm:flex items-center gap-2 bg-indigo-50 border border-indigo-100 rounded-full px-3 py-1">
-                  <Sparkles size={13} className="text-indigo-600" />
-                  <span className="text-[10px] font-bold text-indigo-700 tracking-wide uppercase">
-                    IA-Mapping Insight: Humedad de suelo óptima (Sentinel-2)
-                  </span>
-                </div>
-              </div>
-              
-              <div className="flex-1 rounded-xl overflow-hidden border border-slate-200 relative">
+                <p className={styles.cardDesc}>Seleccione el polígono o punto exacto de la parcela en el mapa.</p>
+                
                 <MapSelector 
                   position={{ lat: formulario.lat, lng: formulario.lng }}
                   onPositionChange={handleMapChange}
-                  height="100%"
+                  height={380}
+                />
+
+                <div className={styles.insightBox}>
+                  <span className="material-symbols-outlined">lightbulb</span>
+                  <p>
+                    <strong>Insight IA:</strong> Humedad de suelo favorable detectada por sensores Sentinel-2 para el área seleccionada.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Form Column */}
+            <div className={styles.colForm}>
+              <div className={styles.premiumCard}>
+                <div className={styles.cardHeader}>
+                  <span className="material-symbols-outlined">settings_input_component</span>
+                  <h3>Parámetros del Cultivo</h3>
+                </div>
+                
+                <AnalysisForm 
+                  data={formulario}
+                  onChange={handleFormChange}
+                  municipalities={municipiosLista}
+                  mode={mode}
                 />
               </div>
             </div>
 
-            {/* Bento Card: CTA */}
-            <button 
-              type="submit" 
-              className="group bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl p-6 flex items-center justify-between shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] transition-all duration-300 border border-emerald-400/50"
-            >
-              <div className="flex flex-col text-left">
-                <span className="text-[11px] font-black tracking-widest uppercase text-emerald-100 mb-1">
-                  Modelo Agro-IA Listo
-                </span>
-                <span className="text-2xl font-serif font-bold tracking-tight group-hover:translate-x-1 transition-transform">
+            {/* Action Row */}
+            <div className={styles.colCta}>
+              <div className={styles.ctaCard}>
+                <span className={`material-symbols-outlined ${styles.ctaBgIcon}`}>auto_awesome</span>
+                <div className={styles.ctaContent}>
+                  <div className={styles.ctaIconBox}>
+                    <span className="material-symbols-outlined">auto_awesome</span>
+                  </div>
+                  <div className={styles.ctaText}>
+                    <h4>¿Listo para el análisis?</h4>
+                    <p>Nuestra IA procesará 24 variables agroclimáticas, imágenes satelitales y datos históricos para generar su recomendación en segundos.</p>
+                  </div>
+                </div>
+                <button type="submit" className={styles.btnAnalyze}>
                   Analizar con IA
-                </span>
+                </button>
               </div>
-              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Zap size={24} className="text-white fill-white" />
-              </div>
-            </button>
+            </div>
 
+            {/* Model Status */}
+            <div className={styles.colStatus}>
+              <div className={styles.statusCard}>
+                <div className={styles.statusHeader}>
+                  <p>MODELO AGRO-IA</p>
+                  <span className={styles.badgeOptimo}>ACTIVO</span>
+                </div>
+                <div className={styles.statusBody}>
+                  <div className={styles.accRow}>
+                    <span>Precisión actual</span>
+                    <strong>94.2%</strong>
+                  </div>
+                  <div className={styles.progressBar}>
+                    <div className={styles.progressFill} style={{ width: '94.2%' }}></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </form>
+        )}
+
+        {activeTab === 'analisis' && mode === 'advanced' && (
+          <form className={styles.gridMain} onSubmit={handleSubmit}>
+            {/* Left Column: Advanced Parameters */}
+            <div className={styles.colMap} style={{ gridColumn: 'span 7' }}>
+              <div className={styles.historyBanner}>
+                <div className={styles.historyIcon}>
+                  <span className="material-symbols-outlined">history</span>
+                </div>
+                <div className={styles.historyText}>
+                  <h4>Usar datos de parcela existente</h4>
+                  <p>Recupere mediciones recientes de sus parcelas guardadas.</p>
+                </div>
+                <div className={styles.historySelectWrapper}>
+                  <select className={styles.historySelect}>
+                    <option disabled selected value="">Seleccione una parcela...</option>
+                    <option>Hacienda El Sol - Hace 2 días</option>
+                    <option>Lote Norte - Hace 1 semana</option>
+                    <option>Parcela Demo - Ayer</option>
+                  </select>
+                  <span className={`material-symbols-outlined ${styles.selectArrow}`}>expand_more</span>
+                </div>
+              </div>
+
+              <section className={styles.premiumCard}>
+                <div className={styles.cardHeader} style={{ justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <span className="material-symbols-outlined" style={{ color: 'var(--m3-primary)' }}>science</span>
+                    <h3>Parámetros del Suelo</h3>
+                  </div>
+                  <div className={styles.dataOrigin}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>info</span>
+                    <span>Datos importados de: Hacienda El Sol (24/05)</span>
+                  </div>
+                </div>
+
+                <div className={styles.advancedFormGrid}>
+                  <div className={styles.fieldGroup}>
+                    <label>pH del Suelo <span style={{ color: 'var(--m3-error)' }}>*</span></label>
+                    <input type="text" className={styles.advancedInput} value="6.5" readOnly />
+                  </div>
+                  <div className={styles.fieldGroup}>
+                    <label>Nitrógeno (N) <span style={{ color: 'var(--m3-error)' }}>*</span></label>
+                    <input type="text" className={styles.advancedInput} placeholder="mg/kg" value="45" readOnly />
+                  </div>
+                  <div className={styles.fieldGroup}>
+                    <label>Humedad <span style={{ color: 'var(--m3-error)' }}>*</span></label>
+                    <input type="text" className={styles.advancedInput} placeholder="%" value="72%" readOnly />
+                  </div>
+                </div>
+
+                <div className={styles.optionalRow}>
+                  <div className={styles.fieldGroup} style={{ opacity: 0.7 }}>
+                    <label style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Fósforo (P) - Opcional</label>
+                    <input type="text" className={styles.optionalInput} placeholder="mg/kg" />
+                  </div>
+                  <div className={styles.fieldGroup} style={{ opacity: 0.7 }}>
+                    <label style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Potasio (K) - Opcional</label>
+                    <input type="text" className={styles.optionalInput} placeholder="mg/kg" />
+                  </div>
+                </div>
+
+                <div className={styles.climateSection}>
+                  <h4 className={styles.climateTitle}>Condiciones Climáticas</h4>
+                  
+                  <div className={styles.sliderGroup}>
+                    <div className={styles.sliderHeader}>
+                      <div className={styles.sliderLabel}>
+                        <span className="material-symbols-outlined" style={{ color: '#f97316' }}>thermostat</span>
+                        <span>Temperatura Promedio</span>
+                      </div>
+                      <div className={styles.sliderValue}>
+                        <strong>{clima.temperatura}</strong>
+                        <span>°C</span>
+                      </div>
+                    </div>
+                    <input 
+                      type="range" 
+                      name="temperatura"
+                      className={styles.rangeInput} 
+                      min="0" max="50" 
+                      value={clima.temperatura}
+                      onChange={handleClimaChange}
+                    />
+                    <div className={styles.sliderLegend}>
+                      <span>BAJA</span>
+                      <span>ÓPTIMA</span>
+                      <span>ALTA</span>
+                    </div>
+                  </div>
+
+                  <div className={styles.sliderGroup}>
+                    <div className={styles.sliderHeader}>
+                      <div className={styles.sliderLabel}>
+                        <span className="material-symbols-outlined" style={{ color: '#3b82f6' }}>humidity_percentage</span>
+                        <span>Humedad Relativa</span>
+                      </div>
+                      <div className={styles.sliderValue}>
+                        <strong>{clima.humedad}</strong>
+                        <span>%</span>
+                      </div>
+                    </div>
+                    <input 
+                      type="range" 
+                      name="humedad"
+                      className={styles.rangeInput} 
+                      min="0" max="100" 
+                      value={clima.humedad}
+                      onChange={handleClimaChange}
+                    />
+                    <div className={styles.sliderLegend}>
+                      <span>SECO</span>
+                      <span>IDEAL</span>
+                      <span>SATURADO</span>
+                    </div>
+                  </div>
+
+                  <div className={styles.sliderGroup}>
+                    <div className={styles.sliderHeader}>
+                      <div className={styles.sliderLabel}>
+                        <span className="material-symbols-outlined" style={{ color: '#38bdf8' }}>rainy</span>
+                        <span>Precipitación Anual</span>
+                      </div>
+                      <div className={styles.sliderValue}>
+                        <strong>{clima.precipitacion}</strong>
+                        <span>mm</span>
+                      </div>
+                    </div>
+                    <input 
+                      type="range" 
+                      name="precipitacion"
+                      className={styles.rangeInput} 
+                      min="0" max="3000" 
+                      value={clima.precipitacion}
+                      onChange={handleClimaChange}
+                    />
+                  </div>
+                </div>
+              </section>
+            </div>
+
+            {/* Right Column: Preview & CTA */}
+            <div className={styles.colForm} style={{ gridColumn: 'span 5' }}>
+              <div className={styles.stickyColumn}>
+                <section className={styles.premiumCard} style={{ height: 'auto', marginBottom: '1.5rem' }}>
+                  <div className={styles.cardHeader}>
+                    <span className="material-symbols-outlined">location_on</span>
+                    <h3 style={{ fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Ubicación de Referencia</h3>
+                  </div>
+                  <div className={styles.satellitePreview}>
+                    <img 
+                      src="https://lh3.googleusercontent.com/aida-public/AB6AXuCxWm9_efZC4jYLLSKKu1FjeVUmyWh2Mby3tfembXL5snfDbpyapTOPxIjnIdYFog_j-YGp9o27Gurc14zLCI8C-0gZObPQN-yHfRm4_xgRNfE_InO0WERAN2zAgVkAVOQElqm1HfDxPrn10_vYIq6UpWDjY0P329KpPjcCPSduwHBeBQdCJ3ahwtSkoCSpDtIbbs7gTiC59FK7o2zrl1OnWd0A0R_rHotm9G791-Jl8lQ2DUAxoRtNOaUNzryaYbhU_Wc84Po4bDU" 
+                      alt="Satellite view" 
+                      className={styles.satelliteImg}
+                    />
+                    <div className={styles.satelliteOverlay}>
+                      <h4>Hacienda El Sol</h4>
+                      <p>Turbaco, Bolívar • 10.33° N, 75.41° W</p>
+                    </div>
+                  </div>
+                  <div className={styles.insightBox} style={{ borderLeft: '4px solid var(--m3-primary)', borderRadius: '0 8px 8px 0' }}>
+                    <p style={{ fontSize: '14px', lineHeight: '1.4' }}>
+                      <strong>Insight IA:</strong> Humedad de suelo favorable detectada por sensores para el área seleccionada.
+                    </p>
+                  </div>
+                </section>
+
+                <div className={styles.largeCta} style={{ marginBottom: '1.5rem' }}>
+                  <div className={styles.ctaDecor}></div>
+                  <div className={styles.ctaTop}>
+                    <div className={styles.ctaIconCircle}>
+                      <span className="material-symbols-outlined" style={{ fontSize: '32px' }}>auto_awesome</span>
+                    </div>
+                    <h3>¿Todo listo?</h3>
+                  </div>
+                  <p>Inicie el análisis de precisión con IA para obtener su plan de fertilización y riego.</p>
+                  <button type="submit" className={styles.btnExecuteLarge}>
+                    Analizar Parcela con IA
+                    <span className="material-symbols-outlined" style={{ fontSize: '32px' }}>bolt</span>
+                  </button>
+                </div>
+
+                <div className={styles.premiumCard} style={{ height: 'auto' }}>
+                  <div className={styles.statusHeader} style={{ marginBottom: '1rem' }}>
+                    <span style={{ fontSize: '14px', fontWeight: '600' }}>Salud del Algoritmo</span>
+                    <span className={styles.badgeOptimo} style={{ fontSize: '10px' }}>ÓPTIMO</span>
+                  </div>
+                  <div className={styles.progressBar}>
+                    <div className={styles.progressFill} style={{ width: '94.2%' }}></div>
+                  </div>
+                  <div className={styles.accRow} style={{ marginTop: '12px' }}>
+                    <span style={{ fontSize: '12px', color: 'var(--m3-outline)' }}>Precisión: 94.2%</span>
+                    <span style={{ fontSize: '12px', color: 'var(--m3-outline)', fontStyle: 'italic' }}>v4.2.0-stable</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </form>
+        )}
+
+        {activeTab === 'historial' && (
+          <div className={styles.historialSection}>
+             <div className={styles.tableCard}>
+                <div className={styles.tableHeader}>
+                  <h2 className={styles.tableTitle}>Consultas recientes</h2>
+                  <div className={styles.searchWrapper}>
+                    <span className="material-symbols-outlined">search</span>
+                    <input type="text" placeholder="Buscar por ID o Municipio..." className={styles.searchInput} />
+                  </div>
+                </div>
+
+                <div className={styles.tableScroll}>
+                  <table className={styles.mainTable}>
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Fecha</th>
+                        <th>Municipio</th>
+                        <th>Cultivo rec.</th>
+                        <th className={styles.textCenter}>Score IA</th>
+                        <th>Estado</th>
+                        <th className={styles.textRight}>Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        { id: 'C-0421', fecha: '2025-04-21', municipio: 'Montería', cultivo: 'Maíz',    score: 94, estado: 'Exitosa' },
+                        { id: 'C-0420', fecha: '2025-04-20', municipio: 'Barranquilla', cultivo: 'Plátano', score: 88, estado: 'Exitosa' },
+                        { id: 'C-0419', fecha: '2025-04-19', municipio: 'Sincelejo', cultivo: 'Yuca',   score: 76, estado: 'Exitosa' },
+                      ].map((row) => (
+                        <tr key={row.id}>
+                          <td className={styles.rowId}>{row.id}</td>
+                          <td className={styles.rowDate}>{row.fecha}</td>
+                          <td className={styles.rowLocation}>{row.municipio}</td>
+                          <td>
+                            <div className={styles.cropInfo}>
+                              <span className="material-symbols-outlined">agriculture</span>
+                              <span>{row.cultivo}</span>
+                            </div>
+                          </td>
+                          <td>
+                            <div className={styles.scoreContainer}>
+                              <span className={`${styles.scoreText} ${row.score < 70 ? styles.scoreLow : ''}`}>{row.score}%</span>
+                            </div>
+                          </td>
+                          <td>
+                            <span className={`${styles.statusBadge} ${row.estado !== 'Exitosa' ? styles.statusWarning : ''}`}>
+                              {row.estado}
+                            </span>
+                          </td>
+                          <td className={styles.textRight}>
+                            <button className={styles.viewBtn}>Ver</button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
           </div>
-
-        </form>
+        )}
       </div>
     </ResearcherLayout>
   );
