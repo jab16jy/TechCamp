@@ -74,8 +74,8 @@
 }
 .iot-algo-score { font-family: 'Montserrat', sans-serif; font-size: 1.35rem; font-weight: 800; line-height: 1; }
 .iot-algo-score small { font-size: 0.75rem; opacity: 0.6; }
-.iot-algo-label { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.75; }
-.iot-algo-ver { font-family: 'IBM Plex Mono', monospace; font-size: 0.55rem; opacity: 0.5; }
+.iot-algo-label { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.95; color: #f8fafc; }
+.iot-algo-ver { font-family: 'IBM Plex Mono', monospace; font-size: 0.55rem; opacity: 0.85; color: #f8fafc; }
 
 /* Pulse badge */
 .iot-pulse-badge {

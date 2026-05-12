@@ -56,8 +56,8 @@
 }
 .ra-algo-score { font-family: 'Syne', sans-serif; font-size: 1.6rem; font-weight: 800; line-height: 1; }
 .ra-algo-score span { font-size: 0.9rem; opacity: 0.7; }
-.ra-algo-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.8; }
-.ra-algo-ver { font-family: 'IBM Plex Mono', monospace; font-size: 0.62rem; opacity: 0.6; margin-top: 1px; }
+.ra-algo-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.95; color: #f8fafc; }
+.ra-algo-ver { font-family: 'IBM Plex Mono', monospace; font-size: 0.62rem; opacity: 0.85; margin-top: 1px; color: #f8fafc; }
 
 /* Sensor status */
 .ra-sensor-status { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.8rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; }

@@ -164,11 +164,11 @@ const AgroAsesor = () => {
           className="absolute bottom-5 left-5 z-[500] rounded-xl p-3"
           style={{ background: 'rgba(15,23,18,0.75)', backdropFilter: 'blur(10px)', border: '1px solid rgba(16,185,129,0.2)' }}
         >
-          <p className="text-[9px] font-black text-emerald-400 uppercase tracking-[0.15em] mb-2">NDVI</p>
+          <p className="text-[9px] font-black text-emerald-100 uppercase tracking-[0.15em] mb-2">NDVI</p>
           <div className="w-28 h-1.5 rounded-full" style={{ background: 'linear-gradient(to right, #ef4444, #f59e0b, #84cc16, #10b981)' }} />
           <div className="flex justify-between mt-1">
-            <span className="text-[8px] text-emerald-200/60 font-mono">0 Estrés</span>
-            <span className="text-[8px] text-emerald-200/60 font-mono">1.0 Óptimo</span>
+            <span className="text-[8px] text-emerald-100/90 font-mono">0 Estrés</span>
+            <span className="text-[8px] text-emerald-100/90 font-mono">1.0 Óptimo</span>
           </div>
         </div>
 
@@ -191,20 +191,20 @@ const AgroAsesor = () => {
                 <Bot size={14} className="text-white" />
               </div>
               <div>
-                <p className="text-[12px] font-black text-emerald-100">Agro-Asesor IA</p>
+                <p className="text-[12px] font-black text-white">Agro-Asesor IA</p>
                 <div className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <p className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider">Conectado · Sentinel-2</p>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse" />
+                  <p className="text-[9px] font-bold text-emerald-100 uppercase tracking-wider">Conectado · Sentinel-2</p>
                 </div>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <div className="flex gap-1.5 px-2 py-1 rounded-full" style={{ background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.25)' }}>
-                <span className="text-[9px] font-bold text-emerald-400">94.2%</span>
+                <span className="text-[9px] font-bold text-white">94.2%</span>
               </div>
               <ChevronDown
                 size={14}
-                className={`text-emerald-400 transition-transform duration-200 ${chatOpen ? 'rotate-180' : ''}`}
+                className={`text-white transition-transform duration-200 ${chatOpen ? 'rotate-180' : ''}`}
               />
             </div>
           </div>
@@ -241,8 +241,8 @@ const AgroAsesor = () => {
                           className="max-w-[80%] px-3 py-2 rounded-xl text-[11.5px] leading-relaxed"
                           style={
                             msg.rol === 'ia'
-                              ? { background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.08)', color: '#c8ddd5', borderRadius: '4px 12px 12px 12px' }
-                              : { background: 'linear-gradient(135deg, #059669, #10b981)', color: '#fff', borderRadius: '12px 4px 12px 12px' }
+                              ? { background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.08)', color: '#ffffff', borderRadius: '4px 12px 12px 12px' }
+                              : { background: 'linear-gradient(135deg, #059669, #10b981)', color: '#ffffff', borderRadius: '12px 4px 12px 12px' }
                           }
                         >
                           <p
@@ -252,7 +252,7 @@ const AgroAsesor = () => {
                                 .replace(/\n/g, '<br/>'),
                             }}
                           />
-                          <span className="block text-[8.5px] mt-1" style={{ color: 'rgba(255,255,255,0.35)', fontFamily: 'monospace' }}>
+                          <span className="block text-[8.5px] mt-1" style={{ color: 'rgba(255,255,255,0.7)', fontFamily: 'monospace' }}>
                             {msg.hora}
                           </span>
                         </div>
@@ -280,7 +280,7 @@ const AgroAsesor = () => {
                         key={i}
                         onClick={() => setInput(s)}
                         className="text-[9.5px] font-semibold px-2.5 py-1 rounded-lg transition-all"
-                        style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#9bbfad' }}
+                        style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#ffffff' }}
                       >
                         {s}
                       </button>
@@ -299,7 +299,7 @@ const AgroAsesor = () => {
                       style={{
                         background: 'rgba(255,255,255,0.07)',
                         border: '1px solid rgba(255,255,255,0.12)',
-                        color: '#e2f5ed',
+                        color: '#ffffff',
                       }}
                     />
                     <button

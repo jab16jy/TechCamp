@@ -60,8 +60,8 @@
 }
 .ia-algo-score { font-family: 'Montserrat', sans-serif; font-size: 1.3rem; font-weight: 800; line-height: 1; }
 .ia-algo-score small { font-size: 0.75rem; opacity: 0.6; }
-.ia-algo-label { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.75; }
-.ia-algo-ver { font-family: 'IBM Plex Mono', monospace; font-size: 0.55rem; opacity: 0.5; }
+.ia-algo-label { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.95; color: #f8fafc; }
+.ia-algo-ver { font-family: 'IBM Plex Mono', monospace; font-size: 0.55rem; opacity: 0.85; color: #f8fafc; }
 .ia-header-btns { display: flex; gap: 6px; }
 .ia-btn-ghost {
   display: flex; align-items: center; gap: 4px; padding: 6px 12px;
