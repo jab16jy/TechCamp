@@ -5,13 +5,13 @@ import './IAPredictiva.css';
 
 // ── XAI Bar Chart ──
 const FEATURES = [
-  { label: 'Precipitación',      pct: 91, color: '#2563eb' },
-  { label: 'Nitrógeno (N)',       pct: 78, color: '#10b981' },
-  { label: 'Temperatura Máx.',    pct: 62, color: '#f59e0b' },
-  { label: 'Humedad del Suelo',   pct: 54, color: '#3b82f6' },
-  { label: 'Fósforo (P)',         pct: 41, color: '#6ee7b7' },
-  { label: 'Radiación Solar',     pct: 33, color: '#fcd34d' },
-  { label: 'Potasio (K)',         pct: 27, color: '#86efac' },
+  { label: 'Precipitación', pct: 91, color: '#2563eb' },
+  { label: 'Nitrógeno (N)', pct: 78, color: '#10b981' },
+  { label: 'Temperatura Máx.', pct: 62, color: '#f59e0b' },
+  { label: 'Humedad del Suelo', pct: 54, color: '#3b82f6' },
+  { label: 'Fósforo (P)', pct: 41, color: '#6ee7b7' },
+  { label: 'Radiación Solar', pct: 33, color: '#fcd34d' },
+  { label: 'Potasio (K)', pct: 27, color: '#86efac' },
 ];
 
 function FeatureChart() {
@@ -44,7 +44,7 @@ function GrowthChart({ riego, npk }) {
     [0, 195], [160, 197], [320, 188], [480, 192], [640, 170], [800, 175]
   ];
   const toPath = pts => pts.map(([x, y], i) => `${i === 0 ? 'M' : 'L'} ${x} ${Math.max(10, y)}`).join(' ');
-  const toArea = (pts, base = 210) => toPath(pts) + ` L ${pts[pts.length-1][0]} ${base} L 0 ${base} Z`;
+  const toArea = (pts, base = 210) => toPath(pts) + ` L ${pts[pts.length - 1][0]} ${base} L 0 ${base} Z`;
 
   return (
     <svg viewBox="0 0 800 210" className="ia-chart-svg" preserveAspectRatio="none">
@@ -105,7 +105,7 @@ function FieldMap({ timeIdx }) {
       </defs>
       <rect width="500" height="220" fill="#1a3a0f" />
       <ellipse cx="250" cy="110" rx="220" ry="105" fill="#2a5218" />
-      {[0,1,2,3,4,5].map(i => (
+      {[0, 1, 2, 3, 4, 5].map(i => (
         <line key={i} x1="20" y1={30 + i * 32} x2="480" y2={30 + i * 32} stroke="rgba(255,255,255,.04)" strokeWidth="1" />
       ))}
       <rect x="20" y="15" width="460" height="190" rx="6" fill="none" stroke="rgba(255,255,255,.1)" strokeWidth="1.5" strokeDasharray="5 4" />
@@ -136,14 +136,14 @@ function InfoTip({ text }) {
 // ── Main ──
 const IAPredictiva = () => {
   const navigate = useNavigate();
-  const [riego, setRiego]         = useState(75);
-  const [npk, setNpk]             = useState(120);
-  const [compare, setCompare]     = useState(false);
-  const [timeIdx, setTimeIdx]     = useState(2);
+  const [riego, setRiego] = useState(75);
+  const [npk, setNpk] = useState(120);
+  const [compare, setCompare] = useState(false);
+  const [timeIdx, setTimeIdx] = useState(2);
 
   const rendimiento = (3.8 + riego * 0.012 + npk * 0.004).toFixed(1);
-  const prob        = Math.min(98, Math.round(72 + riego * 0.18 + npk * 0.06));
-  const riesgo      = Math.max(4,  Math.round(28 - riego * 0.1 - npk * 0.04));
+  const prob = Math.min(98, Math.round(72 + riego * 0.18 + npk * 0.06));
+  const riesgo = Math.max(4, Math.round(28 - riego * 0.1 - npk * 0.04));
 
   const MONTHS = ['Oct', 'Nov', 'Dic', 'Ene', 'Feb', 'Mar'];
 
@@ -170,11 +170,11 @@ const IAPredictiva = () => {
               <div className="ia-meta-badges">
                 <span className="ia-badge-mode">MODELO ACTIVO</span>
                 <span className="ia-badge-ref">
-                  <span className="material-symbols-outlined" style={{fontSize:'0.75rem'}}>calendar_today</span>
+                  <span className="material-symbols-outlined" style={{ fontSize: '0.75rem' }}>calendar_today</span>
                   Oct 24, 2023
                 </span>
                 <span className="ia-badge-ref">
-                  <span className="material-symbols-outlined" style={{fontSize:'0.75rem'}}>location_on</span>
+                  <span className="material-symbols-outlined" style={{ fontSize: '0.75rem' }}>location_on</span>
                   Zona Norte · Lote A4
                 </span>
               </div>
@@ -205,12 +205,12 @@ const IAPredictiva = () => {
         <div className="ia-metrics-row">
           {[
             { icon: 'agriculture', label: 'Rendimiento Estimado', val: `${rendimiento}`, unit: 't/ha', sub: 'Proyectadas', color: '#10b981', tip: 'Calculado con NASA POWER + Sentinel-2 NDVI' },
-            { icon: 'verified',    label: 'Probabilidad de Éxito',val: `${prob}`,         unit: '%',    sub: 'Estado: Óptimo',  color: '#2563eb', tip: 'Modelo Random Forest con 94.2% de precisión' },
-            { icon: 'warning',     label: 'Riesgo Climático',     val: `${riesgo}`,       unit: '%',    sub: 'Amenaza Baja',    color: '#f59e0b', tip: 'Basado en pronóstico ECMWF + alertas Sentinel-2' },
+            { icon: 'verified', label: 'Probabilidad de Éxito', val: `${prob}`, unit: '%', sub: 'Estado: Óptimo', color: '#2563eb', tip: 'Modelo Random Forest con 94.2% de precisión' },
+            { icon: 'warning', label: 'Riesgo Climático', val: `${riesgo}`, unit: '%', sub: 'Amenaza Baja', color: '#f59e0b', tip: 'Basado en pronóstico ECMWF + alertas Sentinel-2' },
           ].map(m => (
-            <div key={m.label} className="ia-metric-card" style={{'--accent': m.color}}>
+            <div key={m.label} className="ia-metric-card" style={{ '--accent': m.color }}>
               <div className="ia-metric-left">
-                <div className="ia-metric-icon-box" style={{background: m.color + '18', color: m.color}}>
+                <div className="ia-metric-icon-box" style={{ background: m.color + '18', color: m.color }}>
                   <span className="material-symbols-outlined">{m.icon}</span>
                 </div>
                 <div>
@@ -221,7 +221,7 @@ const IAPredictiva = () => {
                   <p className="ia-metric-sub">{m.sub}</p>
                 </div>
               </div>
-              <div className="ia-metric-val" style={{color: m.color}}>{m.val}<span className="ia-metric-unit">{m.unit}</span></div>
+              <div className="ia-metric-val" style={{ color: m.color }}>{m.val}<span className="ia-metric-unit">{m.unit}</span></div>
             </div>
           ))}
         </div>
@@ -254,7 +254,7 @@ const IAPredictiva = () => {
 
               <div className="ia-slider-group">
                 <label className="ia-slider-label">
-                  <span className="material-symbols-outlined" style={{color:'#3b82f6',fontSize:'0.9rem'}}>water_drop</span>
+                  <span className="material-symbols-outlined" style={{ color: '#3b82f6', fontSize: '0.9rem' }}>water_drop</span>
                   Ajuste de Riego
                   <span className="ia-slider-val">{riego}%</span>
                 </label>
@@ -264,7 +264,7 @@ const IAPredictiva = () => {
 
               <div className="ia-slider-group">
                 <label className="ia-slider-label">
-                  <span className="material-symbols-outlined" style={{color:'#10b981',fontSize:'0.9rem'}}>science</span>
+                  <span className="material-symbols-outlined" style={{ color: '#10b981', fontSize: '0.9rem' }}>science</span>
                   Fertilización NPK
                   <span className="ia-slider-val">{npk} kg/ha</span>
                 </label>
@@ -312,15 +312,15 @@ const IAPredictiva = () => {
                 <span className="material-symbols-outlined ia-card-icon">trending_up</span>
                 <h2 className="ia-card-title">Proyección de Crecimiento (6 meses)</h2>
                 <div className="ia-chart-legend">
-                  <span className="ia-leg-dot" style={{background:'#10b981'}}></span><span>Crecimiento</span>
-                  <span className="ia-leg-dot" style={{background:'#ef4444'}}></span><span>Estrés Climático</span>
+                  <span className="ia-leg-dot" style={{ background: '#10b981' }}></span><span>Crecimiento</span>
+                  <span className="ia-leg-dot" style={{ background: '#ef4444' }}></span><span>Estrés Climático</span>
                 </div>
               </div>
               <div className="ia-chart-wrap">
                 <GrowthChart riego={riego} npk={npk} />
               </div>
               <div className="ia-chart-x-axis">
-                {['Oct','Nov','Dic','Ene','Feb','Mar'].map(m => (
+                {['Oct', 'Nov', 'Dic', 'Ene', 'Feb', 'Mar'].map(m => (
                   <span key={m} className="ia-axis-label">{m}</span>
                 ))}
               </div>
@@ -342,7 +342,7 @@ const IAPredictiva = () => {
               </div>
               {/* Time Slider */}
               <div className="ia-time-slider-wrap">
-                <span className="material-symbols-outlined" style={{color:'#64748b',fontSize:'0.9rem'}}>schedule</span>
+                <span className="material-symbols-outlined" style={{ color: '#64748b', fontSize: '0.9rem' }}>schedule</span>
                 <span className="ia-time-label">Mes: <strong>{MONTHS[timeIdx]}</strong></span>
                 <input
                   type="range" min="0" max="5" value={timeIdx}
@@ -358,14 +358,14 @@ const IAPredictiva = () => {
 
           {/* ── RIGHT: Alerts ── */}
           <div className="ia-right-col">
-            <div className="ia-card-header" style={{marginBottom:'8px'}}>
+            <div className="ia-card-header" style={{ marginBottom: '8px' }}>
               <span className="material-symbols-outlined ia-card-icon">notifications_active</span>
               <h2 className="ia-card-title">Alertas de IA</h2>
             </div>
 
             <div className="ia-alert-card ia-alert-red">
               <div className="ia-alert-icon red">
-                <span className="material-symbols-outlined" style={{fontVariationSettings:"'FILL' 1"}}>water_drop</span>
+                <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>water_drop</span>
               </div>
               <div>
                 <h4 className="ia-alert-title">Estrés Hídrico</h4>
@@ -376,7 +376,7 @@ const IAPredictiva = () => {
 
             <div className="ia-alert-card ia-alert-green">
               <div className="ia-alert-icon green">
-                <span className="material-symbols-outlined" style={{fontVariationSettings:"'FILL' 1"}}>eco</span>
+                <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>eco</span>
               </div>
               <div>
                 <h4 className="ia-alert-title">Ventana de Cosecha Óptima</h4>
@@ -397,8 +397,8 @@ const IAPredictiva = () => {
               <p className="ia-sources-title">Fuentes de datos</p>
               {[
                 { icon: 'satellite_alt', name: 'Sentinel-2', desc: 'NDVI · Última imagen: hace 6h' },
-                { icon: 'public',        name: 'NASA POWER',  desc: 'Clima histórico y actual' },
-                { icon: 'biotech',       name: 'Laboratorio', desc: 'Suelo · Calibración: 24/05' },
+                { icon: 'public', name: 'NASA POWER', desc: 'Clima histórico y actual' },
+                { icon: 'biotech', name: 'Laboratorio', desc: 'Suelo · Calibración: 24/05' },
               ].map(s => (
                 <div key={s.name} className="ia-source-row">
                   <span className="material-symbols-outlined ia-source-icon">{s.icon}</span>

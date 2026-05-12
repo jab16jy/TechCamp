@@ -4,10 +4,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import useAppStore from '../../context/useAppStore';
 import {
   LayoutDashboard,
-  Map as MapIcon,
   FlaskConical,
   BrainCircuit,
-  Activity,
   FileText,
   RadioTower,
   Search,
@@ -32,45 +30,48 @@ const NAV_SECTIONS = [
     title: 'PRINCIPAL',
     items: [
       { id: 'dashboard', icon: <LayoutDashboard size={17} />, label: 'Dashboard Hub', path: '/investigador/dashboard' },
-      { id: 'mapas',     icon: <Bot size={17} />,            label: 'Agro-Asesor IA', path: '/investigador/mapas' },
+      { id: 'mapas', icon: <Bot size={17} />, label: 'Agro-Asesor IA', path: '/investigador/mapas' },
     ],
   },
   {
     title: 'CIENCIA',
     items: [
-      { id: 'analisis',  icon: <FlaskConical size={17} />,   label: 'Análisis de Suelos', path: '/investigador/analisis' },
-      { id: 'ia',        icon: <BrainCircuit size={17} />,   label: 'IA Predictiva',      path: '/investigador/ia' },
-      { id: 'simulador', icon: <Activity size={17} />,       label: 'Simulador',          path: '/investigador/simulador' },
+      { id: 'analisis', icon: <FlaskConical size={17} />, label: 'Analisis de Suelos', path: '/investigador/analisis' },
+      { id: 'ia', icon: <BrainCircuit size={17} />, label: 'IA Predictiva', path: '/investigador/ia' },
     ],
   },
   {
     title: 'ADMIN',
     items: [
-      { id: 'reportes', icon: <FileText size={17} />,    label: 'Reportes',         path: '/investigador/reportes' },
-      { id: 'sensores', icon: <RadioTower size={17} />,  label: 'Nodos IoT',        path: '/investigador/sensores' },
+      { id: 'reportes', icon: <FileText size={17} />, label: 'Reportes', path: '/investigador/reportes' },
+      { id: 'sensores', icon: <RadioTower size={17} />, label: 'Nodos IoT', path: '/investigador/sensores' },
     ],
   },
 ];
 
 const ALERTS = [
-  { title: 'Estrés hídrico detectado',   desc: 'Nodo Sur-02 registra 61% HR.',         time: 'Hace 5 min',  type: 'warn'    },
-  { title: 'Imágenes Sentinel-2 listas', desc: 'NDVI procesado para todos los lotes.', time: 'Hace 1 hora', type: 'success' },
-  { title: 'Reporte semanal generado',   desc: 'Descarga disponible en Reportes.',      time: 'Hace 3 horas',type: 'info'    },
+  { title: 'Estres hidrico detectado', desc: 'Nodo Sur-02 registra 61% HR.', time: 'Hace 5 min', type: 'warn' },
+  { title: 'Imagenes Sentinel-2 listas', desc: 'NDVI procesado para todos los lotes.', time: 'Hace 1 hora', type: 'success' },
+  { title: 'Reporte semanal generado', desc: 'Descarga disponible en Reportes.', time: 'Hace 3 horas', type: 'info' },
 ];
 
-const alertIcon = { warn: <AlertTriangle size={13} className="text-amber-400" />, success: <CheckCircle2 size={13} className="text-emerald-400" />, info: <Info size={13} className="text-blue-400" /> };
+const alertIcon = {
+  warn: <AlertTriangle size={13} className="text-amber-500" />,
+  success: <CheckCircle2 size={13} className="text-emerald-500" />,
+  info: <Info size={13} className="text-sky-500" />,
+};
 
 const ResearcherLayout = ({ children, activeTab }) => {
-  const navigate    = useNavigate();
-  const location    = useLocation();
+  const navigate = useNavigate();
+  const location = useLocation();
   const agregarToast = useAppStore((s) => s.agregarToast);
 
   const [profileOpen, setProfileOpen] = useState(false);
-  const [alertsOpen,  setAlertsOpen]  = useState(false);
-  const [generating,  setGenerating]  = useState(false);
+  const [alertsOpen, setAlertsOpen] = useState(false);
+  const [generating, setGenerating] = useState(false);
 
   const profileRef = useRef(null);
-  const alertsRef  = useRef(null);
+  const alertsRef = useRef(null);
 
   const rol = sessionStorage.getItem('rol');
 
@@ -81,7 +82,7 @@ const ResearcherLayout = ({ children, activeTab }) => {
   useEffect(() => {
     const fn = (e) => {
       if (profileRef.current && !profileRef.current.contains(e.target)) setProfileOpen(false);
-      if (alertsRef.current  && !alertsRef.current.contains(e.target))  setAlertsOpen(false);
+      if (alertsRef.current && !alertsRef.current.contains(e.target)) setAlertsOpen(false);
     };
     document.addEventListener('mousedown', fn);
     return () => document.removeEventListener('mousedown', fn);
@@ -89,70 +90,68 @@ const ResearcherLayout = ({ children, activeTab }) => {
 
   const handleLogout = () => {
     sessionStorage.removeItem('rol');
-    agregarToast('Sesión cerrada correctamente', 'info');
+    agregarToast('Sesion cerrada correctamente', 'info');
     navigate('/');
   };
 
   const triggerReport = () => {
     setGenerating(true);
-    setTimeout(() => { setGenerating(false); agregarToast('Reporte generado exitosamente', 'success'); }, 2800);
+    setTimeout(() => {
+      setGenerating(false);
+      agregarToast('Reporte generado exitosamente', 'success');
+    }, 2800);
   };
 
-  const currentLabel = NAV_SECTIONS.flatMap((s) => s.items).find(
-    (i) => location.pathname === i.path || activeTab === i.id
+  const currentLabel = NAV_SECTIONS.flatMap((section) => section.items).find(
+    (item) => location.pathname === item.path || activeTab === item.id,
   )?.label ?? 'Panel de Control';
 
   return (
-    /* h-screen + overflow-hidden → el scroll sucede DENTRO de los hijos */
-    <div className="flex h-screen w-full bg-[#F8FAFC] overflow-hidden" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-
-      {/* ─────────────────── SIDEBAR ─────────────────── */}
-      <aside className="w-64 bg-slate-900 flex flex-col shadow-2xl z-20 shrink-0 border-r border-slate-800">
-
-        {/* BRANDING — siempre visible en la esquina superior */}
-        <div className="px-5 py-5 border-b border-slate-800 shrink-0">
+    <div
+      className="flex h-screen w-full overflow-hidden bg-[#f9fafb] text-slate-900"
+      style={{ fontFamily: "'DM Sans', sans-serif" }}
+    >
+      <aside className="w-72 shrink-0 border-r border-emerald-100/80 bg-white/96 backdrop-blur-sm">
+        <div className="border-b border-emerald-100 px-6 py-6">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/30 shrink-0">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-500 shadow-[0_14px_30px_rgba(16,185,129,0.22)]">
               <Sprout size={18} className="text-white" />
             </div>
             <div>
               <h1
-                className="text-[17px] font-black text-slate-100 leading-tight tracking-tight"
+                className="text-[18px] font-black leading-tight tracking-tight text-emerald-950"
                 style={{ fontFamily: "'Montserrat', sans-serif" }}
               >
-                AgroCaribe <span className="text-emerald-400">IA</span>
+                AgroCaribe <span className="text-emerald-500">IA</span>
               </h1>
-              <p className="text-[9px] font-bold text-slate-500 tracking-[0.22em] uppercase mt-0.5">
-                Intelligence Hub
+              <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.28em] text-emerald-900/55">
+                Research Console
               </p>
             </div>
           </div>
         </div>
 
-        {/* NAV — overflow-y-auto permite scroll en menú si crece */}
-        <nav className="flex-1 overflow-y-auto custom-scrollbar px-3 py-5 space-y-7">
-          {NAV_SECTIONS.map((sec) => (
-            <div key={sec.title}>
-              <p className="text-[9.5px] font-black text-slate-600 tracking-[0.25em] uppercase px-3 mb-3">
-                {sec.title}
+        <nav className="custom-scrollbar flex-1 space-y-8 overflow-y-auto px-4 py-6">
+          {NAV_SECTIONS.map((section) => (
+            <div key={section.title}>
+              <p className="mb-3 px-3 text-[9.5px] font-black uppercase tracking-[0.28em] text-emerald-950/40">
+                {section.title}
               </p>
-              <ul className="space-y-0.5">
-                {sec.items.map((item) => {
+              <ul className="space-y-1">
+                {section.items.map((item) => {
                   const active = location.pathname === item.path || activeTab === item.id;
                   return (
                     <li key={item.id}>
                       <Link
                         to={item.path}
                         onClick={() => item.id === 'reportes' && triggerReport()}
-                        className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13px] font-semibold transition-all relative group ${
+                        className={`flex items-center gap-3 rounded-2xl px-3.5 py-2.5 text-[13px] font-semibold transition-all ${
                           active
-                            ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20'
-                            : 'text-slate-400 hover:bg-slate-800 hover:text-slate-100'
+                            ? 'bg-emerald-500 text-white shadow-[0_12px_24px_rgba(16,185,129,0.18)]'
+                            : 'text-slate-600 hover:bg-emerald-50 hover:text-emerald-950'
                         }`}
                       >
-                        <span className={active ? 'text-white' : 'text-slate-500 group-hover:text-slate-300 transition-colors'}>
-                          {item.icon}
-                        </span>
+                        <span className={active ? 'text-white' : 'text-emerald-800/55'}>{item.icon}</span>
                         {item.label}
                       </Link>
                     </li>
@@ -163,75 +162,64 @@ const ResearcherLayout = ({ children, activeTab }) => {
           ))}
         </nav>
 
-        {/* CTA Footer */}
-        <div className="shrink-0 p-4 border-t border-slate-800 space-y-3">
+        <div className="space-y-3 border-t border-emerald-100 p-4">
           {generating && (
-            <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-slate-800 border border-slate-700 animate-pulse">
-              <Loader2 size={14} className="text-emerald-400 animate-spin shrink-0" />
+            <div className="flex items-center gap-3 rounded-2xl border border-emerald-100 bg-emerald-50 px-3 py-2.5">
+              <Loader2 size={14} className="shrink-0 animate-spin text-emerald-500" />
               <div>
-                <p className="text-[11px] font-bold text-slate-200">Generando reporte…</p>
-                <p className="text-[9px] text-slate-500">NDVI · Análisis de Suelo</p>
+                <p className="text-[11px] font-bold text-emerald-950">Generando reporte...</p>
+                <p className="text-[9px] text-emerald-900/55">NDVI · Analisis de Suelo</p>
               </div>
             </div>
           )}
           <button
-            onClick={() => navigate('/investigador/mapas')}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-slate-800 hover:bg-emerald-600 border border-slate-700 hover:border-emerald-500 text-slate-300 hover:text-white text-[11px] font-black uppercase tracking-widest transition-all"
+            onClick={() => navigate('/investigador/ia')}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-emerald-950 bg-emerald-950 py-3 text-[11px] font-black uppercase tracking-[0.22em] text-white transition-all hover:bg-emerald-900"
           >
-            <Plus size={13} /> Nueva Simulación
+            <Plus size={13} /> Nueva Prediccion
           </button>
         </div>
       </aside>
 
-      {/* ─────────────────── MAIN ─────────────────── */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-
-        {/* HEADER */}
-        <header className="h-[64px] bg-white border-b border-slate-200 flex items-center justify-between px-7 shrink-0 z-10 shadow-sm">
-
-          {/* Breadcrumb */}
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <header className="flex h-[72px] shrink-0 items-center justify-between border-b border-emerald-100 bg-white/90 px-7 backdrop-blur-sm">
           <h2
-            className="text-[15px] font-black text-slate-800 uppercase tracking-tight"
+            className="text-[15px] font-black uppercase tracking-tight text-emerald-950"
             style={{ fontFamily: "'Montserrat', sans-serif" }}
           >
             {currentLabel}
           </h2>
 
-          {/* Search */}
-          <div className="flex-1 max-w-sm mx-8 hidden md:block">
-            <div className="relative group">
+          <div className="mx-8 hidden max-w-sm flex-1 md:block">
+            <div className="group relative">
               <Search
                 size={15}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-600 transition-colors"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors group-focus-within:text-emerald-600"
               />
               <input
                 type="text"
-                placeholder="Buscar lotes, nodos, análisis… (Cmd+K)"
-                className="w-full bg-slate-100 border border-transparent rounded-full py-2 pl-9 pr-12 text-[12.5px] text-slate-700 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all outline-none placeholder:text-slate-400"
+                placeholder="Buscar lotes, nodos, analisis... (Cmd+K)"
+                className="w-full rounded-full border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-12 text-[12.5px] text-slate-700 outline-none transition-all placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10"
               />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none flex items-center gap-0.5 px-1.5 py-0.5 rounded border border-slate-200 bg-white text-[9px] text-slate-500 font-bold shadow-sm">
+              <div className="pointer-events-none absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-0.5 rounded-full border border-slate-200 bg-white px-1.5 py-0.5 text-[9px] font-bold text-slate-500 shadow-sm">
                 <Command size={9} /> K
               </div>
             </div>
           </div>
 
-          {/* Right actions */}
           <div className="flex items-center gap-4">
-
-            {/* AI badge */}
-            <div className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[10.5px] font-black text-emerald-700 tracking-wide">v4.2 Pro | 94.2% Accuracy</span>
+            <div className="hidden items-center gap-1.5 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1.5 lg:flex">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[10.5px] font-black tracking-wide text-emerald-800">v4.2 Pro | 94.2% Accuracy</span>
             </div>
 
-            {/* Bell */}
             <div className="relative" ref={alertsRef}>
               <button
-                onClick={() => setAlertsOpen((p) => !p)}
-                className="relative p-2.5 text-slate-500 hover:bg-slate-100 rounded-xl transition-colors"
+                onClick={() => setAlertsOpen((prev) => !prev)}
+                className="relative rounded-2xl p-2.5 text-slate-500 transition-colors hover:bg-emerald-50"
               >
                 <Bell size={19} />
-                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 border-2 border-white rounded-full" />
+                <span className="absolute right-2 top-2 h-2 w-2 rounded-full border-2 border-white bg-red-500" />
               </button>
 
               <AnimatePresence>
@@ -241,48 +229,50 @@ const ResearcherLayout = ({ children, activeTab }) => {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 8, scale: 0.96 }}
                     transition={{ duration: 0.18, ease: 'easeOut' }}
-                    className="absolute right-0 mt-3 w-80 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 overflow-hidden"
+                    className="absolute right-0 z-50 mt-3 w-80 overflow-hidden rounded-3xl border border-emerald-100 bg-white shadow-[0_24px_60px_rgba(15,23,42,0.12)]"
                   >
-                    <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50/70">
-                      <span className="text-[11px] font-black text-slate-700 uppercase tracking-widest">Alertas Recientes</span>
-                      <button className="text-[10px] font-bold text-emerald-600 hover:underline">Marcar leídas</button>
+                    <div className="flex items-center justify-between border-b border-slate-100 bg-emerald-50/60 px-4 py-3">
+                      <span className="text-[11px] font-black uppercase tracking-widest text-slate-700">Alertas Recientes</span>
+                      <button className="text-[10px] font-bold text-emerald-600 hover:underline">Marcar leidas</button>
                     </div>
                     <div className="max-h-72 overflow-y-auto">
-                      {ALERTS.map((a, i) => (
-                        <div key={i} className="flex items-start gap-3 px-4 py-3 border-b border-slate-50 hover:bg-slate-50 cursor-pointer transition-colors">
-                          <span className="mt-0.5 shrink-0">{alertIcon[a.type]}</span>
+                      {ALERTS.map((alert, index) => (
+                        <div
+                          key={index}
+                          className="flex cursor-pointer items-start gap-3 border-b border-slate-50 px-4 py-3 transition-colors hover:bg-emerald-50/40"
+                        >
+                          <span className="mt-0.5 shrink-0">{alertIcon[alert.type]}</span>
                           <div>
-                            <p className="text-[12.5px] font-semibold text-slate-800">{a.title}</p>
-                            <p className="text-[11px] text-slate-500 mt-0.5">{a.desc}</p>
-                            <p className="text-[9.5px] text-slate-400 font-bold mt-1">{a.time}</p>
+                            <p className="text-[12.5px] font-semibold text-slate-800">{alert.title}</p>
+                            <p className="mt-0.5 text-[11px] text-slate-500">{alert.desc}</p>
+                            <p className="mt-1 text-[9.5px] font-bold text-slate-400">{alert.time}</p>
                           </div>
                         </div>
                       ))}
                     </div>
-                    <div className="py-2.5 text-center border-t border-slate-100 bg-slate-50">
-                      <button className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Ver todas →</button>
+                    <div className="border-t border-slate-100 bg-slate-50 py-2.5 text-center">
+                      <button className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Ver todas →</button>
                     </div>
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
 
-            {/* Profile */}
             <div className="relative" ref={profileRef}>
               <button
-                onClick={() => setProfileOpen((p) => !p)}
-                className="flex items-center gap-2.5 hover:bg-slate-50 py-1 pl-1 pr-3 rounded-2xl transition-all border border-transparent hover:border-slate-200"
+                onClick={() => setProfileOpen((prev) => !prev)}
+                className="flex items-center gap-2.5 rounded-2xl border border-transparent py-1 pl-1 pr-3 transition-all hover:border-emerald-100 hover:bg-emerald-50/60"
               >
-                <div className="w-8 h-8 rounded-xl border-2 border-emerald-400/40 overflow-hidden shrink-0">
+                <div className="h-8 w-8 shrink-0 overflow-hidden rounded-xl border-2 border-emerald-400/40">
                   <img
                     src="https://images.unsplash.com/photo-1559839734-2b71f1536b1e?auto=format&fit=crop&q=80&w=100"
                     alt="Avatar"
-                    className="w-full h-full object-cover"
+                    className="h-full w-full object-cover"
                   />
                 </div>
-                <div className="hidden lg:block text-left">
-                  <p className="text-[11px] font-black text-slate-800 leading-none">Dra. Elena Ramos</p>
-                  <p className="text-[9px] text-slate-500 font-bold uppercase tracking-tighter mt-0.5">Investigadora Senior</p>
+                <div className="hidden text-left lg:block">
+                  <p className="text-[11px] font-black leading-none text-slate-800">Dra. Elena Ramos</p>
+                  <p className="mt-0.5 text-[9px] font-bold uppercase tracking-tighter text-slate-500">Investigadora Senior</p>
                 </div>
                 <ChevronDown
                   size={13}
@@ -297,31 +287,31 @@ const ResearcherLayout = ({ children, activeTab }) => {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 8 }}
                     transition={{ duration: 0.16, ease: 'easeOut' }}
-                    className="absolute right-0 mt-3 w-56 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 py-2 overflow-hidden"
+                    className="absolute right-0 z-50 mt-3 w-56 overflow-hidden rounded-3xl border border-emerald-100 bg-white py-2 shadow-[0_24px_60px_rgba(15,23,42,0.12)]"
                   >
-                    <div className="px-4 py-3 border-b border-slate-100">
+                    <div className="border-b border-slate-100 px-4 py-3">
                       <p className="text-[13px] font-black text-slate-800">Dra. Elena Ramos</p>
                       <p className="text-[10px] text-slate-500">Investigadora Principal</p>
                     </div>
                     {[
-                      { label: 'Mi Perfil',      icon: <User size={15} />,     path: '/perfil' },
+                      { label: 'Mi Perfil', icon: <User size={15} />, path: '/perfil' },
                       { label: 'Ajustes de Finca', icon: <Settings size={15} />, path: '/ajustes' },
-                      { label: 'Administración', icon: <Shield size={15} />,   path: '/admin' },
-                    ].map((opt) => (
+                      { label: 'Administracion', icon: <Shield size={15} />, path: '/admin' },
+                    ].map((option) => (
                       <Link
-                        key={opt.label}
-                        to={opt.path}
-                        className="flex items-center gap-3 px-4 py-2.5 text-[13px] text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+                        key={option.label}
+                        to={option.path}
+                        className="flex items-center gap-3 px-4 py-2.5 text-[13px] text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
                       >
-                        <span className="text-slate-400">{opt.icon}</span> {opt.label}
+                        <span className="text-slate-400">{option.icon}</span> {option.label}
                       </Link>
                     ))}
-                    <div className="h-px bg-slate-100 my-1 mx-4" />
+                    <div className="mx-4 my-1 h-px bg-slate-100" />
                     <button
                       onClick={handleLogout}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] font-bold text-red-500 hover:bg-red-50 transition-colors"
+                      className="flex w-full items-center gap-3 px-4 py-2.5 text-[13px] font-bold text-red-500 transition-colors hover:bg-red-50"
                     >
-                      <LogOut size={15} /> Cerrar Sesión
+                      <LogOut size={15} /> Cerrar Sesion
                     </button>
                   </motion.div>
                 )}
@@ -330,8 +320,7 @@ const ResearcherLayout = ({ children, activeTab }) => {
           </div>
         </header>
 
-        {/* CONTENT — overflow-y-auto → scroll del mouse funciona aquí */}
-        <main className="flex-1 overflow-y-auto bg-[#F8FAFC] custom-scrollbar-light">
+        <main className="custom-scrollbar-light flex-1 overflow-y-auto bg-[#f9fafb]">
           {children}
         </main>
       </div>
