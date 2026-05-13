@@ -1,41 +1,40 @@
-# Dashboard del Investigador - Agro-Asesor IA
+# Dashboard del Investigador - Hub de Monitoreo
 
-Documentación técnica del centro de mando principal de **AgroCaribe IA**.
+Documentación técnica del **Dashboard Hub** de AgroCaribe IA. Esta interfaz centraliza el estado global de la operación agrícola y el rendimiento de los modelos de IA, adoptando el sistema de diseño "Integrated Organic" con estética Ultra-Minimalist Glassmorphism.
 
 ## 1. Visión General
-El Dashboard del Investigador es la interfaz de entrada que combina capacidades de procesamiento de lenguaje natural (Agro-Asesor) con un panel técnico de monitoreo de modelos y acceso rápido a herramientas de datos.
+El Dashboard es el punto de entrada principal para el investigador. Su objetivo es proporcionar una **vista de 360 grados** sobre la salud de los cultivos, el rendimiento detallado de los modelos predictivos de IA y el acceso rápido a reportes técnicos, integrado sobre un mapa satelital de fondo.
 
-## 2. Arquitectura de Componentes
+## 2. Arquitectura de Componentes (Layout Hub)
 
-### 2.1. Centro de Mando (Agro-Asesor Inteligente)
-Interfaz de chat de pantalla completa que actúa como el núcleo interactivo del sistema.
-*   **Capacidades:** Procesamiento de datos satelitales (Sentinel-2) y telemetría de suelo en tiempo real.
-*   **Feedback de Estado:** Indicador animado de "Análisis Activo" y badges de procesamiento por IA.
-*   **Sugerencias Rápidas:** Botones contextuales para consultas frecuentes (Riesgos climáticos, Mapas NDVI, Optimización).
+El componente principal es `DashboardInvestigador.jsx`, el cual opera dentro del contenedor global `ResearcherLayout.jsx`. 
 
-### 2.2. Panel Técnico (Sidebar Derecha)
-Panel de alta densidad diseñado para el monitoreo de la infraestructura de IA y exportación selectiva.
+### 2.1. Fondo Dinámico (Background Map)
+Se integra un mapa interactivo (o imagen estática de satélite) de fondo utilizando propiedades `mix-blend-overlay` para mantener consistencia con la identidad visual botánica de AgroCaribe.
 
-#### A. Salud del Modelo IA (Métricas Críticas)
-Visualización rápida del rendimiento del motor de inferencia:
-*   **Precisión (Accuracy):** 94.2% (Objetivo: >90%).
-*   **Latencia:** Tiempo de respuesta del modelo (124ms promedio).
-*   **Muestras:** Volumen de datos procesados para el entrenamiento y validación (4.2k).
+### 2.2. Panel Principal (Métricas de Modelos IA)
+Anteriormente alojado en un módulo separado (`IAPredictiva`) o mostrando una recomendación hero estática, ahora el Dashboard presenta una tabla detallada con el desempeño de los modelos por cultivo:
 
-#### B. Herramientas de Datos (Exportación)
-Acciones directas para la descarga de información técnica:
-*   **CSV Consultas:** Exportación tabular del histórico de interacciones y datos crudos.
-*   **Reporte PDF:** Resumen ejecutivo de la salud del modelo y estado de parcelas.
+| Cultivo | Precisión (Accuracy) | F1-Score | Error Medio (MAE) | Confianza del Modelo |
+| :--- | :--- | :--- | :--- | :--- |
+| Yuca | 95.8% | 0.94 | 2.1% | Alta (Ideal para suelos francos) |
+| Ñame | 93.2% | 0.91 | 3.5% | Alta (Sensible a humedad/NDWI) |
+| Guineo | 91.5% | 0.89 | 4.2% | Media (Depende de vientos/clima) |
+| Papa | 89.1% | 0.87 | 5.8% | Moderada (Afinidad baja en Caribe) |
 
-#### C. Vista Previa de Campo (Field Preview)
-*   **Mapa Contextual:** Imagen satelital del sector bajo monitoreo activo (Sector Norte, Turbaco).
-*   **Overlay Informativo:** Ubicación y estado general de la zona.
+### 2.3. Bento-Grid de Monitoreo (Actualizaciones)
+Paneles modulares para la supervisión en tiempo real:
+*   **Actualizaciones de Campo:** Novedades sobre salud y riesgos (Ej: "Alerta de plaga temprana", "Humedad óptima").
+*   **Sensores Locales y Clima:** Integración de datos meteorológicos y lecturas del terreno.
+*   **Accesos Directos y Exportación:** Herramientas para "Generar Reporte" (integrado vía `triggerReport` en el Layout).
 
-## 3. Especificaciones de Diseño
-*   **Layout:** Estructura de sidebar colapsable con transición suave (300ms).
-*   **Estética:** Uso de `slate-50` para fondos, acentos en `emerald-600` para identidad de marca agrícola y tipografía `sans-serif` moderna.
-*   **Interactividad:** Toasts informativos para acciones de exportación y scroll-smooth en el historial de chat.
+## 3. Especificaciones de Diseño (Integrated Organic)
+*   **Estética:** "Ultra-Minimalist Glassmorphism". Las tarjetas (`glassPanel`) no utilizan fondos sólidos sino efectos `backdrop-filter: blur()`, sombras sutiles y transparencias.
+*   **Tipografía:** Uso estandarizado de la fuente **Manrope** en toda la interfaz.
+*   **Colores:** Paleta botánica priorizando tokens como verde bosque (`#0f5238`) y fondos claros (`#edeeef`).
+*   **Layout:** Sistema grid de 12 columnas ("Floating" aesthetic) con márgenes y espaciados generosos (40px) para respiración de los elementos.
 
-## 4. Resultados Generados
-*   **Recomendaciones Agronómicas:** Insights accionables basados en anomalías térmicas y niveles de humedad.
-*   **Auditoría de IA:** Registro transparente de la confianza del modelo y latencia para control de calidad.
+## 4. Fuentes de Datos (Integración Futura)
+Actualmente el dashboard consume data estructurada estática (`MODEL_METRICS`, `FIELD_UPDATES`). Las próximas iteraciones conectarán:
+*   **API NASA POWER / Sentinel-2:** Para variables agroclimáticas y mapas NDVI.
+*   **Endpoints ML Internos:** Para la actualización en tiempo real de métricas de desempeño.
