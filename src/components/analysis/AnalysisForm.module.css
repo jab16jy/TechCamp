@@ -5,13 +5,19 @@
 .formGrid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1.25rem;
+  gap: 1rem;
 }
 
 @media (min-width: 640px) {
   .formGrid {
     grid-template-columns: repeat(2, 1fr);
   }
+}
+
+.formColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
 }
 
 .field {
@@ -24,53 +30,50 @@
   display: flex;
   align-items: center;
   gap: 0.25rem;
-  margin-bottom: 0.5rem;
-  color: #064e3b;
-  font-size: 0.875rem;
-  font-weight: 700;
-}
-
-.formColumn {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+  color: #404943;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .optional {
-  color: #64748b;
-  font-size: 0.75rem;
+  color: #707973;
+  font-size: 0.625rem;
   font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
 }
 
 .field select,
 .field input {
   width: 100%;
-  border: 1px solid #dbe4dd;
-  border-radius: 1rem;
-  background: #f8fafc;
-  padding: 0.85rem 1rem;
-  color: #0f172a;
-  font-family: inherit;
-  font-size: 0.875rem;
-  transition: all 0.2s ease;
+  border: none;
+  border-radius: 0.75rem;
+  background: #f3f4f5;
+  padding: 0.75rem 1rem;
+  color: #191c1d;
+  font-family: 'Manrope', sans-serif;
+  font-size: 0.9375rem;
+  transition: all 0.3s ease;
+  appearance: none;
 }
 
 .field select:focus,
 .field input:focus {
   outline: none;
-  border-color: #10b981;
-  background: white;
-  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.12);
+  background: #ffffff;
+  box-shadow: 0 0 0 2px #95d4b3;
 }
 
 .field select:disabled {
   cursor: not-allowed;
-  background: #f1f5f9;
+  opacity: 0.6;
 }
 
 .toggleGroup {
   display: flex;
-  gap: 1rem;
+  gap: 1.5rem;
   padding: 0.25rem 0;
 }
 
@@ -80,10 +83,13 @@
   gap: 0.5rem;
   cursor: pointer;
   font-weight: 500;
+  color: #404943;
+  font-size: 0.875rem;
 }
 
 .toggleOption input {
   width: 1.25rem;
   height: 1.25rem;
   cursor: pointer;
+  accent-color: #2d6a4f;
 }

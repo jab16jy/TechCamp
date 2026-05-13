@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import { MapPin } from 'lucide-react';
 import styles from './MapSelector.module.css';
 
 // Fix for Leaflet icons
@@ -65,7 +66,7 @@ const MapSelector = ({ position, onPositionChange, height = 400 }) => {
       
       <div className={styles.coordsBadge}>
         <div className={styles.coordsIcon}>
-          <span className="material-symbols-outlined">location_on</span>
+          <MapPin size={20} />
         </div>
         <div className={styles.coordsText}>
           <span className={styles.coordsLabel}>Coordenadas seleccionadas</span>
