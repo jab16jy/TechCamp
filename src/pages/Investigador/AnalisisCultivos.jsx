@@ -156,39 +156,10 @@ const AnalisisCultivos = () => {
 
   return (
     <ResearcherLayout activeTab={activeTab} onTabChange={setActiveTab}>
-      <div className="ac-container">
-        {/* Metrics Row */}
-        <section className="ac-metrics">
-          {metricCardsData.map((metric) => {
-            const t = trendMeta[metric.tone] || trendMeta.neutral;
-            const TrendIcon = t.Icon;
-            const MetricIcon = metric.Icon;
-            return (
-              <article key={metric.key} className="ac-metric-card">
-                <div className="ac-metric-top">
-                  <div className={`ac-metric-icon ${iconVariant[metric.tone]}`}>
-                    <MetricIcon size={24} />
-                  </div>
-                  <span className={`ac-metric-badge ${badgeVariant[metric.tone]}`}>
-                    {metric.trend}
-                  </span>
-                </div>
-                <div className="ac-metric-info">
-                  <p className="ac-metric-label">{metric.label}</p>
-                  <h3 className="ac-metric-value">{metric.value}</h3>
-                  <div className={`ac-metric-trend ${t.css}`}>
-                    <TrendIcon size={14} />
-                    <span>{metric.trend}</span>
-                  </div>
-                </div>
-              </article>
-            );
-          })}
-        </section>
-
+      <div className="ac-container max-w-[1440px] mx-auto">
         {/* Tabs */}
         {!isProductor && activeTab === 'analisis' && (
-          <div className="ac-tabs">
+          <div className="ac-tabs mb-4">
             <button
               className={`ac-tab ${mode === 'simple' ? 'ac-tab--active' : ''}`}
               onClick={() => setMode('simple')}
@@ -211,91 +182,110 @@ const AnalisisCultivos = () => {
           </div>
         )}
 
-        {/* SIMPLE MODE */}
+        {/* SIMPLE MODE - Bento Grid Optimizado */}
         {activeTab === 'analisis' && mode === 'simple' && (
-          <form className="ac-grid" onSubmit={handleSubmit}>
-            <div className="ac-col--map">
-              <div className="ac-glass">
-                <div className="ac-card-header">
-                  <Map size={24} className="ac-card-header__icon" />
-                  <h3>Ubicacion Geografica</h3>
+          <form className="grid grid-cols-1 lg:grid-cols-12 gap-6 relative" onSubmit={handleSubmit}>
+            
+            {/* Columna Izquierda (8 cols) */}
+            <div className="lg:col-span-8 flex flex-col gap-6">
+              
+              {/* Vista de Mapa (Compacta) */}
+              <div className="ac-glass p-6 h-[400px] flex flex-col relative overflow-hidden group">
+                <div className="flex justify-between items-center mb-4 z-10 relative">
+                  <div>
+                    <h2 className="text-xl text-[#191c1d] font-bold">Resumen de Parcela</h2>
+                    <p className="text-sm text-[#707973]">Sector seleccionado</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button type="button" className="h-10 w-10 bg-[#f8f9fa] rounded-full flex items-center justify-center shadow-sm hover:bg-[#e7e8e9] transition-colors text-[#2d6a4f]">
+                      <Map size={20} />
+                    </button>
+                    <button type="button" className="h-10 w-10 bg-[#f8f9fa] rounded-full flex items-center justify-center shadow-sm hover:bg-[#e7e8e9] transition-colors text-[#2d6a4f]">
+                      <MapPin size={20} />
+                    </button>
+                  </div>
                 </div>
-                <p className="ac-card-desc">
-                  Seleccione el punto exacto de la parcela sobre el mapa.
-                </p>
-
-                <MapSelector
-                  position={{ lat: formulario.lat, lng: formulario.lng }}
-                  onPositionChange={handleMapChange}
-                  height={380}
-                />
-
-                <div className="ac-insight">
-                  <Lightbulb size={18} className="ac-insight__icon" />
-                  <p>
-                    <strong>Insight IA:</strong> Humedad de suelo favorable detectada por sensores
-                    Sentinel-2 para el area seleccionada.
-                  </p>
+                <div className="absolute inset-0 top-20 rounded-b-3xl overflow-hidden bg-white/50">
+                  <MapSelector
+                    position={{ lat: formulario.lat, lng: formulario.lng }}
+                    onPositionChange={handleMapChange}
+                    height={400}
+                  />
+                  <div className="absolute bottom-6 right-6 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full shadow-sm flex items-center gap-2 border border-[#e1e3e4] z-[1000]">
+                    <div className="w-2 h-2 rounded-full bg-[#006d48]"></div>
+                    <span className="text-xs font-semibold text-[#191c1d]">Sensores Activos</span>
+                  </div>
                 </div>
+              </div>
+
+              {/* Row de Métricas (Bento) */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {metricCardsData.map((metric) => {
+                  const t = trendMeta[metric.tone] || trendMeta.neutral;
+                  const TrendIcon = t.Icon;
+                  const MetricIcon = metric.Icon;
+                  return (
+                    <article key={metric.key} className="ac-glass p-8 flex flex-col justify-between h-48">
+                      <div className="flex justify-between items-start">
+                        <div className={`p-3 rounded-full ${iconVariant[metric.tone]}`}>
+                          <MetricIcon size={24} />
+                        </div>
+                        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${badgeVariant[metric.tone]}`}>
+                          {metric.trend}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-[#707973] uppercase tracking-wider font-semibold mb-1">{metric.label}</p>
+                        <h3 className="text-3xl text-[#191c1d] font-bold">{metric.value}</h3>
+                        <p className={`text-xs mt-1 flex items-center gap-1 ${t.css}`}>
+                          <TrendIcon size={14} /> {metric.trend}
+                        </p>
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             </div>
 
-            <div className="ac-col--form">
-              <div className="ac-glass">
-                <div className="ac-card-header">
-                  <SlidersHorizontal size={24} className="ac-card-header__icon" />
-                  <h3>Parametros del Cultivo</h3>
+            {/* Columna Derecha (4 cols) */}
+            <div className="lg:col-span-4 flex flex-col gap-6">
+              <div className="ac-glass p-8 flex-1 flex flex-col">
+                <div className="mb-6 border-b border-[#e1e3e4] pb-4">
+                  <h2 className="text-xl text-[#191c1d] font-bold flex items-center gap-2">
+                    <SlidersHorizontal className="text-[#2d6a4f]" size={24} />
+                    Recolección de Datos
+                  </h2>
+                  <p className="text-sm text-[#707973] mt-2">Ingrese los parámetros para el análisis.</p>
                 </div>
-                <AnalysisForm
-                  data={formulario}
-                  onChange={handleFormChange}
-                  municipalities={municipiosLista}
-                  mode={mode}
-                />
-              </div>
-            </div>
+                
+                <div className="flex flex-col gap-6 flex-1">
+                  <AnalysisForm
+                    data={formulario}
+                    onChange={handleFormChange}
+                    municipalities={municipiosLista}
+                    mode={mode}
+                  />
 
-            <div className="ac-col--cta">
-              <div className="ac-cta">
-                <Sparkles size={140} className="ac-cta__bg" />
-                <div className="ac-cta__content">
-                  <div className="ac-cta__icon">
-                    <Sparkles size={24} />
+                  {/* Acciones */}
+                  <div className="mt-auto pt-6 flex gap-4">
+                    <button type="button" className="flex-1 py-3 px-6 rounded-full text-xs font-bold text-[#75584d] bg-transparent hover:bg-[#e7e8e9] transition-colors text-center border border-[#bfc9c1]">
+                      Borrador
+                    </button>
+                    <button type="submit" disabled={cargandoAnalisis} className="flex-1 py-3 px-6 rounded-full text-xs font-bold text-white bg-gradient-to-br from-[#2D6A4F] to-[#52B788] hover:shadow-lg transition-all transform hover:-translate-y-1 text-center shadow-md disabled:opacity-70 disabled:hover:translate-y-0">
+                      {cargandoAnalisis ? 'Procesando...' : 'Generar Reporte'}
+                    </button>
                   </div>
-                  <div className="ac-cta__text">
-                    <h4>Listo para el analisis?</h4>
-                    <p>
-                      Nuestra IA procesara 24 variables agroclimaticas, imagenes satelitales y datos
-                      historicos para generar su recomendacion en segundos.
-                    </p>
-                  </div>
-                </div>
-                <button type="submit" className="ac-btn-analyze" disabled={cargandoAnalisis}>
-                  {cargandoAnalisis ? (
-                    <>
-                      <span className="ac-spinner" />
-                      Analizando...
-                    </>
-                  ) : (
-                    'Analizar con IA'
-                  )}
-                </button>
-              </div>
-            </div>
 
-            <div className="ac-col--status">
-              <div className="ac-status-card">
-                <div className="ac-status-header">
-                  <span className="ac-status-header__label">MODELO AGRO-IA</span>
-                  <span className="ac-status-badge">ACTIVO</span>
-                </div>
-                <div className="ac-status-body">
-                  <div className="ac-status-row">
-                    <span>Precision actual</span>
-                    <strong>94.2%</strong>
-                  </div>
-                  <div className="ac-progress-bar">
-                    <div className="ac-progress-fill" style={{ width: '94.2%' }} />
+                  {/* Estado Modelo */}
+                  <div className="flex items-center justify-between p-4 bg-[#f3f4f5] rounded-lg mt-2 border border-[#e1e3e4]">
+                    <div className="flex items-center gap-3">
+                      <Zap className="text-[#2c694e]" size={20} />
+                      <div>
+                        <p className="text-sm text-[#191c1d] font-semibold">Modelo Agro-IA</p>
+                        <p className="text-[10px] text-[#707973]">Precisión actual: 94.2%</p>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-bold bg-[#b1f0ce] text-[#002114] px-2 py-1 rounded-full">ACTIVO</span>
                   </div>
                 </div>
               </div>
@@ -502,41 +492,7 @@ const AnalisisCultivos = () => {
           </form>
         )}
 
-        {/* Structured Response */}
-        {activeTab === 'analisis' && (
-          <section className="ac-response">
-            <div className="ac-response__header">
-              <div>
-                <span className="ac-section-tag">Structured Response</span>
-                <h2>Salida parseable para el frontend minimalista</h2>
-              </div>
-              <span className="ac-response-badge">JSON Ready</span>
-            </div>
 
-            <div className="ac-thought-card">
-              <span className="ac-thought-label">Analisis IA</span>
-              <p>{structuredPreview.thought}</p>
-            </div>
-
-            <div className="ac-ranking">
-              {structuredPreview.output.ranking.map((item) => (
-                <article key={item.rank} className="ac-rank-card">
-                  <div className="ac-rank-top">
-                    <span className="ac-rank-num">#{item.rank}</span>
-                    <span className="ac-rank-score">{item.score}</span>
-                  </div>
-                  <h3>{item.crop}</h3>
-                  <p>{item.explanation}</p>
-                </article>
-              ))}
-            </div>
-
-            <div className="ac-note-card">
-              <span className="ac-note-label">Technical Note</span>
-              <p>{structuredPreview.output.technical_note}</p>
-            </div>
-          </section>
-        )}
 
 
 

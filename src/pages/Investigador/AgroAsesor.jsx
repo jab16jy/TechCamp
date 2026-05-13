@@ -123,7 +123,7 @@ const AgroAsesor = () => {
             {IOT_NODES.map((node) => (
               <Marker key={node.id} position={[node.lat, node.lng]} icon={iotIcon}>
                 <Popup>
-                  <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', minWidth: '140px' }}>
+                  <div style={{ fontFamily: "'Manrope', sans-serif", fontSize: '12px', minWidth: '140px' }}>
                     <p style={{ fontWeight: 800, color: '#0f172a', marginBottom: '6px' }}>{node.nombre}</p>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                       <span>💧 Humedad: <b>{node.hum}%</b></span>
@@ -173,7 +173,7 @@ const AgroAsesor = () => {
         </div>
 
         {/* ── PANEL CHAT FLOTANTE (glassmorphism) ─────────── */}
-        <div className="absolute top-4 right-4 z-[600] w-80" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+        <div className="absolute top-4 right-4 z-[600] w-80" style={{ fontFamily: "'Manrope', sans-serif" }}>
 
           {/* Toggle header */}
           <div
