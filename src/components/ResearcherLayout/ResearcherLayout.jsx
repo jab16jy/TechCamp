@@ -12,11 +12,11 @@ import {
   AlertTriangle,
   CheckCircle2,
   Info,
-  Map,
-  Cloud,
-  History,
-  Activity,
-  Leaf
+  LayoutDashboard,
+  Sprout,
+  Wifi,
+  Brain,
+  BarChart3
 } from 'lucide-react';
 
 const ALERTS = [
@@ -80,9 +80,9 @@ const ResearcherLayout = ({ children, activeTab }) => {
           <span className="text-[24px] font-bold text-[#0f5238]">AgroCaribe IA</span>
           <div className="hidden md:flex bg-white/25 backdrop-blur-xl border border-white/25 shadow-sm rounded-full px-6 py-2 gap-8 ml-8">
             <Link to="/investigador/dashboard" className={linkClass('/investigador/dashboard')}>Dashboard</Link>
-            <Link to="/investigador/ia" className={linkClass('/investigador/ia')}>Analysis</Link>
-            <Link to="/investigador/mapas" className={linkClass('/investigador/mapas')}>Satellites</Link>
-            <Link to="/investigador/reportes" className={linkClass('/investigador/reportes')}>Archives</Link>
+            <Link to="/investigador/mapas" className={linkClass('/investigador/mapas')}>AgroAsesor</Link>
+            <Link to="/investigador/mapa" className={linkClass('/investigador/mapa')}>Mapa</Link>
+            <Link to="/investigador/historial" className={linkClass('/investigador/historial')}>Historial</Link>
           </div>
         </div>
         <div className="flex items-center gap-6">
@@ -206,27 +206,7 @@ const ResearcherLayout = ({ children, activeTab }) => {
               : 'text-slate-400/80 hover:bg-white/30 hover:text-[#0f5238] transition-colors group'
           } rounded-xl p-3 flex flex-col items-center justify-center`}
         >
-          <Map size={24} className={isActive('/investigador/dashboard') ? 'text-[#2d6a4f]' : 'group-hover:text-[#0f5238]'} />
-        </Link>
-        <Link
-          to="/investigador/mapas"
-          className={`${
-            isActive('/investigador/mapas')
-              ? 'bg-[#2d6a4f]/15 text-[#2d6a4f] shadow-sm scale-90 transition-transform duration-200'
-              : 'text-slate-400/80 hover:bg-white/30 hover:text-[#0f5238] transition-colors group'
-          } rounded-xl p-3 flex flex-col items-center justify-center`}
-        >
-          <Leaf size={24} className={isActive('/investigador/mapas') ? 'text-[#2d6a4f]' : 'group-hover:text-[#0f5238]'} />
-        </Link>
-        <Link
-          to="/investigador/ia"
-          className={`${
-            isActive('/investigador/ia')
-              ? 'bg-[#2d6a4f]/15 text-[#2d6a4f] shadow-sm scale-90 transition-transform duration-200'
-              : 'text-slate-400/80 hover:bg-white/30 hover:text-[#0f5238] transition-colors group'
-          } rounded-xl p-3 flex flex-col items-center justify-center`}
-        >
-          <Activity size={24} className={isActive('/investigador/ia') ? 'text-[#2d6a4f]' : 'group-hover:text-[#0f5238]'} />
+          <LayoutDashboard size={24} className={isActive('/investigador/dashboard') ? 'text-[#2d6a4f]' : 'group-hover:text-[#0f5238]'} />
         </Link>
         <Link
           to="/investigador/analisis"
@@ -236,7 +216,27 @@ const ResearcherLayout = ({ children, activeTab }) => {
               : 'text-slate-400/80 hover:bg-white/30 hover:text-[#0f5238] transition-colors group'
           } rounded-xl p-3 flex flex-col items-center justify-center`}
         >
-          <Cloud size={24} className={isActive('/investigador/analisis') ? 'text-[#2d6a4f]' : 'group-hover:text-[#0f5238]'} />
+          <Sprout size={24} className={isActive('/investigador/analisis') ? 'text-[#2d6a4f]' : 'group-hover:text-[#0f5238]'} />
+        </Link>
+        <Link
+          to="/investigador/sensores"
+          className={`${
+            isActive('/investigador/sensores')
+              ? 'bg-[#2d6a4f]/15 text-[#2d6a4f] shadow-sm scale-90 transition-transform duration-200'
+              : 'text-slate-400/80 hover:bg-white/30 hover:text-[#0f5238] transition-colors group'
+          } rounded-xl p-3 flex flex-col items-center justify-center`}
+        >
+          <Wifi size={24} className={isActive('/investigador/sensores') ? 'text-[#2d6a4f]' : 'group-hover:text-[#0f5238]'} />
+        </Link>
+        <Link
+          to="/investigador/ia"
+          className={`${
+            isActive('/investigador/ia')
+              ? 'bg-[#2d6a4f]/15 text-[#2d6a4f] shadow-sm scale-90 transition-transform duration-200'
+              : 'text-slate-400/80 hover:bg-white/30 hover:text-[#0f5238] transition-colors group'
+          } rounded-xl p-3 flex flex-col items-center justify-center`}
+        >
+          <Brain size={24} className={isActive('/investigador/ia') ? 'text-[#2d6a4f]' : 'group-hover:text-[#0f5238]'} />
         </Link>
         <Link
           to="/investigador/reportes"
@@ -246,7 +246,7 @@ const ResearcherLayout = ({ children, activeTab }) => {
               : 'text-slate-400/80 hover:bg-white/30 hover:text-[#0f5238] transition-colors group'
           } rounded-xl p-3 flex flex-col items-center justify-center`}
         >
-          <History size={24} className={isActive('/investigador/reportes') ? 'text-[#2d6a4f]' : 'group-hover:text-[#0f5238]'} />
+          <BarChart3 size={24} className={isActive('/investigador/reportes') ? 'text-[#2d6a4f]' : 'group-hover:text-[#0f5238]'} />
         </Link>
       </nav>
 

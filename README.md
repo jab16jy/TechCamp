@@ -17,23 +17,26 @@ npm run dev
 
 ## 📚 Documentación Técnica
 
-Hemos preparado una documentación exhaustiva y organizada para facilitarte la exploración del código y su mantenimiento. **Ideal para ver en Obsidian.**
+La documentación del proyecto está organizada bajo el framework Diátaxis en `docs/`.
 
-### [👉 Ir al Índice de Documentación](docs/INDEX.md)
+### [👉 Ir a la Documentación](docs/README.md)
 
-**Contenidos destacados:**
-- 🏗️ [[FRONTEND_OVERVIEW]]: Arquitectura y flujo.
-- 📁 [[STRUCTURE]]: Organización de carpetas.
-- 🧩 [[COMPONENTS]]: Catálogo de UI.
-- 🛣️ [[ROUTING]]: Mapa de navegación.
-- 🚀 [[FUTURE_IMPROVEMENTS]]: Hoja de ruta.
+| Documento | Tipo | Descripción |
+|-----------|------|-------------|
+| [Introducción](docs/1-INTRODUCTION.md) | Explicación | Visión general, stack y propósito |
+| [Arquitectura](docs/2-ARCHITECTURE.md) | Explicación | Arquitectura y flujo de datos |
+| [Setup](docs/3-SETUP.md) | Guía práctica | Instalación, configuración y scripts |
+| [Frontend Reference](docs/4-FRONTEND-REFERENCE.md) | Referencia | Componentes, rutas, estado y servicios |
+| [Backend API](docs/5-BACKEND-API.md) | Referencia | Endpoints, schemas y mock data |
+| [Módulos de Desarrollo](docs/6-DEVELOPMENT.md) | Explicación | IA, sensores, dashboard y reportes |
+| [Troubleshooting](docs/7-TROUBLESHOOTING.md) | Guía práctica | Problemas comunes y roadmap |
 
 ---
 
 ## 🛠️ Stack Tecnológico
-- **Frontend**: React 18 + Vite
-- **Estado**: Zustand
-- **Estilos**: Vanilla CSS (Premium Organic-Lab Design)
+- **Frontend**: React 19 + Vite 8
+- **Estado**: Zustand 5
+- **Estilos**: Tailwind CSS 3 + Glassmorphism
 - **Integración**: API FastAPI (Mock fallback incluido)
 
 ---

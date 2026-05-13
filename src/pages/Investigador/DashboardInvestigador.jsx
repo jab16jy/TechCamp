@@ -37,11 +37,62 @@ const WEATHER = [
 ];
 
 const MODEL_METRICS = [
-  { cultivo: 'Yuca', accuracy: '95.8%', f1: '0.94', mae: '2.1%', confianza: 'Alta (Ideal para suelos francos)', icon: '🌿' },
-  { cultivo: 'Ñame', accuracy: '93.2%', f1: '0.91', mae: '3.5%', confianza: 'Alta (Sensible a humedad/NDWI)', icon: '🍠' },
-  { cultivo: 'Guineo', accuracy: '91.5%', f1: '0.89', mae: '4.2%', confianza: 'Media (Depende de vientos/clima)', icon: '🍌' },
-  { cultivo: 'Papa', accuracy: '89.1%', f1: '0.87', mae: '5.8%', confianza: 'Moderada (Afinidad baja en Caribe)', icon: '🥔' },
+  { cultivo: 'Yuca', accuracy: '95.8%', f1: '0.94', mae: '2.1%', confianza: 'Alta (Ideal para suelos francos)', icon: 'yuca' },
+  { cultivo: 'Ñame', accuracy: '93.2%', f1: '0.91', mae: '3.5%', confianza: 'Alta (Sensible a humedad/NDWI)', icon: 'ñame' },
+  { cultivo: 'Guineo', accuracy: '91.5%', f1: '0.89', mae: '4.2%', confianza: 'Media (Depende de vientos/clima)', icon: 'guineo' },
+  { cultivo: 'Papa', accuracy: '89.1%', f1: '0.87', mae: '5.8%', confianza: 'Moderada (Afinidad baja en Caribe)', icon: 'papa' },
 ];
+
+const CropIcon = ({ type, size = 28 }) => {
+  const icons = {
+    yuca: (
+      <svg width={size} height={size} viewBox="0 0 48 48" fill="none">
+        <path d="M24 6C24 6 18 14 18 24C18 34 24 42 24 42" stroke="#0f5238" strokeWidth="2.5" strokeLinecap="round"/>
+        <path d="M24 6C24 6 30 14 30 24C30 34 24 42 24 42" stroke="#2d6a4f" strokeWidth="2.5" strokeLinecap="round"/>
+        <path d="M20 14C16 16 12 20 12 26" stroke="#0f5238" strokeWidth="2" strokeLinecap="round" opacity="0.6"/>
+        <path d="M28 14C32 16 36 20 36 26" stroke="#2d6a4f" strokeWidth="2" strokeLinecap="round" opacity="0.6"/>
+        <path d="M18 20C14 22 10 26 10 32" stroke="#0f5238" strokeWidth="1.5" strokeLinecap="round" opacity="0.4"/>
+        <path d="M30 20C34 22 38 26 38 32" stroke="#2d6a4f" strokeWidth="1.5" strokeLinecap="round" opacity="0.4"/>
+        <circle cx="24" cy="24" r="3" fill="#0f5238" opacity="0.15"/>
+      </svg>
+    ),
+    ñame: (
+      <svg width={size} height={size} viewBox="0 0 48 48" fill="none">
+        <ellipse cx="24" cy="28" rx="10" ry="14" fill="#2d6a4f" opacity="0.1" stroke="#0f5238" strokeWidth="2"/>
+        <path d="M24 10C24 10 20 16 20 22" stroke="#0f5238" strokeWidth="2" strokeLinecap="round"/>
+        <path d="M24 10C24 10 28 16 28 22" stroke="#2d6a4f" strokeWidth="2" strokeLinecap="round"/>
+        <circle cx="24" cy="10" r="2.5" fill="#0f5238" opacity="0.3"/>
+        <path d="M18 28C18 28 20 32 24 32C28 32 30 28 30 28" stroke="#0f5238" strokeWidth="1.5" strokeLinecap="round" opacity="0.5"/>
+        <path d="M20 34C20 34 22 36 24 36C26 36 28 34 28 34" stroke="#2d6a4f" strokeWidth="1.5" strokeLinecap="round" opacity="0.4"/>
+      </svg>
+    ),
+    guineo: (
+      <svg width={size} height={size} viewBox="0 0 48 48" fill="none">
+        <path d="M16 8C16 8 12 18 14 28C16 38 22 42 24 42" stroke="#0f5238" strokeWidth="2.5" strokeLinecap="round"/>
+        <path d="M16 8C16 8 20 18 18 28C16 38 22 42 24 42" stroke="#2d6a4f" strokeWidth="2.5" strokeLinecap="round"/>
+        <path d="M24 42C24 42 28 38 30 28C32 18 28 8 28 8" stroke="#0f5238" strokeWidth="2.5" strokeLinecap="round"/>
+        <path d="M24 42C24 42 28 38 30 28C32 18 28 8 28 8" stroke="#2d6a4f" strokeWidth="2.5" strokeLinecap="round"/>
+        <path d="M18 14C18 14 16 20 17 26" stroke="#0f5238" strokeWidth="1.5" strokeLinecap="round" opacity="0.5"/>
+        <path d="M28 14C28 14 30 20 29 26" stroke="#2d6a4f" strokeWidth="1.5" strokeLinecap="round" opacity="0.5"/>
+        <circle cx="22" cy="10" r="2" fill="#0f5238" opacity="0.2"/>
+      </svg>
+    ),
+    papa: (
+      <svg width={size} height={size} viewBox="0 0 48 48" fill="none">
+        <ellipse cx="24" cy="26" rx="14" ry="12" fill="#2d6a4f" opacity="0.08" stroke="#0f5238" strokeWidth="2"/>
+        <circle cx="18" cy="22" r="1.5" fill="#0f5238" opacity="0.3"/>
+        <circle cx="28" cy="20" r="1.5" fill="#0f5238" opacity="0.3"/>
+        <circle cx="22" cy="30" r="1.5" fill="#0f5238" opacity="0.3"/>
+        <circle cx="30" cy="28" r="1.5" fill="#0f5238" opacity="0.3"/>
+        <circle cx="16" cy="28" r="1" fill="#2d6a4f" opacity="0.2"/>
+        <circle cx="26" cy="34" r="1" fill="#2d6a4f" opacity="0.2"/>
+        <path d="M24 14C24 14 22 10 24 8C26 10 24 14 24 14Z" fill="#0f5238" opacity="0.2"/>
+        <path d="M24 14C24 14 22 10 24 8C26 10 24 14 24 14Z" stroke="#0f5238" strokeWidth="1.5" strokeLinecap="round"/>
+      </svg>
+    ),
+  };
+  return icons[type] || null;
+};
 
 // ── Sparkline minimalista ────────────────────────────────────
 const MiniSparkline = ({ data, color = '#10b981' }) => {
@@ -183,7 +234,7 @@ const DashboardInvestigador = () => {
                       {MODEL_METRICS.map((item, idx) => (
                         <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
                           <td className="py-4 flex items-center gap-3">
-                            <span className="text-2xl">{item.icon}</span>
+                            <CropIcon type={item.icon} size={28} />
                             <span className="font-bold text-slate-800">{item.cultivo}</span>
                           </td>
                           <td className="py-4">
