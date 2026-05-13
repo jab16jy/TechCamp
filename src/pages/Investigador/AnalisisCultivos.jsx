@@ -107,19 +107,19 @@ const AnalisisCultivos = () => {
 
   const metricCards = [
     {
-      label: 'NDVI',
+      label: 'Vegetación (NDVI)',
       value: structuredPreview.output.kpis.ndvi.value,
       trend: structuredPreview.output.kpis.ndvi.trend,
       tone: 'positive',
     },
     {
-      label: 'Humidity',
+      label: 'Humedad',
       value: structuredPreview.output.kpis.humidity.value,
       trend: structuredPreview.output.kpis.humidity.trend,
       tone: 'neutral',
     },
     {
-      label: 'Nitrogen',
+      label: 'Nitrógeno',
       value: structuredPreview.output.kpis.nitrogen.value,
       trend: structuredPreview.output.kpis.nitrogen.trend,
       tone: 'neutral',
@@ -131,11 +131,11 @@ const AnalisisCultivos = () => {
       <div className={styles.container}>
         <header className={styles.header}>
           <div>
-            <span className={styles.kicker}>Agro intelligence workflow</span>
-            <h1 className="premium-font">Analisis de Cultivos</h1>
+            <span className={styles.kicker}>Sistema de recomendación agrícola</span>
+            <h1 className="premium-font">Análisis de Cultivos</h1>
             <p>
-              Un espacio mas limpio para explorar suelo, clima y geografia antes de ejecutar la
-              recomendacion.
+              Un espacio más limpio para explorar suelo, clima y geografía antes de ejecutar la
+              recomendación.
             </p>
           </div>
           <button type="button" className={styles.headerAction}>
@@ -192,7 +192,7 @@ const AnalisisCultivos = () => {
               <div className={styles.premiumCard}>
                 <div className={styles.cardHeader}>
                   <span className="material-symbols-outlined">map</span>
-                  <h3>Ubicacion Geografica</h3>
+                  <h3>Ubicación Geográfica</h3>
                 </div>
                 <p className={styles.cardDesc}>Seleccione el punto exacto de la parcela sobre el mapa.</p>
 
@@ -206,7 +206,7 @@ const AnalisisCultivos = () => {
                   <span className="material-symbols-outlined">lightbulb</span>
                   <p>
                     <strong>Insight IA:</strong> Humedad de suelo favorable detectada por sensores
-                    Sentinel-2 para el area seleccionada.
+                    Sentinel-2 para el área seleccionada.
                   </p>
                 </div>
               </div>
@@ -216,7 +216,7 @@ const AnalisisCultivos = () => {
               <div className={styles.premiumCard}>
                 <div className={styles.cardHeader}>
                   <span className="material-symbols-outlined">settings_input_component</span>
-                  <h3>Parametros del Cultivo</h3>
+                  <h3>Parámetros del Cultivo</h3>
                 </div>
 
                 <AnalysisForm
@@ -236,10 +236,10 @@ const AnalisisCultivos = () => {
                     <span className="material-symbols-outlined">auto_awesome</span>
                   </div>
                   <div className={styles.ctaText}>
-                    <h4>Listo para el analisis?</h4>
+                    <h4>¿Listo para el análisis?</h4>
                     <p>
-                      Nuestra IA procesara 24 variables agroclimaticas, imagenes satelitales y datos
-                      historicos para generar su recomendacion en segundos.
+                      Nuestra IA procesará 24 variables agroclimáticas, imágenes satelitales y datos
+                      históricos para generar su recomendación en segundos.
                     </p>
                   </div>
                 </div>
@@ -257,7 +257,7 @@ const AnalisisCultivos = () => {
                 </div>
                 <div className={styles.statusBody}>
                   <div className={styles.accRow}>
-                    <span>Precision actual</span>
+                    <span>Precisión actual</span>
                     <strong>94.2%</strong>
                   </div>
                   <div className={styles.progressBar}>
@@ -299,7 +299,7 @@ const AnalisisCultivos = () => {
                     <span className="material-symbols-outlined" style={{ color: '#10b981' }}>
                       science
                     </span>
-                    <h3>Parametros del Suelo</h3>
+                    <h3>Parámetros del Suelo</h3>
                   </div>
                   <div className={styles.dataOrigin}>
                     <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>
@@ -439,7 +439,7 @@ const AnalisisCultivos = () => {
                   <div className={styles.cardHeader}>
                     <span className="material-symbols-outlined">location_on</span>
                     <h3 style={{ fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                      Ubicacion de Referencia
+                      Ubicación de Referencia
                     </h3>
                   </div>
                   <div className={styles.satellitePreview}>
@@ -455,7 +455,7 @@ const AnalisisCultivos = () => {
                   </div>
                   <div className={styles.insightBox} style={{ borderLeft: '4px solid #10b981', borderRadius: '0 8px 8px 0' }}>
                     <p style={{ fontSize: '14px', lineHeight: '1.4' }}>
-                      <strong>Insight IA:</strong> Humedad de suelo favorable detectada por sensores para el area seleccionada.
+                      <strong>Insight IA:</strong> Humedad de suelo favorable detectada por sensores para el área seleccionada.
                     </p>
                   </div>
                 </section>
@@ -468,9 +468,9 @@ const AnalisisCultivos = () => {
                         auto_awesome
                       </span>
                     </div>
-                    <h3>Todo listo?</h3>
+                    <h3>¿Todo listo?</h3>
                   </div>
-                  <p>Inicie el analisis de precision con IA para obtener su plan de fertilizacion y riego.</p>
+                  <p>Inicie el análisis de precisión con IA para obtener su plan de fertilización y riego.</p>
                   <button type="submit" className={styles.btnExecuteLarge}>
                     Analizar Parcela con IA
                     <span className="material-symbols-outlined" style={{ fontSize: '32px' }}>
@@ -490,7 +490,7 @@ const AnalisisCultivos = () => {
                     <div className={styles.progressFill} style={{ width: '94.2%' }}></div>
                   </div>
                   <div className={styles.accRow} style={{ marginTop: '12px' }}>
-                    <span style={{ fontSize: '12px', color: '#64748b' }}>Precision: 94.2%</span>
+                    <span style={{ fontSize: '12px', color: '#64748b' }}>Precisión: 94.2%</span>
                     <span style={{ fontSize: '12px', color: '#64748b', fontStyle: 'italic' }}>v4.2.0-stable</span>
                   </div>
                 </div>
