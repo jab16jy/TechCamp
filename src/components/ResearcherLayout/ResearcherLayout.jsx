@@ -3,51 +3,21 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import useAppStore from '../../context/useAppStore';
 import {
-  LayoutDashboard,
-  FlaskConical,
-  BrainCircuit,
-  FileText,
-  RadioTower,
   Search,
   Bell,
   Settings,
   LogOut,
   User,
   Shield,
-  Plus,
-  Loader2,
-  Command,
-  ChevronDown,
-  Sprout,
   AlertTriangle,
   CheckCircle2,
   Info,
-  Bot,
+  Map,
+  Cloud,
+  History,
+  Activity,
+  Leaf
 } from 'lucide-react';
-
-const NAV_SECTIONS = [
-  {
-    title: 'PRINCIPAL',
-    items: [
-      { id: 'dashboard', icon: <LayoutDashboard size={17} />, label: 'Dashboard Hub', path: '/investigador/dashboard' },
-      { id: 'mapas', icon: <Bot size={17} />, label: 'Agro-Asesor IA', path: '/investigador/mapas' },
-    ],
-  },
-  {
-    title: 'CIENCIA',
-    items: [
-      { id: 'analisis', icon: <FlaskConical size={17} />, label: 'Analisis de Suelos', path: '/investigador/analisis' },
-      { id: 'ia', icon: <BrainCircuit size={17} />, label: 'IA Predictiva', path: '/investigador/ia' },
-    ],
-  },
-  {
-    title: 'ADMIN',
-    items: [
-      { id: 'reportes', icon: <FileText size={17} />, label: 'Reportes', path: '/investigador/reportes' },
-      { id: 'sensores', icon: <RadioTower size={17} />, label: 'Nodos IoT', path: '/investigador/sensores' },
-    ],
-  },
-];
 
 const ALERTS = [
   { title: 'Estres hidrico detectado', desc: 'Nodo Sur-02 registra 61% HR.', time: 'Hace 5 min', type: 'warn' },
@@ -68,7 +38,6 @@ const ResearcherLayout = ({ children, activeTab }) => {
 
   const [profileOpen, setProfileOpen] = useState(false);
   const [alertsOpen, setAlertsOpen] = useState(false);
-  const [generating, setGenerating] = useState(false);
 
   const profileRef = useRef(null);
   const alertsRef = useRef(null);
@@ -94,134 +63,37 @@ const ResearcherLayout = ({ children, activeTab }) => {
     navigate('/');
   };
 
-  const triggerReport = () => {
-    setGenerating(true);
-    setTimeout(() => {
-      setGenerating(false);
-      agregarToast('Reporte generado exitosamente', 'success');
-    }, 2800);
-  };
-
-  const currentLabel = NAV_SECTIONS.flatMap((section) => section.items).find(
-    (item) => location.pathname === item.path || activeTab === item.id,
-  )?.label ?? 'Panel de Control';
+  const isActive = (path) => location.pathname === path;
 
   return (
     <div
-      className="flex h-screen w-full overflow-hidden bg-[#f9fafb] text-slate-900"
-      style={{ fontFamily: "'DM Sans', sans-serif" }}
+      className="bg-[#f8f9fa] text-slate-900 font-sans antialiased overflow-hidden h-screen w-full relative"
+      style={{ fontFamily: "'Manrope', sans-serif" }}
     >
-      <aside className="w-72 shrink-0 border-r border-emerald-100/80 bg-white/96 backdrop-blur-sm">
-        <div className="border-b border-emerald-100 px-6 py-6">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-500 shadow-[0_14px_30px_rgba(16,185,129,0.22)]">
-              <Sprout size={18} className="text-white" />
-            </div>
-            <div>
-              <h1
-                className="text-[18px] font-black leading-tight tracking-tight text-emerald-950"
-                style={{ fontFamily: "'Montserrat', sans-serif" }}
-              >
-                AgroCaribe <span className="text-emerald-500">IA</span>
-              </h1>
-              <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.28em] text-emerald-900/55">
-                Research Console
-              </p>
-            </div>
+      {/* Top Navigation (Shared Component) */}
+      <header className="w-full top-0 sticky z-50 bg-transparent flex justify-between items-center px-10 py-4 max-w-[1440px] mx-auto">
+        <div className="flex items-center gap-4">
+          <span className="text-[24px] font-bold text-[#0f5238]" style={{ fontFamily: "'Manrope', sans-serif" }}>AgroCaribe IA</span>
+          <div className="hidden md:flex bg-white/80 backdrop-blur-xl shadow-sm rounded-full px-6 py-2 gap-8 ml-8">
+            <Link to="/investigador/dashboard" className={`${isActive('/investigador/dashboard') ? 'text-[#0f5238] font-semibold border-b-2 border-[#0f5238] pb-1 opacity-80 scale-95' : 'text-slate-600 hover:text-[#0f5238]'} transition-all flex items-center font-medium`}>Dashboard</Link>
+            <Link to="/investigador/ia" className={`${isActive('/investigador/ia') ? 'text-[#0f5238] font-semibold border-b-2 border-[#0f5238] pb-1 opacity-80 scale-95' : 'text-slate-600 hover:text-[#0f5238]'} transition-all flex items-center font-medium`}>Analysis</Link>
+            <Link to="/investigador/mapas" className={`${isActive('/investigador/mapas') ? 'text-[#0f5238] font-semibold border-b-2 border-[#0f5238] pb-1 opacity-80 scale-95' : 'text-slate-600 hover:text-[#0f5238]'} transition-all flex items-center font-medium`}>Satellites</Link>
+            <Link to="/investigador/reportes" className={`${isActive('/investigador/reportes') ? 'text-[#0f5238] font-semibold border-b-2 border-[#0f5238] pb-1 opacity-80 scale-95' : 'text-slate-600 hover:text-[#0f5238]'} transition-all flex items-center font-medium`}>Archives</Link>
           </div>
         </div>
-
-        <nav className="custom-scrollbar flex-1 space-y-8 overflow-y-auto px-4 py-6">
-          {NAV_SECTIONS.map((section) => (
-            <div key={section.title}>
-              <p className="mb-3 px-3 text-[9.5px] font-black uppercase tracking-[0.28em] text-emerald-950/40">
-                {section.title}
-              </p>
-              <ul className="space-y-1">
-                {section.items.map((item) => {
-                  const active = location.pathname === item.path || activeTab === item.id;
-                  return (
-                    <li key={item.id}>
-                      <Link
-                        to={item.path}
-                        onClick={() => item.id === 'reportes' && triggerReport()}
-                        className={`flex items-center gap-3 rounded-2xl px-3.5 py-2.5 text-[13px] font-semibold transition-all ${
-                          active
-                            ? 'bg-emerald-500 text-white shadow-[0_12px_24px_rgba(16,185,129,0.18)]'
-                            : 'text-slate-600 hover:bg-emerald-50 hover:text-emerald-950'
-                        }`}
-                      >
-                        <span className={active ? 'text-white' : 'text-emerald-800/55'}>{item.icon}</span>
-                        {item.label}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          ))}
-        </nav>
-
-        <div className="space-y-3 border-t border-emerald-100 p-4">
-          {generating && (
-            <div className="flex items-center gap-3 rounded-2xl border border-emerald-100 bg-emerald-50 px-3 py-2.5">
-              <Loader2 size={14} className="shrink-0 animate-spin text-emerald-500" />
-              <div>
-                <p className="text-[11px] font-bold text-emerald-950">Generando reporte...</p>
-                <p className="text-[9px] text-emerald-900/55">NDVI · Analisis de Suelo</p>
-              </div>
-            </div>
-          )}
-          <button
-            onClick={() => navigate('/investigador/ia')}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-emerald-950 bg-emerald-950 py-3 text-[11px] font-black uppercase tracking-[0.22em] text-white transition-all hover:bg-emerald-900"
-          >
-            <Plus size={13} /> Nueva Prediccion
-          </button>
-        </div>
-      </aside>
-
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <header className="flex h-[72px] shrink-0 items-center justify-between border-b border-emerald-100 bg-white/90 px-7 backdrop-blur-sm">
-          <h2
-            className="text-[15px] font-black uppercase tracking-tight text-emerald-950"
-            style={{ fontFamily: "'Montserrat', sans-serif" }}
-          >
-            {currentLabel}
-          </h2>
-
-          <div className="mx-8 hidden max-w-sm flex-1 md:block">
-            <div className="group relative">
-              <Search
-                size={15}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors group-focus-within:text-emerald-600"
-              />
-              <input
-                type="text"
-                placeholder="Buscar lotes, nodos, analisis... (Cmd+K)"
-                className="w-full rounded-full border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-12 text-[12.5px] text-slate-700 outline-none transition-all placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10"
-              />
-              <div className="pointer-events-none absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-0.5 rounded-full border border-slate-200 bg-white px-1.5 py-0.5 text-[9px] font-bold text-slate-500 shadow-sm">
-                <Command size={9} /> K
-              </div>
-            </div>
+        <div className="flex items-center gap-6">
+          <div className="bg-white/85 backdrop-blur-[12px] shadow-[0_20px_50px_rgba(0,0,0,0.04)] hover:backdrop-blur-[20px] hover:-translate-y-0.5 rounded-full px-4 py-2 flex items-center gap-2 text-slate-500 transition-all duration-300">
+            <Search size={20} />
+            <input className="bg-transparent border-none focus:ring-0 text-sm w-48 text-slate-700 placeholder:text-slate-400 p-0 outline-none" placeholder="Buscar parcela..." type="text"/>
           </div>
-
-          <div className="flex items-center gap-4">
-            <div className="hidden items-center gap-1.5 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1.5 lg:flex">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[10.5px] font-black tracking-wide text-emerald-800">v4.2 Pro | 94.2% Accuracy</span>
-            </div>
-
+          <div className="flex gap-4 items-center">
+            
             <div className="relative" ref={alertsRef}>
-              <button
-                onClick={() => setAlertsOpen((prev) => !prev)}
-                className="relative rounded-2xl p-2.5 text-slate-500 transition-colors hover:bg-emerald-50"
-              >
-                <Bell size={19} />
-                <span className="absolute right-2 top-2 h-2 w-2 rounded-full border-2 border-white bg-red-500" />
+              <button onClick={() => setAlertsOpen((prev) => !prev)} className="text-slate-500 hover:text-[#0f5238] transition-colors relative flex items-center justify-center">
+                <Bell size={24} />
+                <span className="absolute right-0 top-0 h-2 w-2 rounded-full border-2 border-white bg-red-500" />
               </button>
-
+              
               <AnimatePresence>
                 {alertsOpen && (
                   <motion.div
@@ -229,7 +101,7 @@ const ResearcherLayout = ({ children, activeTab }) => {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 8, scale: 0.96 }}
                     transition={{ duration: 0.18, ease: 'easeOut' }}
-                    className="absolute right-0 z-50 mt-3 w-80 overflow-hidden rounded-3xl border border-emerald-100 bg-white shadow-[0_24px_60px_rgba(15,23,42,0.12)]"
+                    className="absolute right-0 z-50 mt-4 w-80 overflow-hidden rounded-3xl border border-emerald-100 bg-white shadow-[0_24px_60px_rgba(15,23,42,0.12)]"
                   >
                     <div className="flex items-center justify-between border-b border-slate-100 bg-emerald-50/60 px-4 py-3">
                       <span className="text-[11px] font-black uppercase tracking-widest text-slate-700">Alertas Recientes</span>
@@ -258,26 +130,13 @@ const ResearcherLayout = ({ children, activeTab }) => {
               </AnimatePresence>
             </div>
 
+            <button className="text-slate-500 hover:text-[#0f5238] transition-colors">
+              <Settings size={24} />
+            </button>
+            
             <div className="relative" ref={profileRef}>
-              <button
-                onClick={() => setProfileOpen((prev) => !prev)}
-                className="flex items-center gap-2.5 rounded-2xl border border-transparent py-1 pl-1 pr-3 transition-all hover:border-emerald-100 hover:bg-emerald-50/60"
-              >
-                <div className="h-8 w-8 shrink-0 overflow-hidden rounded-xl border-2 border-emerald-400/40">
-                  <img
-                    src="https://images.unsplash.com/photo-1559839734-2b71f1536b1e?auto=format&fit=crop&q=80&w=100"
-                    alt="Avatar"
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-                <div className="hidden text-left lg:block">
-                  <p className="text-[11px] font-black leading-none text-slate-800">Dra. Elena Ramos</p>
-                  <p className="mt-0.5 text-[9px] font-bold uppercase tracking-tighter text-slate-500">Investigadora Senior</p>
-                </div>
-                <ChevronDown
-                  size={13}
-                  className={`text-slate-400 transition-transform duration-200 ${profileOpen ? 'rotate-180' : ''}`}
-                />
+              <button onClick={() => setProfileOpen((prev) => !prev)} className="focus:outline-none flex items-center">
+                <img alt="Agronomist Profile" className="w-10 h-10 rounded-full border-2 border-[#f8f9fa] object-cover shadow-sm" src="https://images.unsplash.com/photo-1559839734-2b71f1536b1e?auto=format&fit=crop&q=80&w=100"/>
               </button>
 
               <AnimatePresence>
@@ -287,7 +146,7 @@ const ResearcherLayout = ({ children, activeTab }) => {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 8 }}
                     transition={{ duration: 0.16, ease: 'easeOut' }}
-                    className="absolute right-0 z-50 mt-3 w-56 overflow-hidden rounded-3xl border border-emerald-100 bg-white py-2 shadow-[0_24px_60px_rgba(15,23,42,0.12)]"
+                    className="absolute right-0 z-50 mt-4 w-56 overflow-hidden rounded-3xl border border-emerald-100 bg-white py-2 shadow-[0_24px_60px_rgba(15,23,42,0.12)]"
                   >
                     <div className="border-b border-slate-100 px-4 py-3">
                       <p className="text-[13px] font-black text-slate-800">Dra. Elena Ramos</p>
@@ -317,13 +176,34 @@ const ResearcherLayout = ({ children, activeTab }) => {
                 )}
               </AnimatePresence>
             </div>
-          </div>
-        </header>
 
-        <main className="custom-scrollbar-light flex-1 overflow-y-auto bg-[#f9fafb]">
-          {children}
-        </main>
-      </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Floating Sidebar (Shared Component) */}
+      <nav className="fixed left-4 top-24 bottom-4 w-20 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.04)] shadow-xl bg-white/90 backdrop-blur-md flex flex-col items-center py-8 gap-y-6 z-40">
+        <Link to="/investigador/dashboard" className={`${isActive('/investigador/dashboard') ? 'bg-[#2d6a4f]/10 text-[#2d6a4f] shadow-sm scale-90 transition-transform duration-200' : 'text-slate-400 hover:bg-slate-100/50 hover:text-[#0f5238] transition-colors group'} rounded-xl p-3 flex flex-col items-center justify-center`}>
+          <Map size={24} className={isActive('/investigador/dashboard') ? 'text-[#2d6a4f]' : 'group-hover:text-[#0f5238]'} />
+        </Link>
+        <Link to="/investigador/mapas" className={`${isActive('/investigador/mapas') ? 'bg-[#2d6a4f]/10 text-[#2d6a4f] shadow-sm scale-90 transition-transform duration-200' : 'text-slate-400 hover:bg-slate-100/50 hover:text-[#0f5238] transition-colors group'} rounded-xl p-3 flex flex-col items-center justify-center`}>
+          <Leaf size={24} className={isActive('/investigador/mapas') ? 'text-[#2d6a4f]' : 'group-hover:text-[#0f5238]'} />
+        </Link>
+        <Link to="/investigador/ia" className={`${isActive('/investigador/ia') ? 'bg-[#2d6a4f]/10 text-[#2d6a4f] shadow-sm scale-90 transition-transform duration-200' : 'text-slate-400 hover:bg-slate-100/50 hover:text-[#0f5238] transition-colors group'} rounded-xl p-3 flex flex-col items-center justify-center`}>
+          <Activity size={24} className={isActive('/investigador/ia') ? 'text-[#2d6a4f]' : 'group-hover:text-[#0f5238]'} />
+        </Link>
+        <Link to="/investigador/analisis" className={`${isActive('/investigador/analisis') ? 'bg-[#2d6a4f]/10 text-[#2d6a4f] shadow-sm scale-90 transition-transform duration-200' : 'text-slate-400 hover:bg-slate-100/50 hover:text-[#0f5238] transition-colors group'} rounded-xl p-3 flex flex-col items-center justify-center`}>
+          <Cloud size={24} className={isActive('/investigador/analisis') ? 'text-[#2d6a4f]' : 'group-hover:text-[#0f5238]'} />
+        </Link>
+        <Link to="/investigador/reportes" className={`${isActive('/investigador/reportes') ? 'bg-[#2d6a4f]/10 text-[#2d6a4f] shadow-sm scale-90 transition-transform duration-200' : 'text-slate-400 hover:bg-slate-100/50 hover:text-[#0f5238] transition-colors group'} rounded-xl p-3 flex flex-col items-center justify-center`}>
+          <History size={24} className={isActive('/investigador/reportes') ? 'text-[#2d6a4f]' : 'group-hover:text-[#0f5238]'} />
+        </Link>
+      </nav>
+
+      {/* Main Content Area */}
+      <main className="absolute top-24 left-32 right-10 bottom-4 z-30 overflow-y-auto pb-10 pr-2 custom-scrollbar-light">
+        {children}
+      </main>
     </div>
   );
 };
