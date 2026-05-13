@@ -17,7 +17,7 @@ const PROMPT_BLOCKS = [
 
 const AnalisisCultivos = () => {
   const navigate = useNavigate();
-  const { formulario, actualizarFormulario, setCargandoAnalisis, setResultado, agregarToast } = useAppStore();
+  const { formulario, actualizarFormulario, setCargandoAnalisis, cargandoAnalisis, setResultado, agregarToast } = useAppStore();
 
   const [municipiosLista, setMunicipiosLista] = useState([]);
   const rol = sessionStorage.getItem('rol');
@@ -243,8 +243,15 @@ const AnalisisCultivos = () => {
                     </p>
                   </div>
                 </div>
-                <button type="submit" className={styles.btnAnalyze}>
-                  Analizar con IA
+                <button type="submit" className={styles.btnAnalyze} disabled={cargandoAnalisis}>
+                  {cargandoAnalisis ? (
+                    <>
+                      <span className={styles.spinner}></span>
+                      Analizando...
+                    </>
+                  ) : (
+                    'Analizar con IA'
+                  )}
                 </button>
               </div>
             </div>
@@ -471,11 +478,20 @@ const AnalisisCultivos = () => {
                     <h3>¿Todo listo?</h3>
                   </div>
                   <p>Inicie el análisis de precisión con IA para obtener su plan de fertilización y riego.</p>
-                  <button type="submit" className={styles.btnExecuteLarge}>
-                    Analizar Parcela con IA
-                    <span className="material-symbols-outlined" style={{ fontSize: '32px' }}>
-                      bolt
-                    </span>
+                  <button type="submit" className={styles.btnExecuteLarge} disabled={cargandoAnalisis}>
+                    {cargandoAnalisis ? (
+                      <>
+                        <span className={styles.spinner}></span>
+                        Analizando...
+                      </>
+                    ) : (
+                      <>
+                        Analizar Parcela con IA
+                        <span className="material-symbols-outlined" style={{ fontSize: '32px' }}>
+                          bolt
+                        </span>
+                      </>
+                    )}
                   </button>
                 </div>
 
