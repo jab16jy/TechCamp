@@ -98,7 +98,61 @@ const buildTechnicalNote = (ndvi) => {
   return 'La recomendacion favorece cultivos compatibles con humedad relativamente alta y vigor vegetal positivo, priorizando productividad con menor estres hidrico. Se recomienda cobertura viva, monitoreo de nitrogeno y manejo de drenaje para sostener fertilidad y estructura.';
 };
 
+const simulatePrediction = async ({ riego, npk, fechaSiembra, variedad }) => {
+  // Simulate model processing delay
+  await new Promise((r) => setTimeout(r, 1400));
+
+  const riegoNorm = Math.min(1, Math.max(0, riego / 100));
+  const npkNorm = Math.min(1, Math.max(0, npk / 250));
+
+  // Deterministic pseudo-random based on inputs so same inputs = same output
+  const seed = Math.round(riego * 3 + npk * 7 + (fechaSiembra?.length || 0) * 11 + (variedad?.length || 0) * 13);
+  const detRand = (offset) => {
+    const x = Math.sin(seed + offset) * 10000;
+    return x - Math.floor(x);
+  };
+
+  const rendimiento = (2.4 + 2.2 * riegoNorm + 1.3 * npkNorm + 0.9 * riegoNorm * npkNorm + detRand(1) * 0.4).toFixed(1);
+  const prob = Math.min(98, Math.round(62 + 24 * riegoNorm + 14 * npkNorm + detRand(2) * 6));
+  const riesgo = Math.max(3, Math.round(34 - 16 * riegoNorm - 9 * npkNorm - detRand(3) * 5));
+
+  const meses = ['Oct', 'Nov', 'Dic', 'Ene', 'Feb', 'Mar'];
+  const crecimiento = meses.map((_, i) => {
+    const t = i / 5;
+    const base = 100 * (1 - Math.exp(-2.8 * t));
+    const factor = 1 + riegoNorm * 0.35 + npkNorm * 0.22;
+    return Math.round(base * factor * (0.96 + detRand(i + 10) * 0.08));
+  });
+
+  const estres = meses.map((_, i) => {
+    const t = i / 5;
+    const base = 22 + 38 * Math.sin(t * Math.PI);
+    const factor = 1 - riegoNorm * 0.42 - npkNorm * 0.18;
+    return Math.round(base * factor * (0.92 + detRand(i + 20) * 0.16));
+  });
+
+  return {
+    rendimiento: parseFloat(rendimiento),
+    prob,
+    riesgo,
+    proyeccion: { meses, crecimiento, estres },
+    factores: [
+      { label: 'Precipitación', pct: Math.round(82 + detRand(30) * 12), color: '#2563eb' },
+      { label: 'Nitrógeno (N)', pct: Math.round(68 + npkNorm * 22), color: '#10b981' },
+      { label: 'Temperatura Máx.', pct: Math.round(56 + detRand(31) * 12), color: '#f59e0b' },
+      { label: 'Humedad del Suelo', pct: Math.round(48 + riegoNorm * 32), color: '#3b82f6' },
+      { label: 'Fósforo (P)', pct: Math.round(36 + npkNorm * 16), color: '#6ee7b7' },
+      { label: 'Radiación Solar', pct: Math.round(30 + detRand(32) * 10), color: '#fcd34d' },
+      { label: 'Potasio (K)', pct: Math.round(24 + npkNorm * 14), color: '#86efac' },
+    ],
+  };
+};
+
 const AnalysisService = {
+  async runPrediction(inputs) {
+    return await simulatePrediction(inputs);
+  },
+
   async performAnalysis(formData) {
     const payload = {
       ...formData,

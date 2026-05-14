@@ -76,7 +76,9 @@
 /* ── Metrics Row ── */
 .ia-metrics-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 .ia-metric-card {
-  background: #ffffff;
+  background: rgba(255,255,255,0.94);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   box-shadow: 0 2px 8px rgba(15, 82, 56, 0.06);
   border: 1px solid rgba(255,255,255,0.25);
   border-radius: 2rem;
@@ -108,7 +110,9 @@
 
 /* ── Card Base ── */
 .ia-card {
-  background: #ffffff;
+  background: rgba(255,255,255,0.94);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   box-shadow: 0 2px 8px rgba(15, 82, 56, 0.06);
   border: 1px solid rgba(255,255,255,0.25);
   border-radius: 2rem;
@@ -129,8 +133,8 @@
 .ia-left-col { display: flex; flex-direction: column; gap: 12px; }
 .ia-form-group { display: flex; flex-direction: column; gap: 4px; }
 .ia-form-label { font-size: 0.68rem; font-weight: 600; color: #707973; }
-.ia-input, .ia-select { background: rgba(255,255,255,0.4); border: 1px solid rgba(255,255,255,0.3); border-radius: 0.75rem; padding: 7px 10px; font-size: 0.75rem; color: #191c1d; font-family: 'Manrope', sans-serif; width: 100%; transition: all 0.18s; outline: none; }
-.ia-input:focus, .ia-select:focus { border-color: #2d6a4f; background: rgba(255,255,255,0.6); }
+.ia-input, .ia-select { background: rgba(255,255,255,0.55); border: 1px solid rgba(255,255,255,0.3); border-radius: 0.75rem; padding: 7px 10px; font-size: 0.75rem; color: #191c1d; font-family: 'Manrope', sans-serif; width: 100%; transition: all 0.18s; outline: none; }
+.ia-input:focus, .ia-select:focus { border-color: #2d6a4f; background: rgba(255,255,255,0.75); }
 
 .ia-slider-group { display: flex; flex-direction: column; gap: 5px; }
 .ia-slider-label { display: flex; align-items: center; gap: 5px; font-size: 0.7rem; font-weight: 600; color: #404943; }
@@ -149,7 +153,39 @@
   box-shadow: 0 4px 16px rgba(15,82,56,0.25);
   transition: all 0.2s; margin-top: 2px;
 }
-.ia-btn-execute:hover { background: #2d6a4f; transform: translateY(-1px); }
+.ia-btn-execute:hover:not(:disabled) { background: #2d6a4f; transform: translateY(-1px); }
+.ia-btn-execute:disabled { opacity: 0.75; cursor: not-allowed; }
+
+@keyframes ia-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.ia-spin { animation: ia-spin 1s linear infinite; }
+
+.ia-simulated-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 6px;
+  font-size: 0.55rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  background: #0f5238;
+  color: #fff;
+  padding: 2px 5px;
+  border-radius: 4px;
+  vertical-align: middle;
+  line-height: 1;
+}
+
+.ia-metric-simulated {
+  animation: ia-metric-pulse 0.5s ease both;
+}
+@keyframes ia-metric-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.015); }
+  100% { transform: scale(1); }
+}
 
 .ia-compare-row { display: flex; flex-direction: column; gap: 4px; }
 .ia-compare-label { display: flex; align-items: center; justify-content: space-between; font-size: 0.7rem; font-weight: 600; color: #707973; cursor: pointer; }
@@ -208,9 +244,17 @@
   background: linear-gradient(135deg, #0f5238, #2d6a4f);
   border-radius: 2rem; padding: 14px; color: white; position: relative; overflow: hidden;
 }
-.ia-promo-title { font-family: 'Manrope', sans-serif; font-size: 0.78rem; font-weight: 700; margin-bottom: 4px; letter-spacing: -0.01em; }
-.ia-promo-desc { font-size: 0.65rem; opacity: 0.7; line-height: 1.5; margin-bottom: 10px; }
+.ia-promo-title { font-family: 'Manrope', sans-serif; font-size: 0.78rem; font-weight: 700; margin-bottom: 4px; letter-spacing: -0.01em; color: #ffffff; }
+.ia-promo-desc { font-size: 0.65rem; opacity: 1; line-height: 1.5; margin-bottom: 10px; color: #ffffff; }
 .ia-promo-btn { background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.25); color: white; padding: 6px 12px; border-radius: 999px; font-size: 0.7rem; font-weight: 700; cursor: pointer; font-family: 'Manrope', sans-serif; transition: background 0.18s; }
+.ia-promo-bg-icon {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  opacity: 0.12;
+  color: #ffffff;
+  pointer-events: none;
+}
 .ia-promo-btn:hover { background: rgba(255,255,255,.25); }
 
 .ia-sources-card { background: rgba(255,255,255,0.90); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.25); border-radius: 2rem; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
