@@ -20,10 +20,9 @@ import {
   Bot
 } from 'lucide-react';
 
-import bg1 from '../../assets/images/Gemini_Generated_Image_r07jbqr07jbqr07j.png';
-import bg2 from '../../assets/images/Gemini_Generated_Image_btajyhbtajyhbtaj.png';
-import bg3 from '../../assets/images/Gemini_Generated_Image_x15nkpx15nkpx15n.png';
-import bg4 from '../../assets/images/Gemini_Generated_Image_lo86tflo86tflo86.png';
+import AmbientBackground from '../AmbientBackground/AmbientBackground';
+import logoSrc from '../../assets/images/logo.png';
+import noFotoSrc from '../../assets/images/nofoto-Usuario.png';
 
 const ALERTS = [
   { title: 'Estres hidrico detectado', desc: 'Nodo Sur-02 registra 61% HR.', time: 'Hace 5 min', type: 'warn' },
@@ -37,8 +36,6 @@ const alertIcon = {
   info: <Info size={13} className="text-sky-500" />,
 };
 
-const backgrounds = [bg1, bg2, bg3, bg4];
-
 const ResearcherLayout = ({ children, activeTab }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -46,14 +43,6 @@ const ResearcherLayout = ({ children, activeTab }) => {
 
   const [profileOpen, setProfileOpen] = useState(false);
   const [alertsOpen, setAlertsOpen] = useState(false);
-  const [bgIndex, setBgIndex] = useState(0);
-
-  useEffect(() => {
-    const id = setInterval(() => {
-      setBgIndex((prev) => (prev + 1) % backgrounds.length);
-    }, 30000);
-    return () => clearInterval(id);
-  }, []);
 
   const profileRef = useRef(null);
   const alertsRef = useRef(null);
@@ -90,16 +79,11 @@ const ResearcherLayout = ({ children, activeTab }) => {
 
   return (
     <div className="text-slate-900 font-sans antialiased h-screen w-full relative overflow-hidden">
-      {/* Rotating Background */}
-      <img
-        src={backgrounds[bgIndex]}
-        alt=""
-        className="absolute inset-0 w-full h-full object-cover opacity-30 transition-all duration-700 ease-in-out"
-      />
+      <AmbientBackground />
       {/* Top Navigation (Shared Component) */}
       <header className="sticky top-4 z-50 mx-auto w-[calc(100%-3rem)] max-w-[1400px] rounded-3xl bg-white/90 backdrop-blur-xl border border-white/40 shadow-sm flex justify-between items-center px-8 py-3 transition-all duration-300 hover:bg-white/95">
         <div className="flex items-center gap-4">
-          <span className="text-[24px] font-bold text-[#1A4D3A]">AgroCaribe IA</span>
+          <img src={logoSrc} alt="AgroCaribe IA" className="h-8 w-auto" />
           <div className="hidden md:flex bg-white/90 backdrop-blur-xl border border-white/40 shadow-sm rounded-full px-6 py-2 gap-8 ml-8">
             <Link to="/investigador/dashboard" className={linkClass('/investigador/dashboard')}>Dashboard</Link>
             <Link to="/investigador/mapas" className={linkClass('/investigador/mapas')}>AgroAsesor</Link>
@@ -170,9 +154,9 @@ const ResearcherLayout = ({ children, activeTab }) => {
             <div className="relative" ref={profileRef}>
               <button onClick={() => setProfileOpen((prev) => !prev)} className="focus:outline-none flex items-center">
                 <img
-                  alt="Agronomist Profile"
+                  src={noFotoSrc}
+                  alt="Usuario"
                   className="w-10 h-10 rounded-full border-2 border-white/40 object-cover shadow-sm"
-                  src="https://images.unsplash.com/photo-1559839734-2b71f1536b1e?auto=format&fit=crop&q=80&w=100"
                 />
               </button>
 
@@ -186,8 +170,7 @@ const ResearcherLayout = ({ children, activeTab }) => {
                     className="absolute right-0 z-50 mt-4 w-56 overflow-hidden rounded-3xl bg-white/90 backdrop-blur-2xl border border-white/40 py-2 shadow-[0_24px_60px_rgba(0,0,0,0.08)]"
                   >
                     <div className="border-b border-white/20 px-4 py-3">
-                      <p className="text-[13px] font-black text-slate-700">Dra. Elena Ramos</p>
-                      <p className="text-[10px] text-slate-500">Investigadora Principal</p>
+                      <p className="text-[13px] font-black text-slate-700">Dr johan borrero investigador</p>
                     </div>
                     {[
                       { label: 'Mi Perfil', icon: <User size={15} />, path: '/perfil' },

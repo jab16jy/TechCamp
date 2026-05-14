@@ -81,7 +81,7 @@ html {
 
 body {
   font-family: 'Manrope', sans-serif;
-  background: linear-gradient(165deg, #e8ece9 0%, #f0f2f0 30%, #f5f6f4 60%, #eef0ed 100%);
+  background: linear-gradient(165deg, #f5f0e8 0%, #eef5e8 30%, #f3f2ec 60%, #f0f4ed 100%);
   color: var(--gris-800);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
