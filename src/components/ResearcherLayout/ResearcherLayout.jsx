@@ -17,7 +17,8 @@ import {
   Wifi,
   Brain,
   BarChart3,
-  Bot
+  Bot,
+  Map
 } from 'lucide-react';
 
 import AmbientBackground from '../AmbientBackground/AmbientBackground';
@@ -251,6 +252,16 @@ const ResearcherLayout = ({ children, activeTab }) => {
           } rounded-xl p-3 flex flex-col items-center justify-center`}
         >
           <BarChart3 size={24} className={isActive('/investigador/reportes') ? 'text-[#2d6a4f]' : 'group-hover:text-[#0f5238]'} />
+        </Link>
+        <Link
+          to="/investigador/mapa"
+          className={`${
+            isActive('/investigador/mapa')
+              ? 'bg-[#2d6a4f]/15 text-[#2d6a4f] shadow-sm scale-90 transition-transform duration-200'
+              : 'text-slate-400/80 hover:bg-white/30 hover:text-[#0f5238] transition-colors group'
+          } rounded-xl p-3 flex flex-col items-center justify-center`}
+        >
+          <Map size={24} className={isActive('/investigador/mapa') ? 'text-[#2d6a4f]' : 'group-hover:text-[#0f5238]'} />
         </Link>
       </nav>
 

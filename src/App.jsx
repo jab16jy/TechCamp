@@ -12,6 +12,7 @@ import Acceso from './pages/Acceso/Acceso';
 import LoginInvestigador from './pages/Investigador/LoginInvestigador';
 import DashboardInvestigador from './pages/Investigador/DashboardInvestigador';
 import AgroAsesor from './pages/Investigador/AgroAsesor';
+import Mapa from './pages/Investigador/Mapa';
 import AnalisisCultivosInvestigador from './pages/Investigador/AnalisisCultivos';
 import ResultadoAvanzado from './pages/Investigador/ResultadoAvanzado';
 import IAPredictiva from './pages/Investigador/IAPredictiva';
@@ -37,7 +38,7 @@ const App = () => (
       <Route path="/investigador/dashboard" element={<DashboardInvestigador />} />
       <Route path="/dashboard" element={<DashboardInvestigador />} />
       <Route path="/investigador/mapas" element={<AgroAsesor />} />
-      <Route path="/investigador/mapa" element={<div className="p-8"><h2 className="text-2xl font-bold text-[#0f5238]">Mapa</h2><p className="text-slate-500 mt-2">Página en desarrollo</p></div>} />
+      <Route path="/investigador/mapa" element={<Mapa />} />
       <Route path="/investigador/historial" element={<Historial />} />
       <Route path="/investigador/analisis" element={<AnalisisCultivosInvestigador />} />
       <Route path="/investigador/resultado-avanzado" element={<ResultadoAvanzado />} />

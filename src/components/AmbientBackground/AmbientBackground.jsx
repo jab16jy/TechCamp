@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useState, useEffect, useCallback } from 'react';
 import styles from './AmbientBackground.module.css';
 
 const TOPO_PATHS = [
@@ -13,66 +13,239 @@ const TOPO_PATHS = [
   'M0,860 C160,840 340,880 500,850 S660,820 840,840 S1000,865 1180,820 S1340,790 1440,815',
 ];
 
-const PARTICLES = [
-  { cx: 120, cy: 180, r: 1.5, fill: 'rgba(255,255,255,0.5)' },
-  { cx: 380, cy: 520, r: 1, fill: 'rgba(255,255,255,0.35)' },
-  { cx: 650, cy: 280, r: 2, fill: 'rgba(212,195,140,0.3)' },
-  { cx: 900, cy: 620, r: 1.5, fill: 'rgba(255,255,255,0.4)' },
-  { cx: 1150, cy: 150, r: 1, fill: 'rgba(255,255,255,0.3)' },
-  { cx: 250, cy: 750, r: 1.5, fill: 'rgba(163,190,140,0.3)' },
-  { cx: 780, cy: 420, r: 1, fill: 'rgba(255,255,255,0.45)' },
-  { cx: 1320, cy: 500, r: 2, fill: 'rgba(255,255,255,0.25)' },
-  { cx: 500, cy: 120, r: 1, fill: 'rgba(212,195,140,0.35)' },
-  { cx: 1050, cy: 780, r: 1.5, fill: 'rgba(255,255,255,0.3)' },
-  { cx: 80, cy: 400, r: 1.2, fill: 'rgba(255,255,255,0.25)' },
-  { cx: 1350, cy: 300, r: 1.8, fill: 'rgba(165,198,210,0.25)' },
+const PALETTES = [
+  {
+    name: 'green',
+    mesh: [
+      'rgba(163, 190, 140, 0.25)',
+      'rgba(186, 200, 155, 0.18)',
+      'rgba(212, 195, 140, 0.12)',
+      'rgba(165, 198, 210, 0.15)',
+      'rgba(200, 185, 155, 0.1)',
+      'rgba(175, 205, 175, 0.12)',
+    ],
+    orbs: [
+      'rgba(163, 190, 140, 0.2)',
+      'rgba(212, 195, 140, 0.12)',
+      'rgba(165, 198, 210, 0.1)',
+      'rgba(175, 205, 175, 0.12)',
+    ],
+    topo: 'rgba(120, 140, 100, 0.06)',
+    vignette: 'rgba(180, 170, 150, 0.08)',
+    particles: [
+      'rgba(255,255,255,0.5)',
+      'rgba(255,255,255,0.35)',
+      'rgba(212,195,140,0.3)',
+      'rgba(255,255,255,0.4)',
+      'rgba(255,255,255,0.3)',
+      'rgba(163,190,140,0.3)',
+      'rgba(255,255,255,0.45)',
+      'rgba(255,255,255,0.25)',
+      'rgba(212,195,140,0.35)',
+      'rgba(255,255,255,0.3)',
+      'rgba(255,255,255,0.25)',
+      'rgba(165,198,210,0.25)',
+    ],
+  },
+  {
+    name: 'yellow',
+    mesh: [
+      'rgba(212, 195, 140, 0.25)',
+      'rgba(200, 185, 155, 0.18)',
+      'rgba(186, 200, 155, 0.12)',
+      'rgba(220, 200, 160, 0.15)',
+      'rgba(212, 195, 140, 0.1)',
+      'rgba(200, 185, 155, 0.12)',
+    ],
+    orbs: [
+      'rgba(212, 195, 140, 0.2)',
+      'rgba(200, 185, 155, 0.12)',
+      'rgba(220, 200, 160, 0.1)',
+      'rgba(186, 200, 155, 0.12)',
+    ],
+    topo: 'rgba(160, 140, 100, 0.06)',
+    vignette: 'rgba(180, 170, 150, 0.08)',
+    particles: [
+      'rgba(255,255,255,0.5)',
+      'rgba(255,255,255,0.35)',
+      'rgba(212,195,140,0.3)',
+      'rgba(255,255,255,0.4)',
+      'rgba(255,255,255,0.3)',
+      'rgba(200,185,155,0.3)',
+      'rgba(255,255,255,0.45)',
+      'rgba(255,255,255,0.25)',
+      'rgba(212,195,140,0.35)',
+      'rgba(255,255,255,0.3)',
+      'rgba(255,255,255,0.25)',
+      'rgba(220,200,160,0.25)',
+    ],
+  },
+  {
+    name: 'blue',
+    mesh: [
+      'rgba(165, 198, 210, 0.25)',
+      'rgba(184, 212, 224, 0.18)',
+      'rgba(194, 219, 230, 0.12)',
+      'rgba(165, 198, 210, 0.15)',
+      'rgba(184, 212, 224, 0.1)',
+      'rgba(194, 219, 230, 0.12)',
+    ],
+    orbs: [
+      'rgba(165, 198, 210, 0.2)',
+      'rgba(184, 212, 224, 0.12)',
+      'rgba(194, 219, 230, 0.1)',
+      'rgba(165, 198, 210, 0.12)',
+    ],
+    topo: 'rgba(100, 140, 160, 0.06)',
+    vignette: 'rgba(150, 170, 180, 0.08)',
+    particles: [
+      'rgba(255,255,255,0.5)',
+      'rgba(255,255,255,0.35)',
+      'rgba(165,198,210,0.3)',
+      'rgba(255,255,255,0.4)',
+      'rgba(255,255,255,0.3)',
+      'rgba(184,212,224,0.3)',
+      'rgba(255,255,255,0.45)',
+      'rgba(255,255,255,0.25)',
+      'rgba(194,219,230,0.35)',
+      'rgba(255,255,255,0.3)',
+      'rgba(255,255,255,0.25)',
+      'rgba(165,198,210,0.25)',
+    ],
+  },
+  {
+    name: 'brown',
+    mesh: [
+      'rgba(196, 168, 130, 0.25)',
+      'rgba(212, 191, 168, 0.18)',
+      'rgba(224, 208, 188, 0.12)',
+      'rgba(196, 168, 130, 0.15)',
+      'rgba(212, 191, 168, 0.1)',
+      'rgba(224, 208, 188, 0.12)',
+    ],
+    orbs: [
+      'rgba(196, 168, 130, 0.2)',
+      'rgba(212, 191, 168, 0.12)',
+      'rgba(224, 208, 188, 0.1)',
+      'rgba(196, 168, 130, 0.12)',
+    ],
+    topo: 'rgba(140, 120, 100, 0.06)',
+    vignette: 'rgba(180, 170, 150, 0.08)',
+    particles: [
+      'rgba(255,255,255,0.5)',
+      'rgba(255,255,255,0.35)',
+      'rgba(196,168,130,0.3)',
+      'rgba(255,255,255,0.4)',
+      'rgba(255,255,255,0.3)',
+      'rgba(212,191,168,0.3)',
+      'rgba(255,255,255,0.45)',
+      'rgba(255,255,255,0.25)',
+      'rgba(224,208,188,0.35)',
+      'rgba(255,255,255,0.3)',
+      'rgba(255,255,255,0.25)',
+      'rgba(196,168,130,0.25)',
+    ],
+  },
 ];
 
-const AmbientBackground = memo(() => (
-  <div className={styles.root} aria-hidden="true">
-    <div className={styles.mesh} />
-    <svg
-      className={styles.topo}
-      viewBox="0 0 1440 900"
-      preserveAspectRatio="xMidYMid slice"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      {TOPO_PATHS.map((d, i) => (
-        <path
+const CYCLE_INTERVAL = 16000;
+const TRANSITION_MS = 2000;
+
+const AmbientBackground = memo(() => {
+  const [idx, setIdx] = useState(0);
+  const [transitioning, setTransitioning] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTransitioning(true);
+      setIdx((prev) => (prev + 1) % PALETTES.length);
+      setTimeout(() => setTransitioning(false), TRANSITION_MS);
+    }, CYCLE_INTERVAL);
+    return () => clearInterval(interval);
+  }, []);
+
+  const p = PALETTES[idx];
+
+  const meshBg = `
+    radial-gradient(ellipse 70% 55% at 20% 30%, ${p.mesh[0]} 0%, transparent 70%),
+    radial-gradient(ellipse 55% 50% at 80% 65%, ${p.mesh[1]} 0%, transparent 60%),
+    radial-gradient(ellipse 50% 45% at 45% 55%, ${p.mesh[2]} 0%, transparent 55%),
+    radial-gradient(ellipse 60% 50% at 70% 20%, ${p.mesh[3]} 0%, transparent 50%),
+    radial-gradient(ellipse 45% 40% at 30% 75%, ${p.mesh[4]} 0%, transparent 45%),
+    radial-gradient(ellipse 55% 60% at 60% 40%, ${p.mesh[5]} 0%, transparent 50%)
+  `;
+
+  return (
+    <div className={styles.root} aria-hidden="true">
+      <div
+        className={styles.mesh}
+        style={{
+          background: meshBg,
+          transition: `background ${TRANSITION_MS}ms ease-in-out`,
+        }}
+      />
+      <svg
+        className={styles.topo}
+        viewBox="0 0 1440 900"
+        preserveAspectRatio="xMidYMid slice"
+        xmlns="http://www.w3.org/2000/svg"
+        style={{
+          color: p.topo,
+          transition: `color ${TRANSITION_MS}ms ease-in-out`,
+        }}
+      >
+        {TOPO_PATHS.map((d, i) => (
+          <path
+            key={i}
+            d={d}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={0.7 - i * 0.04}
+            opacity={0.25 - i * 0.02}
+          />
+        ))}
+      </svg>
+      {p.orbs.map((orb, i) => (
+        <div
           key={i}
-          d={d}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={0.7 - i * 0.04}
-          opacity={0.25 - i * 0.02}
+          className={`${styles.orb} ${styles[`orb${i + 1}`]}`}
+          style={{
+            background: `radial-gradient(circle at 50% 50%, ${orb}, transparent 70%)`,
+            transition: `background ${TRANSITION_MS}ms ease-in-out`,
+          }}
         />
       ))}
-    </svg>
-    <div className={`${styles.orb} ${styles.orb1}`} />
-    <div className={`${styles.orb} ${styles.orb2}`} />
-    <div className={`${styles.orb} ${styles.orb3}`} />
-    <div className={`${styles.orb} ${styles.orb4}`} />
-    <svg
-      className={styles.particles}
-      viewBox="0 0 1440 900"
-      preserveAspectRatio="xMidYMid slice"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      {PARTICLES.map((p, i) => (
-        <circle
-          key={i}
-          cx={p.cx}
-          cy={p.cy}
-          r={p.r}
-          fill={p.fill}
-          className={styles.particle}
-        />
-      ))}
-    </svg>
-    <div className={styles.noise} />
-    <div className={styles.vignette} />
-  </div>
-));
+      <svg
+        className={styles.particles}
+        viewBox="0 0 1440 900"
+        preserveAspectRatio="xMidYMid slice"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        {p.particles.map((fill, i) => (
+          <circle
+            key={i}
+            cx={[120, 380, 650, 900, 1150, 250, 780, 1320, 500, 1050, 80, 1350][i]}
+            cy={[180, 520, 280, 620, 150, 750, 420, 500, 120, 780, 400, 300][i]}
+            r={[1.5, 1, 2, 1.5, 1, 1.5, 1, 2, 1, 1.5, 1.2, 1.8][i]}
+            fill={fill}
+            className={styles.particle}
+            style={{
+              transition: `fill ${TRANSITION_MS}ms ease-in-out`,
+            }}
+          />
+        ))}
+      </svg>
+      <div className={styles.noise} />
+      <div
+        className={styles.vignette}
+        style={{
+          background: `radial-gradient(ellipse 65% 55% at 50% 50%, transparent 50%, ${p.vignette} 100%)`,
+          transition: `background ${TRANSITION_MS}ms ease-in-out`,
+        }}
+      />
+    </div>
+  );
+});
 
 AmbientBackground.displayName = 'AmbientBackground';
 export default AmbientBackground;
