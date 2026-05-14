@@ -23,12 +23,37 @@ import {
   Zap,
   Search,
   Sprout,
+  ArrowLeft,
+  ChevronRight,
+  Calendar,
+  Download,
+  Share2,
+  Loader2,
+  Brain,
+  Satellite,
+  Globe,
+  Microscope,
 } from 'lucide-react';
 import './AnalisisCultivos.css';
 
+// ── Tooltip ──
+function InfoTip({ text }) {
+  const [show, setShow] = useState(false);
+  return (
+    <span
+      className="ac-tooltip-wrap"
+      onMouseEnter={() => setShow(true)}
+      onMouseLeave={() => setShow(false)}
+    >
+      <Info size={14} className="ac-info-icon" />
+      {show && <div className="ac-tooltip">{text}</div>}
+    </span>
+  );
+}
+
 const AnalisisCultivos = () => {
   const navigate = useNavigate();
-  const { formulario, actualizarFormulario, setCargandoAnalisis, cargandoAnalisis, setResultado, agregarToast } = useAppStore();
+  const { formulario, actualizarFormulario, setCargandoAnalisis, cargandoAnalisis, setResultado, agregarToast, agregarAlHistorial } = useAppStore();
 
   const [municipiosLista, setMunicipiosLista] = useState([]);
   const rol = sessionStorage.getItem('rol');
@@ -86,6 +111,36 @@ const AnalisisCultivos = () => {
       setResultado(resultado);
       agregarToast('Analisis completado exitosamente', 'success');
 
+      const topRec = resultado.recomendaciones?.[0];
+      agregarAlHistorial({
+        tipo: mode === 'advanced' ? 'suelo' : 'analisis',
+        municipio: formulario.municipio,
+        departamento: formulario.departamento,
+        lat: formulario.lat,
+        lng: formulario.lng,
+        area_hectareas: formulario.area_hectareas,
+        ...(mode === 'simple'
+          ? {
+              cultivo: topRec?.cultivo || null,
+              score: topRec?.score || null,
+              cultivo_top: topRec?.cultivo || null,
+              rankings: resultado.structuredRecommendation?.output?.ranking?.map((r, i) => ({
+                rank: i + 1,
+                crop: r.crop,
+                score: r.score,
+              })) || [],
+            }
+          : {
+              ph: formulario.ph_suelo || null,
+              nitrogeno: null,
+              fosforo: null,
+              potasio: null,
+              materia_organica: formulario.materia_organica || null,
+              calidad_suelo: resultado.indicadores_satelite?.calidad_suelo || null,
+              ndvi: resultado.indicadores_satelite?.ndvi || null,
+            }),
+      });
+
       if (mode === 'advanced') {
         navigate('/investigador/resultado-avanzado');
       } else {
@@ -122,6 +177,7 @@ const AnalisisCultivos = () => {
       trend: structuredPreview.output.kpis.ndvi.trend,
       tone: 'positive',
       Icon: Leaf,
+      tip: 'Índice de Vegetación de Diferencia Normalizada basado en imágenes Sentinel-2. Valores >0.5 indican vegetación saludable.',
     },
     {
       key: 'humidity',
@@ -130,6 +186,7 @@ const AnalisisCultivos = () => {
       trend: structuredPreview.output.kpis.humidity.trend,
       tone: 'neutral',
       Icon: Droplets,
+      tip: 'Humedad relativa promedio del ambiente, calculada con datos de NASA POWER para las coordenadas seleccionadas.',
     },
     {
       key: 'nitrogen',
@@ -138,6 +195,7 @@ const AnalisisCultivos = () => {
       trend: structuredPreview.output.kpis.nitrogen.trend,
       tone: 'neutral',
       Icon: FlaskConical,
+      tip: 'Estimación de nitrógeno disponible basada en materia orgánica del suelo y área de la parcela.',
     },
   ];
 
@@ -162,6 +220,59 @@ const AnalisisCultivos = () => {
   return (
     <ResearcherLayout activeTab={activeTab} onTabChange={setActiveTab}>
       <div className="ac-container max-w-[1440px] mx-auto">
+
+        {/* ── HEADER ── */}
+        <header className="ac-header">
+          <div className="ac-header-left">
+            <div className="ac-nav-row">
+              <button className="ac-back-btn" onClick={() => navigate('/investigador/dashboard')}>
+                <ArrowLeft size={14} />
+                Volver al Dashboard
+              </button>
+              <nav className="ac-breadcrumb">
+                <span>Módulos</span>
+                <ChevronRight size={12} />
+                <span className="ac-crumb-active">Análisis de Parcela</span>
+              </nav>
+            </div>
+            <div className="ac-title-row">
+              <h1 className="ac-title">
+                Análisis de Parcela <span className="ac-title-light">· Calidad del Suelo</span>
+              </h1>
+              <div className="ac-meta-badges">
+                <span className="ac-badge-mode">MOTOR ACTIVO</span>
+                <span className="ac-badge-ref">
+                  <Calendar size={10} />
+                  {new Date().toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' })}
+                </span>
+                <span className="ac-badge-ref">
+                  <MapPin size={10} />
+                  Zona Caribe · Colombia
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="ac-header-right">
+            <div className="ac-algo-badge">
+              <span className="ac-algo-score">94.2<small>%</small></span>
+              <div>
+                <p className="ac-algo-label">Precisión Algorítmica</p>
+                <p className="ac-algo-ver">v4.2.0 · Random Forest</p>
+              </div>
+            </div>
+            <div className="ac-header-btns">
+              <button className="ac-btn-ghost">
+                <Download size={14} />
+                Exportar
+              </button>
+              <button className="ac-btn-primary">
+                <Share2 size={14} />
+                Informe
+              </button>
+            </div>
+          </div>
+        </header>
+
         {/* Tabs */}
         {!isProductor && activeTab === 'analisis' && (
           <div className="ac-tabs mb-4">
@@ -195,42 +306,42 @@ const AnalisisCultivos = () => {
             <div className="lg:col-span-8 flex flex-col gap-6">
               
               {/* Vista de Mapa (Compacta) */}
-              <div className="ac-glass p-6 h-[400px] flex flex-col relative overflow-hidden group">
+              <div className="ac-map-card ac-glass p-6 h-[400px] flex flex-col relative overflow-hidden group">
                 <div className="flex justify-between items-center mb-4 z-10 relative">
                   <div>
                     <h2 className="text-xl text-[#191c1d] font-bold">Resumen de Parcela</h2>
                     <p className="text-sm text-[#707973]">Sector seleccionado</p>
                   </div>
                   <div className="flex gap-2">
-                    <button type="button" className="h-10 w-10 bg-[#f8f9fa] rounded-full flex items-center justify-center shadow-sm hover:bg-[#e7e8e9] transition-colors text-[#2d6a4f]">
+                    <button type="button" className="ac-map-tool-btn">
                       <Map size={20} />
                     </button>
-                    <button type="button" className="h-10 w-10 bg-[#f8f9fa] rounded-full flex items-center justify-center shadow-sm hover:bg-[#e7e8e9] transition-colors text-[#2d6a4f]">
+                    <button type="button" className="ac-map-tool-btn">
                       <MapPin size={20} />
                     </button>
                   </div>
                 </div>
-                <div className="absolute inset-0 top-20 rounded-b-3xl overflow-hidden bg-white/50">
+                <div className="absolute inset-0 top-20 rounded-b-[2rem] overflow-hidden">
                   <MapSelector
                     position={{ lat: formulario.lat, lng: formulario.lng }}
                     onPositionChange={handleMapChange}
                     height={400}
                   />
-                  <div className="absolute bottom-6 right-6 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full shadow-sm flex items-center gap-2 border border-[#e1e3e4] z-[1000]">
-                    <div className="w-2 h-2 rounded-full bg-[#006d48]"></div>
-                    <span className="text-xs font-semibold text-[#191c1d]">Sensores Activos</span>
+                  <div className="absolute bottom-6 right-6 ac-glass ac-sensor-chip z-[1000]">
+                    <div className="ac-pulse-dot" />
+                    <span>Sensores Activos</span>
                   </div>
                 </div>
               </div>
 
               {/* Row de Métricas (Bento) */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {metricCardsData.map((metric) => {
+                {metricCardsData.map((metric, i) => {
                   const t = trendMeta[metric.tone] || trendMeta.neutral;
                   const TrendIcon = t.Icon;
                   const MetricIcon = metric.Icon;
                   return (
-                    <article key={metric.key} className="ac-glass p-8 flex flex-col justify-between h-48">
+                    <article key={metric.key} className="ac-metric-card" style={{ animationDelay: `${i * 0.08}s` }}>
                       <div className="flex justify-between items-start">
                         <div className={`p-3 rounded-full ${iconVariant[metric.tone]}`}>
                           <MetricIcon size={24} />
@@ -240,7 +351,10 @@ const AnalisisCultivos = () => {
                         </span>
                       </div>
                       <div>
-                        <p className="text-[10px] text-[#707973] uppercase tracking-wider font-semibold mb-1">{metric.label}</p>
+                        <div className="ac-metric-label-row">
+                          <p className="text-[10px] text-[#707973] uppercase tracking-wider font-semibold mb-1">{metric.label}</p>
+                          <InfoTip text={metric.tip} />
+                        </div>
                         <h3 className="text-3xl text-[#191c1d] font-bold">{metric.value}</h3>
                         <p className={`text-xs mt-1 flex items-center gap-1 ${t.css}`}>
                           <TrendIcon size={14} /> {metric.trend}
@@ -273,16 +387,26 @@ const AnalisisCultivos = () => {
 
                   {/* Acciones */}
                   <div className="mt-auto pt-6 flex gap-4">
-                    <button type="button" className="flex-1 py-3 px-6 rounded-full text-xs font-bold text-[#75584d] bg-transparent hover:bg-[#e7e8e9] transition-colors text-center border border-[#bfc9c1]">
+                    <button type="button" className="ac-btn-ghost flex-1 justify-center">
                       Borrador
                     </button>
-                    <button type="submit" disabled={cargandoAnalisis} className="flex-1 py-3 px-6 rounded-full text-xs font-bold text-white bg-gradient-to-br from-[#2D6A4F] to-[#52B788] hover:shadow-lg transition-all transform hover:-translate-y-1 text-center shadow-md disabled:opacity-70 disabled:hover:translate-y-0">
-                      {cargandoAnalisis ? 'Procesando...' : 'Generar Reporte'}
+                    <button type="submit" disabled={cargandoAnalisis} className="ac-btn-execute flex-1">
+                      {cargandoAnalisis ? (
+                        <>
+                          <Loader2 size={16} className="ac-spin" />
+                          Procesando...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles size={16} />
+                          Generar Reporte
+                        </>
+                      )}
                     </button>
                   </div>
 
                   {/* Estado Modelo */}
-                  <div className="flex items-center justify-between p-4 bg-[#f3f4f5] rounded-lg mt-2 border border-[#e1e3e4]">
+                  <div className="ac-model-status">
                     <div className="flex items-center gap-3">
                       <Zap className="text-[#2c694e]" size={20} />
                       <div>
@@ -290,7 +414,7 @@ const AnalisisCultivos = () => {
                         <p className="text-[10px] text-[#707973]">Precisión actual: 94.2%</p>
                       </div>
                     </div>
-                    <span className="text-[10px] font-bold bg-[#b1f0ce] text-[#002114] px-2 py-1 rounded-full">ACTIVO</span>
+                    <span className="ac-status-pill">ACTIVO</span>
                   </div>
                 </div>
               </div>
@@ -333,9 +457,12 @@ const AnalisisCultivos = () => {
                       <Thermometer size={18} />
                     </div>
                     <div className="ac-climate-card-body">
-                      <span className="ac-climate-card-label">Temperatura</span>
+                      <div className="ac-climate-card-top">
+                        <span className="ac-climate-card-label">Temperatura</span>
+                        <span className="ac-climate-badge">AUTO</span>
+                      </div>
                       <span className="ac-climate-card-value">{clima.temperatura}°C</span>
-                      <span className="ac-climate-card-source">NASA POWER · Auto</span>
+                      <span className="ac-climate-card-source">NASA POWER · {selectedParcela.split(' - ')[0]}</span>
                     </div>
                   </div>
                   <div className="ac-climate-card">
@@ -343,9 +470,12 @@ const AnalisisCultivos = () => {
                       <Droplets size={18} />
                     </div>
                     <div className="ac-climate-card-body">
-                      <span className="ac-climate-card-label">Humedad Relativa</span>
+                      <div className="ac-climate-card-top">
+                        <span className="ac-climate-card-label">Humedad Relativa</span>
+                        <span className="ac-climate-badge ac-climate-badge--sensor">SENSOR</span>
+                      </div>
                       <span className="ac-climate-card-value">{clima.humedad}%</span>
-                      <span className="ac-climate-card-source">Sensores IoT · Auto</span>
+                      <span className="ac-climate-card-source">Sensores IoT · {selectedParcela.split(' - ')[0]}</span>
                     </div>
                   </div>
                   <div className="ac-climate-card">
@@ -353,9 +483,12 @@ const AnalisisCultivos = () => {
                       <CloudRain size={18} />
                     </div>
                     <div className="ac-climate-card-body">
-                      <span className="ac-climate-card-label">Precipitación Anual</span>
+                      <div className="ac-climate-card-top">
+                        <span className="ac-climate-card-label">Precipitación Anual</span>
+                        <span className="ac-climate-badge">AUTO</span>
+                      </div>
                       <span className="ac-climate-card-value">{clima.precipitacion} mm</span>
-                      <span className="ac-climate-card-source">NASA POWER · Auto</span>
+                      <span className="ac-climate-card-source">NASA POWER · {selectedParcela.split(' - ')[0]}</span>
                     </div>
                   </div>
                 </div>
@@ -409,10 +542,10 @@ const AnalisisCultivos = () => {
                 <p className="ac-submit-cta-desc">
                   Los datos serán procesados por el motor de IA para generar un plan de fertilización y riego personalizado.
                 </p>
-                <button type="submit" className="ac-btn-primary-solid" disabled={cargandoAnalisis}>
+                <button type="submit" className="ac-btn-execute" disabled={cargandoAnalisis}>
                   {cargandoAnalisis ? (
                     <>
-                      <span className="ac-spinner" />
+                      <Loader2 size={16} className="ac-spin" />
                       Analizando...
                     </>
                   ) : (
@@ -466,14 +599,28 @@ const AnalisisCultivos = () => {
                     <span style={{ fontSize: '12px', color: '#707973', fontStyle: 'italic' }}>v4.2.0-stable</span>
                   </div>
                 </div>
+
+                {/* Data Sources Card */}
+                <div className="ac-sources-card">
+                  <p className="ac-sources-title">Fuentes de datos</p>
+                  {[
+                    { icon: Satellite, name: 'Sentinel-2', desc: 'NDVI · Última imagen: hace 6h' },
+                    { icon: Globe, name: 'NASA POWER', desc: 'Clima histórico y actual' },
+                    { icon: Microscope, name: 'Laboratorio', desc: 'Suelo · Calibración: 24/05' },
+                  ].map((s) => (
+                    <div key={s.name} className="ac-source-row">
+                      <s.icon size={16} className="ac-source-icon" />
+                      <div>
+                        <p className="ac-source-name">{s.name}</p>
+                        <p className="ac-source-desc">{s.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </form>
         )}
-
-
-
-
 
         {/* Historial Tab */}
         {activeTab === 'historial' && (

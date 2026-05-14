@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 
 import AmbientBackground from '../AmbientBackground/AmbientBackground';
+import HistorialDropdown from '../HistorialDropdown/HistorialDropdown';
 import logoSrc from '../../assets/images/logo.png';
 import noFotoSrc from '../../assets/images/nofoto-Usuario.png';
 
@@ -92,16 +93,15 @@ const ResearcherLayout = ({ children, activeTab }) => {
           </div>
         </div>
         <div className="flex items-center gap-6">
-          <div className="bg-white/90 backdrop-blur-xl border border-white/40 shadow-sm rounded-full px-4 py-2 flex items-center gap-2 text-slate-500 transition-all duration-300 hover:bg-white">
-            <Search size={20} />
-            <input
-              className="bg-transparent border-none focus:ring-0 text-sm w-48 text-slate-700 placeholder:text-slate-400 p-0 outline-none"
-              placeholder="Buscar parcela..."
-              type="text"
-            />
-          </div>
-          <div className="flex gap-4 items-center">
-
+            <div className="bg-white/90 backdrop-blur-xl border border-white/40 shadow-sm rounded-full px-4 py-2 flex items-center gap-2 text-slate-500 transition-all duration-300 hover:bg-white">
+              <Search size={20} />
+              <input
+                className="bg-transparent border-none focus:ring-0 text-sm w-48 text-slate-700 placeholder:text-slate-400 p-0 outline-none"
+                placeholder="Buscar parcela..."
+                type="text"
+              />
+            </div>
+            <HistorialDropdown />
             <div className="relative" ref={alertsRef}>
               <button
                 onClick={() => setAlertsOpen((prev) => !prev)}
@@ -198,7 +198,6 @@ const ResearcherLayout = ({ children, activeTab }) => {
             </div>
 
           </div>
-        </div>
       </header>
 
       {/* Floating Sidebar (Shared Component) */}
