@@ -21,7 +21,6 @@ const HYDRO = [
   { label: 'May', rain: 110, soil: 95 },
   { label: 'Jun', rain: 68, soil: 72 },
 ];
-const RAIN_MAX = 120;
 
 const TASKS = [
   {
@@ -117,53 +116,90 @@ function NdviMiniMap({ color, selected }) {
 
 // ── Hydro Combo Chart ──
 function HydroChart() {
-  const H = 120, W = 100;
-  // Normalise
-  const rainPts = HYDRO.map((d, i) => ({
-    x: (i / (HYDRO.length - 1)) * W,
-    y: H - (d.soil / RAIN_MAX) * H,
-    rain: d.rain,
-  }));
-  const linePts = rainPts.map(p => `${p.x},${p.y}`).join(' ');
+  const W = 600, H = 200, PAD = { top: 20, bottom: 30, left: 40, right: 20 };
+  const chartW = W - PAD.left - PAD.right;
+  const chartH = H - PAD.top - PAD.bottom;
+  const maxVal = Math.max(...HYDRO.map(d => Math.max(d.rain, d.soil)));
+  const scale = chartH / maxVal;
+
+  const barW = chartW / HYDRO.length * 0.55;
+  const gap = chartW / HYDRO.length;
 
   return (
-    <div className="gr-hydro-chart-wrap">
-      {/* Bars */}
-      <div className="gr-bars">
-        {HYDRO.map((d, i) => (
-          <div key={i} className="gr-bar-col">
-            <div className="gr-bar-inner">
-              <div
-                className="gr-bar-fill"
-                style={{ height: `${(d.rain / RAIN_MAX) * 100}%` }}
-              >
-                <span className="gr-bar-tip">{d.rain}mm</span>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-      {/* Line overlay */}
-      <svg className="gr-hydro-line-svg" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none">
-        <defs>
-          <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#10b981" stopOpacity="0.3" />
-            <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        <polygon
-          points={`0,${H} ${linePts} ${W},${H}`}
-          fill="url(#lineGrad)"
-        />
-        <polyline
-          points={linePts}
-          fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-        />
-        {rainPts.map((p, i) => (
-          <circle key={i} cx={p.x} cy={p.y} r="2.5" fill="#10b981" stroke="white" strokeWidth="1" />
-        ))}
-      </svg>
-    </div>
+    <svg viewBox={`0 0 ${W} ${H}`} className="gr-hydro-svg" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <linearGradient id="rainGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.7" />
+          <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.3" />
+        </linearGradient>
+        <linearGradient id="soilGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#10b981" stopOpacity="0.3" />
+          <stop offset="100%" stopColor="#10b981" stopOpacity="0.02" />
+        </linearGradient>
+      </defs>
+
+      {/* Grid lines */}
+      {[0, 0.25, 0.5, 0.75, 1].map((r, i) => {
+        const y = PAD.top + chartH * (1 - r);
+        return (
+          <g key={i}>
+            <line x1={PAD.left} y1={y} x2={W - PAD.right} y2={y} stroke="#e5e7eb" strokeWidth="0.5" />
+            <text x={PAD.left - 6} y={y + 3} textAnchor="end" fontSize="9" fill="#9ca3af" fontFamily="Manrope, sans-serif">
+              {Math.round(maxVal * r)}
+            </text>
+          </g>
+        );
+      })}
+
+      {/* Bars (precipitation) */}
+      {HYDRO.map((d, i) => {
+        const x = PAD.left + i * gap + (gap - barW) / 2;
+        const barH = d.rain * scale;
+        return (
+          <g key={`bar-${i}`}>
+            <rect x={x} y={PAD.top + chartH - barH} width={barW} height={barH} rx="3" fill="url(#rainGrad)" />
+            <text x={x + barW / 2} y={PAD.top + chartH - barH - 5} textAnchor="middle" fontSize="8" fill="#6b7280" fontFamily="Manrope, sans-serif" fontWeight="600">
+              {d.rain}
+            </text>
+          </g>
+        );
+      })}
+
+      {/* Soil moisture line + area */}
+      <path
+        d={
+          HYDRO.map((d, i) => {
+            const x = PAD.left + i * gap + gap / 2;
+            const y = PAD.top + chartH - d.soil * scale;
+            return `${i === 0 ? 'M' : 'L'}${x},${y}`;
+          }).join(' ') +
+          ` L${PAD.left + (HYDRO.length - 1) * gap + gap / 2},${PAD.top + chartH} L${PAD.left + gap / 2},${PAD.top + chartH} Z`
+        }
+        fill="url(#soilGrad)"
+      />
+      <path
+        d={HYDRO.map((d, i) => {
+          const x = PAD.left + i * gap + gap / 2;
+          const y = PAD.top + chartH - d.soil * scale;
+          return `${i === 0 ? 'M' : 'L'}${x},${y}`;
+        }).join(' ')}
+        fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+      />
+
+      {/* Soil dots */}
+      {HYDRO.map((d, i) => {
+        const x = PAD.left + i * gap + gap / 2;
+        const y = PAD.top + chartH - d.soil * scale;
+        return <circle key={`dot-${i}`} cx={x} cy={y} r="3" fill="#10b981" stroke="white" strokeWidth="1.5" />;
+      })}
+
+      {/* X-axis labels */}
+      {HYDRO.map((d, i) => (
+        <text key={`label-${i}`} x={PAD.left + i * gap + gap / 2} y={H - 6} textAnchor="middle" fontSize="9" fill="#6b7280" fontFamily="Manrope, sans-serif" fontWeight="600">
+          {d.label}
+        </text>
+      ))}
+    </svg>
   );
 }
 

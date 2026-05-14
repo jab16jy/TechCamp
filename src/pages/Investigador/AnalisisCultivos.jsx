@@ -35,11 +35,17 @@ const AnalisisCultivos = () => {
   const isProductor = rol === 'productor';
   const [mode, setMode] = useState('simple');
   const [activeTab, setActiveTab] = useState('analisis');
-  const [clima, setClima] = useState({
-    temperatura: 24,
-    humedad: 75,
-    precipitacion: 1200,
-  });
+  const [selectedParcela, setSelectedParcela] = useState('');
+
+  const CLIMA_POR_PARCELA = {
+    'Hacienda El Sol - Hace 2 dias': { temperatura: 26.4, humedad: 72, precipitacion: 1180 },
+    'Lote Norte - Hace 1 semana': { temperatura: 28.1, humedad: 65, precipitacion: 940 },
+    'Parcela Demo - Ayer': { temperatura: 24.8, humedad: 78, precipitacion: 1320 },
+  };
+
+  const clima = selectedParcela && CLIMA_POR_PARCELA[selectedParcela]
+    ? CLIMA_POR_PARCELA[selectedParcela]
+    : { temperatura: 26.4, humedad: 72, precipitacion: 1180 };
 
   useEffect(() => {
     if (isProductor) setMode('simple');
@@ -92,9 +98,8 @@ const AnalisisCultivos = () => {
     }
   };
 
-  const handleClimaChange = (e) => {
-    const { name, value } = e.target;
-    setClima((prev) => ({ ...prev, [name]: parseInt(value, 10) }));
+  const handleParcelaChange = (e) => {
+    setSelectedParcela(e.target.value);
   };
 
   const structuredPreview = useMemo(
@@ -306,8 +311,8 @@ const AnalisisCultivos = () => {
                   <p>Recupere mediciones recientes de sus parcelas guardadas.</p>
                 </div>
                 <div className="ac-history-select-wrap">
-                  <select className="ac-history-select" defaultValue="">
-                    <option disabled value="">Seleccione una parcela...</option>
+                  <select className="ac-history-select" value={selectedParcela} onChange={handleParcelaChange}>
+                    <option value="">Seleccione una parcela...</option>
                     <option>Hacienda El Sol - Hace 2 dias</option>
                     <option>Lote Norte - Hace 1 semana</option>
                     <option>Parcela Demo - Ayer</option>
@@ -320,6 +325,42 @@ const AnalisisCultivos = () => {
                 </div>
               </div>
 
+              {/* Auto climate data cards — shown when parcela selected */}
+              {selectedParcela && (
+                <div className="ac-climate-data">
+                  <div className="ac-climate-card">
+                    <div className="ac-climate-card-icon" style={{ background: 'rgba(249,115,22,0.1)', color: '#f97316' }}>
+                      <Thermometer size={18} />
+                    </div>
+                    <div className="ac-climate-card-body">
+                      <span className="ac-climate-card-label">Temperatura</span>
+                      <span className="ac-climate-card-value">{clima.temperatura}°C</span>
+                      <span className="ac-climate-card-source">NASA POWER · Auto</span>
+                    </div>
+                  </div>
+                  <div className="ac-climate-card">
+                    <div className="ac-climate-card-icon" style={{ background: 'rgba(59,130,246,0.1)', color: '#3b82f6' }}>
+                      <Droplets size={18} />
+                    </div>
+                    <div className="ac-climate-card-body">
+                      <span className="ac-climate-card-label">Humedad Relativa</span>
+                      <span className="ac-climate-card-value">{clima.humedad}%</span>
+                      <span className="ac-climate-card-source">Sensores IoT · Auto</span>
+                    </div>
+                  </div>
+                  <div className="ac-climate-card">
+                    <div className="ac-climate-card-icon" style={{ background: 'rgba(56,189,248,0.1)', color: '#38bdf8' }}>
+                      <CloudRain size={18} />
+                    </div>
+                    <div className="ac-climate-card-body">
+                      <span className="ac-climate-card-label">Precipitación Anual</span>
+                      <span className="ac-climate-card-value">{clima.precipitacion} mm</span>
+                      <span className="ac-climate-card-source">NASA POWER · Auto</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <section className="ac-glass">
                 <div className="ac-card-header" style={{ justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -328,7 +369,7 @@ const AnalisisCultivos = () => {
                   </div>
                   <div className="ac-data-origin">
                     <Info size={12} />
-                    <span>Datos importados de: Hacienda El Sol (24/05)</span>
+                    <span>Datos importados de: {selectedParcela ? selectedParcela.split(' - ')[0] : 'Hacienda El Sol'} (24/05)</span>
                   </div>
                 </div>
 
@@ -342,8 +383,8 @@ const AnalisisCultivos = () => {
                     <input type="text" className="ac-adv-input" placeholder="mg/kg" value="45" readOnly />
                   </div>
                   <div className="ac-field-group">
-                    <label>Humedad <span style={{ color: '#ba1a1a' }}>*</span></label>
-                    <input type="text" className="ac-adv-input" placeholder="%" value="72%" readOnly />
+                    <label>Humedad del Suelo <span style={{ color: '#ba1a1a' }}>*</span></label>
+                    <input type="text" className="ac-adv-input" placeholder="%" value={`${clima.humedad}%`} readOnly />
                   </div>
                 </div>
 
@@ -361,63 +402,27 @@ const AnalisisCultivos = () => {
                     <input type="text" className="ac-optional-input" placeholder="mg/kg" />
                   </div>
                 </div>
-
-                <div className="ac-climate-section">
-                  <h4 className="ac-climate-title">Condiciones Climaticas</h4>
-
-                  <div className="ac-slider-group">
-                    <div className="ac-slider-header">
-                      <div className="ac-slider-label">
-                        <Thermometer size={16} style={{ color: '#f97316' }} />
-                        <span>Temperatura Promedio</span>
-                      </div>
-                      <div className="ac-slider-value">
-                        <strong>{clima.temperatura}</strong>
-                        <span>C</span>
-                      </div>
-                    </div>
-                    <input type="range" name="temperatura" className="ac-range" min="0" max="50" value={clima.temperatura} onChange={handleClimaChange} />
-                    <div className="ac-slider-legend">
-                      <span>BAJA</span>
-                      <span>OPTIMA</span>
-                      <span>ALTA</span>
-                    </div>
-                  </div>
-
-                  <div className="ac-slider-group">
-                    <div className="ac-slider-header">
-                      <div className="ac-slider-label">
-                        <Droplets size={16} style={{ color: '#3b82f6' }} />
-                        <span>Humedad Relativa</span>
-                      </div>
-                      <div className="ac-slider-value">
-                        <strong>{clima.humedad}</strong>
-                        <span>%</span>
-                      </div>
-                    </div>
-                    <input type="range" name="humedad" className="ac-range" min="0" max="100" value={clima.humedad} onChange={handleClimaChange} />
-                    <div className="ac-slider-legend">
-                      <span>SECO</span>
-                      <span>IDEAL</span>
-                      <span>SATURADO</span>
-                    </div>
-                  </div>
-
-                  <div className="ac-slider-group">
-                    <div className="ac-slider-header">
-                      <div className="ac-slider-label">
-                        <CloudRain size={16} style={{ color: '#38bdf8' }} />
-                        <span>Precipitacion Anual</span>
-                      </div>
-                      <div className="ac-slider-value">
-                        <strong>{clima.precipitacion}</strong>
-                        <span>mm</span>
-                      </div>
-                    </div>
-                    <input type="range" name="precipitacion" className="ac-range" min="0" max="3000" value={clima.precipitacion} onChange={handleClimaChange} />
-                  </div>
-                </div>
               </section>
+
+              {/* Primary CTA */}
+              <div className="ac-submit-cta">
+                <p className="ac-submit-cta-desc">
+                  Los datos serán procesados por el motor de IA para generar un plan de fertilización y riego personalizado.
+                </p>
+                <button type="submit" className="ac-btn-primary-solid" disabled={cargandoAnalisis}>
+                  {cargandoAnalisis ? (
+                    <>
+                      <span className="ac-spinner" />
+                      Analizando...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles size={20} />
+                      Analizar Parcela con IA
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
 
             <div className="ac-col--narrow">
@@ -436,7 +441,7 @@ const AnalisisCultivos = () => {
                       className="ac-sat-img"
                     />
                     <div className="ac-sat-overlay">
-                      <h4>Hacienda El Sol</h4>
+                      <h4>{selectedParcela ? selectedParcela.split(' - ')[0] : 'Hacienda El Sol'}</h4>
                       <p>Turbaco, Bolivar - 10.33 N, 75.41 W</p>
                     </div>
                   </div>
@@ -447,32 +452,6 @@ const AnalisisCultivos = () => {
                     </p>
                   </div>
                 </section>
-
-                <div className="ac-large-cta">
-                  <div className="ac-large-cta__decor" />
-                  <div className="ac-large-cta__top">
-                    <div className="ac-large-cta__circle">
-                      <Sparkles size={28} />
-                    </div>
-                    <h3>Todo listo?</h3>
-                  </div>
-                  <p>
-                    Inicie el analisis de precision con IA para obtener su plan de fertilizacion y riego.
-                  </p>
-                  <button type="submit" className="ac-btn-execute" disabled={cargandoAnalisis}>
-                    {cargandoAnalisis ? (
-                      <>
-                        <span className="ac-spinner" />
-                        Analizando...
-                      </>
-                    ) : (
-                      <>
-                        Analizar Parcela con IA
-                        <Zap size={24} />
-                      </>
-                    )}
-                  </button>
-                </div>
 
                 <div className="ac-glass ac-glass--auto">
                   <div className="ac-status-header" style={{ marginBottom: '1rem' }}>

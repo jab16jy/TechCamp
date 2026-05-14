@@ -25,16 +25,8 @@ const AnalysisResults = ({ data, onNewAnalysis, onDownloadPDF }) => {
 
   const mainCrop = data.recomendaciones?.[0] || { cultivo: 'Desconocido', score: 0, riesgo: 'Bajo', justificacion: '' };
 
-  // Progress ring calculations
-  const radius = 54;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (mainCrop.score / 100) * circumference;
-
-  // NDVI gauge rotation (-1 to 1)
-  const ndviRotation = ((data.indicadores_satelite.ndvi + 1) / 2) * 180;
-
   return (
-    <div className={styles.premiumContent}>
+    <div className={styles.dashboardContainer}>
       {/* Hero Header */}
       <div className={styles.heroHeader}>
         <div className={styles.heroTitle}>
@@ -46,141 +38,123 @@ const AnalysisResults = ({ data, onNewAnalysis, onDownloadPDF }) => {
         </div>
         <div className={styles.heroActions}>
           <button className={styles.btnPdf} onClick={onDownloadPDF}>
-            Descargar reporte PDF
+            <span className="material-symbols-outlined">picture_as_pdf</span>
+            Descargar PDF
           </button>
           <button className={styles.btnQuery} onClick={onNewAnalysis}>
             Nueva consulta
+            <span className="material-symbols-outlined">arrow_forward</span>
           </button>
         </div>
       </div>
 
       <div className={styles.dashboardGrid}>
-        {/* Left Column */}
+        {/* Left Column: Map & Primary Data */}
         <div className={styles.mainCol}>
-          {/* Quick Metrics */}
-          <div className={styles.metricsGrid}>
-            <MetricCard 
-              label="Temperatura" 
-              value={`${data.clima.temperatura}°C`} 
-              icon="device_thermostat" 
-              status="Óptimo"
-              statusClass={styles.badgeOptimo}
-              colorClass="bg-orange-50 text-orange-600"
-            />
-            <MetricCard 
-              label="Precipitación" 
-              value={`${data.clima.precipitacion}mm`} 
-              icon="rainy" 
-              status="Normal"
-              statusClass={styles.badgeNormal}
-              colorClass="bg-blue-50 text-blue-600"
-            />
-            <MetricCard 
-              label="Humedad" 
-              value={`${data.clima.humedad}%`} 
-              icon="humidity_percentage" 
-              status="Óptimo"
-              statusClass={styles.badgeOptimo}
-              colorClass="bg-cyan-50 text-cyan-600"
-            />
-            <MetricCard 
-              label="Radiación" 
-              value={`${data.clima.radiacion_solar}W/m²`} 
-              icon="light_mode" 
-              status="Alerta"
-              statusClass={styles.badgeAlerta}
-              colorClass="bg-amber-50 text-amber-600"
-            />
-          </div>
-
-          {/* Map Section */}
-          <section className={styles.mapSection}>
-            <div className={styles.mapHeader}>
-              <div className={styles.mapTitle}>
-                <span className="material-symbols-outlined">map</span>
-                <h3>Visualización Espacial</h3>
-              </div>
-              <div className={styles.mapToggle}>
-                <button 
-                  className={`${styles.toggleBtn} ${mapType === 'satellite' ? styles.toggleBtnActive : styles.toggleBtnInactive}`}
-                  onClick={() => setMapType('satellite')}
-                >
-                  Satélite
-                </button>
-                <button 
-                  className={`${styles.toggleBtn} ${mapType === 'terrain' ? styles.toggleBtnActive : styles.toggleBtnInactive}`}
-                  onClick={() => setMapType('terrain')}
-                >
-                  Terreno
-                </button>
-              </div>
-            </div>
-            <div className={styles.mapContainer}>
-              <MapContainer 
-                center={[data.ubicacion?.lat || 11, data.ubicacion?.lng || -74]} 
-                zoom={14} 
-                style={{ height: '100%', width: '100%' }}
-                zoomControl={false}
+          {/* Map Container */}
+          <section className={`${styles.glassCard} ${styles.mapCard}`}>
+            <div className={styles.mapToggle}>
+              <button 
+                className={`${styles.toggleBtn} ${mapType === 'satellite' ? styles.toggleBtnActive : styles.toggleBtnInactive}`}
+                onClick={() => setMapType('satellite')}
               >
-                {mapType === 'satellite' ? (
-                  <TileLayer
-                    attribution='Tiles &copy; Esri'
-                    url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                  />
-                ) : (
-                  <TileLayer
-                    attribution='&copy; OpenStreetMap'
-                    url="https://{s}.tile.openstreetmap.org/{z}/{y}/{x}.png"
-                  />
-                )}
-                <Marker position={[data.ubicacion?.lat, data.ubicacion?.lng]} />
-                <ZoomControl position="bottomright" />
-              </MapContainer>
-              <div className={styles.mapOverlay}>
-                <div className={styles.legendItem}>
-                  <div className={`${styles.dot} bg-emerald-500`}></div>
-                  <span className={styles.legendText}>Salud vegetal alta</span>
-                </div>
-                <div className={styles.legendItem}>
-                  <div className={`${styles.dot} bg-amber-400`}></div>
-                  <span className={styles.legendText}>Humedad moderada</span>
-                </div>
-                <div className={styles.legendItem}>
-                  <div className={`${styles.dot} bg-red-400`}></div>
-                  <span className={styles.legendText}>Estrés hídrico</span>
-                </div>
+                Satélite
+              </button>
+              <button 
+                className={`${styles.toggleBtn} ${mapType === 'terrain' ? styles.toggleBtnActive : styles.toggleBtnInactive}`}
+                onClick={() => setMapType('terrain')}
+              >
+                Terreno
+              </button>
+            </div>
+            <MapContainer 
+              center={[data.ubicacion?.lat || 11, data.ubicacion?.lng || -74]} 
+              zoom={14} 
+              style={{ height: '100%', width: '100%', borderRadius: 'inherit' }}
+              zoomControl={false}
+            >
+              {mapType === 'satellite' ? (
+                <TileLayer
+                  attribution='Tiles &copy; Esri'
+                  url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                />
+              ) : (
+                <TileLayer
+                  attribution='&copy; OpenStreetMap'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{y}/{x}.png"
+                />
+              )}
+              <Marker position={[data.ubicacion?.lat, data.ubicacion?.lng]} />
+              <ZoomControl position="bottomright" />
+            </MapContainer>
+            
+            <div className={styles.mapOverlay}>
+              <div className={styles.legendItem}>
+                <div className={`${styles.dot} bg-emerald-500`}></div>
+                <span className={styles.legendText}>Salud vegetal alta</span>
+              </div>
+              <div className={styles.legendItem}>
+                <div className={`${styles.dot} bg-amber-400`}></div>
+                <span className={styles.legendText}>Humedad moderada</span>
+              </div>
+              <div className={styles.legendItem}>
+                <div className={`${styles.dot} bg-red-400`}></div>
+                <span className={styles.legendText}>Estrés hídrico</span>
               </div>
             </div>
           </section>
 
-          {/* Main Recommendation Card - MOVED BELOW MAP */}
-          <section className={styles.recommendedSection}>
-            <div className={styles.topographicBg}></div>
-            <div className={styles.recommendedContent}>
-              <div className={styles.recommendedInfo}>
-                <div className={styles.recommendedTitle}>
-                  <h2 className="premium-font">{mainCrop.cultivo}</h2>
-                  <span className={styles.riskBadge}>Riesgo {mainCrop.riesgo}</span>
+          {/* AI Insights & Recommendations */}
+          <section className={`${styles.glassCard} ${styles.insightsCard}`}>
+            <h2 className={styles.sectionTitle}>IA Insights & Recomendaciones</h2>
+            
+            <div className={styles.insightsGrid}>
+              {/* Recommendation */}
+              <div className={styles.recommendationBox}>
+                <p className={styles.labelSmall}>CULTIVO RECOMENDADO</p>
+                <div className={styles.cropHeader}>
+                  <h3>{mainCrop.cultivo}</h3>
+                  <div className={styles.affinityBadge}>
+                    <span className="material-symbols-outlined">check_circle</span>
+                    {mainCrop.score}% Afinidad
+                  </div>
                 </div>
-                <p className={styles.recommendedDesc}>{mainCrop.justificacion}</p>
-                <div className={styles.recommendedMeta}>
-                  <span>Proyectado para siembra en: {data.ubicacion?.mes_siembra}</span>
-                </div>
+                <p className={styles.cropDesc}>{mainCrop.justificacion}</p>
+                <button className={styles.btnGradient}>
+                  <span>Generar Plan Detallado</span>
+                  <span className="material-symbols-outlined">arrow_forward</span>
+                </button>
               </div>
 
-              <div className={styles.progressWrapper}>
-                <div className={styles.progressRing}>
-                  <svg className={styles.progressRingSvg}>
-                    <circle className={styles.progressRingCircleBg} cx="64" cy="64" r={radius} />
-                    <circle 
-                      className={styles.progressRingCircle} 
-                      cx="64" cy="64" r={radius} 
-                      style={{ strokeDasharray: circumference, strokeDashoffset: offset }}
-                    />
-                  </svg>
-                  <div className={styles.progressValue}>
-                    <span className={styles.progressNumber}>{mainCrop.score}%</span>
-                    <span className={styles.progressLabel}>Afinidad</span>
+              {/* Details */}
+              <div className={styles.detailsList}>
+                <div className={styles.detailItem}>
+                  <div className={`${styles.iconCircle} ${styles.iconSoil}`}>
+                    <span className="material-symbols-outlined">grass</span>
+                  </div>
+                  <div>
+                    <h4>Calidad del Suelo</h4>
+                    <p>{data.indicadores_satelite.calidad_suelo}. Materia orgánica rica apta para crecimiento vegetativo.</p>
+                  </div>
+                </div>
+                
+                <div className={styles.detailItem}>
+                  <div className={`${styles.iconCircle} ${styles.iconCloud}`}>
+                    <span className="material-symbols-outlined">cloud</span>
+                  </div>
+                  <div>
+                    <h4>Inferencia de Nubosidad</h4>
+                    <p>{data.indicadores_satelite.cobertura_nube}% de interferencia satelital. Análisis espectral ajustado.</p>
+                  </div>
+                </div>
+
+                <div className={styles.detailItem}>
+                  <div className={`${styles.iconCircle} ${styles.iconNdvi}`}>
+                    <span className="material-symbols-outlined">analytics</span>
+                  </div>
+                  <div>
+                    <h4>Estado NDVI</h4>
+                    <p>Índice {data.indicadores_satelite.ndvi}. Salud vegetativa moderada. Considerar riego dirigido.</p>
                   </div>
                 </div>
               </div>
@@ -188,97 +162,110 @@ const AnalysisResults = ({ data, onNewAnalysis, onDownloadPDF }) => {
           </section>
         </div>
 
-        {/* Right Column */}
-        <aside className={styles.sideCol}>
-          {/* NDVI Card */}
-          <div className={styles.sideCard}>
-            <div className={styles.sideCardHeader}>
-              <h3>Índice NDVI</h3>
-              <span className="material-symbols-outlined">info</span>
+        {/* Right Column: Climate Metrics */}
+        <div className={styles.sideCol}>
+          <div className={`${styles.glassCard} ${styles.climateCard}`}>
+            <div className={styles.climateHeader}>
+              <h2>Condiciones Climáticas</h2>
+              <button className={styles.btnMore}>
+                <span className="material-symbols-outlined">more_vert</span>
+              </button>
             </div>
-            <div className={styles.gaugeContainer}>
-              <div className={styles.gaugeWrapper}>
-                <div className={styles.gaugeBg}></div>
-                <div 
-                  className={styles.gaugeFill} 
-                  style={{ transform: `rotate(${ndviRotation}deg)` }}
-                ></div>
-                <div className={styles.gaugeInfo}>
-                  <span className={styles.gaugeValue}>{data.indicadores_satelite.ndvi}</span>
-                  <span className={styles.gaugeLabel}>Salud de Cultivo</span>
+            
+            <div className={styles.climateMetrics}>
+              {/* Temperature */}
+              <div className={styles.climateItem}>
+                <div className={styles.climateItemHeader}>
+                  <div className={styles.climateLabel}>
+                    <span className="material-symbols-outlined text-orange-500">thermostat</span>
+                    <span>Temperatura</span>
+                  </div>
+                  <span className={styles.badgeOptimo}>ÓPTIMO</span>
+                </div>
+                <div className={styles.climateValue}>
+                  <span>{data.clima.temperatura}</span>
+                  <small>°C</small>
+                </div>
+                <div className={styles.progressBarBg}>
+                  <div className={`${styles.progressBarFill} bg-orange-500`} style={{ width: '65%' }}></div>
                 </div>
               </div>
-              <div className={styles.gaugeRange}>
-                <span>BAJO</span>
-                <span>ÓPTIMO</span>
+
+              {/* Precipitation */}
+              <div className={styles.climateItem}>
+                <div className={styles.climateItemHeader}>
+                  <div className={styles.climateLabel}>
+                    <span className="material-symbols-outlined text-blue-500">water_drop</span>
+                    <span>Precipitación</span>
+                  </div>
+                  <span className={styles.badgeNormal}>NORMAL</span>
+                </div>
+                <div className={styles.climateValue}>
+                  <span>{data.clima.precipitacion}</span>
+                  <small>mm</small>
+                </div>
+                <div className={styles.progressBarBg}>
+                  <div className={`${styles.progressBarFill} bg-blue-500`} style={{ width: '45%' }}></div>
+                </div>
+              </div>
+
+              {/* Humidity */}
+              <div className={styles.climateItem}>
+                <div className={styles.climateItemHeader}>
+                  <div className={styles.climateLabel}>
+                    <span className="material-symbols-outlined text-teal-600">humidity_percentage</span>
+                    <span>Humedad</span>
+                  </div>
+                  <span className={styles.badgeOptimo}>ÓPTIMO</span>
+                </div>
+                <div className={styles.climateValue}>
+                  <span>{data.clima.humedad}</span>
+                  <small>%</small>
+                </div>
+                <div className={styles.progressBarBg}>
+                  <div className={`${styles.progressBarFill} bg-teal-600`} style={{ width: '77%' }}></div>
+                </div>
+              </div>
+
+              {/* Radiation */}
+              <div className={styles.climateItem}>
+                <div className={styles.climateItemHeader}>
+                  <div className={styles.climateLabel}>
+                    <span className="material-symbols-outlined text-amber-500">light_mode</span>
+                    <span>Radiación</span>
+                  </div>
+                  <span className={styles.badgeNormal}>NORMAL</span>
+                </div>
+                <div className={styles.climateValue}>
+                  <span>{data.clima.radiacion_solar}</span>
+                  <small>W/m²</small>
+                </div>
+                <div className={styles.progressBarBg}>
+                  <div className={`${styles.progressBarFill} bg-amber-500`} style={{ width: '55%' }}></div>
+                </div>
               </div>
             </div>
-            <p className={styles.insightText}>
-              El índice de vegetación actual sugiere un crecimiento vigoroso. No se detectan anomalías de plagas.
-            </p>
           </div>
 
-          {/* Indicators List */}
-          <div className={styles.sideCard}>
-            <div className={styles.sideCardHeader}>
-              <h3>Indicadores Satelitales</h3>
+          <div className={`${styles.glassCard} ${styles.trendCard}`}>
+            <div className={styles.trendHeader}>
+              <h3>Tendencia Rendimiento</h3>
+              <span className="material-symbols-outlined">trending_up</span>
             </div>
-            <div className={styles.dataList}>
-              <DataItem label="NDWI (Agua)" value={data.indicadores_satelite.ndwi} sub="Humedad en hoja" />
-              <DataItem label="Calidad Suelo" value={data.indicadores_satelite.calidad_suelo} sub="Análisis espectral" />
-              <DataItem label="Nubosidad" value={`${data.indicadores_satelite.cobertura_nube}%`} sub="Obstrucción" />
+            <div className={styles.trendChart}>
+              <div className={`${styles.bar} ${styles.barLow}`} style={{ height: '30%' }}></div>
+              <div className={`${styles.bar} ${styles.barLow}`} style={{ height: '50%' }}></div>
+              <div className={`${styles.bar} ${styles.barLow}`} style={{ height: '40%' }}></div>
+              <div className={`${styles.bar} ${styles.barHigh1}`} style={{ height: '70%' }}></div>
+              <div className={`${styles.bar} ${styles.barHigh2}`} style={{ height: '85%' }}></div>
+              <div className={`${styles.bar} ${styles.barHigh3}`} style={{ height: '95%' }}></div>
             </div>
-            <button className={styles.btnHistory}>
-              <span className="material-symbols-outlined">history</span>
-              Ver historial de zona
-            </button>
+            <p className={styles.trendFooter}>Últimas 6 temporadas</p>
           </div>
-
-          {/* AI Insight Card */}
-          <div className={styles.insightCard}>
-            <div className={styles.insightBg}></div>
-            <div className={styles.insightHeader}>
-              <span className="material-symbols-outlined">psychology</span>
-              <span className={styles.insightBadge}>IA INSIGHT</span>
-            </div>
-            <p className={styles.insightText}>
-              "Se detecta una ventana de siembra óptima en los próximos 12 días basada en patrones de la Niña."
-            </p>
-            <img 
-              src="https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&q=80&w=400" 
-              alt="Análisis IA" 
-              className={styles.insightImage}
-            />
-          </div>
-        </aside>
+        </div>
       </div>
     </div>
   );
 };
-
-const MetricCard = ({ label, value, icon, status, statusClass, colorClass }) => (
-  <div className={styles.metricCard}>
-    <div className={styles.metricHeader}>
-      <div className={`${styles.metricIconWrapper} ${colorClass}`}>
-        <span className="material-symbols-outlined">{icon}</span>
-      </div>
-      <span className={`${styles.badge} ${statusClass}`}>{status}</span>
-    </div>
-    <div className={styles.metricInfo}>
-      <p>{label}</p>
-      <h3>{value}</h3>
-    </div>
-  </div>
-);
-
-const DataItem = ({ label, value, sub }) => (
-  <div className={styles.dataItem}>
-    <div className={styles.dataInfo}>
-      <span className={styles.dataName}>{label}</span>
-      <span className={styles.dataSub}>{sub}</span>
-    </div>
-    <span className={styles.dataValue}>{value}</span>
-  </div>
-);
 
 export default AnalysisResults;
