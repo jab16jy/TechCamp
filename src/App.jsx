@@ -1,24 +1,26 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
 // Componentes compartidos
-import Toast from './components/Toast/Toast';
-import FloatingAIButton from './components/FloatingAIButton/FloatingAIButton';
+import Toast from '@shared/ui/Toast/Toast';
+import FloatingAIButton from '@shared/layout/FloatingAIButton/FloatingAIButton';
 
-// Páginas del flujo principal
-import Resultado from './pages/Resultado/Resultado';
+// ── Páginas de acceso ──
+import Acceso from '@features/auth/pages/Acceso';
+import LoginInvestigador from '@features/auth/pages/LoginInvestigador';
 
-// ── Páginas de acceso y panel investigador ──
-import Acceso from './pages/Acceso/Acceso';
-import LoginInvestigador from './pages/Investigador/LoginInvestigador';
-import DashboardInvestigador from './pages/Investigador/DashboardInvestigador';
-import AgroAsesor from './pages/Investigador/AgroAsesor';
-import Mapa from './pages/Investigador/Mapa';
-import AnalisisCultivosInvestigador from './pages/Investigador/AnalisisCultivos';
-import ResultadoAvanzado from './pages/Investigador/ResultadoAvanzado';
-import IAPredictiva from './pages/Investigador/IAPredictiva';
-import SensoresIoT from './pages/Investigador/SensoresIoT';
-import GestionReportes from './pages/Investigador/GestionReportes';
-import Historial from './pages/Investigador/Historial';
+// ── Páginas del panel investigador ──
+import DashboardInvestigador from '@features/dashboard/pages/DashboardInvestigador';
+import AgroAsesor from '@features/chat/pages/AgroAsesor';
+import Mapa from '@features/map/pages/Mapa';
+import AnalisisCultivosInvestigador from '@features/analysis/pages/AnalisisCultivos';
+import ResultadoAvanzado from '@features/analysis/pages/ResultadoAvanzado';
+import IAPredictiva from '@features/predictions/pages/IAPredictiva';
+import SensoresIoT from '@features/sensors/pages/SensoresIoT';
+import GestionReportes from '@features/reports/pages/GestionReportes';
+import Historial from '@features/history/pages/Historial';
+
+// ── Páginas compartidas ──
+import Resultado from '@features/analysis/pages/Resultado';
 
 const App = () => (
   <BrowserRouter>
