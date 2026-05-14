@@ -17,7 +17,7 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: 16px;
-  background: rgba(255,255,255,0.55);
+  background: rgba(255,255,255,0.90);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255,255,255,0.25);
@@ -65,7 +65,7 @@
 
 /* ── Node Sidebar ── */
 .iot-node-col {
-  background: rgba(255,255,255,0.55);
+  background: rgba(255,255,255,0.90);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255,255,255,0.25);
@@ -122,7 +122,7 @@
 .iot-map-body { min-height: 280px; flex: 1; }
 
 /* AI Card */
-.iot-ai-card { background: rgba(255,255,255,0.55); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1.5px solid rgba(251,191,36,0.4); border-radius: 2rem; padding: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.03); display: flex; flex-direction: column; gap: 10px; transition: all 0.3s ease; }
+.iot-ai-card { background: #ffffff; border: 1.5px solid rgba(251,191,36,0.4); border-radius: 2rem; padding: 16px; box-shadow: 0 2px 8px rgba(15, 82, 56, 0.06); display: flex; flex-direction: column; gap: 10px; transition: all 0.3s ease; }
 .iot-ai-header { display: flex; align-items: flex-start; gap: 10px; }
 .iot-ai-icon-box { width: 36px; height: 36px; background: rgba(251,191,36,0.12); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .iot-ai-badge { display: block; font-size: 0.55rem; font-weight: 900; letter-spacing: 0.09em; color: #d97706; margin-bottom: 2px; }
@@ -139,7 +139,7 @@
 /* ── Right Column ── */
 .iot-right-col { display: flex; flex-direction: column; gap: 10px; }
 
-.iot-gauge-card { background: rgba(255,255,255,0.55); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.25); border-radius: 2rem; padding: 14px; box-shadow: 0 20px 50px rgba(0,0,0,0.03); display: flex; flex-direction: column; gap: 8px; transition: all 0.3s ease; }
+.iot-gauge-card { background: #ffffff; border: 1px solid rgba(255,255,255,0.25); border-radius: 2rem; padding: 14px; box-shadow: 0 2px 8px rgba(15, 82, 56, 0.06); display: flex; flex-direction: column; gap: 8px; transition: all 0.3s ease; }
 .iot-gauge-row { display: flex; align-items: center; gap: 10px; }
 .iot-gauge-icon-box { width: 34px; height: 34px; border-radius: 8px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
 .iot-gauge-icon-box.blue   { background: rgba(37,99,235,0.08); color: #2563eb; }
@@ -164,7 +164,7 @@
 .iot-mini-fill.green  { background: linear-gradient(to right, #52b788, #16a34a); }
 
 /* Log Card */
-.iot-log-card { background: rgba(255,255,255,0.55); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.25); border-radius: 2rem; padding: 14px; box-shadow: 0 20px 50px rgba(0,0,0,0.03); display: flex; flex-direction: column; gap: 10px; transition: all 0.3s ease; }
+.iot-log-card { background: #ffffff; border: 1px solid rgba(255,255,255,0.25); border-radius: 2rem; padding: 14px; box-shadow: 0 2px 8px rgba(15, 82, 56, 0.06); display: flex; flex-direction: column; gap: 10px; transition: all 0.3s ease; }
 .iot-log-header { display: flex; align-items: center; gap: 6px; padding-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.2); }
 .iot-log-list { display: flex; flex-direction: column; gap: 6px; }
 .iot-log-item { display: flex; align-items: flex-start; gap: 8px; padding: 8px; border-radius: 8px; }

@@ -129,7 +129,7 @@ img {
 
 @layer components {
   .glass-card {
-    background: rgba(255, 255, 255, 0.55);
+    background: rgba(255, 255, 255, 0.90);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.04);
@@ -139,25 +139,32 @@ img {
   }
 
   .glass-card:hover {
-    background: rgba(255, 255, 255, 0.65);
+    background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     transform: translateY(-4px);
   }
 
-  .glass-premium {
-    background: rgba(255, 255, 255, 0.35);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04);
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.90);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.04);
     transition: all var(--transicion);
   }
 
-  .glass-premium:hover {
-    background: rgba(255, 255, 255, 0.45);
-    backdrop-filter: blur(28px);
-    -webkit-backdrop-filter: blur(28px);
+  .glass-card-solid {
+    background: #ffffff;
+    box-shadow: 0 2px 8px rgba(15, 82, 56, 0.06);
+    border-radius: var(--radio-lg);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    transition: all var(--transicion);
+  }
+
+  .glass-card-solid:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
   }
 
   .glass-input {

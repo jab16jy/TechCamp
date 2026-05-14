@@ -16,8 +16,14 @@ import {
   Sprout,
   Wifi,
   Brain,
-  BarChart3
+  BarChart3,
+  Bot
 } from 'lucide-react';
+
+import bg1 from '../../assets/images/Gemini_Generated_Image_r07jbqr07jbqr07j.png';
+import bg2 from '../../assets/images/Gemini_Generated_Image_btajyhbtajyhbtaj.png';
+import bg3 from '../../assets/images/Gemini_Generated_Image_x15nkpx15nkpx15n.png';
+import bg4 from '../../assets/images/Gemini_Generated_Image_lo86tflo86tflo86.png';
 
 const ALERTS = [
   { title: 'Estres hidrico detectado', desc: 'Nodo Sur-02 registra 61% HR.', time: 'Hace 5 min', type: 'warn' },
@@ -31,6 +37,8 @@ const alertIcon = {
   info: <Info size={13} className="text-sky-500" />,
 };
 
+const backgrounds = [bg1, bg2, bg3, bg4];
+
 const ResearcherLayout = ({ children, activeTab }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -38,6 +46,14 @@ const ResearcherLayout = ({ children, activeTab }) => {
 
   const [profileOpen, setProfileOpen] = useState(false);
   const [alertsOpen, setAlertsOpen] = useState(false);
+  const [bgIndex, setBgIndex] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setBgIndex((prev) => (prev + 1) % backgrounds.length);
+    }, 30000);
+    return () => clearInterval(id);
+  }, []);
 
   const profileRef = useRef(null);
   const alertsRef = useRef(null);
@@ -74,11 +90,17 @@ const ResearcherLayout = ({ children, activeTab }) => {
 
   return (
     <div className="text-slate-900 font-sans antialiased h-screen w-full relative overflow-hidden">
+      {/* Rotating Background */}
+      <img
+        src={backgrounds[bgIndex]}
+        alt=""
+        className="absolute inset-0 w-full h-full object-cover opacity-30 transition-all duration-700 ease-in-out"
+      />
       {/* Top Navigation (Shared Component) */}
-      <header className="w-full top-0 sticky z-50 bg-white/30 backdrop-blur-xl border-b border-white/20 shadow-sm flex justify-between items-center px-10 py-4 max-w-[1440px] mx-auto">
+      <header className="sticky top-4 z-50 mx-auto w-[calc(100%-3rem)] max-w-[1400px] rounded-3xl bg-white/90 backdrop-blur-xl border border-white/40 shadow-sm flex justify-between items-center px-8 py-3 transition-all duration-300 hover:bg-white/95">
         <div className="flex items-center gap-4">
-          <span className="text-[24px] font-bold text-[#0f5238]">AgroCaribe IA</span>
-          <div className="hidden md:flex bg-white/25 backdrop-blur-xl border border-white/25 shadow-sm rounded-full px-6 py-2 gap-8 ml-8">
+          <span className="text-[24px] font-bold text-[#1A4D3A]">AgroCaribe IA</span>
+          <div className="hidden md:flex bg-white/90 backdrop-blur-xl border border-white/40 shadow-sm rounded-full px-6 py-2 gap-8 ml-8">
             <Link to="/investigador/dashboard" className={linkClass('/investigador/dashboard')}>Dashboard</Link>
             <Link to="/investigador/mapas" className={linkClass('/investigador/mapas')}>AgroAsesor</Link>
             <Link to="/investigador/mapa" className={linkClass('/investigador/mapa')}>Mapa</Link>
@@ -86,7 +108,7 @@ const ResearcherLayout = ({ children, activeTab }) => {
           </div>
         </div>
         <div className="flex items-center gap-6">
-          <div className="bg-white/30 backdrop-blur-xl border border-white/25 shadow-sm rounded-full px-4 py-2 flex items-center gap-2 text-slate-500 transition-all duration-300 hover:bg-white/40">
+          <div className="bg-white/90 backdrop-blur-xl border border-white/40 shadow-sm rounded-full px-4 py-2 flex items-center gap-2 text-slate-500 transition-all duration-300 hover:bg-white">
             <Search size={20} />
             <input
               className="bg-transparent border-none focus:ring-0 text-sm w-48 text-slate-700 placeholder:text-slate-400 p-0 outline-none"
@@ -112,7 +134,7 @@ const ResearcherLayout = ({ children, activeTab }) => {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 8, scale: 0.96 }}
                     transition={{ duration: 0.18, ease: 'easeOut' }}
-                    className="absolute right-0 z-50 mt-4 w-80 overflow-hidden rounded-3xl bg-white/60 backdrop-blur-2xl border border-white/30 shadow-[0_24px_60px_rgba(0,0,0,0.08)]"
+                    className="absolute right-0 z-50 mt-4 w-80 overflow-hidden rounded-3xl bg-white/90 backdrop-blur-2xl border border-white/40 shadow-[0_24px_60px_rgba(0,0,0,0.08)]"
                   >
                     <div className="flex items-center justify-between border-b border-white/20 px-4 py-3">
                       <span className="text-[11px] font-black uppercase tracking-widest text-slate-600">Alertas Recientes</span>
@@ -161,7 +183,7 @@ const ResearcherLayout = ({ children, activeTab }) => {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 8 }}
                     transition={{ duration: 0.16, ease: 'easeOut' }}
-                    className="absolute right-0 z-50 mt-4 w-56 overflow-hidden rounded-3xl bg-white/60 backdrop-blur-2xl border border-white/30 py-2 shadow-[0_24px_60px_rgba(0,0,0,0.08)]"
+                    className="absolute right-0 z-50 mt-4 w-56 overflow-hidden rounded-3xl bg-white/90 backdrop-blur-2xl border border-white/40 py-2 shadow-[0_24px_60px_rgba(0,0,0,0.08)]"
                   >
                     <div className="border-b border-white/20 px-4 py-3">
                       <p className="text-[13px] font-black text-slate-700">Dra. Elena Ramos</p>
@@ -197,7 +219,7 @@ const ResearcherLayout = ({ children, activeTab }) => {
       </header>
 
       {/* Floating Sidebar (Shared Component) */}
-      <nav className="fixed left-4 top-24 bottom-4 w-20 rounded-2xl bg-white/35 backdrop-blur-xl border border-white/25 shadow-lg flex flex-col items-center py-8 gap-y-6 z-40">
+      <nav className="fixed left-4 top-24 bottom-4 w-20 rounded-2xl bg-white/90 backdrop-blur-xl border border-white/40 shadow-lg flex flex-col items-center py-8 gap-y-6 z-40">
         <Link
           to="/investigador/dashboard"
           className={`${

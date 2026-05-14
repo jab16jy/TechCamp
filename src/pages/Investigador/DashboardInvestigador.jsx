@@ -118,7 +118,7 @@ const colorMap = {
   purple: { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-700', dot: 'bg-purple-500' },
 };
 
-const glassPanel = 'bg-white/85 backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.04)] hover:backdrop-blur-2xl hover:-translate-y-1 transition-all duration-300 border border-white/50 rounded-2xl';
+const glassPanel = 'bg-white shadow-sm border border-white/40 rounded-2xl transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md';
 
 // ── Main Component ───────────────────────────────────────────
 const DashboardInvestigador = () => {
@@ -144,15 +144,6 @@ const DashboardInvestigador = () => {
   return (
     <ResearcherLayout activeTab="dashboard">
       <div className="relative min-h-full w-full font-sans" style={{ fontFamily: "'Manrope', sans-serif" }}>
-        
-        {/* Background Map from the design */}
-        <div className="absolute inset-0 z-0 bg-[#edeeef] overflow-hidden pointer-events-none">
-          <img 
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuACABo3njzKgJNUWnzuJCodRyQWeRPBhkjAPZ2fu5HeMNcXYhop_kXKqB1h32KLxzgjbcTXwOx0qhYRCGI5M21cAv-Nolc2Bg5H0gCpzXOp9I7zi2pHiVS025IgtIss8036EVJ9AOVouiy_9qnQ__6m4BZN11cDXE79bn2RV1AYppHikLGJNoU8DdU7hwdifneonly_93Ms6hc7sPPA9KO0LLYD-ZjbR69408EhygpB3IT_HfPHilzfUqkGwC5CkLDO0kioZOq6g10d" 
-            alt="Map" 
-            className="w-full h-full object-cover opacity-60 mix-blend-overlay"
-          />
-        </div>
 
         {/* Content */}
         <div className="relative z-10 p-6 space-y-6">
@@ -169,7 +160,7 @@ const DashboardInvestigador = () => {
             </div>
             <button 
               onClick={() => setTimestamp(new Date())}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/80 backdrop-blur-md hover:bg-white border border-white/50 text-[#0f5238] text-sm font-bold transition-all shadow-sm"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white hover:bg-slate-50 border border-white/40 text-[#0f5238] text-sm font-bold transition-all shadow-sm"
             >
               <RefreshCw size={16} /> Actualizar
             </button>
@@ -264,11 +255,11 @@ const DashboardInvestigador = () => {
               <div className={`${glassPanel} p-5`}>
                 <div className="flex items-center justify-between mb-4">
                   <p className="text-xs font-bold text-slate-600 uppercase tracking-widest">Condiciones Meteorológicas · Ahora</p>
-                  <span className="text-[10px] text-slate-500 font-bold bg-white/50 px-2 py-1 rounded-full border border-white/60">NASA POWER API</span>
+                  <span className="text-[10px] text-slate-500 font-bold bg-white px-2 py-1 rounded-full border border-white/40">NASA POWER API</span>
                 </div>
                 <div className="grid grid-cols-4 gap-4">
                   {WEATHER.map((w, i) => (
-                    <div key={i} className="text-center bg-white/40 rounded-xl p-3 border border-white/50 shadow-sm">
+                    <div key={i} className="text-center bg-white rounded-xl p-3 border border-white/40 shadow-sm">
                       <div className="flex justify-center mb-2">{w.icon}</div>
                       <p className="text-lg font-bold text-slate-800">{w.value}</p>
                       <p className="text-[10px] text-slate-600 font-bold uppercase tracking-wide mt-1">{w.label}</p>
@@ -281,7 +272,7 @@ const DashboardInvestigador = () => {
             {/* RIGHT: Feed de Actualizaciones de Parcelas */}
             <motion.div {...fadeUp(0.1)} className="h-full">
               <div className={`${glassPanel} p-0 overflow-hidden h-full flex flex-col`}>
-                <div className="px-6 py-5 border-b border-white/40 bg-white/50 shrink-0">
+                <div className="px-6 py-5 border-b border-white/40 bg-white shrink-0">
                   <div className="flex items-center justify-between">
                     <p className="text-xs font-bold text-[#0f5238] uppercase tracking-widest">Actualizaciones de Parcelas</p>
                     <span className="w-2.5 h-2.5 rounded-full bg-[#0f5238] animate-pulse shadow-[0_0_8px_rgba(15,82,56,0.5)]" />
@@ -312,7 +303,7 @@ const DashboardInvestigador = () => {
                   })}
                 </div>
 
-                <div className="px-6 py-4 border-t border-white/40 bg-white/50 shrink-0">
+                <div className="px-6 py-4 border-t border-white/40 bg-white shrink-0">
                   <button
                     onClick={() => navigate('/investigador/sensores')}
                     className="w-full flex items-center justify-center gap-2 py-2.5 rounded-full bg-white hover:bg-slate-50 text-[#0f5238] text-xs font-bold transition-all shadow-sm border border-slate-100"
@@ -339,7 +330,7 @@ const DashboardInvestigador = () => {
                   { label: 'Alertas gestionadas', val: '7', color: 'text-amber-600' },
                   { label: 'Reportes exportados', val: '3', color: 'text-blue-600' },
                 ].map((s, i) => (
-                  <div key={i} className="text-center p-4 rounded-2xl bg-white/40 border border-white/60 shadow-sm">
+                  <div key={i} className="text-center p-4 rounded-2xl bg-white border border-white/40 shadow-sm">
                     <p className={`text-3xl font-black ${s.color}`}>{s.val}</p>
                     <p className="text-[10px] text-slate-600 font-bold mt-2 uppercase tracking-wide leading-tight">{s.label}</p>
                   </div>
@@ -368,7 +359,7 @@ const DashboardInvestigador = () => {
                     <button
                       key={mod.label}
                       onClick={() => navigate(mod.path)}
-                      className={`flex items-start gap-3 p-4 rounded-2xl text-left border border-white/50 bg-white/50 transition-all hover:-translate-y-1 hover:bg-white/80 hover:shadow-md`}
+                      className={`flex items-start gap-3 p-4 rounded-2xl text-left border border-white/40 bg-white transition-all hover:-translate-y-1 hover:shadow-md`}
                     >
                       <span className={`shrink-0 mt-0.5 p-2 rounded-full ${c.bg} ${c.text}`}>{mod.icon}</span>
                       <div>

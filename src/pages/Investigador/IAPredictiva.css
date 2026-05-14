@@ -17,7 +17,7 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: 16px;
-  background: rgba(255,255,255,0.55);
+  background: rgba(255,255,255,0.90);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255,255,255,0.25);
@@ -76,23 +76,20 @@
 /* ── Metrics Row ── */
 .ia-metrics-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 .ia-metric-card {
-  background: rgba(255,255,255,0.55);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(15, 82, 56, 0.06);
   border: 1px solid rgba(255,255,255,0.25);
   border-radius: 2rem;
   padding: 14px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.03);
   border-left: 3px solid var(--accent);
   transition: all 0.3s ease;
 }
 .ia-metric-card:hover {
-  background: rgba(255,255,255,0.65);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
 }
 .ia-metric-left { display: flex; align-items: center; gap: 10px; }
 .ia-metric-icon-box { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
@@ -111,22 +108,19 @@
 
 /* ── Card Base ── */
 .ia-card {
-  background: rgba(255,255,255,0.55);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(15, 82, 56, 0.06);
   border: 1px solid rgba(255,255,255,0.25);
   border-radius: 2rem;
   padding: 16px;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.03);
   display: flex;
   flex-direction: column;
   gap: 10px;
   transition: all 0.3s ease;
 }
 .ia-card:hover {
-  background: rgba(255,255,255,0.65);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
 }
 .ia-card-header { display: flex; align-items: center; gap: 6px; }
 .ia-card-icon { color: #2d6a4f; }
@@ -219,7 +213,7 @@
 .ia-promo-btn { background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.25); color: white; padding: 6px 12px; border-radius: 999px; font-size: 0.7rem; font-weight: 700; cursor: pointer; font-family: 'Manrope', sans-serif; transition: background 0.18s; }
 .ia-promo-btn:hover { background: rgba(255,255,255,.25); }
 
-.ia-sources-card { background: rgba(255,255,255,0.4); border: 1px solid rgba(255,255,255,0.25); border-radius: 2rem; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.ia-sources-card { background: rgba(255,255,255,0.90); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.25); border-radius: 2rem; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
 .ia-sources-title { font-size: 0.65rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; }
 .ia-source-row { display: flex; align-items: center; gap: 8px; }
 .ia-source-icon { color: #707973; flex-shrink: 0; }

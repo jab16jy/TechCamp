@@ -17,7 +17,7 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: 1.5rem;
-  background: rgba(255,255,255,0.55);
+  background: rgba(255,255,255,0.90);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255,255,255,0.25);
@@ -62,16 +62,14 @@
 
 /* ── Card Base ── */
 .ra-card {
-  background: rgba(255,255,255,0.55);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(15, 82, 56, 0.06);
   border: 1px solid rgba(255,255,255,0.25);
   border-radius: 2rem;
   padding: 1.25rem;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.03);
   transition: all 0.3s ease;
 }
-.ra-card:hover { background: rgba(255,255,255,0.65); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
+.ra-card:hover { box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08); transform: translateY(-2px); }
 .ra-card-header { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1rem; flex-wrap: wrap; }
 .ra-card-icon { color: #2d6a4f; }
 .ra-card-title { font-family: 'Manrope', sans-serif; font-size: 0.9rem; font-weight: 700; color: #0f5238; flex: 1; }
@@ -126,7 +124,7 @@
 
 /* ── Recommendations ── */
 .ra-recs-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; }
-.ra-rec-card { padding: 0.9rem; border-radius: 1.5rem; border: 1px solid; display: flex; flex-direction: column; gap: 0.5rem; background: rgba(255,255,255,0.55); border-color: rgba(255,255,255,0.25); }
+.ra-rec-card { padding: 0.9rem; border-radius: 1.5rem; border: 1px solid; display: flex; flex-direction: column; gap: 0.5rem; background: #ffffff; box-shadow: 0 2px 8px rgba(15, 82, 56, 0.06); border-color: rgba(255,255,255,0.25); }
 .ra-rec-top { display: flex; align-items: center; justify-content: space-between; }
 .ra-rec-icon-box { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
 .rec-icon-blue { background: rgba(37,99,235,0.08); color: #2563eb; }

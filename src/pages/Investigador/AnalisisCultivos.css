@@ -18,11 +18,9 @@
 }
 
 .ac-metric-card {
-  background: rgba(255, 255, 255, 0.55);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(15, 82, 56, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.25);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.03);
   border-radius: 2rem;
   padding: 2rem;
   display: flex;
@@ -33,10 +31,8 @@
 }
 
 .ac-metric-card:hover {
-  background: rgba(255, 255, 255, 0.65);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
   transform: translateY(-4px);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
 }
 
 .ac-metric-top {
@@ -181,7 +177,7 @@
 
 /* ── Glass Card ── */
 .ac-glass {
-  background: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.90);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.25);
@@ -193,7 +189,7 @@
 }
 
 .ac-glass:hover {
-  background: rgba(255, 255, 255, 0.65);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
 }
@@ -367,11 +363,9 @@
   height: 100%;
   flex-direction: column;
   justify-content: space-between;
-  background: rgba(255, 255, 255, 0.55);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(15, 82, 56, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.25);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.03);
   border-radius: 2rem;
   padding: 1.5rem;
 }
@@ -451,7 +445,7 @@
 
 /* ── Response Section ── */
 .ac-response {
-  background: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.90);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.04);
@@ -537,11 +531,9 @@
 }
 
 .ac-rank-card {
-  background: rgba(255, 255, 255, 0.55);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(15, 82, 56, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.25);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.03);
   border-radius: 1.5rem;
   padding: 1.25rem;
   transition: all 0.3s ease;
@@ -549,9 +541,7 @@
 
 .ac-rank-card:hover {
   transform: translateY(-4px);
-  background: rgba(255, 255, 255, 0.65);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
 }
 
 .ac-rank-top {
@@ -596,7 +586,7 @@
 
 /* ── Architecture ── */
 .ac-architecture {
-  background: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.90);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.04);
@@ -706,11 +696,10 @@
 
 .ac-table-card {
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.55);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.04);
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(15, 82, 56, 0.06);
   border-radius: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.25);
 }
 
 .ac-table-header {
@@ -746,7 +735,7 @@
   width: 256px;
   border: none;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.90);
   padding: 0.6rem 1rem 0.6rem 2.5rem;
   font-family: 'Manrope', sans-serif;
   font-size: 0.875rem;
@@ -835,7 +824,7 @@
   align-items: center;
   gap: 1.25rem;
   margin-bottom: 1.5rem;
-  background: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.90);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.04);
