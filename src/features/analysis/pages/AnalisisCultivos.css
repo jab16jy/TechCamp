@@ -134,14 +134,14 @@
   transition: all 0.2s ease;
 }
 
-.ac-tab:hover { color: #0f5238; }
-.ac-tab--active { border-bottom-color: #0f5238; color: #0f5238; }
+.ac-tab:hover { color: #2D5A27; }
+.ac-tab--active { border-bottom-color: #2D5A27; color: #2D5A27; }
 
 .ac-tab-badge {
   padding: 0.2rem 0.5rem;
   border-radius: 999px;
   background: rgba(45, 106, 79, 0.1);
-  color: #0f5238;
+  color: #2D5A27;
   font-size: 0.625rem;
   font-weight: 800;
   letter-spacing: 0.05em;
@@ -169,7 +169,7 @@
 }
 
 .ac-connection-text {
-  color: #0f5238;
+  color: #2D5A27;
   font-size: 0.75rem;
   font-weight: 600;
 }
@@ -219,7 +219,7 @@
 
 .ac-card-header h3 {
   margin: 0;
-  color: #0f5238;
+  color: #2D5A27;
   font-size: 1rem;
   font-weight: 700;
   font-family: 'Manrope', sans-serif;
@@ -246,7 +246,7 @@
 
 .ac-insight p {
   margin: 0;
-  color: #0f5238;
+  color: #2D5A27;
   font-size: 0.8125rem;
   line-height: 1.5;
 }
@@ -259,7 +259,7 @@
   justify-content: space-between;
   overflow: hidden;
   border-radius: 2rem;
-  background: linear-gradient(135deg, #0f5238 0%, #2d6a4f 100%);
+  background: linear-gradient(135deg, #2D5A27 0%, #2d6a4f 100%);
   padding: 2rem;
   box-shadow: 0 20px 50px rgba(15, 82, 56, 0.2);
 }
@@ -330,20 +330,20 @@
   font-family: 'Manrope', sans-serif; font-size: 0.73rem; font-weight: 600;
   color: #707973; padding: 3px 8px; border-radius: 6px; transition: all 0.18s;
 }
-.ac-back-btn:hover { background: rgba(255,255,255,0.3); color: #0f5238; }
+.ac-back-btn:hover { background: rgba(255,255,255,0.3); color: #2D5A27; }
 .ac-breadcrumb { display: flex; align-items: center; gap: 3px; font-size: 0.68rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
 .ac-crumb-active { color: #2d6a4f; }
 .ac-title-row { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
-.ac-title { font-family: 'Manrope', sans-serif; font-size: 1.35rem; font-weight: 800; color: #0f5238; letter-spacing: -0.025em; margin: 0; }
+.ac-title { font-family: 'Manrope', sans-serif; font-size: 1.35rem; font-weight: 800; color: #2D5A27; letter-spacing: -0.025em; margin: 0; }
 .ac-title-light { font-weight: 500; color: #707973; }
 .ac-meta-badges { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.ac-badge-mode { font-size: 0.6rem; font-weight: 800; letter-spacing: 0.1em; background: #0f5238; color: white; padding: 2px 8px; border-radius: 4px; }
+.ac-badge-mode { font-size: 0.6rem; font-weight: 800; letter-spacing: 0.1em; background: #2D5A27; color: white; padding: 2px 8px; border-radius: 4px; }
 .ac-badge-ref { display: flex; align-items: center; gap: 3px; font-family: 'Manrope', sans-serif; font-size: 0.63rem; color: #707973; background: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.3); padding: 2px 8px; border-radius: 4px; }
 .ac-header-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
 
 .ac-algo-badge {
   display: flex; align-items: center; gap: 8px;
-  background: linear-gradient(135deg, #0f5238, #2d6a4f);
+  background: linear-gradient(135deg, #2D5A27, #2d6a4f);
   color: white; padding: 7px 12px; border-radius: 10px;
   box-shadow: 0 4px 16px rgba(15,82,56,0.25);
 }
@@ -394,7 +394,7 @@
 }
 .ac-status-pill {
   font-size: 0.6rem; font-weight: 800; letter-spacing: 0.08em;
-  background: #0f5238; color: #fff;
+  background: #2D5A27; color: #fff;
   padding: 3px 10px; border-radius: 999px;
   text-transform: uppercase;
 }
@@ -402,7 +402,7 @@
 /* ── Buttons ── */
 .ac-btn-execute {
   display: flex; align-items: center; justify-content: center; gap: 6px;
-  background: #0f5238; color: white; border: none; border-radius: 999px;
+  background: #2D5A27; color: white; border: none; border-radius: 999px;
   padding: 10px 16px; font-size: 0.8rem; font-weight: 700; cursor: pointer;
   font-family: 'Manrope', sans-serif;
   box-shadow: 0 4px 16px rgba(15,82,56,0.25);
@@ -422,7 +422,7 @@
 
 .ac-btn-primary {
   display: flex; align-items: center; gap: 4px; padding: 6px 14px;
-  background: #0f5238; color: white; border: none; border-radius: 999px;
+  background: #2D5A27; color: white; border: none; border-radius: 999px;
   font-size: 0.73rem; font-weight: 700; cursor: pointer;
   font-family: 'Manrope', sans-serif; box-shadow: 0 4px 16px rgba(15,82,56,0.25);
   transition: all 0.18s;
@@ -488,7 +488,7 @@
   border-radius: 999px;
   background: rgba(45, 106, 79, 0.1);
   padding: 0.15rem 0.5rem;
-  color: #0f5238;
+  color: #2D5A27;
   font-size: 0.625rem;
   font-weight: 800;
   font-family: 'Manrope', sans-serif;
@@ -508,7 +508,7 @@
 }
 
 .ac-status-row strong {
-  color: #0f5238;
+  color: #2D5A27;
   font-size: 1.25rem;
 }
 
@@ -533,7 +533,7 @@
   width: 18px;
   height: 18px;
   border: 3px solid rgba(15, 82, 56, 0.2);
-  border-top-color: #0f5238;
+  border-top-color: #2D5A27;
   border-radius: 50%;
   animation: ac-spin 0.8s linear infinite;
 }
@@ -562,7 +562,7 @@
 
 .ac-response__header h2 {
   margin: 0;
-  color: #0f5238;
+  color: #2D5A27;
   font-size: clamp(1.4rem, 2.6vw, 2rem);
   line-height: 1.2;
   letter-spacing: -0.03em;
@@ -583,7 +583,7 @@
   border-radius: 999px;
   background: rgba(45, 106, 79, 0.1);
   padding: 0.4rem 0.75rem;
-  color: #0f5238;
+  color: #2D5A27;
   font-size: 0.7rem;
   font-weight: 800;
   letter-spacing: 0.12em;
@@ -660,7 +660,7 @@
 
 .ac-rank-score {
   border-radius: 999px;
-  background: #0f5238;
+  background: #2D5A27;
   padding: 0.3rem 0.65rem;
   color: white;
   font-size: 0.8rem;
@@ -670,7 +670,7 @@
 
 .ac-rank-card h3 {
   margin: 0 0 0.5rem;
-  color: #0f5238;
+  color: #2D5A27;
   font-size: 1.125rem;
   font-weight: 600;
   font-family: 'Manrope', sans-serif;
@@ -700,7 +700,7 @@
 
 .ac-arch-intro h2 {
   margin: 0 0 0.5rem;
-  color: #0f5238;
+  color: #2D5A27;
   font-size: clamp(1.6rem, 3vw, 2.35rem);
   line-height: 1.1;
   letter-spacing: -0.03em;
@@ -814,7 +814,7 @@
 
 .ac-table-title {
   margin: 0;
-  color: #0f5238;
+  color: #2D5A27;
   font-size: 1.125rem;
   font-weight: 600;
   font-family: 'Manrope', sans-serif;
@@ -876,7 +876,7 @@
   color: #191c1d;
 }
 
-.ac-row-id { color: #0f5238; font-weight: 600; }
+.ac-row-id { color: #2D5A27; font-weight: 600; }
 .ac-row-date { color: #707973; }
 .ac-row-loc { font-weight: 500; }
 
@@ -886,14 +886,14 @@
   gap: 0.5rem;
 }
 
-.ac-score { font-weight: 700; color: #0f5238; }
+.ac-score { font-weight: 700; color: #2D5A27; }
 .ac-score--low { color: #75584d; }
 
 .ac-cell-badge {
   border-radius: 999px;
   background: rgba(45, 106, 79, 0.1);
   padding: 0.2rem 0.6rem;
-  color: #0f5238;
+  color: #2D5A27;
   font-size: 0.7rem;
   font-weight: 600;
   font-family: 'Manrope', sans-serif;
@@ -908,7 +908,7 @@
   cursor: pointer;
   border: none;
   background: none;
-  color: #0f5238;
+  color: #2D5A27;
   font-weight: 600;
   font-size: 0.875rem;
   font-family: 'Manrope', sans-serif;
@@ -945,7 +945,7 @@
 
 .ac-history-text h4 {
   margin: 0;
-  color: #0f5238;
+  color: #2D5A27;
   font-size: 0.875rem;
   font-weight: 600;
   font-family: 'Manrope', sans-serif;
@@ -1033,7 +1033,7 @@
   border-radius: 0.625rem;
   background: #f3f4f5;
   padding: 0.5rem 0.875rem;
-  color: #0f5238;
+  color: #2D5A27;
   font-family: 'Manrope', sans-serif;
   font-size: 0.875rem;
   font-weight: 600;
@@ -1104,7 +1104,7 @@
   font-size: 0.55rem;
   font-weight: 800;
   letter-spacing: 0.06em;
-  background: #0f5238;
+  background: #2D5A27;
   color: #fff;
   padding: 2px 6px;
   border-radius: 4px;

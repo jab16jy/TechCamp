@@ -81,7 +81,7 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: #0f5238;
+  color: #2D5A27;
   margin-bottom: 16px;
 }
 
@@ -179,7 +179,7 @@
 }
 
 .mapa-layer-btn.active {
-  background: #0f5238;
+  background: #2D5A27;
   color: #fff;
 }
 

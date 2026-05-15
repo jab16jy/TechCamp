@@ -31,24 +31,24 @@
   font-family: 'Manrope', sans-serif; font-size: 0.73rem; font-weight: 600;
   color: #707973; padding: 3px 8px; border-radius: 6px; transition: all 0.18s;
 }
-.gr-back-btn:hover { background: rgba(255,255,255,0.3); color: #0f5238; }
+.gr-back-btn:hover { background: rgba(255,255,255,0.3); color: #2D5A27; }
 .gr-breadcrumb {
   display: flex; align-items: center; gap: 3px;
   font-size: 0.68rem; font-weight: 600; color: #94a3b8;
   text-transform: uppercase; letter-spacing: 0.05em;
 }
-.gr-crumb-active { color: #2d6a4f; }
+.gr-crumb-active { color: #2D5A27; }
 .gr-title-row { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
 .gr-title {
   font-family: 'Manrope', sans-serif;
-  font-size: 1.55rem; font-weight: 800; color: #0f5238;
+  font-size: 1.55rem; font-weight: 800; color: #2D5A27;
   letter-spacing: -0.02em; margin: 0; line-height: 1.1;
 }
-.gr-title-amp { color: #2d6a4f; font-style: italic; }
+.gr-title-amp { color: #2D5A27; font-style: italic; }
 .gr-meta-badges { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .gr-badge-mode {
   font-size: 0.6rem; font-weight: 800; letter-spacing: 0.1em;
-  background: #0f5238; color: white; padding: 2px 8px; border-radius: 4px;
+  background: #2D5A27; color: white; padding: 2px 8px; border-radius: 4px;
 }
 .gr-badge-ref {
   display: flex; align-items: center; gap: 3px;
@@ -62,15 +62,15 @@
   background: rgba(255,255,255,0.4); color: #707973; border-radius: 7px; cursor: pointer;
   transition: all 0.18s;
 }
-.gr-btn-ghost:hover { border-color: #2d6a4f; color: #2d6a4f; }
+.gr-btn-ghost:hover { border-color: #2D5A27; color: #2D5A27; }
 .gr-btn-primary {
   display: flex; align-items: center; gap: 5px; padding: 7px 14px;
-  background: #0f5238; color: white; border: none; border-radius: 999px;
+  background: #2D5A27; color: white; border: none; border-radius: 999px;
   font-size: 0.73rem; font-weight: 700; cursor: pointer;
   font-family: 'Manrope', sans-serif; box-shadow: 0 4px 16px rgba(15,82,56,0.25);
   transition: all 0.18s;
 }
-.gr-btn-primary:hover { background: #2d6a4f; transform: translateY(-1px); }
+.gr-btn-primary:hover { background: #2D5A27; transform: translateY(-1px); }
 
 /* ── Card Base ── */
 .gr-card {
@@ -87,10 +87,10 @@
   transform: translateY(-2px);
 }
 .gr-card-header { display: flex; align-items: center; gap: 7px; }
-.gr-card-icon { color: #2d6a4f; font-size: 1.1rem !important; }
+.gr-card-icon { color: #2D5A27; font-size: 1.1rem !important; }
 .gr-card-title {
   font-family: 'Manrope', sans-serif;
-  font-size: 0.9rem; font-weight: 700; color: #0f5238;
+  font-size: 0.9rem; font-weight: 700; color: #2D5A27;
   letter-spacing: -0.01em; flex: 1;
 }
 
@@ -99,14 +99,14 @@
 .gr-gauge-card { align-items: center; }
 .gr-gauge-wrap { width: 100%; max-width: 180px; }
 .gr-gauge-svg { width: 100%; height: auto; display: block; }
-.gr-gauge-num { font-family: 'Manrope', sans-serif; font-size: 2.2rem; font-weight: 900; fill: #0f5238; }
+.gr-gauge-num { font-family: 'Manrope', sans-serif; font-size: 2.2rem; font-weight: 900; fill: #2D5A27; }
 .gr-gauge-pct { font-family: 'Manrope', sans-serif; font-size: 1rem; fill: #707973; font-weight: 600; }
 .gr-gauge-sub { font-family: 'Manrope', sans-serif; font-size: 0.48rem; fill: #94a3b8; }
 .gr-gauge-value-path { animation: gr-gauge-draw 1.2s ease both; stroke-dasharray: 1000; stroke-dashoffset: 0; }
 @keyframes gr-gauge-draw { from { stroke-dashoffset: 1000; } to { stroke-dashoffset: 0; } }
 .gr-optimal-pill {
   display: flex; align-items: center; gap: 5px;
-  background: rgba(45,106,79,0.12); color: #0f5238; font-size: 0.7rem; font-weight: 800;
+  background: rgba(45,106,79,0.12); color: #2D5A27; font-size: 0.7rem; font-weight: 800;
   letter-spacing: 0.04em; padding: 5px 12px; border-radius: 999px;
   border: 1px solid rgba(45,106,79,0.25);
 }
@@ -128,14 +128,14 @@
   padding: 0; overflow: hidden; cursor: pointer; transition: all 0.2s;
   display: flex; flex-direction: column; text-align: left;
 }
-.gr-ndvi-cell:hover { border-color: #2d6a4f; transform: translateY(-1px); }
-.gr-ndvi-active { border-color: #2d6a4f !important; box-shadow: 0 0 0 2px rgba(45,106,79,0.2); }
+.gr-ndvi-cell:hover { border-color: #2D5A27; transform: translateY(-1px); }
+.gr-ndvi-active { border-color: #2D5A27 !important; box-shadow: 0 0 0 2px rgba(45,106,79,0.2); }
 .gr-mini-map-svg { width: 100%; height: auto; display: block; }
 .gr-ndvi-info { padding: 7px 8px 8px; }
 .gr-ndvi-month { display: block; font-size: 0.62rem; font-weight: 700; color: #707973; margin-bottom: 1px; }
 .gr-ndvi-val { display: block; font-family: 'Manrope', sans-serif; font-size: 1rem; font-weight: 700; color: #191c1d; line-height: 1.1; }
 .gr-ndvi-delta { display: block; font-size: 0.6rem; font-weight: 700; margin-top: 2px; }
-.gr-delta-up   { color: #2d6a4f; }
+.gr-delta-up   { color: #2D5A27; }
 .gr-delta-down { color: #ba1a1a; }
 .gr-delta-max  { color: #d97706; }
 
@@ -156,12 +156,12 @@
   align-items: center; justify-content: center;
   border: 2px solid rgba(255,255,255,0.4); background: rgba(255,255,255,0.3); transition: all 0.18s;
 }
-.gr-checkbox-checked { background: #2d6a4f; border-color: #2d6a4f; }
+.gr-checkbox-checked { background: #2D5A27; border-color: #2D5A27; }
 .gr-task-icon-box {
   width: 28px; height: 28px; border-radius: 7px; background: rgba(45,106,79,0.12);
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
-.gr-task-icon-box span { color: #2d6a4f !important; }
+.gr-task-icon-box span { color: #2D5A27 !important; }
 .gr-task-body { flex: 1; }
 .gr-task-top  { display: flex; align-items: flex-start; gap: 6px; justify-content: space-between; margin-bottom: 3px; }
 .gr-task-title { font-size: 0.74rem; font-weight: 700; color: #191c1d; line-height: 1.3; }
@@ -172,7 +172,7 @@
 .gr-priority-med  { background: rgba(232,184,75,0.15); color: #a16207; }
 .gr-priority-low  { background: rgba(0,109,72,0.08); color: #006d48; }
 .gr-task-progress-track { height: 4px; background: rgba(255,255,255,0.3); border-radius: 999px; overflow: hidden; }
-.gr-task-progress-fill  { height: 100%; background: linear-gradient(to right, #52b788, #2d6a4f); border-radius: 999px; transition: width 0.4s ease; }
+.gr-task-progress-fill  { height: 100%; background: linear-gradient(to right, #52b788, #2D5A27); border-radius: 999px; transition: width 0.4s ease; }
 
 /* Hydro Chart */
 .gr-hydro-legend { display: flex; align-items: center; gap: 8px; margin-left: auto; flex-wrap: wrap; }
@@ -185,7 +185,7 @@
 
 /* ── Export Card ── */
 .gr-export-card {
-  background: linear-gradient(135deg, #0f5238 0%, #2d6a4f 100%);
+  background: linear-gradient(135deg, #2D5A27 0%, #2D5A27 100%);
   border-radius: 2rem; padding: 20px 24px;
   display: flex; align-items: center; gap: 18px;
   box-shadow: 0 20px 50px rgba(15,82,56,0.2);
@@ -203,7 +203,7 @@
 .gr-export-actions { display: flex; align-items: center; gap: 10px; flex-direction: column; z-index: 1; }
 .gr-export-btn {
   display: flex; align-items: center; gap: 7px;
-  background: white; color: #0f5238; border: none; border-radius: 999px;
+  background: white; color: #2D5A27; border: none; border-radius: 999px;
   padding: 11px 20px; font-size: 0.82rem; font-weight: 800; cursor: pointer;
   font-family: 'Manrope', sans-serif; box-shadow: 0 3px 12px rgba(0,0,0,0.2);
   transition: all 0.2s; white-space: nowrap;

@@ -32,7 +32,7 @@
   justify-content: center;
   border-radius: 999px;
   background: rgba(45, 106, 79, 0.1);
-  color: #2d6a4f;
+  color: #2D5A27;
 }
 
 .coordsText {
@@ -49,7 +49,7 @@
 }
 
 .coordsValue {
-  color: #0f5238;
+  color: #2D5A27;
   font-size: 0.875rem;
   font-weight: 600;
 }

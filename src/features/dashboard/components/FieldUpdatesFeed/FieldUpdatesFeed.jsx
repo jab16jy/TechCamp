@@ -4,7 +4,7 @@ import { ArrowRight } from 'lucide-react';
 const glassPanel = 'bg-white shadow-sm border border-white/40 rounded-2xl transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md';
 
 const colorMap = {
-  emerald: { bg: 'bg-[#0f5238]/10', border: 'border-[#0f5238]/20', text: 'text-[#0f5238]', dot: 'bg-[#0f5238]' },
+  emerald: { bg: 'bg-[#2D5A27]/10', border: 'border-[#2D5A27]/20', text: 'text-[#2D5A27]', dot: 'bg-[#2D5A27]' },
   amber: { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700', dot: 'bg-amber-500' },
   red: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-700', dot: 'bg-red-500' },
   blue: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700', dot: 'bg-blue-500' },
@@ -22,8 +22,8 @@ const FieldUpdatesFeed = ({ updates, onViewAll }) => (
     <div className={`${glassPanel} p-0 overflow-hidden h-full flex flex-col`}>
       <div className="px-6 py-5 border-b border-white/40 bg-white shrink-0">
         <div className="flex items-center justify-between">
-          <p className="text-xs font-bold text-[#0f5238] uppercase tracking-widest">Actualizaciones de Parcelas</p>
-          <span className="w-2.5 h-2.5 rounded-full bg-[#0f5238] animate-pulse shadow-[0_0_8px_rgba(15,82,56,0.5)]" />
+          <p className="text-xs font-bold text-[#2D5A27] uppercase tracking-widest">Actualizaciones de Parcelas</p>
+          <span className="w-2.5 h-2.5 rounded-full bg-[#2D5A27] animate-pulse shadow-[0_0_8px_rgba(45,90,39,0.5)]" />
         </div>
         <p className="text-[11px] text-slate-600 mt-1 font-medium">Feed en tiempo real · Turbaco</p>
       </div>
@@ -37,7 +37,7 @@ const FieldUpdatesFeed = ({ updates, onViewAll }) => (
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2 mb-1">
-                  <p className="text-[13px] font-bold text-slate-800 truncate group-hover:text-[#0f5238] transition-colors">{u.lote}</p>
+                  <p className="text-[13px] font-bold text-slate-800 truncate group-hover:text-[#2D5A27] transition-colors">{u.lote}</p>
                   <span className={`shrink-0 text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${c.bg} ${c.text}`}>
                     {u.status === 'ok' ? 'OK' : u.status === 'warn' ? 'AVISO' : 'ALERTA'}
                   </span>
@@ -52,7 +52,7 @@ const FieldUpdatesFeed = ({ updates, onViewAll }) => (
       <div className="px-6 py-4 border-t border-white/40 bg-white shrink-0">
         <button
           onClick={onViewAll}
-          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-full bg-white hover:bg-slate-50 text-[#0f5238] text-xs font-bold transition-all shadow-sm border border-slate-100"
+          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-full bg-white hover:bg-slate-50 text-[#2D5A27] text-xs font-bold transition-all shadow-sm border border-slate-100"
         >
           Ver todos los nodos <ArrowRight size={14} />
         </button>

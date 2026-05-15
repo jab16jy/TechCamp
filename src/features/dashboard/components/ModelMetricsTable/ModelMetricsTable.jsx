@@ -7,10 +7,10 @@ const ModelMetricsTable = ({ metrics }) => (
   <div className={`${glassPanel} p-6 overflow-hidden relative`}>
     <div className="flex items-center justify-between mb-6">
       <div>
-        <h3 className="text-xl font-bold text-[#0f5238] mb-1">Métricas de Modelo Predictivo</h3>
+        <h3 className="text-xl font-bold text-[#2D5A27] mb-1">Métricas de Modelo Predictivo</h3>
         <p className="text-sm text-slate-600">Rendimiento de los algoritmos por tipo de cultivo</p>
       </div>
-      <div className="bg-[#2d6a4f]/10 text-[#0f5238] px-4 py-1.5 rounded-full flex items-center gap-2">
+      <div className="bg-[#2d6a4f]/10 text-[#2D5A27] px-4 py-1.5 rounded-full flex items-center gap-2">
         <CheckCircle2 size={16} />
         <span className="text-sm font-bold">Modelos Estables</span>
       </div>
@@ -34,7 +34,7 @@ const ModelMetricsTable = ({ metrics }) => (
                 <span className="font-bold text-slate-800">{item.cultivo}</span>
               </td>
               <td className="py-4">
-                <span className="inline-flex items-center gap-1.5 font-semibold text-[#0f5238]">
+                <span className="inline-flex items-center gap-1.5 font-semibold text-[#2D5A27]">
                   <BarChart3 size={14} /> {item.accuracy}
                 </span>
               </td>
@@ -42,7 +42,7 @@ const ModelMetricsTable = ({ metrics }) => (
               <td className="py-4 font-medium text-slate-600">{item.mae}</td>
               <td className="py-4">
                 <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
-                  item.confianza.includes('Alta') ? 'bg-[#0f5238]/10 text-[#0f5238]' :
+                  item.confianza.includes('Alta') ? 'bg-[#2D5A27]/10 text-[#2D5A27]' :
                   item.confianza.includes('Media') ? 'bg-amber-100 text-amber-800' :
                   'bg-slate-200 text-slate-700'
                 }`}>

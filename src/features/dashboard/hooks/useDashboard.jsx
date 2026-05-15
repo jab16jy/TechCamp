@@ -60,7 +60,7 @@ export default function useDashboard() {
   ];
 
   const weeklyStats = [
-    { label: 'Análisis realizados', val: '24', color: 'text-[#0f5238]' },
+    { label: 'Análisis realizados', val: '24', color: 'text-[#2D5A27]' },
     { label: 'Alertas gestionadas', val: '7', color: 'text-amber-600' },
     { label: 'Reportes exportados', val: '3', color: 'text-blue-600' },
   ];

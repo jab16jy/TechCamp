@@ -4,8 +4,8 @@ import FarmMap from '@features/sensors/components/FarmMap/FarmMap';
 import TelemetryPanel from '@features/sensors/components/TelemetryPanel/TelemetryPanel';
 import EventLog from '@features/sensors/components/EventLog/EventLog';
 import { useSensoresIoT } from '@features/sensors/hooks/useSensoresIoT';
+import { ArrowLeft, ChevronRight, MapPin, Download, Satellite, ZoomIn, ZoomOut, Brain, Droplets, ArrowRight } from 'lucide-react';
 import './SensoresIoT.css';
-// Note: SensoresIoT.module.css retained for legacy compatibility but not used here
 
 const SensoresIoT = () => {
   const {
@@ -31,12 +31,12 @@ const SensoresIoT = () => {
           <div className="iot-header-left">
             <div className="iot-nav-row">
               <button className="iot-back-btn" onClick={() => navigate('/investigador/dashboard')}>
-                <span className="material-symbols-outlined">arrow_back</span>
+                <ArrowLeft size={14} />
                 Volver al Dashboard
               </button>
               <nav className="iot-breadcrumb">
                 <span>Reportes</span>
-                <span className="material-symbols-outlined">chevron_right</span>
+                <ChevronRight size={12} />
                 <span className="iot-crumb-active">Sensores IoT</span>
               </nav>
             </div>
@@ -46,7 +46,7 @@ const SensoresIoT = () => {
                 <span className="iot-badge-mode">RED ACTIVA</span>
                 <span className="iot-badge-ref">REF: #IOT-NET-2024</span>
                 <span className="iot-badge-coords">
-                  <span className="material-symbols-outlined" style={{fontSize:'0.75rem'}}>location_on</span>
+                  <MapPin size={12} />
                   Lote Norte · Turbaco
                 </span>
               </div>
@@ -71,11 +71,11 @@ const SensoresIoT = () => {
             </div>
             <div className="iot-header-btns">
               <button className="iot-btn-ghost">
-                <span className="material-symbols-outlined">download</span>
+                <Download size={14} />
                 CSV / JSON
               </button>
               <button className="iot-btn-primary">
-                <span className="material-symbols-outlined">satellite_alt</span>
+                <Satellite size={14} />
                 Sentinel-2
               </button>
             </div>
@@ -104,8 +104,8 @@ const SensoresIoT = () => {
                     </span>
                     <span>Sentinel-2 NDVI</span>
                   </label>
-                  <button className="iot-map-btn"><span className="material-symbols-outlined">zoom_in</span></button>
-                  <button className="iot-map-btn"><span className="material-symbols-outlined">zoom_out</span></button>
+                  <button className="iot-map-btn"><ZoomIn size={14} /></button>
+                  <button className="iot-map-btn"><ZoomOut size={14} /></button>
                 </div>
               </div>
               <FarmMap showNdvi={showNdvi} />
@@ -115,7 +115,7 @@ const SensoresIoT = () => {
             <div className="iot-ai-card">
               <div className="iot-ai-header">
                 <div className="iot-ai-icon-box">
-                  <span className="material-symbols-outlined">psychology</span>
+                  <Brain size={18} />
                 </div>
                 <div>
                   <span className="iot-ai-badge">RECOMENDACIÓN DEL ASISTENTE</span>
@@ -131,11 +131,11 @@ const SensoresIoT = () => {
                   className={`iot-valve-btn ${valveActive ? 'iot-valve-active' : ''}`}
                   onClick={handleValveToggle}
                 >
-                  <span className="material-symbols-outlined">sprinkler</span>
+                  <Droplets size={16} />
                   {valveActive ? '✓ Válvula B-12 Activa' : 'Activar Válvula B-12 (Riego)'}
                 </button>
                 <button className="iot-ghost-sm">
-                  Ver Sector Sur <span className="material-symbols-outlined" style={{fontSize:'0.8rem'}}>arrow_forward</span>
+                  Ver Sector Sur <ArrowRight size={14} />
                 </button>
               </div>
             </div>

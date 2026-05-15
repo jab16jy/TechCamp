@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 
 const colorMap = {
-  emerald: { bg: 'bg-[#0f5238]/10', border: 'border-[#0f5238]/20', text: 'text-[#0f5238]', dot: 'bg-[#0f5238]' },
+  emerald: { bg: 'bg-[#2D5A27]/10', border: 'border-[#2D5A27]/20', text: 'text-[#2D5A27]', dot: 'bg-[#2D5A27]' },
   amber: { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700', dot: 'bg-amber-500' },
   red: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-700', dot: 'bg-red-500' },
   blue: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700', dot: 'bg-blue-500' },
@@ -33,7 +33,7 @@ const MiniSparkline = ({ data, color = '#10b981' }) => {
 };
 
 const AIMetricsGrid = ({ metrics, sparkData }) => {
-  const sparkColors = { emerald: '#0f5238', blue: '#3b82f6', purple: '#8b5cf6', amber: '#f59e0b' };
+  const sparkColors = { emerald: '#2D5A27', blue: '#3b82f6', purple: '#8b5cf6', amber: '#f59e0b' };
   const sparkSeries = [sparkData.acc, sparkData.lat, sparkData.proc, [1, 2, 1, 3, 2, 3]];
 
   return (
@@ -44,7 +44,7 @@ const AIMetricsGrid = ({ metrics, sparkData }) => {
           <div key={i} className={`${glassPanel} p-5`}>
             <div className="flex items-start justify-between mb-4">
               <div className={`p-2.5 rounded-full ${c.bg} ${c.text}`}>{m.icon}</div>
-              <div className={`flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full ${m.up ? 'bg-[#0f5238]/10 text-[#0f5238]' : 'bg-red-100 text-red-700'}`}>
+              <div className={`flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full ${m.up ? 'bg-[#2D5A27]/10 text-[#2D5A27]' : 'bg-red-100 text-red-700'}`}>
                 {m.up ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
                 {m.delta}
               </div>

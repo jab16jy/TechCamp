@@ -12,12 +12,32 @@ import {
   AlertTriangle,
   CheckCircle2,
   Info,
+  LayoutDashboard,
+  Sprout,
+  Bot,
+  Map,
+  Brain,
+  Wifi,
+  FileText,
+  Clock,
 } from 'lucide-react';
 
 import AmbientBackground from '../AmbientBackground/AmbientBackground';
 import HistorialDropdown from '@features/history/components/HistorialDropdown/HistorialDropdown';
 import logoSrc from '@assets/images/logo.png';
 import noFotoSrc from '@assets/images/nofoto-Usuario.png';
+import './ResearcherLayout.css';
+
+const NAV_ITEMS = [
+  { path: '/investigador/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { path: '/investigador/analisis', label: 'Análisis', icon: Sprout },
+  { path: '/investigador/mapas', label: 'AgroAsesor', icon: Bot },
+  { path: '/investigador/mapa', label: 'Mapa', icon: Map },
+  { path: '/investigador/ia', label: 'IA Predictiva', icon: Brain },
+  { path: '/investigador/sensores', label: 'Sensores', icon: Wifi },
+  { path: '/investigador/reportes', label: 'Reportes', icon: FileText },
+  { path: '/investigador/historial', label: 'Historial', icon: Clock },
+];
 
 const ALERTS = [
   { title: 'Estres hidrico detectado', desc: 'Nodo Sur-02 registra 61% HR.', time: 'Hace 5 min', type: 'warn' },
@@ -63,144 +83,152 @@ const ResearcherLayout = ({ children, activeTab }) => {
     navigate('/');
   };
 
-  const isActive = (path) => location.pathname === path;
-
-  const linkClass = (path) =>
-    `${
-      isActive(path)
-        ? 'text-[#0f5238] font-semibold border-b-2 border-[#0f5238] pb-1 opacity-80 scale-95'
-        : 'text-slate-500/80 hover:text-[#0f5238]'
-    } transition-all flex items-center font-medium`;
+  const isActive = (path) => {
+    if (path === '/investigador/dashboard') {
+      return location.pathname === '/investigador/dashboard' || location.pathname === '/dashboard';
+    }
+    return location.pathname === path;
+  };
 
   return (
-    <div className="text-slate-900 font-sans antialiased h-screen w-full relative overflow-hidden">
+    <div className="rl-root">
       <AmbientBackground />
-      {/* Top Navigation (Shared Component) */}
-      <header className="sticky top-3 z-50 mx-auto w-[calc(100%-2rem)] max-w-[1400px] rounded-2xl bg-white/80 backdrop-blur-xl border border-white/40 shadow-sm flex justify-between items-center px-6 py-2 transition-all duration-300 hover:bg-white/95">
-        <div className="flex items-center gap-4">
-          <img src={logoSrc} alt="AgroCaribe IA" className="h-7 w-auto" />
-          <div className="hidden md:flex bg-white/80 backdrop-blur-xl border border-white/40 shadow-sm rounded-full px-4 py-1.5 gap-5 ml-6">
-            <Link to="/investigador/dashboard" className={linkClass('/investigador/dashboard')}>Dashboard</Link>
-            <Link to="/investigador/analisis" className={linkClass('/investigador/analisis')}>Análisis</Link>
-            <Link to="/investigador/mapas" className={linkClass('/investigador/mapas')}>AgroAsesor</Link>
-            <Link to="/investigador/mapa" className={linkClass('/investigador/mapa')}>Mapa</Link>
-            <Link to="/investigador/ia" className={linkClass('/investigador/ia')}>IA</Link>
-            <Link to="/investigador/sensores" className={linkClass('/investigador/sensores')}>Sensores</Link>
-            <Link to="/investigador/reportes" className={linkClass('/investigador/reportes')}>Reportes</Link>
-            <Link to="/investigador/historial" className={linkClass('/investigador/historial')}>Historial</Link>
-          </div>
+
+      {/* ── Logo (Top-Left) ── */}
+      <Link to="/investigador/dashboard" className="rl-logo">
+        <img src={logoSrc} alt="AgroCaribe IA" />
+      </Link>
+
+      {/* ── Nav Pill (Top-Center) ── */}
+      <nav className="rl-nav-pill">
+        {NAV_ITEMS.map((item) => {
+          const active = isActive(item.path);
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`rl-nav-item ${active ? 'rl-nav-item-active' : ''}`}
+            >
+              <Icon size={20} strokeWidth={active ? 2.5 : 1.8} />
+              <span className="rl-nav-item-text">{item.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* ── Control Center (Top-Right) ── */}
+      <div className="rl-control-center">
+        {/* Search Bubble */}
+        <div className="rl-control-search">
+          <Search size={16} className="rl-search-icon" />
+          <input
+            className="rl-search-input"
+            placeholder="Buscar..."
+            type="text"
+          />
         </div>
-        <div className="flex items-center gap-4">
-            <div className="bg-white/80 backdrop-blur-xl border border-white/40 shadow-sm rounded-full px-3 py-1.5 flex items-center gap-2 text-slate-500 transition-all duration-300 hover:bg-white">
-              <Search size={18} />
-              <input
-                className="bg-transparent border-none focus:ring-0 text-sm w-36 text-slate-700 placeholder:text-slate-400 p-0 outline-none"
-                placeholder="Buscar parcela..."
-                type="text"
-              />
-            </div>
-            <HistorialDropdown />
-            <div className="relative" ref={alertsRef}>
-              <button
-                onClick={() => setAlertsOpen((prev) => !prev)}
-                className="text-slate-500/80 hover:text-[#0f5238] transition-colors relative flex items-center justify-center"
+
+        <HistorialDropdown />
+
+        {/* Alerts */}
+        <div className="rl-control-bubble-wrap" ref={alertsRef}>
+          <button
+            onClick={() => setAlertsOpen((prev) => !prev)}
+            className="rl-control-bubble rl-control-bell"
+          >
+            <Bell size={17} />
+            <span className="rl-bell-dot" />
+          </button>
+
+          <AnimatePresence>
+            {alertsOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                transition={{ duration: 0.18, ease: 'easeOut' }}
+                className="rl-dropdown"
               >
-                <Bell size={20} />
-                <span className="absolute right-0 top-0 h-2 w-2 rounded-full border-2 border-white bg-red-500" />
-              </button>
+                <div className="rl-dropdown-header">
+                  <span className="rl-dropdown-title">Alertas Recientes</span>
+                  <button className="rl-dropdown-link">Marcar leidas</button>
+                </div>
+                <div className="rl-dropdown-list">
+                  {ALERTS.map((alert, index) => (
+                    <div key={index} className="rl-dropdown-item">
+                      <span className="rl-dropdown-item-icon">{alertIcon[alert.type]}</span>
+                      <div>
+                        <p className="rl-dropdown-item-title">{alert.title}</p>
+                        <p className="rl-dropdown-item-desc">{alert.desc}</p>
+                        <p className="rl-dropdown-item-time">{alert.time}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="rl-dropdown-footer">
+                  <button className="rl-dropdown-link">Ver todas →</button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
-              <AnimatePresence>
-                {alertsOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 8, scale: 0.96 }}
-                    transition={{ duration: 0.18, ease: 'easeOut' }}
-                    className="absolute right-0 z-50 mt-4 w-80 overflow-hidden rounded-3xl bg-white/90 backdrop-blur-2xl border border-white/40 shadow-[0_24px_60px_rgba(0,0,0,0.08)]"
+        {/* Settings */}
+        <button className="rl-control-bubble">
+          <Settings size={17} />
+        </button>
+
+        {/* Profile */}
+        <div className="rl-control-bubble-wrap" ref={profileRef}>
+          <button
+            onClick={() => setProfileOpen((prev) => !prev)}
+            className="rl-control-bubble rl-control-avatar"
+          >
+            <img src={noFotoSrc} alt="Usuario" />
+          </button>
+
+          <AnimatePresence>
+            {profileOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 8 }}
+                transition={{ duration: 0.16, ease: 'easeOut' }}
+                className="rl-dropdown rl-dropdown-profile"
+              >
+                <div className="rl-dropdown-header rl-profile-header">
+                  <p className="rl-profile-name">Dr johan borrero investigador</p>
+                </div>
+                {[
+                  { label: 'Mi Perfil', icon: <User size={15} />, path: '/perfil' },
+                  { label: 'Ajustes de Finca', icon: <Settings size={15} />, path: '/ajustes' },
+                  { label: 'Administracion', icon: <Shield size={15} />, path: '/admin' },
+                ].map((option) => (
+                  <Link
+                    key={option.label}
+                    to={option.path}
+                    className="rl-dropdown-profile-item"
                   >
-                    <div className="flex items-center justify-between border-b border-white/20 px-4 py-3">
-                      <span className="text-[11px] font-black uppercase tracking-widest text-slate-600">Alertas Recientes</span>
-                      <button className="text-[10px] font-bold text-emerald-600 hover:underline">Marcar leidas</button>
-                    </div>
-                    <div className="max-h-72 overflow-y-auto">
-                      {ALERTS.map((alert, index) => (
-                        <div
-                          key={index}
-                          className="flex cursor-pointer items-start gap-3 border-b border-white/10 px-4 py-3 transition-colors hover:bg-white/20"
-                        >
-                          <span className="mt-0.5 shrink-0">{alertIcon[alert.type]}</span>
-                          <div>
-                            <p className="text-[12.5px] font-semibold text-slate-700">{alert.title}</p>
-                            <p className="mt-0.5 text-[11px] text-slate-500">{alert.desc}</p>
-                            <p className="mt-1 text-[9.5px] font-bold text-slate-400">{alert.time}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="border-t border-white/20 bg-white/10 py-2.5 text-center">
-                      <button className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Ver todas →</button>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+                    <span className="rl-dropdown-profile-icon">{option.icon}</span>
+                    {option.label}
+                  </Link>
+                ))}
+                <div className="rl-dropdown-divider" />
+                <button onClick={handleLogout} className="rl-dropdown-logout">
+                  <LogOut size={15} /> Cerrar Sesion
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
 
-            <button className="text-slate-500/80 hover:text-[#0f5238] transition-colors">
-              <Settings size={20} />
-            </button>
-
-            <div className="relative" ref={profileRef}>
-              <button onClick={() => setProfileOpen((prev) => !prev)} className="focus:outline-none flex items-center">
-                <img
-                  src={noFotoSrc}
-                  alt="Usuario"
-                  className="w-8 h-8 rounded-full border-2 border-white/40 object-cover shadow-sm"
-                />
-              </button>
-
-              <AnimatePresence>
-                {profileOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 8 }}
-                    transition={{ duration: 0.16, ease: 'easeOut' }}
-                    className="absolute right-0 z-50 mt-4 w-56 overflow-hidden rounded-3xl bg-white/90 backdrop-blur-2xl border border-white/40 py-2 shadow-[0_24px_60px_rgba(0,0,0,0.08)]"
-                  >
-                    <div className="border-b border-white/20 px-4 py-3">
-                      <p className="text-[13px] font-black text-slate-700">Dr johan borrero investigador</p>
-                    </div>
-                    {[
-                      { label: 'Mi Perfil', icon: <User size={15} />, path: '/perfil' },
-                      { label: 'Ajustes de Finca', icon: <Settings size={15} />, path: '/ajustes' },
-                      { label: 'Administracion', icon: <Shield size={15} />, path: '/admin' },
-                    ].map((option) => (
-                      <Link
-                        key={option.label}
-                        to={option.path}
-                        className="flex items-center gap-3 px-4 py-2.5 text-[13px] text-slate-600 transition-colors hover:bg-white/20 hover:text-slate-900"
-                      >
-                        <span className="text-slate-400">{option.icon}</span> {option.label}
-                      </Link>
-                    ))}
-                    <div className="mx-4 my-1 h-px bg-white/20" />
-                    <button
-                      onClick={handleLogout}
-                      className="flex w-full items-center gap-3 px-4 py-2.5 text-[13px] font-bold text-red-500 transition-colors hover:bg-red-50/50"
-                    >
-                      <LogOut size={15} /> Cerrar Sesion
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-          </div>
-      </header>
-
-      {/* Main Content Area */}
-      <main className="absolute top-20 left-10 right-10 bottom-4 z-30 overflow-y-auto pb-10 pr-2 custom-scrollbar-light">
-        {children}
+      {/* ── Main Content ── */}
+      <main className="rl-main">
+        <div className="rl-content-inner">
+          {children}
+        </div>
       </main>
     </div>
   );

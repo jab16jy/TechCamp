@@ -40,7 +40,7 @@
   box-shadow: 0 2px 16px rgba(0, 0, 0, 0.03);
 }
 
-/* ── Header (simplified) ── */
+/* ── Header ── */
 .agro-header {
   display: flex;
   align-items: center;
@@ -55,7 +55,7 @@
   width: 36px;
   height: 36px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #2d6a4f, #40916c);
+  background: linear-gradient(135deg, #2D5A27, #00A650);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -134,7 +134,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #2d6a4f;
+  color: #2D5A27;
   flex-shrink: 0;
 }
 
@@ -152,7 +152,7 @@
 }
 
 .agro-msg-user .agro-msg-bubble {
-  background: linear-gradient(135deg, #2d6a4f, #40916c);
+  background: linear-gradient(135deg, #2D5A27, #00A650);
   color: white;
   border-radius: 20px 4px 20px 20px;
   box-shadow: 0 4px 12px rgba(45, 106, 79, 0.2);
@@ -216,7 +216,7 @@
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #2d6a4f;
+  background: #2D5A27;
   animation: bounce-dot 1.2s infinite ease-in-out;
 }
 
@@ -229,7 +229,7 @@
   40% { transform: scale(1); opacity: 1; }
 }
 
-/* ── Quick actions (capsules above input) ── */
+/* ── Quick actions ── */
 .agro-acciones {
   display: flex;
   gap: 6px;
@@ -258,7 +258,7 @@
 .agro-accion-btn:hover {
   background: #e8eaed;
   border-color: rgba(45, 106, 79, 0.15);
-  color: #2d6a4f;
+  color: #2D5A27;
 }
 
 .agro-accion-btn svg {
@@ -267,7 +267,7 @@
 }
 
 .agro-accion-btn:hover svg {
-  color: #2d6a4f;
+  color: #2D5A27;
 }
 
 /* ── Input area ── */
@@ -291,7 +291,7 @@
 }
 
 .agro-input-wrapper:focus-within {
-  border-color: #2d6a4f;
+  border-color: #2D5A27;
   box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
 }
 
@@ -318,7 +318,7 @@
   height: 40px;
   border-radius: 50%;
   border: none;
-  background: linear-gradient(135deg, #2d6a4f, #40916c);
+  background: linear-gradient(135deg, #2D5A27, #00A650);
   color: white;
   display: flex;
   align-items: center;

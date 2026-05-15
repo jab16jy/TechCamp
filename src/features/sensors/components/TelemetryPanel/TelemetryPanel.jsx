@@ -1,4 +1,5 @@
 import React from 'react';
+import { Droplets, Thermometer, Zap } from 'lucide-react';
 import Spark from '@features/sensors/components/Spark/Spark';
 
 const humSpark = [38, 35, 32, 30, 27, 25, 24, 24];
@@ -11,7 +12,7 @@ function TelemetryPanel({ selectedNode }) {
       <div className="iot-gauge-card">
         <div className="iot-gauge-row">
           <div className="iot-gauge-icon-box blue">
-            <span className="material-symbols-outlined">water_drop</span>
+            <Droplets size={18} />
           </div>
           <div className="iot-gauge-info">
             <p className="iot-gauge-label">Humedad del Suelo</p>
@@ -31,7 +32,7 @@ function TelemetryPanel({ selectedNode }) {
       <div className="iot-gauge-card">
         <div className="iot-gauge-row">
           <div className="iot-gauge-icon-box amber">
-            <span className="material-symbols-outlined">thermostat</span>
+            <Thermometer size={18} />
           </div>
           <div className="iot-gauge-info">
             <p className="iot-gauge-label">Temperatura Ambiente</p>
@@ -51,7 +52,7 @@ function TelemetryPanel({ selectedNode }) {
       <div className="iot-gauge-card">
         <div className="iot-gauge-row">
           <div className="iot-gauge-icon-box green">
-            <span className="material-symbols-outlined">bolt</span>
+            <Zap size={18} />
           </div>
           <div className="iot-gauge-info">
             <p className="iot-gauge-label">Conductividad Eléctrica</p>

@@ -1,11 +1,12 @@
 import React from 'react';
+import { Network, Battery } from 'lucide-react';
 import RssiBar from '@features/sensors/components/RssiBar/RssiBar';
 
 function NodeList({ nodes, selectedNode, onSelectNode }) {
   return (
     <aside className="iot-node-col">
       <div className="iot-node-col-header">
-        <span className="material-symbols-outlined iot-col-icon">hub</span>
+        <Network size={16} className="iot-col-icon" />
         <h2 className="iot-col-title">Estado de Nodos</h2>
       </div>
       <div className="iot-node-list">
@@ -25,7 +26,7 @@ function NodeList({ nodes, selectedNode, onSelectNode }) {
             <RssiBar rssi={n.rssi} />
             <div className="iot-node-stats">
               <span className="iot-node-stat">
-                <span className="material-symbols-outlined" style={{fontSize:'0.75rem',color:'#64748b'}}>battery_std</span>
+                <Battery size={12} style={{color:'#64748b'}} />
                 {n.online ? `${n.battery}%` : '–'}
               </span>
               <span className={`iot-node-tag ${n.online ? (n.battery < 20 ? 'tag-warn' : 'tag-ok') : 'tag-off'}`}>
