@@ -4,6 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import 'leaflet-draw/dist/leaflet.draw.css';
 import 'leaflet-draw';
 import ResearcherLayout from '@shared/layout/ResearcherLayout/ResearcherLayout';
+import useAuthGuard from '@shared/hooks/useAuthGuard';
 import {
   Leaf, Thermometer, Droplets, MapPin,
   CheckCircle, AlertTriangle
@@ -22,6 +23,9 @@ L.Icon.Default.mergeOptions({
 });
 
 const Mapa = () => {
+  const authorized = useAuthGuard('investigador');
+  if (!authorized) return null;
+
   const {
     zona,
     layerType,

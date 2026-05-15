@@ -1,4 +1,5 @@
 import ResearcherLayout from '@shared/layout/ResearcherLayout/ResearcherLayout';
+import useAuthGuard from '@shared/hooks/useAuthGuard';
 import AdvancedResultHeader from '@features/analysis/components/AdvancedResultHeader/AdvancedResultHeader';
 import SoilParameters from '@features/analysis/components/SoilParameters/SoilParameters';
 import RecommendationsList from '@features/analysis/components/RecommendationsList/RecommendationsList';
@@ -37,6 +38,9 @@ const RECS = [
 ];
 
 const ResultadoAvanzado = () => {
+  const authorized = useAuthGuard('investigador');
+  if (!authorized) return null;
+
   const {
     rain,
     fert,

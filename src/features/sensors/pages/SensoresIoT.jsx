@@ -1,4 +1,5 @@
 import ResearcherLayout from '@shared/layout/ResearcherLayout/ResearcherLayout';
+import useAuthGuard from '@shared/hooks/useAuthGuard';
 import NodeList from '@features/sensors/components/NodeList/NodeList';
 import FarmMap from '@features/sensors/components/FarmMap/FarmMap';
 import TelemetryPanel from '@features/sensors/components/TelemetryPanel/TelemetryPanel';
@@ -8,6 +9,9 @@ import { ArrowLeft, ChevronRight, MapPin, Download, Satellite, ZoomIn, ZoomOut, 
 import './SensoresIoT.css';
 
 const SensoresIoT = () => {
+  const authorized = useAuthGuard('investigador');
+  if (!authorized) return null;
+
   const {
     showNdvi,
     pulse,

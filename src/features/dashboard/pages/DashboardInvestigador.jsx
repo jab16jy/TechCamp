@@ -4,6 +4,7 @@
 // ============================================================
 import { motion } from 'framer-motion';
 import ResearcherLayout from '@shared/layout/ResearcherLayout/ResearcherLayout';
+import useAuthGuard from '@shared/hooks/useAuthGuard';
 import useDashboard from '@features/dashboard/hooks/useDashboard';
 
 // ── Componentes extraídos ──
@@ -16,6 +17,9 @@ import WeeklySummary from '../components/WeeklySummary/WeeklySummary';
 import ModuleShortcuts from '../components/ModuleShortcuts/ModuleShortcuts';
 
 const DashboardInvestigador = () => {
+  const authorized = useAuthGuard('investigador');
+  if (!authorized) return null;
+
   const {
     timestamp,
     refreshTimestamp,

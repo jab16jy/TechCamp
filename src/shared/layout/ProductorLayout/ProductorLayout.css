@@ -1,0 +1,129 @@
+/* ── Root ── */
+.pl-root {
+  font-family: 'Manrope', sans-serif;
+  height: 100vh;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ── Top Bar ── */
+.pl-topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.03);
+}
+
+.pl-logo-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+.pl-logo-wrap:hover {
+  opacity: 0.85;
+}
+
+.pl-logo {
+  height: 36px;
+  width: auto;
+}
+
+.pl-brand-text {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #2D5A27;
+  letter-spacing: -0.01em;
+}
+
+.pl-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pl-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 50px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #404943;
+  text-decoration: none;
+  background: rgba(45, 90, 39, 0.06);
+  transition: all 0.3s ease;
+}
+
+.pl-nav-link:hover {
+  background: rgba(45, 90, 39, 0.12);
+  color: #2D5A27;
+}
+
+.pl-logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 50px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #ba1a1a;
+  background: rgba(186, 26, 26, 0.04);
+  border: none;
+  cursor: pointer;
+  font-family: 'Manrope', sans-serif;
+  transition: all 0.3s ease;
+}
+
+.pl-logout-btn:hover {
+  background: rgba(186, 26, 26, 0.1);
+  color: #a11717;
+}
+
+/* ── Main Content ── */
+.pl-main {
+  height: calc(100vh - 72px);
+  overflow-y: auto;
+  margin-top: 72px;
+  position: relative;
+}
+
+.pl-content-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px;
+  height: 100%;
+}
+
+/* ── Scrollbar ── */
+.pl-main::-webkit-scrollbar {
+  width: 5px;
+}
+
+.pl-main::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.pl-main::-webkit-scrollbar-thumb {
+  background: rgba(45, 90, 39, 0.15);
+  border-radius: 9999px;
+}
+
+.pl-main::-webkit-scrollbar-thumb:hover {
+  background: rgba(45, 90, 39, 0.3);
+}

@@ -12,6 +12,7 @@ import {
   Clock,
 } from 'lucide-react';
 import ResearcherLayout from '@shared/layout/ResearcherLayout/ResearcherLayout';
+import useAuthGuard from '@shared/hooks/useAuthGuard';
 import usePredictionSimulator from '@features/predictions/hooks/usePredictionSimulator';
 import FeatureChart, { DEFAULT_FEATURES } from '@features/predictions/components/FeatureChart/FeatureChart';
 import GrowthChart from '@features/predictions/components/GrowthChart/GrowthChart';
@@ -22,6 +23,9 @@ import InfoTip from '@shared/ui/InfoTip/InfoTip';
 import './IAPredictiva.css';
 
 const IAPredictiva = () => {
+  const authorized = useAuthGuard('investigador');
+  if (!authorized) return null;
+
   const navigate = useNavigate();
 
   const {

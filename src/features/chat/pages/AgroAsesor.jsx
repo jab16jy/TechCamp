@@ -1,4 +1,5 @@
 import ResearcherLayout from '@shared/layout/ResearcherLayout/ResearcherLayout';
+import useAuthGuard from '@shared/hooks/useAuthGuard';
 import useChat from '@features/chat/hooks/useChat';
 import ChatHeader from '@features/chat/components/ChatHeader/ChatHeader';
 import ChatMessages from '@features/chat/components/ChatMessages/ChatMessages';
@@ -9,6 +10,9 @@ import StudioPanel from '@features/chat/components/StudioPanel/StudioPanel';
 import './AgroAsesor.css';
 
 const AgroAsesor = () => {
+  const authorized = useAuthGuard('investigador');
+  if (!authorized) return null;
+
   const {
     mensajes,
     input,

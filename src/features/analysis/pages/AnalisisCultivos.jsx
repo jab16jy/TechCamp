@@ -1,4 +1,5 @@
 import ResearcherLayout from '@shared/layout/ResearcherLayout/ResearcherLayout';
+import ProductorLayout from '@shared/layout/ProductorLayout/ProductorLayout';
 import MapSelector from '@features/analysis/components/MapSelector';
 import AnalysisForm from '@features/analysis/components/AnalysisForm';
 import InfoTip from '@shared/ui/InfoTip/InfoTip';
@@ -51,17 +52,20 @@ const AnalisisCultivos = () => {
   } = useAnalisisCultivos();
 
 
+  const Layout = isProductor ? ProductorLayout : ResearcherLayout;
+  const layoutProps = isProductor ? {} : { activeTab, onTabChange: setActiveTab };
+
   return (
-    <ResearcherLayout activeTab={activeTab} onTabChange={setActiveTab}>
+    <Layout {...layoutProps}>
       <div className="ac-container max-w-[1440px] mx-auto">
 
         {/* ── HEADER ── */}
         <header className="ac-header">
           <div className="ac-header-left">
             <div className="ac-nav-row">
-              <button className="ac-back-btn" onClick={() => navigate('/investigador/dashboard')}>
+              <button className="ac-back-btn" onClick={() => navigate(isProductor ? '/' : '/investigador/dashboard')}>
                 <ArrowLeft size={14} />
-                Volver al Dashboard
+                {isProductor ? 'Inicio' : 'Volver al Dashboard'}
               </button>
               <nav className="ac-breadcrumb">
                 <span>Módulos</span>
@@ -361,7 +365,7 @@ const AnalisisCultivos = () => {
         {/* Historial Tab */}
         {activeTab === 'historial' && <HistorialTab />}
       </div>
-    </ResearcherLayout>
+    </Layout>
   );
 };
 

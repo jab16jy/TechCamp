@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import ResearcherLayout from '@shared/layout/ResearcherLayout/ResearcherLayout';
+import useAuthGuard from '@shared/hooks/useAuthGuard';
 import GaugeChart from '@features/reports/components/GaugeChart/GaugeChart';
 import NdviMiniMap from '@features/reports/components/NdviMiniMap/NdviMiniMap';
 import HydroChart from '@features/reports/components/HydroChart/HydroChart';
@@ -8,6 +9,9 @@ import './GestionReportes.css';
 
 // ── Main ──
 const GestionReportes = () => {
+  const authorized = useAuthGuard('investigador');
+  if (!authorized) return null;
+
   const navigate = useNavigate();
   const {
     activeMonth,

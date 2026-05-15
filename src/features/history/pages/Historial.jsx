@@ -5,6 +5,7 @@ import {
   Sprout
 } from 'lucide-react';
 import ResearcherLayout from '@shared/layout/ResearcherLayout/ResearcherLayout';
+import useAuthGuard from '@shared/hooks/useAuthGuard';
 import useHistorial, { TYPE_META, ESTADO_COLORS, formatDate } from '@features/history/hooks/useHistorial';
 import './Historial.css';
 
@@ -177,6 +178,9 @@ function HistorialCard({ item, onView, onDelete }) {
 }
 
 const Historial = () => {
+  const authorized = useAuthGuard('investigador');
+  if (!authorized) return null;
+
   const {
     search,
     setSearch,
