@@ -161,7 +161,7 @@ const AnalisisCultivos = () => {
                     onPositionChange={handleMapChange}
                     height={400}
                   />
-                  <div className="absolute bottom-6 right-6 ac-glass ac-sensor-chip z-[1000]">
+                  <div className="absolute top-6 right-6 ac-glass ac-sensor-chip z-[1000]">
                     <div className="ac-pulse-dot" />
                     <span>Sensores Activos</span>
                   </div>
