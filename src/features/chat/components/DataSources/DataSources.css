@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 16px;
+  padding: 20px;
   overflow-y: auto;
   height: 100%;
 }
@@ -26,19 +26,16 @@
 }
 
 .ds-card {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: transparent;
   border-radius: 16px;
   padding: 12px;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
 }
 
 .ds-card:hover {
-  background: rgba(255, 255, 255, 0.85);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
-  transform: translateY(-1px);
+  background: rgba(0, 0, 0, 0.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
 .ds-card-header {
@@ -85,20 +82,26 @@
 }
 
 .ds-card-value {
-  font-size: 11px;
-  color: #5f6368;
+  font-size: 10px;
+  color: #9aa0a6;
 }
 
 .ds-card-detail {
   margin-top: 8px;
   padding-top: 8px;
-  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  border-top: 1px solid rgba(0, 0, 0, 0.04);
   font-size: 11px;
-  color: #5f6368;
+  color: #9aa0a6;
 }
 
 .ds-card-compact {
   padding: 10px 12px;
+  box-shadow: none;
+}
+
+.ds-card-compact:hover {
+  background: rgba(0, 0, 0, 0.02);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .ds-card-compact .ds-card-header {
@@ -111,6 +114,12 @@
 
 .ds-card-sensor {
   padding: 10px 12px;
+  box-shadow: none;
+}
+
+.ds-card-sensor:hover {
+  background: rgba(0, 0, 0, 0.02);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .ds-sensor-header {

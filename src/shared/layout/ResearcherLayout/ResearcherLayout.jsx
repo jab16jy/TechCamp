@@ -12,13 +12,6 @@ import {
   AlertTriangle,
   CheckCircle2,
   Info,
-  LayoutDashboard,
-  Sprout,
-  Wifi,
-  Brain,
-  BarChart3,
-  Bot,
-  Map
 } from 'lucide-react';
 
 import AmbientBackground from '../AmbientBackground/AmbientBackground';
@@ -83,21 +76,25 @@ const ResearcherLayout = ({ children, activeTab }) => {
     <div className="text-slate-900 font-sans antialiased h-screen w-full relative overflow-hidden">
       <AmbientBackground />
       {/* Top Navigation (Shared Component) */}
-      <header className="sticky top-4 z-50 mx-auto w-[calc(100%-3rem)] max-w-[1400px] rounded-3xl bg-white/90 backdrop-blur-xl border border-white/40 shadow-sm flex justify-between items-center px-8 py-3 transition-all duration-300 hover:bg-white/95">
+      <header className="sticky top-3 z-50 mx-auto w-[calc(100%-2rem)] max-w-[1400px] rounded-2xl bg-white/80 backdrop-blur-xl border border-white/40 shadow-sm flex justify-between items-center px-6 py-2 transition-all duration-300 hover:bg-white/95">
         <div className="flex items-center gap-4">
-          <img src={logoSrc} alt="AgroCaribe IA" className="h-8 w-auto" />
-          <div className="hidden md:flex bg-white/90 backdrop-blur-xl border border-white/40 shadow-sm rounded-full px-6 py-2 gap-8 ml-8">
+          <img src={logoSrc} alt="AgroCaribe IA" className="h-7 w-auto" />
+          <div className="hidden md:flex bg-white/80 backdrop-blur-xl border border-white/40 shadow-sm rounded-full px-4 py-1.5 gap-5 ml-6">
             <Link to="/investigador/dashboard" className={linkClass('/investigador/dashboard')}>Dashboard</Link>
+            <Link to="/investigador/analisis" className={linkClass('/investigador/analisis')}>Análisis</Link>
             <Link to="/investigador/mapas" className={linkClass('/investigador/mapas')}>AgroAsesor</Link>
             <Link to="/investigador/mapa" className={linkClass('/investigador/mapa')}>Mapa</Link>
+            <Link to="/investigador/ia" className={linkClass('/investigador/ia')}>IA</Link>
+            <Link to="/investigador/sensores" className={linkClass('/investigador/sensores')}>Sensores</Link>
+            <Link to="/investigador/reportes" className={linkClass('/investigador/reportes')}>Reportes</Link>
             <Link to="/investigador/historial" className={linkClass('/investigador/historial')}>Historial</Link>
           </div>
         </div>
-        <div className="flex items-center gap-6">
-            <div className="bg-white/90 backdrop-blur-xl border border-white/40 shadow-sm rounded-full px-4 py-2 flex items-center gap-2 text-slate-500 transition-all duration-300 hover:bg-white">
-              <Search size={20} />
+        <div className="flex items-center gap-4">
+            <div className="bg-white/80 backdrop-blur-xl border border-white/40 shadow-sm rounded-full px-3 py-1.5 flex items-center gap-2 text-slate-500 transition-all duration-300 hover:bg-white">
+              <Search size={18} />
               <input
-                className="bg-transparent border-none focus:ring-0 text-sm w-48 text-slate-700 placeholder:text-slate-400 p-0 outline-none"
+                className="bg-transparent border-none focus:ring-0 text-sm w-36 text-slate-700 placeholder:text-slate-400 p-0 outline-none"
                 placeholder="Buscar parcela..."
                 type="text"
               />
@@ -108,7 +105,7 @@ const ResearcherLayout = ({ children, activeTab }) => {
                 onClick={() => setAlertsOpen((prev) => !prev)}
                 className="text-slate-500/80 hover:text-[#0f5238] transition-colors relative flex items-center justify-center"
               >
-                <Bell size={24} />
+                <Bell size={20} />
                 <span className="absolute right-0 top-0 h-2 w-2 rounded-full border-2 border-white bg-red-500" />
               </button>
 
@@ -149,7 +146,7 @@ const ResearcherLayout = ({ children, activeTab }) => {
             </div>
 
             <button className="text-slate-500/80 hover:text-[#0f5238] transition-colors">
-              <Settings size={24} />
+              <Settings size={20} />
             </button>
 
             <div className="relative" ref={profileRef}>
@@ -157,7 +154,7 @@ const ResearcherLayout = ({ children, activeTab }) => {
                 <img
                   src={noFotoSrc}
                   alt="Usuario"
-                  className="w-10 h-10 rounded-full border-2 border-white/40 object-cover shadow-sm"
+                  className="w-8 h-8 rounded-full border-2 border-white/40 object-cover shadow-sm"
                 />
               </button>
 
@@ -201,72 +198,8 @@ const ResearcherLayout = ({ children, activeTab }) => {
           </div>
       </header>
 
-      {/* Floating Sidebar (Shared Component) */}
-      <nav className="fixed left-4 top-24 bottom-4 w-20 rounded-2xl bg-white/90 backdrop-blur-xl border border-white/40 shadow-lg flex flex-col items-center py-8 gap-y-6 z-40">
-        <Link
-          to="/investigador/dashboard"
-          className={`${
-            isActive('/investigador/dashboard')
-              ? 'bg-[#2d6a4f]/15 text-[#2d6a4f] shadow-sm scale-90 transition-transform duration-200'
-              : 'text-slate-400/80 hover:bg-white/30 hover:text-[#0f5238] transition-colors group'
-          } rounded-xl p-3 flex flex-col items-center justify-center`}
-        >
-          <LayoutDashboard size={24} className={isActive('/investigador/dashboard') ? 'text-[#2d6a4f]' : 'group-hover:text-[#0f5238]'} />
-        </Link>
-        <Link
-          to="/investigador/analisis"
-          className={`${
-            isActive('/investigador/analisis')
-              ? 'bg-[#2d6a4f]/15 text-[#2d6a4f] shadow-sm scale-90 transition-transform duration-200'
-              : 'text-slate-400/80 hover:bg-white/30 hover:text-[#0f5238] transition-colors group'
-          } rounded-xl p-3 flex flex-col items-center justify-center`}
-        >
-          <Sprout size={24} className={isActive('/investigador/analisis') ? 'text-[#2d6a4f]' : 'group-hover:text-[#0f5238]'} />
-        </Link>
-        <Link
-          to="/investigador/sensores"
-          className={`${
-            isActive('/investigador/sensores')
-              ? 'bg-[#2d6a4f]/15 text-[#2d6a4f] shadow-sm scale-90 transition-transform duration-200'
-              : 'text-slate-400/80 hover:bg-white/30 hover:text-[#0f5238] transition-colors group'
-          } rounded-xl p-3 flex flex-col items-center justify-center`}
-        >
-          <Wifi size={24} className={isActive('/investigador/sensores') ? 'text-[#2d6a4f]' : 'group-hover:text-[#0f5238]'} />
-        </Link>
-        <Link
-          to="/investigador/ia"
-          className={`${
-            isActive('/investigador/ia')
-              ? 'bg-[#2d6a4f]/15 text-[#2d6a4f] shadow-sm scale-90 transition-transform duration-200'
-              : 'text-slate-400/80 hover:bg-white/30 hover:text-[#0f5238] transition-colors group'
-          } rounded-xl p-3 flex flex-col items-center justify-center`}
-        >
-          <Brain size={24} className={isActive('/investigador/ia') ? 'text-[#2d6a4f]' : 'group-hover:text-[#0f5238]'} />
-        </Link>
-        <Link
-          to="/investigador/reportes"
-          className={`${
-            isActive('/investigador/reportes')
-              ? 'bg-[#2d6a4f]/15 text-[#2d6a4f] shadow-sm scale-90 transition-transform duration-200'
-              : 'text-slate-400/80 hover:bg-white/30 hover:text-[#0f5238] transition-colors group'
-          } rounded-xl p-3 flex flex-col items-center justify-center`}
-        >
-          <BarChart3 size={24} className={isActive('/investigador/reportes') ? 'text-[#2d6a4f]' : 'group-hover:text-[#0f5238]'} />
-        </Link>
-        <Link
-          to="/investigador/mapa"
-          className={`${
-            isActive('/investigador/mapa')
-              ? 'bg-[#2d6a4f]/15 text-[#2d6a4f] shadow-sm scale-90 transition-transform duration-200'
-              : 'text-slate-400/80 hover:bg-white/30 hover:text-[#0f5238] transition-colors group'
-          } rounded-xl p-3 flex flex-col items-center justify-center`}
-        >
-          <Map size={24} className={isActive('/investigador/mapa') ? 'text-[#2d6a4f]' : 'group-hover:text-[#0f5238]'} />
-        </Link>
-      </nav>
-
       {/* Main Content Area */}
-      <main className="absolute top-24 left-32 right-10 bottom-4 z-30 overflow-y-auto pb-10 pr-2 custom-scrollbar-light">
+      <main className="absolute top-20 left-10 right-10 bottom-4 z-30 overflow-y-auto pb-10 pr-2 custom-scrollbar-light">
         {children}
       </main>
     </div>

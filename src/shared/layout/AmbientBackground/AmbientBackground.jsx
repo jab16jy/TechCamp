@@ -166,13 +166,20 @@ const AmbientBackground = memo(() => {
 
   const p = PALETTES[idx];
 
+  const reduceOpacity = (color) => {
+    const match = color.match(/rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/);
+    if (!match) return color;
+    const [, r, g, b, a] = match;
+    return `rgba(${r}, ${g}, ${b}, ${(parseFloat(a) * 0.5).toFixed(3)})`;
+  };
+
   const meshBg = `
-    radial-gradient(ellipse 70% 55% at 20% 30%, ${p.mesh[0]} 0%, transparent 70%),
-    radial-gradient(ellipse 55% 50% at 80% 65%, ${p.mesh[1]} 0%, transparent 60%),
-    radial-gradient(ellipse 50% 45% at 45% 55%, ${p.mesh[2]} 0%, transparent 55%),
-    radial-gradient(ellipse 60% 50% at 70% 20%, ${p.mesh[3]} 0%, transparent 50%),
-    radial-gradient(ellipse 45% 40% at 30% 75%, ${p.mesh[4]} 0%, transparent 45%),
-    radial-gradient(ellipse 55% 60% at 60% 40%, ${p.mesh[5]} 0%, transparent 50%)
+    radial-gradient(ellipse 70% 55% at 20% 30%, ${reduceOpacity(p.mesh[0])} 0%, transparent 70%),
+    radial-gradient(ellipse 55% 50% at 80% 65%, ${reduceOpacity(p.mesh[1])} 0%, transparent 60%),
+    radial-gradient(ellipse 50% 45% at 45% 55%, ${reduceOpacity(p.mesh[2])} 0%, transparent 55%),
+    radial-gradient(ellipse 60% 50% at 70% 20%, ${reduceOpacity(p.mesh[3])} 0%, transparent 50%),
+    radial-gradient(ellipse 45% 40% at 30% 75%, ${reduceOpacity(p.mesh[4])} 0%, transparent 45%),
+    radial-gradient(ellipse 55% 60% at 60% 40%, ${reduceOpacity(p.mesh[5])} 0%, transparent 50%)
   `;
 
   return (
@@ -190,7 +197,7 @@ const AmbientBackground = memo(() => {
         preserveAspectRatio="xMidYMid slice"
         xmlns="http://www.w3.org/2000/svg"
         style={{
-          color: p.topo,
+          color: reduceOpacity(p.topo),
           transition: `color ${TRANSITION_MS}ms ease-in-out`,
         }}
       >
@@ -210,7 +217,7 @@ const AmbientBackground = memo(() => {
           key={i}
           className={`${styles.orb} ${styles[`orb${i + 1}`]}`}
           style={{
-            background: `radial-gradient(circle at 50% 50%, ${orb}, transparent 70%)`,
+            background: `radial-gradient(circle at 50% 50%, ${reduceOpacity(orb)}, transparent 70%)`,
             transition: `background ${TRANSITION_MS}ms ease-in-out`,
           }}
         />
@@ -227,7 +234,7 @@ const AmbientBackground = memo(() => {
             cx={[120, 380, 650, 900, 1150, 250, 780, 1320, 500, 1050, 80, 1350][i]}
             cy={[180, 520, 280, 620, 150, 750, 420, 500, 120, 780, 400, 300][i]}
             r={[1.5, 1, 2, 1.5, 1, 1.5, 1, 2, 1, 1.5, 1.2, 1.8][i]}
-            fill={fill}
+            fill={reduceOpacity(fill)}
             className={styles.particle}
             style={{
               transition: `fill ${TRANSITION_MS}ms ease-in-out`,
@@ -239,7 +246,7 @@ const AmbientBackground = memo(() => {
       <div
         className={styles.vignette}
         style={{
-          background: `radial-gradient(ellipse 65% 55% at 50% 50%, transparent 50%, ${p.vignette} 100%)`,
+          background: `radial-gradient(ellipse 65% 55% at 50% 50%, transparent 50%, ${reduceOpacity(p.vignette)} 100%)`,
           transition: `background ${TRANSITION_MS}ms ease-in-out`,
         }}
       />
