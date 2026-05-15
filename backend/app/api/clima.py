@@ -1,16 +1,20 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.dependencies import get_db
 from app.schemas.analisis import ClimateData
+from app.services.climate_service import get_climate_data, get_mock_climate
+from app.services.satellite_service import get_satellite_data, get_mock_satellite
 
 router = APIRouter(prefix="/climate", tags=["clima"])
 
 
 @router.get("", response_model=ClimateData)
-async def get_climate(lat: float = Query(...), lng: float = Query(...)):
-    return ClimateData(
-        temperatura=29.1,
-        precipitacion=74.5,
-        humedad=77,
-        evapotranspiracion=5.2,
-        radiacion_solar=18.4,
-    )
+async def get_climate(
+    lat: float = Query(...),
+    lng: float = Query(...),
+):
+    climate = await get_climate_data(lat, lng)
+    if climate.temperatura == 0.0 and climate.precipitacion == 0.0:
+        return get_mock_climate()
+    return climate
