@@ -13,35 +13,82 @@ React 19 SPA — agricultural analysis platform. Vite 8, Tailwind CSS 3, Zustand
 
 No test suite configured. No typecheck step.
 
-## Architecture
+## Architecture — Feature-Based
 
-- **Entrypoint**: `src/main.jsx` → `src/App.jsx` (BrowserRouter + Routes)
-- **State**: Single Zustand store at `src/context/useAppStore.js` — holds `formulario`, `resultado`, `cargandoAnalisis`, `toasts`
-- **API**: Axios client at `src/services/api.js` targets `localhost:8000`. All endpoints have mock fallback (serverless dev works without backend)
-- **Layout**: `ResearcherLayout` wraps all dashboard routes — has a fixed floating sidebar (5 icons) and sticky glass navbar
-- **Styling**: Mix of Tailwind utility classes, CSS Modules (`.module.css`), and plain CSS. Design system is **Integrated Organic** glassmorphism: Manrope font, botanical greens (`#0f5238`, `#2d6a4f`), `backdrop-filter` cards with `rgba(255,255,255,0.55)` backgrounds
-- **Icons**: `lucide-react` only — do NOT use Material Symbols/`material-symbols-outlined`
-- **Routing**: All routes defined in `src/App.jsx`. Key paths: `/`, `/investigador/login`, `/investigador/dashboard`, `/investigador/analisis`, `/investigador/ia`, `/investigador/reportes`
+The codebase follows a **feature-based folder structure** with path aliases.
+
+```
+src/
+├── main.jsx              → Vite entrypoint
+├── App.jsx               → BrowserRouter + Routes
+├── assets/               → Images, logos, sprites
+├── shared/               → Cross-cutting concerns
+│   ├── layout/           → ResearcherLayout, AmbientBackground, FloatingAIButton
+│   ├── services/         → api.js, analysisService.js
+│   ├── store/            → Zustand slices: analysisSlice, historySlice, uiSlice
+│   ├── styles/           → Global CSS (index.css)
+│   └── ui/               → Reusable UI primitives (Toast, InfoTip, DataSourcesCard)
+└── features/             → Domain modules
+    ├── analysis/         → AnalisisCultivos, Resultado, ResultadoAvanzado
+    ├── auth/             → Login, Acceso
+    ├── chat/             → AgroAsesor (map + chatbot)
+    ├── dashboard/        → DashboardInvestigador
+    ├── history/          → Historial
+    ├── map/              → Mapa
+    ├── predictions/      → IAPredictiva
+    ├── reports/          → GestionReportes
+    └── sensors/          → SensoresIoT
+```
+
+### Path Aliases (vite.config.js + jsconfig.json)
+
+| Alias | Points to |
+|-------|-----------|
+| `@features/*` | `src/features/*` |
+| `@shared/*` | `src/shared/*` |
+| `@assets/*` | `src/assets/*` |
+
+Example:
+```js
+import ResearcherLayout from '@shared/layout/ResearcherLayout/ResearcherLayout'
+import useAppStore from '@shared/store'
+import { AnalysisService } from '@shared/services/analysisService'
+```
+
+### State Management
+
+Zustand store at `@shared/store` (was `src/context/useAppStore.js`). Split into slices:
+- `analysisSlice` — form data, loading state, results
+- `historySlice` — analysis history with localStorage persistence
+- `uiSlice` — toasts, UI flags
+
+### API / Services
+
+Axios client at `@shared/services/api.js` targets `localhost:8000`. All endpoints have mock fallback (serverless dev works without backend).
+Business logic hooks live inside each feature: `@features/<feature>/hooks/use*.js|jsx`.
 
 ## Dashboard Pages (all wrapped in ResearcherLayout)
 
-| Route | Component | Description |
-|-------|-----------|-------------|
-| `/investigador/dashboard` | `DashboardInvestigador` | Overview. Tailwind glass classes directly in JSX. |
-| `/investigador/analisis` | `AnalisisCultivos` | Crop analysis form + map. Uses `AnalisisCultivos.css` (plain CSS, NOT `.module.css`). |
-| `/investigador/ia` | `IAPredictiva` | AI prediction dashboard. Uses `IAPredictiva.css`. |
-| `/investigador/mapas` | `AgroAsesor` | Map + chatbot. No CSS file (inline styles with glassmorphism). |
-| `/investigador/reportes` | `GestionReportes` | Reports. Uses `GestionReportes.css`. |
-| `/investigador/sensores` | `SensoresIoT` | IoT sensor dashboard. Uses `SensoresIoT.css`. |
-| `/investigador/resultado-avanzado` | `ResultadoAvanzado` | Advanced results. Uses `ResultadoAvanzado.css`. |
+| Route | Component | File | Description |
+|-------|-----------|------|-------------|
+| `/investigador/dashboard` | `DashboardInvestigador` | `features/dashboard/pages/DashboardInvestigador.jsx` | Overview. Uses `useDashboard` hook. |
+| `/investigador/analisis` | `AnalisisCultivos` | `features/analysis/pages/AnalisisCultivos.jsx` | Crop analysis form + map. Uses `useAnalisisCultivos`. |
+| `/investigador/ia` | `IAPredictiva` | `features/predictions/pages/IAPredictiva.jsx` | AI prediction dashboard. Uses `usePredictionSimulator`. |
+| `/investigador/mapas` | `AgroAsesor` | `features/chat/pages/AgroAsesor.jsx` | Map + chatbot. Uses `useChat`. |
+| `/investigador/reportes` | `GestionReportes` | `features/reports/pages/GestionReportes.jsx` | Reports. Uses `useTaskManager`. |
+| `/investigador/sensores` | `SensoresIoT` | `features/sensors/pages/SensoresIoT.jsx` | IoT sensor dashboard. Uses `useSensoresIoT`. |
+| `/investigador/historial` | `Historial` | `features/history/pages/Historial.jsx` | Analysis history. Uses `useHistorial`. |
+| `/investigador/resultado-avanzado` | `ResultadoAvanzado` | `features/analysis/pages/ResultadoAvanzado.jsx` | Advanced results. Uses `useResultadoAvanzado`. |
+| `/resultado` | `Resultado` | `features/analysis/pages/Resultado.jsx` | Shared result page. Uses `useResultado`. |
 
 ## Design Conventions
 
 - **Font**: Manrope everywhere. Do NOT use DM Sans, Montserrat, Playfair Display, Syne, Inter, or IBM Plex Mono.
-- **Color palette**: Use the M3 tokens from `src/index.css` (`--m3-*`) or the Tailwind colors from `tailwind.config.js` (`primary: #0f5238`, `primary-container: #2d6a4f`, etc.)
+- **Color palette**: Use the M3 tokens from `src/shared/styles/index.css` (`--m3-*`) or the Tailwind colors from `tailwind.config.js` (`primary: #0f5238`, `primary-container: #2d6a4f`, etc.)
 - **Glass cards**: Standard pattern is `background: rgba(255,255,255,0.55); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.25); border-radius: 2rem;`
 - **Animation**: `@keyframes` can be added in component CSS. Use `0.3s ease` transitions. Entry animations via framer-motion (available in ResearcherLayout for dropdowns).
 - **CSS approach**: Each page uses either plain CSS (e.g., `AnalisisCultivos.css`), CSS Modules (e.g., `LoginInvestigador.module.css`), or Tailwind alone. Stay consistent with the file's existing approach.
+- **Icons**: `lucide-react` only — do NOT use Material Symbols/`material-symbols-outlined`.
 
 ## Skills (installed)
 
@@ -62,7 +109,6 @@ Browse more skills: `npx skills find <query>`
 
 ## Gotchas
 
-- Some pages have orphaned `.module.css` files no longer imported by their JSX (e.g., `GestionReportes.module.css`, `IAPredictiva.module.css`, `ResultadoAvanzado.module.css`, `SensoresIoT.module.css`, `DashboardInvestigador.module.css`). Prefer editing the imported CSS file or the JSX inline styles instead.
 - The `ResearcherLayout` wraps pages in an `absolute` positioned `<main>` — content needs `position: relative` if it should be positioned relative to the main area.
 - Refresh page to logout: session is in `sessionStorage` (cleared on tab close).
 - The `FloatingAIButton` (a persistent floating bot icon) and `Toast` component are rendered at the App level, outside the router/ResearcherLayout.

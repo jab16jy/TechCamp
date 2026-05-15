@@ -1,29 +1,12 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   History, Leaf, FlaskConical, MapPin, Calendar, Trash2,
   Eye, Filter, Search, ChevronRight, X, ArrowLeft,
-  Sprout, Droplets, Thermometer, CloudRain
+  Sprout
 } from 'lucide-react';
-import useAppStore from '@shared/store';
 import ResearcherLayout from '@shared/layout/ResearcherLayout/ResearcherLayout';
+import useHistorial, { TYPE_META, ESTADO_COLORS, formatDate } from '@features/history/hooks/useHistorial';
 import './Historial.css';
-
-const TYPE_META = {
-  analisis: { label: 'Análisis Cultivo', icon: Leaf, color: '#2d6a4f', bgColor: 'rgba(45,106,79,0.08)' },
-  suelo: { label: 'Calidad Suelo', icon: FlaskConical, color: '#75584d', bgColor: 'rgba(117,88,77,0.08)' },
-};
-
-const ESTADO_COLORS = {
-  Exitosa: { bg: 'rgba(0,109,72,0.1)', color: '#006d48' },
-  Pendiente: { bg: 'rgba(234,179,8,0.1)', color: '#ca8a04' },
-  Error: { bg: 'rgba(186,26,26,0.1)', color: '#ba1a1a' },
-};
-
-function formatDate(iso) {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-}
 
 function ScoreBar({ score }) {
   const color = score >= 85 ? '#006d48' : score >= 70 ? '#ca8a04' : '#ba1a1a';
@@ -40,13 +23,14 @@ function ScoreBar({ score }) {
 function HistorialCard({ item, onView, onDelete }) {
   const [expanded, setExpanded] = useState(false);
   const meta = TYPE_META[item.tipo] || TYPE_META.analisis;
-  const Icon = meta.icon;
   const estadoColors = ESTADO_COLORS[item.estado] || ESTADO_COLORS.Exitosa;
+
+  const Icon = item.tipo === 'analisis' ? Leaf : FlaskConical;
 
   return (
     <article className={`h-card ${expanded ? 'h-card--expanded' : ''}`}>
       <div className="h-card-main">
-        <div className={`h-card-icon-wrap`} style={{ background: meta.bgColor, color: meta.color }}>
+        <div className="h-card-icon-wrap" style={{ background: meta.bgColor, color: meta.color }}>
           <Icon size={20} />
         </div>
 
@@ -193,53 +177,22 @@ function HistorialCard({ item, onView, onDelete }) {
 }
 
 const Historial = () => {
-  const navigate = useNavigate();
-  const historial = useAppStore((s) => s.historial);
-  const limpiarHistorial = useAppStore((s) => s.limpiarHistorial);
-
-  const [search, setSearch] = useState('');
-  const [filterTipo, setFilterTipo] = useState('all');
-  const [filterEstado, setFilterEstado] = useState('all');
-
-  const filtered = historial.filter((item) => {
-    const matchSearch =
-      !search ||
-      (item.id?.toLowerCase().includes(search.toLowerCase())) ||
-      (item.municipio?.toLowerCase().includes(search.toLowerCase())) ||
-      (item.cultivo?.toLowerCase().includes(search.toLowerCase())) ||
-      (item.cultivo_top?.toLowerCase().includes(search.toLowerCase()));
-    const matchTipo = filterTipo === 'all' || item.tipo === filterTipo;
-    const matchEstado = filterEstado === 'all' || item.estado === filterEstado;
-    return matchSearch && matchTipo && matchEstado;
-  });
-
-  const handleView = (item) => {
-    if (item.tipo === 'suelo') {
-      navigate('/investigador/resultado-avanzado');
-    } else {
-      navigate('/resultado');
-    }
-  };
-
-  const handleDelete = (id) => {
-    const updated = historial.filter((h) => h.id !== id);
-    try {
-      localStorage.setItem('agrocaribe_historial', JSON.stringify(updated));
-      useAppStore.setState({ historial: updated });
-    } catch { /* ignore */ }
-  };
-
-  const handleClearAll = () => {
-    if (window.confirm('¿Eliminar todo el historial?')) {
-      limpiarHistorial();
-    }
-  };
-
-  const stats = {
-    total: historial.length,
-    analisis: historial.filter((h) => h.tipo === 'analisis').length,
-    suelo: historial.filter((h) => h.tipo === 'suelo').length,
-  };
+  const {
+    search,
+    setSearch,
+    filterTipo,
+    setFilterTipo,
+    filterEstado,
+    setFilterEstado,
+    historial,
+    filtered,
+    stats,
+    handleView,
+    handleDelete,
+    handleClearAll,
+    clearSearch,
+    navigate,
+  } = useHistorial();
 
   return (
     <ResearcherLayout activeTab="historial">
@@ -306,7 +259,7 @@ const Historial = () => {
               onChange={(e) => setSearch(e.target.value)}
             />
             {search && (
-              <button className="h-search-clear" onClick={() => setSearch('')}>
+              <button className="h-search-clear" onClick={clearSearch}>
                 <X size={14} />
               </button>
             )}

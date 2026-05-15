@@ -1,10 +1,13 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import useAppStore from '@shared/store';
-import AnalysisService from '@shared/services/analysisService';
 import ResearcherLayout from '@shared/layout/ResearcherLayout/ResearcherLayout';
 import MapSelector from '@features/analysis/components/MapSelector';
 import AnalysisForm from '@features/analysis/components/AnalysisForm';
+import InfoTip from '@shared/ui/InfoTip/InfoTip';
+import MetricCardsGrid from '@features/analysis/components/MetricCardsGrid/MetricCardsGrid';
+import ClimateDataCards from '@features/analysis/components/ClimateDataCards/ClimateDataCards';
+import AlgorithmHealthCard from '@features/analysis/components/AlgorithmHealthCard/AlgorithmHealthCard';
+import HistorialTab from '@features/analysis/components/HistorialTab/HistorialTab';
+import DataSourcesCard from '@shared/ui/DataSourcesCard/DataSourcesCard';
+import { useAnalisisCultivos } from '@features/analysis/hooks/useAnalisisCultivos';
 import {
   Sparkles,
   Map,
@@ -13,209 +16,40 @@ import {
   Leaf,
   Droplets,
   FlaskConical,
-  Thermometer,
-  CloudRain,
   Info,
-  CheckCircle2,
-  AlertTriangle,
   History,
   MapPin,
   Zap,
-  Search,
-  Sprout,
   ArrowLeft,
   ChevronRight,
   Calendar,
   Download,
   Share2,
   Loader2,
-  Brain,
-  Satellite,
-  Globe,
-  Microscope,
 } from 'lucide-react';
 import './AnalisisCultivos.css';
 
-// ── Tooltip ──
-function InfoTip({ text }) {
-  const [show, setShow] = useState(false);
-  return (
-    <span
-      className="ac-tooltip-wrap"
-      onMouseEnter={() => setShow(true)}
-      onMouseLeave={() => setShow(false)}
-    >
-      <Info size={14} className="ac-info-icon" />
-      {show && <div className="ac-tooltip">{text}</div>}
-    </span>
-  );
-}
 
 const AnalisisCultivos = () => {
-  const navigate = useNavigate();
-  const { formulario, actualizarFormulario, setCargandoAnalisis, cargandoAnalisis, setResultado, agregarToast, agregarAlHistorial } = useAppStore();
+  const {
+    municipiosLista,
+    mode,
+    setMode,
+    activeTab,
+    setActiveTab,
+    selectedParcela,
+    isProductor,
+    clima,
+    formulario,
+    cargandoAnalisis,
+    handleFormChange,
+    handleMapChange,
+    handleSubmit,
+    handleParcelaChange,
+    metricCardsData,
+    navigate,
+  } = useAnalisisCultivos();
 
-  const [municipiosLista, setMunicipiosLista] = useState([]);
-  const rol = sessionStorage.getItem('rol');
-  const isProductor = rol === 'productor';
-  const [mode, setMode] = useState('simple');
-  const [activeTab, setActiveTab] = useState('analisis');
-  const [selectedParcela, setSelectedParcela] = useState('');
-
-  const CLIMA_POR_PARCELA = {
-    'Hacienda El Sol - Hace 2 dias': { temperatura: 26.4, humedad: 72, precipitacion: 1180 },
-    'Lote Norte - Hace 1 semana': { temperatura: 28.1, humedad: 65, precipitacion: 940 },
-    'Parcela Demo - Ayer': { temperatura: 24.8, humedad: 78, precipitacion: 1320 },
-  };
-
-  const clima = selectedParcela && CLIMA_POR_PARCELA[selectedParcela]
-    ? CLIMA_POR_PARCELA[selectedParcela]
-    : { temperatura: 26.4, humedad: 72, precipitacion: 1180 };
-
-  useEffect(() => {
-    if (isProductor) setMode('simple');
-  }, [isProductor]);
-
-  useEffect(() => {
-    AnalysisService.getAvailableLocations().then(setMunicipiosLista);
-  }, []);
-
-  const handleFormChange = (newFields) => {
-    actualizarFormulario(newFields);
-  };
-
-  const handleMapChange = (latlng) => {
-    actualizarFormulario({
-      lat: latlng.lat,
-      lng: latlng.lng,
-    });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    const required = ['departamento', 'municipio', 'tipo_suelo', 'mes_siembra', 'area_hectareas'];
-    const missing = required.filter((field) => !formulario[field]);
-
-    if (missing.length > 0 || !formulario.lat || !formulario.lng) {
-      agregarToast('Por favor, completa todos los campos y selecciona la ubicacion en el mapa', 'error');
-      return;
-    }
-
-    setCargandoAnalisis(true);
-    try {
-      const resultado = await AnalysisService.performAnalysis({
-        ...formulario,
-        humedad: clima.humedad,
-      });
-      setResultado(resultado);
-      agregarToast('Analisis completado exitosamente', 'success');
-
-      const topRec = resultado.recomendaciones?.[0];
-      agregarAlHistorial({
-        tipo: mode === 'advanced' ? 'suelo' : 'analisis',
-        municipio: formulario.municipio,
-        departamento: formulario.departamento,
-        lat: formulario.lat,
-        lng: formulario.lng,
-        area_hectareas: formulario.area_hectareas,
-        ...(mode === 'simple'
-          ? {
-              cultivo: topRec?.cultivo || null,
-              score: topRec?.score || null,
-              cultivo_top: topRec?.cultivo || null,
-              rankings: resultado.structuredRecommendation?.output?.ranking?.map((r, i) => ({
-                rank: i + 1,
-                crop: r.crop,
-                score: r.score,
-              })) || [],
-            }
-          : {
-              ph: formulario.ph_suelo || null,
-              nitrogeno: null,
-              fosforo: null,
-              potasio: null,
-              materia_organica: formulario.materia_organica || null,
-              calidad_suelo: resultado.indicadores_satelite?.calidad_suelo || null,
-              ndvi: resultado.indicadores_satelite?.ndvi || null,
-            }),
-      });
-
-      if (mode === 'advanced') {
-        navigate('/investigador/resultado-avanzado');
-      } else {
-        navigate('/resultado');
-      }
-    } catch (error) {
-      agregarToast('Error al procesar el analisis. Intentalo de nuevo.', 'error');
-    } finally {
-      setCargandoAnalisis(false);
-    }
-  };
-
-  const handleParcelaChange = (e) => {
-    setSelectedParcela(e.target.value);
-  };
-
-  const structuredPreview = useMemo(
-    () =>
-      AnalysisService.createStructuredAnalysisPayload(
-        {
-          clima: { humedad: clima.humedad },
-          indicadores_satelite: { ndvi: clima.humedad > 68 ? 0.72 : 0.28 },
-        },
-        { ...formulario, humedad: clima.humedad },
-      ),
-    [clima.humedad, formulario],
-  );
-
-  const metricCardsData = [
-    {
-      key: 'ndvi',
-      label: 'Vegetacion (NDVI)',
-      value: structuredPreview.output.kpis.ndvi.value,
-      trend: structuredPreview.output.kpis.ndvi.trend,
-      tone: 'positive',
-      Icon: Leaf,
-      tip: 'Índice de Vegetación de Diferencia Normalizada basado en imágenes Sentinel-2. Valores >0.5 indican vegetación saludable.',
-    },
-    {
-      key: 'humidity',
-      label: 'Humedad',
-      value: structuredPreview.output.kpis.humidity.value,
-      trend: structuredPreview.output.kpis.humidity.trend,
-      tone: 'neutral',
-      Icon: Droplets,
-      tip: 'Humedad relativa promedio del ambiente, calculada con datos de NASA POWER para las coordenadas seleccionadas.',
-    },
-    {
-      key: 'nitrogen',
-      label: 'Nitrogeno',
-      value: structuredPreview.output.kpis.nitrogen.value,
-      trend: structuredPreview.output.kpis.nitrogen.trend,
-      tone: 'neutral',
-      Icon: FlaskConical,
-      tip: 'Estimación de nitrógeno disponible basada en materia orgánica del suelo y área de la parcela.',
-    },
-  ];
-
-  const trendMeta = {
-    positive: { Icon: CheckCircle2, css: 'ac-trend--positive' },
-    warning: { Icon: AlertTriangle, css: 'ac-trend--warning' },
-    neutral: { Icon: Info, css: 'ac-trend--neutral' },
-  };
-
-  const iconVariant = {
-    positive: 'ac-metric-icon--primary',
-    warning: 'ac-metric-icon--secondary',
-    neutral: 'ac-metric-icon--neutral',
-  };
-
-  const badgeVariant = {
-    positive: 'ac-metric-badge--positive',
-    warning: 'ac-metric-badge--negative',
-    neutral: 'ac-metric-badge--neutral',
-  };
 
   return (
     <ResearcherLayout activeTab={activeTab} onTabChange={setActiveTab}>
@@ -335,35 +169,7 @@ const AnalisisCultivos = () => {
               </div>
 
               {/* Row de Métricas (Bento) */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {metricCardsData.map((metric, i) => {
-                  const t = trendMeta[metric.tone] || trendMeta.neutral;
-                  const TrendIcon = t.Icon;
-                  const MetricIcon = metric.Icon;
-                  return (
-                    <article key={metric.key} className="ac-metric-card" style={{ animationDelay: `${i * 0.08}s` }}>
-                      <div className="flex justify-between items-start">
-                        <div className={`p-3 rounded-full ${iconVariant[metric.tone]}`}>
-                          <MetricIcon size={24} />
-                        </div>
-                        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${badgeVariant[metric.tone]}`}>
-                          {metric.trend}
-                        </span>
-                      </div>
-                      <div>
-                        <div className="ac-metric-label-row">
-                          <p className="text-[10px] text-[#707973] uppercase tracking-wider font-semibold mb-1">{metric.label}</p>
-                          <InfoTip text={metric.tip} />
-                        </div>
-                        <h3 className="text-3xl text-[#191c1d] font-bold">{metric.value}</h3>
-                        <p className={`text-xs mt-1 flex items-center gap-1 ${t.css}`}>
-                          <TrendIcon size={14} /> {metric.trend}
-                        </p>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
+              <MetricCardsGrid metrics={metricCardsData} />
             </div>
 
             {/* Columna Derecha (4 cols) */}
@@ -450,49 +256,7 @@ const AnalisisCultivos = () => {
               </div>
 
               {/* Auto climate data cards — shown when parcela selected */}
-              {selectedParcela && (
-                <div className="ac-climate-data">
-                  <div className="ac-climate-card">
-                    <div className="ac-climate-card-icon" style={{ background: 'rgba(249,115,22,0.1)', color: '#f97316' }}>
-                      <Thermometer size={18} />
-                    </div>
-                    <div className="ac-climate-card-body">
-                      <div className="ac-climate-card-top">
-                        <span className="ac-climate-card-label">Temperatura</span>
-                        <span className="ac-climate-badge">AUTO</span>
-                      </div>
-                      <span className="ac-climate-card-value">{clima.temperatura}°C</span>
-                      <span className="ac-climate-card-source">NASA POWER · {selectedParcela.split(' - ')[0]}</span>
-                    </div>
-                  </div>
-                  <div className="ac-climate-card">
-                    <div className="ac-climate-card-icon" style={{ background: 'rgba(59,130,246,0.1)', color: '#3b82f6' }}>
-                      <Droplets size={18} />
-                    </div>
-                    <div className="ac-climate-card-body">
-                      <div className="ac-climate-card-top">
-                        <span className="ac-climate-card-label">Humedad Relativa</span>
-                        <span className="ac-climate-badge ac-climate-badge--sensor">SENSOR</span>
-                      </div>
-                      <span className="ac-climate-card-value">{clima.humedad}%</span>
-                      <span className="ac-climate-card-source">Sensores IoT · {selectedParcela.split(' - ')[0]}</span>
-                    </div>
-                  </div>
-                  <div className="ac-climate-card">
-                    <div className="ac-climate-card-icon" style={{ background: 'rgba(56,189,248,0.1)', color: '#38bdf8' }}>
-                      <CloudRain size={18} />
-                    </div>
-                    <div className="ac-climate-card-body">
-                      <div className="ac-climate-card-top">
-                        <span className="ac-climate-card-label">Precipitación Anual</span>
-                        <span className="ac-climate-badge">AUTO</span>
-                      </div>
-                      <span className="ac-climate-card-value">{clima.precipitacion} mm</span>
-                      <span className="ac-climate-card-source">NASA POWER · {selectedParcela.split(' - ')[0]}</span>
-                    </div>
-                  </div>
-                </div>
-              )}
+              {selectedParcela && <ClimateDataCards clima={clima} selectedParcela={selectedParcela} />}
 
               <section className="ac-glass">
                 <div className="ac-card-header" style={{ justifyContent: 'space-between' }}>
@@ -586,108 +350,16 @@ const AnalisisCultivos = () => {
                   </div>
                 </section>
 
-                <div className="ac-glass ac-glass--auto">
-                  <div className="ac-status-header" style={{ marginBottom: '1rem' }}>
-                    <span style={{ fontSize: '14px', fontWeight: '600' }}>Salud del Algoritmo</span>
-                    <span className="ac-status-badge" style={{ fontSize: '10px' }}>OPTIMO</span>
-                  </div>
-                  <div className="ac-progress-bar">
-                    <div className="ac-progress-fill" style={{ width: '94.2%' }} />
-                  </div>
-                  <div className="ac-status-row" style={{ marginTop: '12px' }}>
-                    <span style={{ fontSize: '12px', color: '#707973' }}>Precision: 94.2%</span>
-                    <span style={{ fontSize: '12px', color: '#707973', fontStyle: 'italic' }}>v4.2.0-stable</span>
-                  </div>
-                </div>
+                <AlgorithmHealthCard />
 
-                {/* Data Sources Card */}
-                <div className="ac-sources-card">
-                  <p className="ac-sources-title">Fuentes de datos</p>
-                  {[
-                    { icon: Satellite, name: 'Sentinel-2', desc: 'NDVI · Última imagen: hace 6h' },
-                    { icon: Globe, name: 'NASA POWER', desc: 'Clima histórico y actual' },
-                    { icon: Microscope, name: 'Laboratorio', desc: 'Suelo · Calibración: 24/05' },
-                  ].map((s) => (
-                    <div key={s.name} className="ac-source-row">
-                      <s.icon size={16} className="ac-source-icon" />
-                      <div>
-                        <p className="ac-source-name">{s.name}</p>
-                        <p className="ac-source-desc">{s.desc}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <DataSourcesCard />
               </div>
             </div>
           </form>
         )}
 
         {/* Historial Tab */}
-        {activeTab === 'historial' && (
-          <div className="ac-historial">
-            <div className="ac-table-card">
-              <div className="ac-table-header">
-                <h2 className="ac-table-title">Consultas recientes</h2>
-                <div className="ac-search-wrap">
-                  <Search size={18} />
-                  <input
-                    type="text"
-                    placeholder="Buscar por ID o Municipio..."
-                    className="ac-search-input"
-                  />
-                </div>
-              </div>
-
-              <div className="ac-table-scroll">
-                <table className="ac-table">
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Fecha</th>
-                      <th>Municipio</th>
-                      <th>Cultivo rec.</th>
-                      <th className="ac-txt-center">Score IA</th>
-                      <th>Estado</th>
-                      <th className="ac-txt-right">Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {[
-                      { id: 'C-0421', fecha: '2025-04-21', municipio: 'Monteria', cultivo: 'Maiz', score: 94, estado: 'Exitosa' },
-                      { id: 'C-0420', fecha: '2025-04-20', municipio: 'Barranquilla', cultivo: 'Platano', score: 88, estado: 'Exitosa' },
-                      { id: 'C-0419', fecha: '2025-04-19', municipio: 'Sincelejo', cultivo: 'Yuca', score: 76, estado: 'Exitosa' },
-                    ].map((row) => (
-                      <tr key={row.id}>
-                        <td className="ac-row-id">{row.id}</td>
-                        <td className="ac-row-date">{row.fecha}</td>
-                        <td className="ac-row-loc">{row.municipio}</td>
-                        <td>
-                          <div className="ac-crop-info">
-                            <Sprout size={16} />
-                            <span>{row.cultivo}</span>
-                          </div>
-                        </td>
-                        <td>
-                          <span className={`ac-score ${row.score < 70 ? 'ac-score--low' : ''}`}>
-                            {row.score}%
-                          </span>
-                        </td>
-                        <td>
-                          <span className={`ac-cell-badge ${row.estado !== 'Exitosa' ? 'ac-cell-badge--warn' : ''}`}>
-                            {row.estado}
-                          </span>
-                        </td>
-                        <td className="ac-txt-right">
-                          <button className="ac-view-btn">Ver</button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
+        {activeTab === 'historial' && <HistorialTab />}
       </div>
     </ResearcherLayout>
   );

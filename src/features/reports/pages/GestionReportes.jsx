@@ -1,215 +1,23 @@
-import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ResearcherLayout from '@shared/layout/ResearcherLayout/ResearcherLayout';
+import GaugeChart from '@features/reports/components/GaugeChart/GaugeChart';
+import NdviMiniMap from '@features/reports/components/NdviMiniMap/NdviMiniMap';
+import HydroChart from '@features/reports/components/HydroChart/HydroChart';
+import useTaskManager, { NDVI_MONTHS, TASKS } from '@features/reports/hooks/useTaskManager';
 import './GestionReportes.css';
-
-// ── Data ──
-const NDVI_MONTHS = [
-  { month: 'Mar', value: '0.62', delta: '+3%', trend: 'up',   color: '#a3be8c' },
-  { month: 'Abr', value: '0.68', delta: '+5%', trend: 'up',   color: '#8fb97a' },
-  { month: 'May', value: '0.74', delta: '+7%', trend: 'up',   color: '#6ea055' },
-  { month: 'Jun', value: '0.81', delta: '+5%', trend: 'up',   color: '#4d8c3a' },
-  { month: 'Jul', value: '0.85', delta: '↑ MÁX', trend: 'max', color: '#166534' },
-  { month: 'Ago', value: '0.78', delta: '-8%', trend: 'down', color: '#ca8a04' },
-];
-
-const HYDRO = [
-  { label: 'Ene', rain: 42, soil: 38 },
-  { label: 'Feb', rain: 58, soil: 51 },
-  { label: 'Mar', rain: 74, soil: 65 },
-  { label: 'Abr', rain: 91, soil: 82 },
-  { label: 'May', rain: 110, soil: 95 },
-  { label: 'Jun', rain: 68, soil: 72 },
-];
-
-const TASKS = [
-  {
-    title: 'Ajuste de Riego Sector B',
-    desc: 'Detección de saturación en suelo profundo. Reducir 15% el caudal.',
-    priority: 'ALTA', priorityClass: 'gr-priority-high',
-    icon: 'water_drop',
-  },
-  {
-    title: 'Fertilización Nitrogenada',
-    desc: 'Ventana de 48h basada en pronóstico de lluvia leve (NASA POWER).',
-    priority: 'MEDIA', priorityClass: 'gr-priority-med',
-    icon: 'science',
-  },
-  {
-    title: 'Revisión de Drenaje',
-    desc: 'Mantenimiento preventivo en canaleta principal sector sur.',
-    priority: 'BAJA', priorityClass: 'gr-priority-low',
-    icon: 'plumbing',
-  },
-];
-
-// ── Gauge ──
-function GaugeChart({ pct = 82 }) {
-  const R = 72, CX = 90, CY = 90;
-  const circumference = 2 * Math.PI * R;
-  // Semi-circle gauge: arc from 210° to -30° (240° sweep)
-  const sweep = 240;
-  const arcLen = (sweep / 360) * circumference;
-  const dash = (pct / 100) * arcLen;
-
-  // SVG arc path for a 240° arc centered at bottom
-  const toRad = d => (d * Math.PI) / 180;
-  const startAngle = 150; // degrees
-  const endAngle = startAngle + sweep;
-  const x1 = CX + R * Math.cos(toRad(startAngle));
-  const y1 = CY + R * Math.sin(toRad(startAngle));
-  const x2 = CX + R * Math.cos(toRad(endAngle));
-  const y2 = CY + R * Math.sin(toRad(endAngle));
-  const largeArc = sweep > 180 ? 1 : 0;
-
-  const trackD = `M ${x1} ${y1} A ${R} ${R} 0 ${largeArc} 1 ${x2} ${y2}`;
-
-  // Value arc
-  const valAngle = startAngle + (pct / 100) * sweep;
-  const vx2 = CX + R * Math.cos(toRad(valAngle));
-  const vy2 = CY + R * Math.sin(toRad(valAngle));
-  const valLargeArc = (pct / 100) * sweep > 180 ? 1 : 0;
-  const valueD = `M ${x1} ${y1} A ${R} ${R} 0 ${valLargeArc} 1 ${vx2} ${vy2}`;
-
-  return (
-    <svg viewBox="0 0 180 180" className="gr-gauge-svg">
-      <defs>
-        <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#f59e0b" />
-          <stop offset="50%" stopColor="#22c55e" />
-          <stop offset="100%" stopColor="#166534" />
-        </linearGradient>
-      </defs>
-      {/* Track */}
-      <path d={trackD} fill="none" stroke="#f1f5f9" strokeWidth="14" strokeLinecap="round" />
-      {/* Value */}
-      <path d={valueD} fill="none" stroke="url(#gaugeGrad)" strokeWidth="14" strokeLinecap="round"
-        className="gr-gauge-value-path" />
-      {/* Center text */}
-      <text x={CX} y={CY - 4} textAnchor="middle" className="gr-gauge-num">82</text>
-      <text x={CX} y={CY + 16} textAnchor="middle" className="gr-gauge-pct">%</text>
-      <text x={CX} y={CY + 34} textAnchor="middle" className="gr-gauge-sub">Índice OEE</text>
-    </svg>
-  );
-}
-
-// ── Micro NDVI Map SVG ──
-function NdviMiniMap({ color, selected }) {
-  return (
-    <svg viewBox="0 0 80 50" className="gr-mini-map-svg">
-      <defs>
-        <radialGradient id={`mg-${color.replace('#', '')}`} cx="40%" cy="45%" r="55%">
-          <stop offset="0%" stopColor={color} stopOpacity="0.9" />
-          <stop offset="70%" stopColor={color} stopOpacity="0.4" />
-          <stop offset="100%" stopColor="#ca8a04" stopOpacity="0.15" />
-        </radialGradient>
-        <filter id="mm-blur"><feGaussianBlur stdDeviation="3" /></filter>
-      </defs>
-      <rect width="80" height="50" fill="#1a3a0f" rx="5" />
-      <ellipse cx="38" cy="26" rx="32" ry="20" fill="#2a5218" />
-      <ellipse cx="35" cy="24" rx="24" ry="15"
-        fill={`url(#mg-${color.replace('#', '')})`} filter="url(#mm-blur)" />
-      {selected && <rect width="80" height="50" fill="none" stroke="white" strokeWidth="1.5" rx="5" opacity="0.5" />}
-    </svg>
-  );
-}
-
-// ── Hydro Combo Chart ──
-function HydroChart() {
-  const W = 600, H = 200, PAD = { top: 20, bottom: 30, left: 40, right: 20 };
-  const chartW = W - PAD.left - PAD.right;
-  const chartH = H - PAD.top - PAD.bottom;
-  const maxVal = Math.max(...HYDRO.map(d => Math.max(d.rain, d.soil)));
-  const scale = chartH / maxVal;
-
-  const barW = chartW / HYDRO.length * 0.55;
-  const gap = chartW / HYDRO.length;
-
-  return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="gr-hydro-svg" preserveAspectRatio="xMidYMid meet">
-      <defs>
-        <linearGradient id="rainGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.7" />
-          <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.3" />
-        </linearGradient>
-        <linearGradient id="soilGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#10b981" stopOpacity="0.3" />
-          <stop offset="100%" stopColor="#10b981" stopOpacity="0.02" />
-        </linearGradient>
-      </defs>
-
-      {/* Grid lines */}
-      {[0, 0.25, 0.5, 0.75, 1].map((r, i) => {
-        const y = PAD.top + chartH * (1 - r);
-        return (
-          <g key={i}>
-            <line x1={PAD.left} y1={y} x2={W - PAD.right} y2={y} stroke="#e5e7eb" strokeWidth="0.5" />
-            <text x={PAD.left - 6} y={y + 3} textAnchor="end" fontSize="9" fill="#9ca3af" fontFamily="Manrope, sans-serif">
-              {Math.round(maxVal * r)}
-            </text>
-          </g>
-        );
-      })}
-
-      {/* Bars (precipitation) */}
-      {HYDRO.map((d, i) => {
-        const x = PAD.left + i * gap + (gap - barW) / 2;
-        const barH = d.rain * scale;
-        return (
-          <g key={`bar-${i}`}>
-            <rect x={x} y={PAD.top + chartH - barH} width={barW} height={barH} rx="3" fill="url(#rainGrad)" />
-            <text x={x + barW / 2} y={PAD.top + chartH - barH - 5} textAnchor="middle" fontSize="8" fill="#6b7280" fontFamily="Manrope, sans-serif" fontWeight="600">
-              {d.rain}
-            </text>
-          </g>
-        );
-      })}
-
-      {/* Soil moisture line + area */}
-      <path
-        d={
-          HYDRO.map((d, i) => {
-            const x = PAD.left + i * gap + gap / 2;
-            const y = PAD.top + chartH - d.soil * scale;
-            return `${i === 0 ? 'M' : 'L'}${x},${y}`;
-          }).join(' ') +
-          ` L${PAD.left + (HYDRO.length - 1) * gap + gap / 2},${PAD.top + chartH} L${PAD.left + gap / 2},${PAD.top + chartH} Z`
-        }
-        fill="url(#soilGrad)"
-      />
-      <path
-        d={HYDRO.map((d, i) => {
-          const x = PAD.left + i * gap + gap / 2;
-          const y = PAD.top + chartH - d.soil * scale;
-          return `${i === 0 ? 'M' : 'L'}${x},${y}`;
-        }).join(' ')}
-        fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-      />
-
-      {/* Soil dots */}
-      {HYDRO.map((d, i) => {
-        const x = PAD.left + i * gap + gap / 2;
-        const y = PAD.top + chartH - d.soil * scale;
-        return <circle key={`dot-${i}`} cx={x} cy={y} r="3" fill="#10b981" stroke="white" strokeWidth="1.5" />;
-      })}
-
-      {/* X-axis labels */}
-      {HYDRO.map((d, i) => (
-        <text key={`label-${i}`} x={PAD.left + i * gap + gap / 2} y={H - 6} textAnchor="middle" fontSize="9" fill="#6b7280" fontFamily="Manrope, sans-serif" fontWeight="600">
-          {d.label}
-        </text>
-      ))}
-    </svg>
-  );
-}
 
 // ── Main ──
 const GestionReportes = () => {
   const navigate = useNavigate();
-  const [activeMonth, setActiveMonth] = useState('Jul');
-  const [tasks, setTasks] = useState(TASKS.map(() => false));
-
-  const toggleTask = i => setTasks(t => t.map((v, j) => j === i ? !v : v));
+  const {
+    activeMonth,
+    setActiveMonth,
+    tasks,
+    toggleTask,
+    completedCount,
+    totalCount,
+    progressPercent,
+  } = useTaskManager();
 
   return (
     <ResearcherLayout activeTab="reportes">
@@ -328,7 +136,7 @@ const GestionReportes = () => {
             <div className="gr-card-header">
               <span className="material-symbols-outlined gr-card-icon">psychology</span>
               <h2 className="gr-card-title">Acciones Recomendadas por IA</h2>
-              <span className="gr-task-count">{tasks.filter(Boolean).length}/{TASKS.length} completadas</span>
+              <span className="gr-task-count">{completedCount}/{totalCount} completadas</span>
             </div>
             <div className="gr-task-list">
               {TASKS.map((t, i) => (
@@ -359,7 +167,7 @@ const GestionReportes = () => {
             </div>
             <div className="gr-task-footer">
               <div className="gr-task-progress-track">
-                <div className="gr-task-progress-fill" style={{width:`${(tasks.filter(Boolean).length / TASKS.length) * 100}%`}}></div>
+                <div className="gr-task-progress-fill" style={{width:`${progressPercent}%`}}></div>
               </div>
             </div>
           </div>
@@ -375,9 +183,6 @@ const GestionReportes = () => {
               </div>
             </div>
             <HydroChart />
-            <div className="gr-hydro-x-axis">
-              {HYDRO.map(d => <span key={d.label} className="gr-axis-label">{d.label}</span>)}
-            </div>
           </div>
         </div>
 
