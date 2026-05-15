@@ -11,8 +11,6 @@ import './AgroAsesor.css';
 
 const AgroAsesor = () => {
   const authorized = useAuthGuard('investigador');
-  if (!authorized) return null;
-
   const {
     mensajes,
     input,
@@ -23,6 +21,8 @@ const AgroAsesor = () => {
     messagesEndRef,
     ACCIONES_RAPIDAS,
   } = useChat();
+
+  if (!authorized) return null;
 
   return (
     <ResearcherLayout activeTab="mapas">

@@ -24,8 +24,6 @@ L.Icon.Default.mergeOptions({
 
 const Mapa = () => {
   const authorized = useAuthGuard('investigador');
-  if (!authorized) return null;
-
   const {
     zona,
     layerType,
@@ -33,6 +31,8 @@ const Mapa = () => {
     handleZoneCreated,
     handleZoneCleared,
   } = useMapZone();
+
+  if (!authorized) return null;
 
   const estadoIcon = (estado) => {
     if (estado === 'optimal') return <CheckCircle size={12} className="text-emerald-500" />;

@@ -18,8 +18,6 @@ import ModuleShortcuts from '../components/ModuleShortcuts/ModuleShortcuts';
 
 const DashboardInvestigador = () => {
   const authorized = useAuthGuard('investigador');
-  if (!authorized) return null;
-
   const {
     timestamp,
     refreshTimestamp,
@@ -32,6 +30,8 @@ const DashboardInvestigador = () => {
     SPARK_DATA,
     navigate,
   } = useDashboard();
+
+  if (!authorized) return null;
 
   return (
     <ResearcherLayout activeTab="dashboard">

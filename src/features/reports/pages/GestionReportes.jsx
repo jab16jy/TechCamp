@@ -10,8 +10,6 @@ import './GestionReportes.css';
 // ── Main ──
 const GestionReportes = () => {
   const authorized = useAuthGuard('investigador');
-  if (!authorized) return null;
-
   const navigate = useNavigate();
   const {
     activeMonth,
@@ -22,6 +20,8 @@ const GestionReportes = () => {
     totalCount,
     progressPercent,
   } = useTaskManager();
+
+  if (!authorized) return null;
 
   return (
     <ResearcherLayout activeTab="reportes">

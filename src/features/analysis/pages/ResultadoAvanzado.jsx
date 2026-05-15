@@ -39,8 +39,6 @@ const RECS = [
 
 const ResultadoAvanzado = () => {
   const authorized = useAuthGuard('investigador');
-  if (!authorized) return null;
-
   const {
     rain,
     fert,
@@ -48,6 +46,8 @@ const ResultadoAvanzado = () => {
     handleRainChange,
     handleFertChange,
   } = useResultadoAvanzado();
+
+  if (!authorized) return null;
 
   return (
     <ResearcherLayout activeTab="analisis">

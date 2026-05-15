@@ -24,10 +24,7 @@ import './IAPredictiva.css';
 
 const IAPredictiva = () => {
   const authorized = useAuthGuard('investigador');
-  if (!authorized) return null;
-
   const navigate = useNavigate();
-
   const {
     riego,
     setRiego,
@@ -49,6 +46,8 @@ const IAPredictiva = () => {
     metrics,
     MONTHS,
   } = usePredictionSimulator();
+
+  if (!authorized) return null;
 
   return (
     <ResearcherLayout activeTab="ia">

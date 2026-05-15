@@ -10,8 +10,6 @@ import './SensoresIoT.css';
 
 const SensoresIoT = () => {
   const authorized = useAuthGuard('investigador');
-  if (!authorized) return null;
-
   const {
     showNdvi,
     pulse,
@@ -25,6 +23,8 @@ const SensoresIoT = () => {
     setSelectedNode,
     navigate,
   } = useSensoresIoT();
+
+  if (!authorized) return null;
 
   return (
     <ResearcherLayout activeTab="sensores">

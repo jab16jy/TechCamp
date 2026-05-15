@@ -179,8 +179,6 @@ function HistorialCard({ item, onView, onDelete }) {
 
 const Historial = () => {
   const authorized = useAuthGuard('investigador');
-  if (!authorized) return null;
-
   const {
     search,
     setSearch,
@@ -197,6 +195,8 @@ const Historial = () => {
     clearSearch,
     navigate,
   } = useHistorial();
+
+  if (!authorized) return null;
 
   return (
     <ResearcherLayout activeTab="historial">
