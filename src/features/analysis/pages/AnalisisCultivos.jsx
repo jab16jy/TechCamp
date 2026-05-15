@@ -165,10 +165,6 @@ const AnalisisCultivos = () => {
                     onPositionChange={handleMapChange}
                     height={400}
                   />
-                  <div className="absolute top-6 right-6 ac-glass ac-sensor-chip z-[1000]">
-                    <div className="ac-pulse-dot" />
-                    <span>Sensores Activos</span>
-                  </div>
                 </div>
               </div>
 
@@ -262,7 +258,7 @@ const AnalisisCultivos = () => {
               {/* Auto climate data cards — shown when parcela selected */}
               {selectedParcela && <ClimateDataCards clima={clima} selectedParcela={selectedParcela} />}
 
-              <section className="ac-glass">
+              <section className="ac-glass ac-glass--auto">
                 <div className="ac-card-header" style={{ justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <FlaskConical size={22} className="ac-card-header__icon" />
@@ -328,7 +324,7 @@ const AnalisisCultivos = () => {
 
             <div className="ac-col--narrow">
               <div className="ac-sticky">
-                <section className="ac-glass">
+              <section className="ac-glass">
                   <div className="ac-card-header">
                     <MapPin size={20} className="ac-card-header__icon" />
                     <h3 style={{ fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
