@@ -19,11 +19,11 @@ const ChatMessages = ({ mensajes, loading, endRef }) => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2 }}
-            className={`agro-msg agro-msg-${msg.rol} ${msg.rol === 'ia' ? 'agro-msg-ia' : 'agro-msg-user'}`}
+            className={`agro-msg agro-msg-${msg.rol}`}
           >
             {msg.rol === 'ia' && (
               <div className="agro-msg-avatar">
-                <Bot size={14} />
+                <Bot size={14} strokeWidth={1.5} />
               </div>
             )}
             <div className="agro-msg-bubble">
@@ -44,7 +44,7 @@ const ChatMessages = ({ mensajes, loading, endRef }) => {
         {loading && (
           <div className="agro-msg agro-msg-ia">
             <div className="agro-msg-avatar">
-              <Bot size={14} />
+              <Bot size={14} strokeWidth={1.5} />
             </div>
             <div className="agro-msg-bubble agro-msg-loading">
               <div className="agro-loading-dots">

@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { FileText, Clock, Sprout, CheckCircle } from 'lucide-react';
 import useAppStore from '@shared/store';
 
@@ -17,20 +17,18 @@ const RESPUESTAS = {
 };
 
 const ACCIONES_RAPIDAS = [
-  { id: 'ultimo', label: 'Ver último resultado', icon: <FileText size={14} /> },
-  { id: 'historial', label: 'Comparar históricos', icon: <Clock size={14} /> },
-  { id: 'recomendar', label: 'Recomendación de cultivo', icon: <Sprout size={14} /> },
-  { id: 'sensores', label: 'Estado de sensores', icon: <CheckCircle size={14} /> },
+  { id: 'ultimo', label: 'Ver último resultado', icon: <FileText size={14} strokeWidth={1.5} /> },
+  { id: 'historial', label: 'Comparar históricos', icon: <Clock size={14} strokeWidth={1.5} /> },
+  { id: 'recomendar', label: 'Recomendación de cultivo', icon: <Sprout size={14} strokeWidth={1.5} /> },
+  { id: 'sensores', label: 'Estado de sensores', icon: <CheckCircle size={14} strokeWidth={1.5} /> },
 ];
 
 export { WELCOME_MSG, RESPUESTAS, ACCIONES_RAPIDAS };
 
 export default function useChat() {
-  const { historial } = useAppStore();
   const [mensajes, setMensajes] = useState([WELCOME_MSG]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [accionesOpen, setAccionesOpen] = useState(true);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -72,21 +70,13 @@ export default function useChat() {
     }, 1000);
   }, [input]);
 
-  const ultimoResultado = useMemo(() => {
-    const entries = historial.filter((h) => h.tipo === 'suelo');
-    return entries.length > 0 ? entries[entries.length - 1] : null;
-  }, [historial]);
-
   return {
     mensajes,
     input,
     setInput,
     loading,
-    accionesOpen,
-    setAccionesOpen,
     handleAccion,
     enviar,
-    ultimoResultado,
     messagesEndRef,
     WELCOME_MSG,
     RESPUESTAS,

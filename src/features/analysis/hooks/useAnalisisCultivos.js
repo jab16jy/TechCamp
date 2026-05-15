@@ -71,7 +71,7 @@ export function useAnalisisCultivos() {
         humedad: clima.humedad,
       });
       setResultado(resultado);
-      agregarToast('Analisis completado exitosamente', 'success');
+      agregarToast('Analisis completado exitosamente', 'exito');
 
       const topRec = resultado.recomendaciones?.[0];
       agregarAlHistorial({

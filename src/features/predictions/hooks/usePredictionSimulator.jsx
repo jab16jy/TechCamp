@@ -38,7 +38,7 @@ export default function usePredictionSimulator() {
         variedad,
       });
       setSimResult(resultado);
-      agregarToast('Simulación predictiva completada con éxito', 'success');
+      agregarToast('Simulación predictiva completada con éxito', 'exito');
     } catch {
       agregarToast('Error al ejecutar la simulación', 'error');
     } finally {
