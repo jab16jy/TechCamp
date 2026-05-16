@@ -238,4 +238,20 @@ export const getHistorial = async () => {
   }
 };
 
+/** Iniciar sesion con Supabase Auth */
+export const login = async (email, password) => {
+  const { data } = await apiClient.post('/auth/login', { email, password });
+  return data;
+};
+
+/** Enviar mensaje al chat del AgroAsesor */
+export const enviarMensajeChat = async (message, conversationId = null, userId = null) => {
+  const { data } = await apiClient.post('/chat', {
+    message,
+    conversation_id: conversationId,
+    user_id: userId,
+  });
+  return data;
+};
+
 export default apiClient;
