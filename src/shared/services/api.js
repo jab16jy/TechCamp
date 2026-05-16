@@ -254,4 +254,39 @@ export const enviarMensajeChat = async (message, conversationId = null, userId =
   return data;
 };
 
+/** Obtener lista de sensores IoT con ultima lectura */
+export const getSensores = async () => {
+  try {
+    const { data } = await apiClient.get('/sensors');
+    return data;
+  } catch {
+    return [];
+  }
+};
+
+/** Obtener lecturas de un sensor especifico */
+export const getLecturasSensor = async (sensorId, limit = 20) => {
+  try {
+    const { data } = await apiClient.get(`/sensors/${sensorId}/readings`, { params: { limit } });
+    return data;
+  } catch {
+    return [];
+  }
+};
+
+/** Registrar una nueva lectura de sensor */
+export const crearLecturaSensor = async (sensorId, ndvi, humedad, temperatura) => {
+  try {
+    const { data } = await apiClient.post('/sensors/readings', {
+      sensor_id: sensorId,
+      ndvi,
+      humedad,
+      temperatura,
+    });
+    return data;
+  } catch {
+    return null;
+  }
+};
+
 export default apiClient;

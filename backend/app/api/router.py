@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api import municipios, analisis, clima, satelite, historial, auth, chat
+from app.api import municipios, analisis, clima, satelite, historial, auth, chat, sensores
 
 router = APIRouter()
 
@@ -11,3 +11,4 @@ router.include_router(satelite.router, tags=["satelite"])
 router.include_router(historial.router, tags=["historial"])
 router.include_router(auth.router, tags=["auth"])
 router.include_router(chat.router, tags=["chat"])
+router.include_router(sensores.router, tags=["sensores"])

@@ -8,6 +8,8 @@ from sqlalchemy import select
 from app.models.conversacion import Conversacion
 from app.models.mensaje import Mensaje
 from app.models.analisis import Analisis
+from app.models.sensor import Sensor
+from app.models.lectura_sensor import LecturaSensor
 
 logger = logging.getLogger(__name__)
 
@@ -178,10 +180,33 @@ async def _get_crop_recommendation(db: AsyncSession, user_id: uuid.UUID) -> str:
 
 
 async def _get_sensor_status(db: AsyncSession, user_id: uuid.UUID) -> str:
-    return (
-        "**Estado de sensores IoT (simulacion):**\n\n"
-        "• **Nodo Norte-01** ✅ OK — NDVI: 0.73 · Hum: 72% · Temp: 28.4°C\n"
-        "• **Nodo Sur-02** ⚠️ Alerta — NDVI: 0.61 · Hum: 61% · Temp: 29.8°C\n"
-        "• **Nodo Este-03** 🔴 Critico — NDVI: 0.54 · Hum: 55% · Temp: 31.2°C\n\n"
-        "El Nodo Este-03 muestra estres hidrico. Recomiendo revision del sistema de riego."
-    )
+    result = await db.execute(select(Sensor).order_by(Sensor.nodo_id))
+    sensores = result.scalars().all()
+
+    if not sensores:
+        return "No hay sensores IoT registrados en el sistema. Ve a la seccion **Sensores IoT** para configurar nodos de monitoreo."
+
+    lines = ["**Estado de sensores IoT:**\n"]
+    for s in sensores:
+        icon = {"ok": "✅ OK", "warn": "⚠️ Alerta", "critical": "🔴 Critico"}
+        line_icon = icon.get(s.estado, "❓")
+        latest = await db.execute(
+            select(LecturaSensor)
+            .where(LecturaSensor.sensor_id == s.id)
+            .order_by(LecturaSensor.created_at.desc())
+            .limit(1)
+        )
+        lr = latest.scalars().one_or_none()
+        lectura_str = ""
+        if lr:
+            lectura_str = (
+                f" NDVI: {lr.ndvi or '?'} · Hum: {lr.humedad or '?'}% · "
+                f"Temp: {lr.temperatura or '?'}C"
+            )
+        lines.append(f"• **{s.nodo_id}** ({s.nombre}): {line_icon}{lectura_str}")
+
+    critical_nodes = [s for s in sensores if s.estado == "critical"]
+    if critical_nodes:
+        lines.append(f"\n⚠️ {len(critical_nodes)} nodo(s) en estado critico. Recomiendo revision del sistema de riego y telemetria en esas zonas.")
+
+    return "\n".join(lines)

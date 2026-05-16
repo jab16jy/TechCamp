@@ -85,18 +85,21 @@ Ultima actualizacion: 2026-05-16
 ### Dependencias
 - [x] `requirements.txt` — Agregados langgraph, langchain-core, pydantic[email]
 
-## ⏳ Pendiente — FASE 3: Modelos IoT + Parcelas
+## ✅ Completado — FASE 3: Modelos IoT + Parcelas
 
-- [ ] `models/parcela.py` — Parcelas con geometria PostGIS
-- [ ] `models/sensor.py` — Nodos IoT
-- [ ] `models/lectura_sensor.py` — Lecturas time-series de sensores
-- [ ] Endpoints de sensores (`GET /sensors`, `GET /sensors/:id/readings`)
+- [x] `models/parcela.py` — Parcelas con geometria PostGIS
+- [x] `models/sensor.py` — Nodos IoT
+- [x] `models/lectura_sensor.py` — Lecturas time-series de sensores
+- [x] `schemas/sensor.py` — DTOs de sensores, lecturas y parcelas
+- [x] `api/sensores.py` — `GET /sensors`, `GET /sensors/{id}/readings`, `POST /sensors/readings`
+- [x] `chat_service.py` actualizado — consulta sensores reales desde DB
 
-## ⏳ Pendiente — FASE 3: Agente LangGraph
+## ✅ Completado — FASE 3: Agente LangGraph (MVP)
 
-- [ ] `agent/graph.py` — Definicion del grafo de estado
-- [ ] `agent/tools.py` — Herramientas del agente (query DB, clima, sensores)
-- [ ] `agent/state.py` — GraphState con TypedDict
+- [x] `agent/state.py` — AgentState TypedDict (messages, user_id, contexto)
+- [x] `agent/tools.py` — 4 herramientas (ultimo analisis, historial, recomendar, sensores)
+- [x] `agent/graph.py` — StateGraph con nodo agente + intent matching
+- [x] `agent/__init__.py`
 
 ## ⏳ Pendiente — FASE 4: Refinamiento
 
