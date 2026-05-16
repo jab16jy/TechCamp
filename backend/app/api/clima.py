@@ -2,7 +2,7 @@ from fastapi import APIRouter, Query, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import get_db
-from app.schemas.analisis import ClimateData
+from app.schemas.clima import ClimateData
 from app.services.climate_service import get_climate_data, get_mock_climate
 from app.services.satellite_service import get_satellite_data, get_mock_satellite
 

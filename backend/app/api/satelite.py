@@ -2,7 +2,7 @@ from fastapi import APIRouter, Query, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import get_db
-from app.schemas.analisis import SatelliteData
+from app.schemas.satelite import SatelliteData
 from app.services.satellite_service import get_satellite_data, get_mock_satellite
 
 router = APIRouter(prefix="/satellite-indicators", tags=["satelite"])

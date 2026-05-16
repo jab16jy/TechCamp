@@ -1,6 +1,6 @@
 import httpx
 from app.core.config import get_settings
-from app.schemas.analisis import ClimateData
+from app.schemas.clima import ClimateData
 
 settings = get_settings()
 

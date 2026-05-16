@@ -1,7 +1,9 @@
 import logging
 
 from app.ml.model import get_crop_classifier
-from app.schemas.analisis import ClimateData, SatelliteData, RecomendacionCultivo
+from app.schemas.clima import ClimateData
+from app.schemas.satelite import SatelliteData
+from app.schemas.analisis import RecomendacionCultivo
 
 logger = logging.getLogger(__name__)
 

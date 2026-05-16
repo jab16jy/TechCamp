@@ -2,6 +2,9 @@ from pydantic import BaseModel, Field
 from typing import Optional
 from uuid import UUID
 
+from app.schemas.clima import ClimateData
+from app.schemas.satelite import SatelliteData
+
 
 class AnalyzeRequest(BaseModel):
     departamento: str
@@ -15,21 +18,6 @@ class AnalyzeRequest(BaseModel):
     ph_suelo: float
     materia_organica: float
     textura_suelo: str
-
-
-class ClimateData(BaseModel):
-    temperatura: float
-    precipitacion: float
-    humedad: float
-    evapotranspiracion: Optional[float] = None
-    radiacion_solar: Optional[float] = None
-
-
-class SatelliteData(BaseModel):
-    ndvi: float
-    ndwi: float
-    calidad_suelo: str
-    cobertura_nube: int
 
 
 class RecomendacionCultivo(BaseModel):

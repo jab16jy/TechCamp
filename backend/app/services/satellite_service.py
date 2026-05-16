@@ -4,7 +4,7 @@ from sqlalchemy import text, select
 from sqlalchemy.sql import func
 
 from app.models.indice_satelital import IndiceSatelital
-from app.schemas.analisis import SatelliteData
+from app.schemas.satelite import SatelliteData
 
 logger = logging.getLogger(__name__)
 

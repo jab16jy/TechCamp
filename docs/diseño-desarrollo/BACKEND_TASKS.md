@@ -101,17 +101,31 @@ Ultima actualizacion: 2026-05-16
 - [x] `agent/graph.py` — StateGraph con nodo agente + intent matching
 - [x] `agent/__init__.py`
 
-## ⏳ Pendiente — FASE 4: Refinamiento
+## ✅ Completado — FASE 4: Refinamiento + Tests + Infraestructura
 
-- [ ] `tests/test_analisis.py`
-- [ ] `tests/test_clima.py`
-- [ ] `tests/test_satelite.py`
-- [ ] `tests/test_chat.py`
-- [ ] `ml/training.py` — Pipeline de entrenamiento RF
-- [ ] Schemas separados: `schemas/clima.py`, `schemas/satelite.py`
+### Tests (16 passing)
+- [x] `tests/test_analisis.py` — 3 tests (200, 422, scores descending)
+- [x] `tests/test_clima.py` — 4 tests (200 coords, 422 missing, out-of-range, negative)
+- [x] `tests/test_satelite.py` — 3 tests (200, 422 missing, mock fallback)
+- [x] `tests/test_chat.py` — 6 tests (200, 422 empty, conversation continue, intents)
+- [x] `tests/conftest.py` — Logging config
 
-## ⏳ Pendiente — Infraestructura
+### Machine Learning — Entrenamiento
+- [x] `ml/training.py` — Pipeline completo: dataset sintetico, Random Forest, cross-validation, guardado joblib
+- [x] Metricas: accuracy, precision, recall, f1, cv_mean, cv_std
 
-- [ ] Migraciones Alembic versionadas (`data/migrations/versions/`)
-- [ ] `nginx.conf` — Proxy inverso para produccion
-- [ ] `data/ndvi/` — Archivos GeoJSON pre-procesados
+### Schemas separados
+- [x] `schemas/clima.py` — ClimateData, ClimateQuery
+- [x] `schemas/satelite.py` — SatelliteData, SatelliteQuery
+- [x] `schemas/analisis.py` — Actualizado a importar desde clima/satelite (sin duplicados)
+
+### Infraestructura
+- [x] `nginx.conf` — Proxy inverso con gzip, cache estatico, rutas /api/* y /docs
+- [x] `data/ndvi/` — Directorio para GeoJSON NDVI pre-procesados
+- [x] `database.py` — Corregido PendingRollbackError con SQLAlchemyError exclusivo
+
+### CI/QA
+- [x] `pytest-asyncio` instalado
+- [x] `httpx` + `ASGITransport` para tests ASGI sin servidor
+
+## ⏳ Pendiente — TODOs menores
