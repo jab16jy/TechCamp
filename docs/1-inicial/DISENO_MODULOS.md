@@ -1,3 +1,12 @@
+---
+titulo: "Diseno Original de Modulos"
+proyecto: AgroCaribe IA
+tags: [diseno, modulos, original, referencia-historica]
+---
+
+> **Nota:** Este documento describe el diseno original de los modulos (fase de prototipado). 
+> La implementacion actual difiere en varios aspectos. Ver `docs/4-arquitectura/` para la documentacion actualizada del sistema.
+
 # Módulos de Desarrollo
 
 Este documento cubre los módulos de IA, sensores, dashboard, análisis y reportes del ecosistema AgroCaribe.
@@ -102,6 +111,15 @@ Herramienta de análisis inmersivo que combina mapa interactivo con asistente vi
 
 - Mapping: Leaflet.js (proveedores Maxar/Esri)
 - UI: Tailwind (posicionamiento absoluto) + Framer Motion (colapso de panel)
+
+---
+
+## Referencias
+
+- [[3-frontend/ARQUITECTURA_FRONTEND]] — Arquitectura actual del frontend
+- [[4-arquitectura/VISION_SISTEMA]] — Vision general del sistema implementado
+- [[4-arquitectura/FLUJO_DATOS]] — Flujo de datos Frontend-Backend actual
+- [[2-backend/ARQUITECTURA_BACKEND]] — Endpoints y servicios backend implementados
 
 ## Gestión de Reportes
 

@@ -127,3 +127,14 @@ agro-recommender-api/
 2.  **Fase 2 (IA Integrada):** Entrenamiento e integración del modelo **Random Forest** con datasets históricos regionales.
 3.  **Fase 3:** Mapas de calor de rendimiento e historial de consultas persistente.
 4.  **Fase 4:** Descarga de reportes técnicos en PDF.
+
+---
+
+## Referencias
+
+- [[1-inicial/PLAN_DESARROLLO]] — Cronograma original del proyecto
+- [[1-inicial/VALIDACION_SISTEMA]] — Validacion del modelo y escenarios de prueba
+- [[4-arquitectura/VISION_SISTEMA]] — Arquitectura actual del sistema implementado
+- [[4-arquitectura/MODULO_CLIMA]] — Detalle tecnico de NASA POWER + OpenMeteo
+- [[4-arquitectura/MODULO_SATELITAL]] — Detalle de procesamiento QGIS + Sentinel-2
+- [[4-arquitectura/MODULO_RECOMENDACION]] — Motor hibrido de recomendacion (reglas + ML)

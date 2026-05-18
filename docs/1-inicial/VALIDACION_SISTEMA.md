@@ -63,3 +63,12 @@ El sistema **AgroCaribe IA** se encuentra en su fase final de consolidación. La
 **Fecha de Entrega:** Mayo 2026
 **Proyecto:** TechCamp - AgroCaribe IA
 **Responsable:** Equipo de Desarrollo / IA Agent
+
+---
+
+## Referencias
+
+- [[1-inicial/DOCUMENTACION_INICIAL]] — Flujo de trabajo y diseno original
+- [[1-inicial/PLAN_DESARROLLO]] — Cronograma y fases del proyecto
+- [[4-arquitectura/MODULO_RECOMENDACION]] — Motor hibrido con Random Forest
+- [[4-arquitectura/MODULO_SATELITAL]] — Procesamiento NDVI desde Sentinel-2

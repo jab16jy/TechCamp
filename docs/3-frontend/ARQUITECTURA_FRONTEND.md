@@ -626,3 +626,11 @@ VITE_API_URL=http://localhost:8000  # Backend URL (opcional, default)
 | Autenticación real | Media | Hoy es sessionStorage + credenciales hardcodeadas |
 | Tests | Alta | No existe suite de pruebas configurada |
 | Limpiar fuentes en index.html | Baja | Se cargan 6 fuentes, solo se usa Manrope |
+
+---
+
+## Referencias
+
+- [[2-backend/ARQUITECTURA_BACKEND]] — Arquitectura del backend y endpoints
+- [[4-arquitectura/FLUJO_DATOS]] — Mapa de conexion Frontend-Backend completo
+- [[4-arquitectura/VISION_SISTEMA]] — Stack tecnologico y flujo de procesamiento

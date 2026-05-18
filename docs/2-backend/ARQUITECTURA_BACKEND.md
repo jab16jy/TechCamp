@@ -709,3 +709,16 @@ Frontend llama a API → ¿Backend responde? → Sí → usar datos reales
 ```
 
 Para desactivar los mock basta con que el backend responda correctamente en `localhost:8000`. La transición es transparente.
+
+---
+
+## Referencias
+
+- [[2-backend/TASKS]] — Seguimiento de implementacion por fase
+- [[4-arquitectura/ARQUITECTURA_DB]] — Esquema detallado de la base de datos
+- [[4-arquitectura/MODULO_CLIMA]] — Servicio climatico (OpenMeteo + NASA POWER)
+- [[4-arquitectura/MODULO_SATELITAL]] — Servicio satelital (Sentinel-2 + NDVI)
+- [[4-arquitectura/MODULO_RECOMENDACION]] — Motor hibrido de recomendacion
+- [[4-arquitectura/FLUJO_DATOS]] — Mapa de conexion Frontend-Backend
+- [[4-arquitectura/DESPLIEGUE]] — Docker y produccion
+- [[4-arquitectura/GUIAS_QGIS]] — Guia para procesar imagenes satelitales

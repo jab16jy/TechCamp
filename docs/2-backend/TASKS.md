@@ -226,6 +226,25 @@ El productor pregunta "como controlo el gusano cogollero en maiz" → RAG busca 
 - [x] `GET /reports/alerts` → 1 critica + 2 advertencias
 - [x] Frontend via `npm run dev` en `:5173` con `VITE_API_URL=http://localhost:8000` funcional
 
+## ✅ Completado — DOCS: Reorganizacion y notas de arquitectura
+
+- [x] `docs/` reorganizado en 4 carpetas tematicas: `1-inicial/`, `2-backend/`, `3-frontend/`, `4-arquitectura/`
+- [x] Root-levl eliminados: `1-INTRODUCTION.md`, `2-ARCHITECTURE.md`, `5-BACKEND-API.md` (contenido duplicado)
+- [x] Movidos: `3-SETUP.md` → `1-inicial/SETUP.md`, `6-DEVELOPMENT.md` → `1-inicial/DISENO_MODULOS.md`,
+      `7-TROUBLESHOOTING.md` → `1-inicial/TROUBLESHOOTING.md`, `4-FRONTEND-REFERENCE.md` → `3-frontend/REFERENCIA.md`
+- [x] `docs/4-arquitectura/` creado con 8 notas conceptuales estilo Obsidian:
+      VISION_SISTEMA, MODULO_CLIMA, MODULO_SATELITAL, MODULO_RECOMENDACION,
+      ARQUITECTURA_DB, FLUJO_DATOS, DESPLIEGUE, GUIAS_QGIS
+- [x] `docs/README.md` reescrito como indice central con estructura, contenidos y stack
+
+---
+
+## Referencias
+
+- [[2-backend/ARQUITECTURA_BACKEND]] — Arquitectura del backend y 19 endpoints
+- [[1-inicial/PLAN_DESARROLLO]] — Cronograma original del proyecto
+- [[4-arquitectura/VISION_SISTEMA]] — Vision general del sistema completo
+
 ## ✅ Completado — AJUSTES: Pagina de configuracion
 
 - [x] `features/settings/` — Nueva feature con hook + page + CSS

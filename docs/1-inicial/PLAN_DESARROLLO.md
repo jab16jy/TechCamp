@@ -165,4 +165,13 @@ gantt
     Validación Caribe               :d4, 7d
     Pruebas integrales              :d5, 14d
     Entregable                      :milestone, 2026-05-31, 0d
+
+---
+
+## Referencias
+
+- [[1-inicial/DOCUMENTACION_INICIAL]] — Vision general y fuentes de datos
+- [[1-inicial/VALIDACION_SISTEMA]] — Metricas de prueba y validacion
+- [[2-backend/TASKS]] — Seguimiento de implementacion por fases
+- [[4-arquitectura/VISION_SISTEMA]] — Estado final de la arquitectura
 ```
