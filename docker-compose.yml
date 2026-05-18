@@ -1,50 +1,24 @@
 services:
-  db:
-    image: postgis/postgis:16-3.4
-    environment:
-      POSTGRES_DB: agrocaribe
-      POSTGRES_USER: agrocaribe
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-agrocaribe_secret}
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-      - ./backend/data/seeds:/docker-entrypoint-initdb.d
-    ports:
-      - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U agrocaribe"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-    networks:
-      - backend
-
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     environment:
-      DATABASE_URL: postgresql+asyncpg://agrocaribe:${DB_PASSWORD:-agrocaribe_secret}@db:5432/agrocaribe
+      DATABASE_URL: ${DATABASE_URL}
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+      ENVIRONMENT: ${ENVIRONMENT:-production}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
       OPENMETEO_BASE_URL: https://api.open-meteo.com/v1
-      CORS_ORIGINS: http://localhost:5173,http://localhost
+      CORS_ORIGINS: http://localhost:5173,http://localhost:5173,http://localhost
     ports:
       - "8000:8000"
-    depends_on:
-      db:
-        condition: service_healthy
-    volumes:
-      - ./backend:/app
+    restart: unless-stopped
     networks:
-      - backend
-    command: >
-      sh -c "
-        python -m app.seeds.municipios &&
-        uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-      "
+      - backend_net
 
 networks:
-  backend:
+  backend_net:
     driver: bridge
-
-volumes:
-  pgdata:
+    driver_opts:
+      com.docker.network.driver.mtu: 1500

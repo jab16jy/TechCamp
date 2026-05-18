@@ -154,8 +154,8 @@ El usuario también puede usar `.\codex-backend.ps1 "tarea"` o seleccionar un sk
 
 ## Deployment
 
-- Cloudflare Pages via `wrangler.toml` (account: `306aa72430e7ed3ca1ebea392c91aba8`)
 - Build output: `./dist`
+- Plataforma por definir (pendiente decisión)
 
 ## Gotchas
 

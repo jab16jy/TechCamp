@@ -6,11 +6,18 @@ from app.core.config import get_settings
 
 settings = get_settings()
 
+connect_args = {
+    "prepared_statement_cache_size": 0,
+    "statement_cache_size": 0,
+    "timeout": 60,
+}
+
 engine = create_async_engine(
     settings.DATABASE_URL,
     echo=settings.ENVIRONMENT == "development",
     pool_size=10,
     max_overflow=20,
+    connect_args=connect_args,
 )
 
 AsyncSessionLocal = async_sessionmaker(

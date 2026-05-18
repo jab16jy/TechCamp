@@ -20,7 +20,7 @@ tags: [frontend, arquitectura, react, vite, tailwind, zustand]
 | Animaciones | framer-motion | 12.38 | Animaciones de entrada, dropdowns y transiciones |
 | Iconos | lucide-react | 1.14 | Conjunto de iconos principal |
 | Peticiones HTTP | axios | 1.16 | Cliente HTTP con timeout e interceptores |
-| Despliegue | Cloudflare Pages | — | Build output en `./dist`, config en `wrangler.toml` |
+| Despliegue | Por definir | — | Build output en `./dist` |
 
 ---
 
@@ -574,14 +574,10 @@ Usar exclusivamente `lucide-react`. Excepciones existentes por migrar:
 | `npm run preview` | Preview build local |
 | `npm run lint` | ESLint |
 
-### 10.2 Cloudflare Pages
+### 10.2 Build
 
-Configurado en `wrangler.toml`:
-```toml
-name = "techcamp"
-pages_build_output_dir = "./dist"
-account_id = "306aa72430e7ed3ca1ebea392c91aba8"
-compatibility_date = "2024-05-10"
+```bash
+npm run build  # → ./dist
 ```
 
 ### 10.3 Variables de Entorno

@@ -210,6 +210,22 @@ El productor pregunta "como controlo el gusano cogollero en maiz" → RAG busca 
 
 ## 🎉 BACKEND COMPLETO — 9 FASES | 19 endpoints | 16 tests
 
+## ✅ Completado — DOCKER: Plan A
+
+- [x] `docker-compose.yml` — Simplificado: solo backend. Sin DB local. Conexion a Supabase via pooler (port 6543)
+- [x] `.env` — `DATABASE_URL` con pooler `aws-1-us-west-1.pooler.supabase.com:6543/postgres`
+- [x] `.env.example` — Actualizado con formato correcto
+- [x] `database.py` — `connect_args` con `prepared_statement_cache_size=0` para compatibilidad con PgBouncer en transaction mode
+- [x] `Dockerfile` — Sin cambios, listo para produccion
+- [x] RLS actualizado — Politicas `FOR SELECT USING (true)` para que el backend pueda leer todas las tablas
+- [x] `docker compose up` → backend funcionando en `localhost:8000`
+- [x] `GET /sensors` → 2025 bytes, 6 sensores con lecturas
+- [x] `GET /history` → 4722 bytes, 5 analisis demo
+- [x] `GET /dashboard/summary` → 785 bytes
+- [x] `POST /geo/decode` → detecta Barranquilla/Atlantico
+- [x] `GET /reports/alerts` → 1 critica + 2 advertencias
+- [x] Frontend via `npm run dev` en `:5173` con `VITE_API_URL=http://localhost:8000` funcional
+
 ## ✅ Completado — AJUSTES: Pagina de configuracion
 
 - [x] `features/settings/` — Nueva feature con hook + page + CSS

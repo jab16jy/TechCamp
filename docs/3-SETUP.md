@@ -30,13 +30,9 @@ Si la API no está disponible, el sistema activa automáticamente el modo Mock.
 | `npm run lint` | ESLint |
 | `npm run preview` | Previsualizar build de producción |
 
-## Despliegue (Cloudflare Pages)
+## Despliegue
 
-```bash
-npx wrangler pages deploy dist
-```
-
-Configuración en `wrangler.toml` (account: `306aa72430e7ed3ca1ebea392c91aba8`).
+Plataforma por definir (pendiente decisión). Build output en `./dist`.
 
 ## Credenciales de Prueba (Login Investigador)
 

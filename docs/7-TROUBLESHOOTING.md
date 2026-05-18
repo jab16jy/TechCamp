@@ -12,7 +12,7 @@
 
 ### 404 en despliegue
 - **Causa:** Servidor no configurado para SPA
-- **Solución:** Configurar fallback en Cloudflare Pages (wrangler.toml)
+- **Solución:** Configurar SPA fallback en el servidor (referir todo a `/index.html`)
 
 ### Siempre muestra datos Mock
 - **Causa:** Backend inaccesible o `VITE_API_URL` incorrecta
