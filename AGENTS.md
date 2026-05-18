@@ -135,20 +135,22 @@ This project uses a hybrid multi-agent setup:
 
 ### Delegación desde OpenCode a Codex
 
-OpenCode puede lanzar tareas a Codex en una ventana visible mediante `codex-delegate.bat`:
-
-```bash
-codex-delegate.bat backend "Implementa GET /municipios con filtro"
-codex-delegate.bat frontend "Crea pagina de configuracion"
-codex-delegate.bat infra "Agrega volumen para logs"
-```
+OpenCode indica la tarea y da el comando exacto. El usuario abre Codex manualmente en otra terminal.
 
 **Flujo:**
-1. OpenCode dice: "Voy a delegar X a Codex mientras sigo planeando"
-2. OpenCode ejecuta `codex-delegate.bat` → se abre ventana PowerShell con Codex trabajando
-3. OpenCode continúa trabajando (paralelismo real)
-4. Cuando Codex termina, muestra "TAREA COMPLETADA" y guarda resultado en `.codex/task-output.txt`
-5. El usuario avisa: "Codex terminó" → OpenCode revisa el output y da feedback
+1. OpenCode: "Parte 1 la hago yo. Para parte 2, abre Codex con:"
+2. OpenCode da el comando exacto listo para copiar/pegar
+3. El usuario pega en otra terminal → Codex trabaja en su ventana
+4. OpenCode sigue trabajando en paralelo
+5. Codex termina → usuario avisa a OpenCode → OpenCode revisa
+
+**Comandos que OpenCode puede dar:**
+```bash
+codex exec -C D:\PROYECTOS\TechCamp --add-dir backend "tarea"
+codex exec -C D:\PROYECTOS\TechCamp "tarea frontend"
+```
+
+El usuario también puede usar `.\codex-backend.ps1 "tarea"` o seleccionar un skill en `/agents` de Codex.
 
 ## Deployment
 

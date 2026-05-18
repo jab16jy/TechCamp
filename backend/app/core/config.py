@@ -6,6 +6,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql+asyncpg://agrocaribe:agrocaribe_secret@localhost:5432/agrocaribe"
     SUPABASE_URL: str = ""
     SUPABASE_ANON_KEY: str = ""
+    OPENAI_API_KEY: str = ""
     ENVIRONMENT: str = "development"
     LOG_LEVEL: str = "DEBUG"
     OPENMETEO_BASE_URL: str = "https://api.open-meteo.com/v1"

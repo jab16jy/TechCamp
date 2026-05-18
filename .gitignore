@@ -2,7 +2,6 @@
 .agent/
 scratch/
 .playwright-mcp/
-.codex/task-output.txt
 node_modules/
 dist/
 .env
@@ -10,7 +9,3 @@ dist/
 .env.*.local
 wrangler.toml
 .wrangler/
-codex-backend.ps1
-codex-frontend.ps1
-.codex/
-codex-delegate.bat

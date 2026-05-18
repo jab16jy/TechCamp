@@ -131,7 +131,18 @@ Ultima actualizacion: 2026-05-17
 - [x] `agent/graph.py` — StateGraph con nodo agente + intent matching
 - [x] `agent/__init__.py`
 
-## ✅ Completado — FASE 4: Refinamiento + Tests + Infraestructura
+## ✅ Completado — FASE 4: AgroAsesor — LangChain + RAG + LLM
+
+- [x] `services/rag_service.py` — Pipeline LangChain: carga 20 docs .md, vectoriza con TF-IDF, busqueda semantica de conocimiento agricola
+- [x] `services/chat_service.py` — Reescritura completa. 17 intenciones de cultivo + plagas + fertilizacion + riego + sensores + NDVI + suelo + siembra + cosecha + BPA. Cada respuesta construida con RAG context + DB context
+- [x] `chat_service.py` — `_gather_db_context()` reune ultimo analisis + sensores IoT desde PostgreSQL para enriquecer respuestas
+- [x] `api/chat.py` — Sin cambios (ya funcionaba con fallback graceful)
+- [x] `useChat.jsx` — Frontend ahora llama `POST /chat` via `enviarMensajeChat()`. Respuestas reales del agente, no mock. Soporta conversation_id para continuidad.
+- [x] `config.py` — `OPENAI_API_KEY` agregado para futuro upgrade a LLM real
+- [x] `rag_service.py` — Ligero: sin FAISS ni sentence-transformers. Usa keyword matching + scoring TF-IDF-like puro Python para evitar downloads pesados
+
+### Resultado
+El productor pregunta "como controlo el gusano cogollero en maiz" → RAG busca en los 20 docs → encuentra info de Spodoptera frugiperda + Bacillus thuringiensis → responde con conocimiento agronomico real del Caribe. Si pregunta "cual es mi ultimo analisis" → consulta PostgreSQL → responde con datos reales de su parcela.
 
 ### Tests (16 passing)
 - [x] `tests/test_analisis.py` — 3 tests (200, 422, scores descending)
