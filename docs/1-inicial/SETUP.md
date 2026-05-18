@@ -44,12 +44,12 @@ Si la API no esta disponible, el sistema activa automaticamente el modo Mock.
 
 ### Frontend
 
-| Comando | Accion |
-|---------|--------|
-| `npm run dev` | Servidor de desarrollo en `localhost:5173` |
-| `npm run build` | Build para produccion en `dist/` |
-| `npm run lint` | ESLint |
-| `npm run preview` | Previsualizar build de produccion |
+| Comando           | Accion                                     |
+| ----------------- | ------------------------------------------ |
+| `npm run dev`     | Servidor de desarrollo en `localhost:5173` |
+| `npm run build`   | Build para produccion en `dist/`           |
+| `npm run lint`    | ESLint                                     |
+| `npm run preview` | Previsualizar build de produccion          |
 
 ### Backend
 

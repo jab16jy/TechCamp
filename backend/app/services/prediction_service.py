@@ -12,6 +12,12 @@ logger = logging.getLogger(__name__)
 
 NASA_POWER_URL = "https://power.larc.nasa.gov/api/temporal/climatology/point"
 
+MONTH_ABBR = {
+    "JAN": 1, "FEB": 2, "MAR": 3, "APR": 4,
+    "MAY": 5, "JUN": 6, "JUL": 7, "AUG": 8,
+    "SEP": 9, "OCT": 10, "NOV": 11, "DEC": 12,
+}
+
 
 async def fetch_nasa_climatology(lat: float, lng: float) -> dict | None:
     params = {
@@ -74,7 +80,14 @@ def _monthly_climatology_from_nasa(nasa_data: dict | None) -> dict:
     for param, values in nasa_data.items():
         monthly[param] = {}
         for month_str, val in values.items():
-            month_num = int(month_str[:2]) if len(month_str) >= 2 else int(month_str)
+            upper = month_str.upper()
+            if upper in MONTH_ABBR:
+                month_num = MONTH_ABBR[upper]
+            else:
+                try:
+                    month_num = int(month_str[:2]) if len(month_str) >= 2 else int(month_str)
+                except (ValueError, TypeError):
+                    continue
             monthly[param][month_num] = float(val)
     return monthly
 

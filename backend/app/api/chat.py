@@ -2,9 +2,11 @@ import logging
 import uuid as _uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import get_db
+from app.models.usuario import Usuario
 from app.schemas.chat import ChatRequest, ChatResponse, ChatMessage
 from app.services.chat_service import process_chat_message
 
@@ -24,7 +26,12 @@ async def chat(
             detail="El mensaje no puede estar vacio",
         )
 
-    user_id = body.user_id or "00000000-0000-0000-0000-000000000000"
+    user_id = body.user_id
+    if not user_id:
+        result = await db.execute(select(Usuario.id).limit(1))
+        user_row = result.scalars().one_or_none()
+        if user_row:
+            user_id = str(user_row)
 
     try:
         resp = await process_chat_message(

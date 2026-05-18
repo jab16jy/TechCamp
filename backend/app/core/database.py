@@ -1,13 +1,13 @@
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.pool import NullPool
 
 from app.core.config import get_settings
 
 settings = get_settings()
 
 connect_args = {
-    "prepared_statement_cache_size": 0,
     "statement_cache_size": 0,
     "timeout": 60,
 }
@@ -15,8 +15,7 @@ connect_args = {
 engine = create_async_engine(
     settings.DATABASE_URL,
     echo=settings.ENVIRONMENT == "development",
-    pool_size=10,
-    max_overflow=20,
+    poolclass=NullPool,
     connect_args=connect_args,
 )
 
