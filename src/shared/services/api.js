@@ -299,4 +299,14 @@ export const geoDecode = async (lat, lng) => {
   }
 };
 
+/** Obtener prediccion climatica a 6 meses para una ubicacion */
+export const getPrediccion = async (lat, lng) => {
+  try {
+    const { data } = await apiClient.post('/predict', { lat, lng });
+    return data;
+  } catch {
+    return null;
+  }
+};
+
 export default apiClient;

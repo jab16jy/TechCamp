@@ -61,6 +61,18 @@ Ultima actualizacion: 2026-05-17
 - [x] `AnalisisCultivos.jsx` — Conectado a `onGeoDetected`
 - [x] `api.js` frontend — Funcion `geoDecode(lat, lng)`
 
+## ✅ Completado — FASE 2: IA Predictiva — Timeline 6 meses NASA POWER
+
+- [x] `api/predict.py` — `POST /predict` endpoint. Recibe `{lat, lng}`, proyecta 6 meses
+- [x] `services/prediction_service.py` — Consulta NASA POWER (climatologia historica) + OpenMeteo (datos actuales), calcula anomalias, proyecta temp/precip/humedad/NDVI mes a mes, ejecuta CropClassifier para recomendar cultivos por mes
+- [x] `schemas/predict.py` — PredictRequest, MonthProjection, CropScore, PredictResponse
+- [x] `router.py` — Incluye predict route
+- [x] `requirements.txt` — python-dateutil agregado
+- [x] `useIAPredictiva.js` — Nuevo hook. Usa coordenadas del ultimo analisis o manuales. Llama `POST /predict`
+- [x] `IAPredictiva.jsx` — Rebuild completo. Timeline grid 6 meses con stats climaticos + cultivos recomendados por mes. Cards highlight del mejor mes y cultivo optimo.
+- [x] `IAPredictiva.css` — Estilo glass limpio, responsive 3-col grid
+- [x] `api.js` frontend — Funcion `getPrediccion(lat, lng)`
+
 ## ✅ Completado — FASE 2: Auth + IA + Chat
 
 ### Auth
