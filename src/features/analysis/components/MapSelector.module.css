@@ -22,6 +22,7 @@
   padding: 0.75rem 1rem;
   box-shadow: 0 16px 28px rgba(0, 0, 0, 0.08);
   border: 1px solid rgba(191, 201, 193, 0.3);
+  flex-wrap: wrap;
 }
 
 .coordsIcon {
@@ -38,6 +39,8 @@
 .coordsText {
   display: flex;
   flex-direction: column;
+  flex: 1;
+  min-width: 0;
 }
 
 .coordsLabel {
@@ -51,5 +54,39 @@
 .coordsValue {
   color: #2D5A27;
   font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.geoBadge {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin-left: auto;
+}
+
+.geoMuni {
+  color: #2D5A27;
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.geoDept {
+  color: #707973;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.areaBadge {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.5rem;
+  background: rgba(45, 90, 39, 0.1);
+  color: #2D5A27;
+  font-size: 0.75rem;
   font-weight: 600;
 }

@@ -53,6 +53,21 @@ export function useAnalisisCultivos() {
     });
   };
 
+  const handleGeoDetected = (geo) => {
+    const updates = {
+      lat: geo.lat,
+      lng: geo.lng,
+    };
+    if (geo.departamento) updates.departamento = geo.departamento;
+    if (geo.municipio) updates.municipio = geo.municipio;
+    if (geo.area_hectareas) updates.area_hectareas = String(geo.area_hectareas);
+    actualizarFormulario(updates);
+    agregarToast(
+      `Ubicacion detectada: ${geo.municipio || ''}, ${geo.departamento || ''}`,
+      'info',
+    );
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -186,6 +201,7 @@ export function useAnalisisCultivos() {
     // Handlers
     handleFormChange,
     handleMapChange,
+    handleGeoDetected,
     handleSubmit,
     handleParcelaChange,
     // Navegación

@@ -289,4 +289,14 @@ export const crearLecturaSensor = async (sensorId, ndvi, humedad, temperatura) =
   }
 };
 
+/** Detectar departamento y municipio desde coordenadas */
+export const geoDecode = async (lat, lng) => {
+  try {
+    const { data } = await apiClient.post('/geo/decode', { lat, lng });
+    return data;
+  } catch {
+    return { detectado: false };
+  }
+};
+
 export default apiClient;

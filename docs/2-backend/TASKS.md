@@ -1,13 +1,13 @@
 ---
-tags: [backend, tracking, mvp, fase2]
-updated: 2026-05-16
+tags: [backend, tracking, mvp, fase1, fase2, fase3, fase4]
+updated: 2026-05-17
 ---
 
 # Backend — Seguimiento de Tareas
 
 Progreso del backend comparando la documentacion de `ARQUITECTURA_BACKEND.md` contra el codigo implementado.
 
-Ultima actualizacion: 2026-05-16
+Ultima actualizacion: 2026-05-17
 
 ## ✅ Completado — Infraestructura base
 
@@ -50,6 +50,16 @@ Ultima actualizacion: 2026-05-16
 
 - [x] `seeds/municipios.py` — Seed de municipios e indices satelitales
 - [x] `data/seeds/01_municipios.sql` — SQL de inicializacion
+
+## ✅ Completado — FASE 1: AnalisisCultivos — Delimitador + Geo-deteccion
+
+- [x] `api/geo.py` — `POST /geo/decode` con PostGIS `ST_Contains`
+- [x] `router.py` — Incluye geo routes
+- [x] `MapSelector.jsx` — Polygon draw con leaflet-draw + geo-deteccion
+- [x] `MapSelector.module.css` — Badges de ubicacion detectada y area
+- [x] `useAnalisisCultivos.js` — `handleGeoDetected()` auto-llena formulario
+- [x] `AnalisisCultivos.jsx` — Conectado a `onGeoDetected`
+- [x] `api.js` frontend — Funcion `geoDecode(lat, lng)`
 
 ## ✅ Completado — FASE 2: Auth + IA + Chat
 

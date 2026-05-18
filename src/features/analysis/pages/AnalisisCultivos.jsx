@@ -45,6 +45,7 @@ const AnalisisCultivos = () => {
     cargandoAnalisis,
     handleFormChange,
     handleMapChange,
+    handleGeoDetected,
     handleSubmit,
     handleParcelaChange,
     metricCardsData,
@@ -163,6 +164,7 @@ const AnalisisCultivos = () => {
                   <MapSelector
                     position={{ lat: formulario.lat, lng: formulario.lng }}
                     onPositionChange={handleMapChange}
+                    onGeoDetected={handleGeoDetected}
                     height={400}
                   />
                 </div>
