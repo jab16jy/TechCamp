@@ -339,4 +339,14 @@ export const exportarReporte = async (analysisId) => {
   }
 };
 
+/** Obtener resumen del dashboard */
+export const getDashboardSummary = async () => {
+  try {
+    const { data } = await apiClient.get('/dashboard/summary');
+    return data;
+  } catch {
+    return null;
+  }
+};
+
 export default apiClient;

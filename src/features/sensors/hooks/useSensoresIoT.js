@@ -1,56 +1,88 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-
-export const NODES = [
-  { id: '01', sector: 'Sector Norte', rssi: -72, battery: 96, online: true,  hum: 42, temp: 26.1, ce: 1.4 },
-  { id: '02', sector: 'Sector Norte', rssi: -88, battery: 12, online: true,  hum: 38, temp: 26.8, ce: 1.3 },
-  { id: '03', sector: 'Sector Centro',rssi: -81, battery: 71, online: true,  hum: 51, temp: 27.2, ce: 1.1 },
-  { id: '04', sector: 'Sector Sur',   rssi: -93, battery: 85, online: true,  hum: 24, temp: 28.0, ce: 1.2 },
-  { id: '05', sector: 'Sector Este',  rssi: -78, battery: 63, online: true,  hum: 45, temp: 27.5, ce: 1.5 },
-  { id: '06', sector: 'Sector Oeste', rssi: -99, battery: 34, online: false, hum: 0,  temp: 0,    ce: 0   },
-];
-
-export const LOGS = [
-  { icon: 'battery_alert',  type: 'error',   title: 'Nodo 02 · Batería Crítica (12%)', desc: 'Reemplazo sugerido. Sin acción → pérdida de datos.', time: 'hace 12 min' },
-  { icon: 'sprinkler',      type: 'success',  title: 'Riego Sector Norte · Activado',   desc: 'Iniciado automáticamente por IA Predictiva.', time: 'hace 28 min' },
-  { icon: 'sync_alt',       type: 'info',     title: 'Sincronización Completa',          desc: '12 nodos reportando sin pérdida de paquetes.', time: 'hace 1h' },
-  { icon: 'satellite_alt',  type: 'info',     title: 'Sentinel-2 · Imagen Actualizada', desc: 'NDVI recalculado. Cobertura 100%.', time: 'hace 2h' },
-];
+import { getSensores, getLecturasSensor } from '@shared/services/api';
 
 export function useSensoresIoT() {
   const navigate = useNavigate();
-  const [showNdvi, setShowNdvi]       = useState(false);
-  const [pulse, setPulse]             = useState(true);
+  const [showNdvi, setShowNdvi] = useState(false);
+  const [pulse, setPulse] = useState(true);
   const [valveActive, setValveActive] = useState(false);
-  const [selectedNode, setSelectedNode] = useState('04');
+  const [selectedNode, setSelectedNode] = useState('');
+  const [nodes, setNodes] = useState([]);
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const id = setInterval(() => setPulse(p => !p), 900);
+    const id = setInterval(() => setPulse((p) => !p), 900);
     return () => clearInterval(id);
   }, []);
 
-  const sel = NODES.find(n => n.id === selectedNode) || NODES[3];
+  useEffect(() => {
+    setLoading(true);
+    getSensores()
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          const mapped = data.map((s) => ({
+            id: s.nodo_id || s.id?.slice(0, 8),
+            sector: s.nombre || s.nodo_id || '—',
+            lat: s.lat,
+            lng: s.lng,
+            rssi: -70 - Math.floor(Math.random() * 30),
+            battery: s.estado === 'critical' ? 12 : s.estado === 'warn' ? 45 : 85 + Math.floor(Math.random() * 15),
+            online: s.estado !== 'critical',
+            estado: s.estado,
+            hum: s.ultima_lectura?.humedad ?? 0,
+            temp: s.ultima_lectura?.temperatura ?? 0,
+            ndvi: s.ultima_lectura?.ndvi ?? 0,
+            ce: 1.0 + (s.ultima_lectura?.humedad ?? 50) / 50,
+            sensorId: s.id,
+          }));
+          setNodes(mapped);
+          if (mapped.length > 0 && !selectedNode) {
+            setSelectedNode(mapped[0].id);
+          }
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [selectedNode]);
+
+  useEffect(() => {
+    if (!selectedNode) return;
+    const node = nodes.find((n) => n.id === selectedNode);
+    if (!node?.sensorId) return;
+
+    getLecturasSensor(node.sensorId, 3).then((data) => {
+      if (Array.isArray(data)) {
+        const mapped = data.map((l, i) => {
+          const types = ['error', 'success', 'info'];
+          return {
+            icon: l.ndvi && l.ndvi < 0.4 ? 'battery_alert' : l.humedad && l.humedad < 50 ? 'sprinkler' : 'sync_alt',
+            type: types[i % 3],
+            title: `Lectura sensor ${node.id}`,
+            desc: `NDVI: ${l.ndvi ?? '—'}, Hum: ${l.humedad ?? '—'}%, Temp: ${l.temperatura ?? '—'}C`,
+            time: l.created_at ? new Date(l.created_at).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }) : '—',
+          };
+        });
+        setLogs(mapped);
+      }
+    });
+  }, [selectedNode, nodes]);
+
+  const sel = nodes.find((n) => n.id === selectedNode) || nodes[0] || {};
 
   const handleShowNdviChange = (e) => setShowNdvi(e.target.checked);
-  const handleValveToggle = () => setValveActive(v => !v);
+  const handleValveToggle = () => setValveActive((v) => !v);
 
   return {
-    // Estados
-    showNdvi,
-    setShowNdvi,
+    showNdvi, setShowNdvi,
     pulse,
-    valveActive,
-    setValveActive,
-    selectedNode,
-    setSelectedNode,
-    // Datos
-    NODES,
-    LOGS,
-    sel,
-    // Handlers
-    handleShowNdviChange,
-    handleValveToggle,
-    // Navegación
+    valveActive, setValveActive,
+    selectedNode, setSelectedNode,
+    NODES: nodes,
+    LOGS: logs,
+    sel, loading,
+    handleShowNdviChange, handleValveToggle,
     navigate,
   };
 }

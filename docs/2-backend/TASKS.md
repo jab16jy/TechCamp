@@ -179,3 +179,33 @@ El productor pregunta "como controlo el gusano cogollero en maiz" → RAG busca 
 - [x] `GestionReportes.css` — Glass design, scrollable, responsive, print stylesheet
 - [x] `api.js` — `getAlertas()`, `compararAnalisis()`, `exportarReporte()`
 - [x] Sin `material-symbols-outlined` — todo lucide-react
+
+## ✅ Completado — FASE 6: SensoresIoT — Datos reales desde backend
+
+- [x] `useSensoresIoT.js` — Hook conectado a `getSensores()` y `getLecturasSensor()` via API real. Mapea response API a formato UI existente (hum, temp, ce, rssi, battery, sector). Logs desde ultimas lecturas reales.
+- [x] Backend ya existente — `GET /sensors`, `GET /sensors/{id}/readings`, `POST /sensors/readings`
+- [x] UI conservada sin cambios — NodeList, TelemetryPanel, EventLog, FarmMap intactos
+
+## ✅ Completado — FASE 7: Mapa — Dashboard Satelital
+
+- [x] `useMapZone.js` — Conectado a `getSensores()` y `getClima()`. Sensores reales desde PostgreSQL mapeados a marcadores Leaflet con iconos por estado (ok/warn/critical). Datos climaticos via OpenMeteo.
+- [x] `Mapa.jsx` — Rebuild como dashboard satelital full-screen. Mapa como hero ocupando toda la pagina. Topbar glass con toggle satelite/mapa. Paneles flotantes derecho: Sensores IoT (con lectura en vivo), Clima (temp/precip/humedad), Zona delimitada (area + centroide + boton Analizar). Leyenda NDVI en la parte inferior.
+- [x] `Mapa.css` — Full-height, glass overlay panels, responsive
+- [x] Backend ya existente — `GET /sensors`, `GET /climate`
+- [x] Sin `material-symbols-outlined` — todo lucide-react
+
+## ✅ Completado — FASE 8: Dashboard — Datos reales
+
+- [x] `api/dashboard.py` — `GET /dashboard/summary` endpoint. Retorna: total_analisis, total_sensores, sensores_criticos, ultimo_analisis, ultimos_analisis. Datos desde PostgreSQL (analisis + sensores).
+- [x] `schemas/dashboard.py` — DashboardSummaryResponse
+- [x] `router.py` — Incluye dashboard route
+- [x] `useDashboard.jsx` — Hook actualizado: llama `getDashboardSummary()` + `getClima()`. AI_METRICS ahora muestra datos reales (total analisis, sensores IoT, alertas activas). FIELD_UPDATES construido desde ultimos_analisis reales. WEATHER desde OpenMeteo. Dashboard ya no es 100% mock.
+- [x] `api.js` — `getDashboardSummary()`
+
+## ✅ Completado — FASE 9: Resultado — Reporte tecnico detallado
+
+- [x] `AnalysisResults.jsx` — Rebuild completo. Factor bars (temp, precip, humedad, NDVI, radiacion). Crop cards expandibles con justificacion + ciclo + rendimiento. Indicadores satelitales. Parametros suelo. Mapa ubicacion.
+- [x] `AnalysisResults.module.css` — Glass cards, factor bars, responsive
+- [x] 0% `material-symbols-outlined` — 100% lucide-react
+
+## 🎉 BACKEND COMPLETO — 9 FASES | 19 endpoints | 16 tests
