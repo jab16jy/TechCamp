@@ -1,60 +1,90 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAppStore from '@shared/store';
+import { getHistorial as fetchHistorial } from '@shared/services/api';
 
-export const TYPE_META = {
-  analisis: { label: 'Análisis Cultivo', color: '#2d6a4f', bgColor: 'rgba(45,106,79,0.08)' },
-  suelo: { label: 'Calidad Suelo', color: '#75584d', bgColor: 'rgba(117,88,77,0.08)' },
-};
-
-export const ESTADO_COLORS = {
-  Exitosa: { bg: 'rgba(0,109,72,0.1)', color: '#006d48' },
-  Pendiente: { bg: 'rgba(234,179,8,0.1)', color: '#ca8a04' },
-  Error: { bg: 'rgba(186,26,26,0.1)', color: '#ba1a1a' },
-};
+const MESES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
 export function formatDate(iso) {
   if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('es-CO', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  const d = new Date(iso);
+  return `${d.getDate()} ${MESES[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+export function formatTime(iso) {
+  if (!iso) return '';
+  return new Date(iso).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
 }
 
 export default function useHistorial() {
   const navigate = useNavigate();
   const historial = useAppStore((s) => s.historial);
-  const limpiarHistorial = useAppStore((s) => s.limpiarHistorial);
+  const agregarAlHistorial = useAppStore((s) => s.agregarAlHistorial);
 
   const [search, setSearch] = useState('');
   const [filterTipo, setFilterTipo] = useState('all');
-  const [filterEstado, setFilterEstado] = useState('all');
+  const [loading, setLoading] = useState(false);
+  const [serverData, setServerData] = useState([]);
+  const [debounced, setDebounced] = useState('');
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(search), 250);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  useEffect(() => {
+    setLoading(true);
+    fetchHistorial()
+      .then((data) => {
+        if (Array.isArray(data)) setServerData(data);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const combined = useMemo(() => {
+    const seen = new Set();
+    const all = [];
+    for (const item of serverData) {
+      if (!seen.has(item.id)) { seen.add(item.id); all.push(item); }
+    }
+    for (const item of historial) {
+      if (!seen.has(item.id)) { seen.add(item.id); all.push(item); }
+    }
+    return all.sort((a, b) => new Date(b.fecha || 0) - new Date(a.fecha || 0));
+  }, [serverData, historial]);
 
   const filtered = useMemo(() => {
-    return historial.filter((item) => {
-      const matchSearch =
-        !search ||
-        item.id?.toLowerCase().includes(search.toLowerCase()) ||
-        item.municipio?.toLowerCase().includes(search.toLowerCase()) ||
-        item.cultivo?.toLowerCase().includes(search.toLowerCase()) ||
-        item.cultivo_top?.toLowerCase().includes(search.toLowerCase());
-      const matchTipo = filterTipo === 'all' || item.tipo === filterTipo;
-      const matchEstado = filterEstado === 'all' || item.estado === filterEstado;
-      return matchSearch && matchTipo && matchEstado;
+    const q = debounced.toLowerCase().trim();
+    return combined.filter((item) => {
+      if (q) {
+        const haystack = [item.id, item.municipio, item.departamento, item.cultivo, item.cultivo_top]
+          .filter(Boolean).join(' ').toLowerCase();
+        if (!haystack.includes(q)) return false;
+      }
+      if (filterTipo !== 'all' && item.tipo !== filterTipo) return false;
+      return true;
     });
-  }, [historial, search, filterTipo, filterEstado]);
+  }, [combined, debounced, filterTipo]);
 
   const stats = useMemo(() => ({
-    total: historial.length,
-    analisis: historial.filter((h) => h.tipo === 'analisis').length,
-    suelo: historial.filter((h) => h.tipo === 'suelo').length,
-  }), [historial]);
+    total: combined.length,
+    analisis: combined.filter((h) => h.tipo === 'simple' || h.tipo === 'analisis').length,
+    prediccion: combined.filter((h) => h.tipo === 'prediccion').length,
+    suelo: combined.filter((h) => h.tipo === 'advanced' || h.tipo === 'suelo').length,
+  }), [combined]);
 
   const handleView = useCallback((item) => {
-    if (item.tipo === 'suelo') {
+    if (item.coordenadas) {
+      useAppStore.setState({
+        formulario: {
+          ...useAppStore.getState().formulario,
+          lat: item.coordenadas.lat,
+          lng: item.coordenadas.lng,
+        }
+      });
+    }
+    if (item.tipo === 'advanced' || item.tipo === 'suelo') {
       navigate('/investigador/resultado-avanzado');
     } else {
       navigate('/resultado');
@@ -62,34 +92,30 @@ export default function useHistorial() {
   }, [navigate]);
 
   const handleDelete = useCallback((id) => {
-    const updated = historial.filter((h) => h.id !== id);
+    const updated = combined.filter((h) => h.id !== id);
+    setServerData((p) => p.filter((h) => h.id !== id));
     try {
       localStorage.setItem('agrocaribe_historial', JSON.stringify(updated));
       useAppStore.setState({ historial: updated });
-    } catch { /* ignore */ }
-  }, [historial]);
+    } catch {}
+  }, [combined]);
 
   const handleClearAll = useCallback(() => {
-    if (window.confirm('¿Eliminar todo el historial?')) {
-      limpiarHistorial();
+    if (window.confirm('Eliminar todo el historial? Esta accion no se puede deshacer.')) {
+      setServerData([]);
+      useAppStore.getState().limpiarHistorial();
     }
-  }, [limpiarHistorial]);
+  }, []);
 
   const clearSearch = useCallback(() => setSearch(''), []);
 
   return {
-    // Estado
-    search,
-    setSearch,
-    filterTipo,
-    setFilterTipo,
-    filterEstado,
-    setFilterEstado,
-    // Datos
-    historial,
+    search, setSearch,
+    filterTipo, setFilterTipo,
+    loading,
+    historial: combined,
     filtered,
     stats,
-    // Handlers
     handleView,
     handleDelete,
     handleClearAll,

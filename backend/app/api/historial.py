@@ -1,76 +1,61 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from app.core.dependencies import get_db
 from app.models.analisis import Analisis
+from app.models.municipio import Municipio
 from app.schemas.analisis import HistorialEntry
 
 router = APIRouter(prefix="/history", tags=["historial"])
 
-MOCK_HISTORY = [
-    {
-        "id": "C-0421",
-        "fecha": "2025-04-21T10:30:00Z",
-        "municipio": "Montería",
-        "departamento": "Córdoba",
-        "cultivo": "Maíz",
-        "score": 94,
-        "tipo": "analisis",
-        "estado": "Exitosa",
-        "area_hectareas": 5.2,
-        "coordenadas": {"lat": 8.7578, "lng": -75.8814},
-    },
-    {
-        "id": "C-0415",
-        "fecha": "2025-04-15T14:20:00Z",
-        "municipio": "Valledupar",
-        "departamento": "Cesar",
-        "cultivo": "Algodón",
-        "score": 78,
-        "tipo": "analisis",
-        "estado": "Exitosa",
-        "area_hectareas": 8.0,
-        "coordenadas": {"lat": 10.4631, "lng": -73.2532},
-    },
-    {
-        "id": "C-0410",
-        "fecha": "2025-04-10T09:15:00Z",
-        "municipio": "Barranquilla",
-        "departamento": "Atlántico",
-        "cultivo": "Yuca",
-        "score": 87,
-        "tipo": "analisis",
-        "estado": "Exitosa",
-        "area_hectareas": 3.5,
-        "coordenadas": {"lat": 10.9685, "lng": -74.7813},
-    },
-]
-
 
 @router.get("", response_model=list[HistorialEntry])
-async def get_history(db: AsyncSession = Depends(get_db)):
+async def get_history(
+    db: AsyncSession = Depends(get_db),
+    tipo: str | None = Query(None, description="Filtrar: simple, advanced, prediccion"),
+    limit: int = Query(50, ge=1, le=200),
+):
     try:
-        result = await db.execute(
-            select(Analisis).order_by(Analisis.created_at.desc()).limit(50)
-        )
+        query = select(Analisis).order_by(Analisis.created_at.desc()).limit(limit)
+        if tipo:
+            query = query.where(Analisis.tipo == tipo)
+        result = await db.execute(query)
         analyses = result.scalars().all()
+
         if analyses:
-            return [
-                HistorialEntry(
+            municipio_ids = [a.municipio_id for a in analyses if a.municipio_id]
+            municipio_map = {}
+            if municipio_ids:
+                muni_result = await db.execute(
+                    select(Municipio).where(Municipio.id.in_(municipio_ids))
+                )
+                municipio_map = {m.id: m for m in muni_result.scalars().all()}
+
+            entries = []
+            for a in analyses:
+                muni = municipio_map.get(a.municipio_id) if a.municipio_id else None
+                datos = a.datos_formulario or {}
+                entries.append(HistorialEntry(
                     id=str(a.id)[:8].upper(),
                     fecha=a.created_at.isoformat() if a.created_at else "",
-                    municipio="",
-                    departamento="",
+                    municipio=muni.nombre if muni else datos.get("municipio", ""),
+                    departamento=muni.departamento if muni else datos.get("departamento", ""),
                     cultivo=a.cultivo_recomendado or "",
                     score=a.score or 0,
                     tipo=a.tipo,
                     estado="Exitosa",
+                    area_hectareas=datos.get("area_hectareas", a.lat and 1.0),
                     coordenadas={"lat": a.lat, "lng": a.lng},
-                )
-                for a in analyses
-            ]
+                    ph_suelo=datos.get("ph_suelo"),
+                    textura_suelo=datos.get("textura_suelo"),
+                    materia_organica=datos.get("materia_organica"),
+                    mes_siembra=datos.get("mes_siembra"),
+                    recomendaciones=a.resultado_completo.get("recomendaciones") if a.resultado_completo else None,
+                ))
+            return entries
     except Exception:
         pass
 
-    return [HistorialEntry(**h) for h in MOCK_HISTORY]
+    return []

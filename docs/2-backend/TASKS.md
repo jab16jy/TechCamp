@@ -51,6 +51,14 @@ Ultima actualizacion: 2026-05-17
 - [x] `seeds/municipios.py` — Seed de municipios e indices satelitales
 - [x] `data/seeds/01_municipios.sql` — SQL de inicializacion
 
+## ✅ Completado — FASE 3: Historial sincronizado + rediseniado
+
+- [x] `api/historial.py` — Endpoint `GET /history` optimizado: JOIN con `municipios` para obtener departamento/municipio real, filtra por `tipo`, retorna datos enriquecidos (ph, textura, materia organica, mes siembra, recomendaciones)
+- [x] `schemas/analisis.py` — `HistorialEntry` extendido con `ph_suelo`, `textura_suelo`, `materia_organica`, `mes_siembra`, `recomendaciones`
+- [x] `useHistorial.js` — Hook reescrito: llama `getHistorial()` desde backend, sincroniza con Zustand + localStorage, debounce 250ms en busqueda, combina datos server + local
+- [x] `Historial.jsx` — Redisenio completo. Glassmorphism en toolbar + cards + empty state. Tabs de filtro (Todos/Cultivos/Suelo/IA). Score lines animadas. Cards expandibles con detalle completo: coordenadas, area, pH, MO, textura, cultivos recomendados. Tipografia Manrope consistente.
+- [x] `Historial.css` — CSS nuevo con glass cards profundos, animaciones, responsive 1/2/4 cols
+
 ## ✅ Completado — FASE 1: AnalisisCultivos — Delimitador + Geo-deteccion
 
 - [x] `api/geo.py` — `POST /geo/decode` con PostGIS `ST_Contains`

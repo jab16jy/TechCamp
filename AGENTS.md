@@ -120,12 +120,35 @@ This project uses a hybrid multi-agent setup:
 - **OpenCode** → orchestration, planning, code review, architecture decisions
 - **Codex CLI** → implementation workers (one terminal per domain)
 
-| Agent | Terminal Command | Scope |
-|-------|-----------------|-------|
-| backend | backend | `.\codex-backend.ps1` | `backend/app/api/`, `services/`, `models/`, `schemas/`, `core/`, `tests/` |
+| Agent | Terminal Launcher | Scope |
+|-------|------------------|-------|
+| backend | `.\codex-backend.ps1` | `backend/app/api/`, `services/`, `models/`, `schemas/`, `core/`, `tests/` |
 | frontend | `.\codex-frontend.ps1` | `src/features/`, `src/shared/` |
 
-See `.codex/agent-backend.md` and `.codex/agent-frontend.md` for full agent specs.
+### Codex CLI Skills (aparecen en `/agents`)
+
+| Skill | Ruta | Contenido |
+|-------|------|-----------|
+| Backend API | `~/.codex/skills/backend-api/` | FastAPI, async, SQLAlchemy, Alembic, LangGraph, ML |
+| Frontend SPA | `~/.codex/skills/frontend-spa/` | React 19, Tailwind, Zustand, diseño, rutas |
+| Infra Docker | `~/.codex/skills/infra-docker/` | Docker Compose, PostGIS, networking |
+
+### Delegación desde OpenCode a Codex
+
+OpenCode puede lanzar tareas a Codex en una ventana visible mediante `codex-delegate.bat`:
+
+```bash
+codex-delegate.bat backend "Implementa GET /municipios con filtro"
+codex-delegate.bat frontend "Crea pagina de configuracion"
+codex-delegate.bat infra "Agrega volumen para logs"
+```
+
+**Flujo:**
+1. OpenCode dice: "Voy a delegar X a Codex mientras sigo planeando"
+2. OpenCode ejecuta `codex-delegate.bat` → se abre ventana PowerShell con Codex trabajando
+3. OpenCode continúa trabajando (paralelismo real)
+4. Cuando Codex termina, muestra "TAREA COMPLETADA" y guarda resultado en `.codex/task-output.txt`
+5. El usuario avisa: "Codex terminó" → OpenCode revisa el output y da feedback
 
 ## Deployment
 

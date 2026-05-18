@@ -49,6 +49,11 @@ class HistorialEntry(BaseModel):
     estado: str
     area_hectareas: Optional[float] = None
     coordenadas: Optional[dict] = None
+    ph_suelo: Optional[float] = None
+    textura_suelo: Optional[str] = None
+    materia_organica: Optional[float] = None
+    mes_siembra: Optional[str] = None
+    recomendaciones: Optional[list] = None
 
 
 class MunicipioResponse(BaseModel):
