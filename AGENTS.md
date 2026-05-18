@@ -102,6 +102,31 @@ Skills live in `.agents/skills/` and are loaded automatically:
 
 Browse more skills: `npx skills find <query>`
 
+## Backend Rules (FastAPI + PostgreSQL/PostGIS)
+
+- **Framework**: FastAPI async only, SQLAlchemy 2.0 async session, asyncpg driver
+- **Pattern**: Repository pattern — services → models, never raw SQL in routes
+- **Schemas**: Pydantic v2 with `from_attributes=True`
+- **Migrations**: Alembic only, never `Base.metadata.create_all()`
+- **Tests**: pytest + httpx.AsyncClient
+- **ML**: scikit-learn models in `backend/app/ml/`
+- **Agent**: LangGraph workflow in `backend/app/agent/`
+- **Docker**: Backend runs in container (see `backend/Dockerfile`), PostGIS in `docker-compose.yml`
+- **Style**: Type hints mandatory on all functions, async def for all endpoints
+
+## Multi-Agent Workflow (OpenCode + Codex CLI)
+
+This project uses a hybrid multi-agent setup:
+- **OpenCode** → orchestration, planning, code review, architecture decisions
+- **Codex CLI** → implementation workers (one terminal per domain)
+
+| Agent | Terminal Command | Scope |
+|-------|-----------------|-------|
+| backend | backend | `.\codex-backend.ps1` | `backend/app/api/`, `services/`, `models/`, `schemas/`, `core/`, `tests/` |
+| frontend | `.\codex-frontend.ps1` | `src/features/`, `src/shared/` |
+
+See `.codex/agent-backend.md` and `.codex/agent-frontend.md` for full agent specs.
+
 ## Deployment
 
 - Cloudflare Pages via `wrangler.toml` (account: `306aa72430e7ed3ca1ebea392c91aba8`)

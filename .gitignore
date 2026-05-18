@@ -9,5 +9,6 @@ dist/
 .env.*.local
 wrangler.toml
 .wrangler/
-
-
+codex-backend.ps1
+codex-frontend.ps1
+.codex/
