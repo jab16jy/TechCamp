@@ -209,3 +209,12 @@ El productor pregunta "como controlo el gusano cogollero en maiz" → RAG busca 
 - [x] 0% `material-symbols-outlined` — 100% lucide-react
 
 ## 🎉 BACKEND COMPLETO — 9 FASES | 19 endpoints | 16 tests
+
+## ✅ Completado — AJUSTES: Pagina de configuracion
+
+- [x] `features/settings/` — Nueva feature con hook + page + CSS
+- [x] `Ajustes.jsx` — 4 secciones: Mi Finca (coordenadas default), Servidor API (URL configurable + test de conexion), Datos (export/import JSON backup), Sistema (limpiar cache, version).
+- [x] `useSettings.js` — `getSetting()`, `setSetting()` para localStorage. `exportData()` descarga JSON. `importData()` restaura backup. `clearCache()` resetea todo.
+- [x] `App.jsx` — Ruta `/investigador/ajustes`
+- [x] `ResearcherLayout` — Item "Ajustes" en dropdown de perfil
+- [x] `api.js` — `BASE_URL` ahora lee desde localStorage (`agrocaribe_api_url`), permite cambiar entre localhost/Docker/Supabase sin recompilar

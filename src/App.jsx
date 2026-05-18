@@ -18,6 +18,7 @@ import IAPredictiva from '@features/predictions/pages/IAPredictiva';
 import SensoresIoT from '@features/sensors/pages/SensoresIoT';
 import GestionReportes from '@features/reports/pages/GestionReportes';
 import Historial from '@features/history/pages/Historial';
+import Ajustes from '@features/settings/pages/Ajustes';
 
 // ── Páginas compartidas ──
 import Resultado from '@features/analysis/pages/Resultado';
@@ -42,6 +43,7 @@ const App = () => (
       <Route path="/investigador/mapas" element={<AgroAsesor />} />
       <Route path="/investigador/mapa" element={<Mapa />} />
       <Route path="/investigador/historial" element={<Historial />} />
+      <Route path="/investigador/ajustes" element={<Ajustes />} />
       <Route path="/investigador/analisis" element={<AnalisisCultivosInvestigador />} />
       <Route path="/investigador/resultado-avanzado" element={<ResultadoAvanzado />} />
       <Route path="/investigador/ia" element={<IAPredictiva />} />

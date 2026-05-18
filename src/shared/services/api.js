@@ -6,10 +6,18 @@
 
 import axios from 'axios';
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const getBaseUrl = () => {
+  try {
+    const saved = localStorage.getItem('agrocaribe_api_url');
+    if (saved) return JSON.parse(saved);
+  } catch {}
+  return import.meta.env.VITE_API_URL || 'http://localhost:8000';
+};
+
+const BASE_URL = getBaseUrl();
 
 // Instancia de Axios con configuración base
-const apiClient = axios.create({
+export const apiClient = axios.create({
   baseURL: BASE_URL,
   timeout: 15000,
   headers: {

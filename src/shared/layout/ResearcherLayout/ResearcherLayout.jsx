@@ -202,8 +202,7 @@ const ResearcherLayout = ({ children, activeTab }) => {
                 </div>
                 {[
                   { label: 'Mi Perfil', icon: <User size={15} />, path: '/perfil' },
-                  { label: 'Ajustes de Finca', icon: <Settings size={15} />, path: '/ajustes' },
-                  { label: 'Administracion', icon: <Shield size={15} />, path: '/admin' },
+                  { label: 'Ajustes', icon: <Settings size={15} />, path: '/investigador/ajustes' },
                 ].map((option) => (
                   <Link
                     key={option.label}
