@@ -1,228 +1,279 @@
 import { useNavigate } from 'react-router-dom';
+import {
+  ArrowLeft, AlertTriangle, ShieldAlert, Bell, FileText,
+  TrendingUp, MapPin, Calendar, Download, Printer, X,
+  Sprout, Gauge, Droplets, Thermometer, Loader2, BarChart3,
+} from 'lucide-react';
 import ResearcherLayout from '@shared/layout/ResearcherLayout/ResearcherLayout';
 import useAuthGuard from '@shared/hooks/useAuthGuard';
-import GaugeChart from '@features/reports/components/GaugeChart/GaugeChart';
-import NdviMiniMap from '@features/reports/components/NdviMiniMap/NdviMiniMap';
-import HydroChart from '@features/reports/components/HydroChart/HydroChart';
-import useTaskManager, { NDVI_MONTHS, TASKS } from '@features/reports/hooks/useTaskManager';
+import useReportManager from '@features/reports/hooks/useReportManager';
 import './GestionReportes.css';
 
-// ── Main ──
+const SEVERIDAD_ICON = {
+  critica: { icon: ShieldAlert, color: '#ba1a1a', bg: 'rgba(186,26,26,0.08)' },
+  advertencia: { icon: AlertTriangle, color: '#b8860b', bg: 'rgba(184,134,11,0.08)' },
+  info: { icon: Bell, color: '#2563eb', bg: 'rgba(37,99,235,0.08)' },
+};
+
+const SCORE_COLOR = (s) => s >= 80 ? '#2D5A27' : s >= 55 ? '#b8860b' : '#ba1a1a';
+
 const GestionReportes = () => {
   const authorized = useAuthGuard('investigador');
   const navigate = useNavigate();
   const {
-    activeMonth,
-    setActiveMonth,
-    tasks,
-    toggleTask,
-    completedCount,
-    totalCount,
-    progressPercent,
-  } = useTaskManager();
+    alertas, analyses, loading, exporting, selectedAnalysis,
+    exportData, handleExport, clearExport,
+  } = useReportManager();
 
   if (!authorized) return null;
+
+  if (exportData) {
+    return (
+      <ResearcherLayout activeTab="reportes">
+        <div className="gr-root">
+          <div className="gr-print-view">
+            <div className="gr-print-toolbar">
+              <button className="gr-back-btn" onClick={clearExport}>
+                <ArrowLeft size={13} /> Volver
+              </button>
+              <button className="gr-print-btn" onClick={() => window.print()}>
+                <Printer size={14} /> Imprimir / Guardar PDF
+              </button>
+            </div>
+            <div className="gr-print-report">
+              <h1 className="gr-print-title">{exportData.titulo}</h1>
+              <p className="gr-print-date">{new Date(exportData.fecha).toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+
+              <section className="gr-print-section">
+                <h2>Ubicacion</h2>
+                <p>{exportData.ubicacion?.municipio}, {exportData.ubicacion?.departamento}</p>
+                <p>Coordenadas: {exportData.ubicacion?.lat?.toFixed(4)} N, {exportData.ubicacion?.lng?.toFixed(4)} W</p>
+              </section>
+
+              <section className="gr-print-section">
+                <h2>Datos Climaticos</h2>
+                <div className="gr-print-grid">
+                  <div><strong>Temperatura:</strong> {exportData.clima?.temperatura} C</div>
+                  <div><strong>Precipitacion:</strong> {exportData.clima?.precipitacion} mm</div>
+                  <div><strong>Humedad:</strong> {exportData.clima?.humedad}%</div>
+                </div>
+              </section>
+
+              <section className="gr-print-section">
+                <h2>Indicadores Satelitales</h2>
+                <div className="gr-print-grid">
+                  <div><strong>NDVI:</strong> {exportData.satelite?.ndvi}</div>
+                  <div><strong>NDWI:</strong> {exportData.satelite?.ndwi}</div>
+                  <div><strong>Calidad suelo:</strong> {exportData.satelite?.calidad_suelo}</div>
+                </div>
+              </section>
+
+              <section className="gr-print-section">
+                <h2>Parametros del Suelo</h2>
+                <div className="gr-print-grid">
+                  <div><strong>pH:</strong> {exportData.suelo?.ph}</div>
+                  <div><strong>Tipo:</strong> {exportData.suelo?.tipo}</div>
+                  <div><strong>Textura:</strong> {exportData.suelo?.textura}</div>
+                  <div><strong>Materia Organica:</strong> {exportData.suelo?.materia_organica}%</div>
+                </div>
+              </section>
+
+              <section className="gr-print-section">
+                <h2>Cultivos Recomendados</h2>
+                {exportData.recomendaciones?.map((r, i) => (
+                  <div key={i} className="gr-print-rec">
+                    <span>{i + 1}.</span>
+                    <span>{r.emoji}</span>
+                    <strong>{r.cultivo}</strong>
+                    <span style={{ color: SCORE_COLOR(r.score) }}>{r.score}%</span>
+                    <span className="risk-{r.riesgo}">{r.riesgo}</span>
+                    <p className="gr-print-rec-just">{r.justificacion}</p>
+                  </div>
+                ))}
+              </section>
+
+              <section className="gr-print-section">
+                <h2>Resumen</h2>
+                <p>{exportData.resumen}</p>
+              </section>
+
+              <footer className="gr-print-footer">
+                <p>Generado por AgroCaribe IA — Sistema Inteligente de Recomendacion de Cultivos</p>
+                <p>Region Caribe Colombiana</p>
+              </footer>
+            </div>
+          </div>
+        </div>
+      </ResearcherLayout>
+    );
+  }
 
   return (
     <ResearcherLayout activeTab="reportes">
       <div className="gr-root">
-
-        {/* ── HEADER ── */}
         <header className="gr-header">
-          <div className="gr-header-left">
-            <div className="gr-nav-row">
-              <button className="gr-back-btn" onClick={() => navigate('/investigador/dashboard')}>
-                <span className="material-symbols-outlined">arrow_back</span>
-                Volver al Dashboard
-              </button>
-              <nav className="gr-breadcrumb">
-                <span>Reportes</span>
-                <span className="material-symbols-outlined">chevron_right</span>
-                <span className="gr-crumb-active">Gestión y Reportes</span>
-              </nav>
-            </div>
-            <div className="gr-title-row">
-              <h1 className="gr-title">Gestión <span className="gr-title-amp">&</span> Reportes</h1>
-              <div className="gr-meta-badges">
-                <span className="gr-badge-mode">ANÁLISIS CONSOLIDADO</span>
-                <span className="gr-badge-ref">
-                  <span className="material-symbols-outlined" style={{fontSize:'0.75rem'}}>location_on</span>
-                  Sector Norte · Parcela 4
-                </span>
-                <span className="gr-badge-ref">
-                  <span className="material-symbols-outlined" style={{fontSize:'0.75rem'}}>calendar_today</span>
-                  Agosto 2024
-                </span>
+          <div className="gr-header-top">
+            <button className="gr-back-btn" onClick={() => navigate('/investigador/dashboard')}>
+              <ArrowLeft size={13} /> Volver
+            </button>
+          </div>
+          <div className="gr-header-main">
+            <div className="gr-title-wrap">
+              <div className="gr-title-icon">
+                <BarChart3 size={28} />
+              </div>
+              <div>
+                <h1 className="gr-title">Gestion y Reportes</h1>
+                <p className="gr-subtitle">Alertas del sistema, comparativa de analisis y exportacion de reportes</p>
               </div>
             </div>
-          </div>
-          <div className="gr-header-right">
-            <button className="gr-btn-ghost">
-              <span className="material-symbols-outlined">print</span>
-            </button>
-            <button className="gr-btn-ghost">
-              <span className="material-symbols-outlined">share</span>
-            </button>
-            <button className="gr-btn-primary">
-              <span className="material-symbols-outlined">download</span>
-              Exportar
-            </button>
           </div>
         </header>
 
-        {/* ── ROW 1: Gauge + NDVI Grid ── */}
-        <div className="gr-row-top">
-
-          {/* Gauge */}
-          <div className="gr-card gr-gauge-card">
-            <div className="gr-card-header">
-              <span className="material-symbols-outlined gr-card-icon">donut_large</span>
-              <h2 className="gr-card-title">Eficiencia de Parcela</h2>
-            </div>
-            <div className="gr-gauge-wrap">
-              <GaugeChart pct={82} />
-            </div>
-            <div className="gr-optimal-pill">
-              <span className="material-symbols-outlined" style={{fontSize:'0.75rem'}}>stars</span>
-              Rendimiento Óptimo
-            </div>
-            <div className="gr-gauge-stats">
-              <div className="gr-gauge-stat">
-                <span className="gr-gauge-stat-val" style={{color:'#10b981'}}>↑ 6%</span>
-                <span className="gr-gauge-stat-label">vs mes ant.</span>
+        <div className="gr-content">
+          {/* ALERTAS */}
+          <div className="gr-card gr-alerts-card">
+            <div className="gr-card-head">
+              <div className="gr-card-head-left">
+                <ShieldAlert size={18} />
+                <h2>Alertas del Sistema</h2>
               </div>
-              <div className="gr-gauge-stat-divider"></div>
-              <div className="gr-gauge-stat">
-                <span className="gr-gauge-stat-val" style={{color:'#2563eb'}}>4.5 t/ha</span>
-                <span className="gr-gauge-stat-label">Rendimiento</span>
-              </div>
-              <div className="gr-gauge-stat-divider"></div>
-              <div className="gr-gauge-stat">
-                <span className="gr-gauge-stat-val" style={{color:'#f59e0b'}}>12 ha</span>
-                <span className="gr-gauge-stat-label">Área total</span>
-              </div>
+              {!loading && (
+                <span className="gr-alert-count">
+                  {alertas.filter((a) => a.severidad === 'critica').length} criticas, {alertas.filter((a) => a.severidad === 'advertencia').length} advertencias
+                </span>
+              )}
             </div>
-          </div>
-
-          {/* NDVI Grid */}
-          <div className="gr-card gr-ndvi-card">
-            <div className="gr-card-header">
-              <span className="material-symbols-outlined gr-card-icon">satellite_alt</span>
-              <h2 className="gr-card-title">Evolución del Vigor NDVI</h2>
-              <span className="gr-badge-semester">Semestre I · 2024</span>
-            </div>
-            <div className="gr-ndvi-grid">
-              {NDVI_MONTHS.map((m, i) => (
-                <button
-                  key={i}
-                  className={`gr-ndvi-cell ${activeMonth === m.month ? 'gr-ndvi-active' : ''}`}
-                  onClick={() => setActiveMonth(m.month)}
-                >
-                  <NdviMiniMap color={m.color} selected={activeMonth === m.month} />
-                  <div className="gr-ndvi-info">
-                    <span className="gr-ndvi-month">{m.month}</span>
-                    <span className="gr-ndvi-val">{m.value}</span>
-                    <span className={`gr-ndvi-delta ${m.trend === 'down' ? 'gr-delta-down' : m.trend === 'max' ? 'gr-delta-max' : 'gr-delta-up'}`}>
-                      {m.trend === 'up' && '↑'}{m.trend === 'down' && '↓'} {m.delta}
-                    </span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* ── ROW 2: Tasks + Hydro ── */}
-        <div className="gr-row-mid">
-
-          {/* AI Task Manager */}
-          <div className="gr-card gr-tasks-card">
-            <div className="gr-card-header">
-              <span className="material-symbols-outlined gr-card-icon">psychology</span>
-              <h2 className="gr-card-title">Acciones Recomendadas por IA</h2>
-              <span className="gr-task-count">{completedCount}/{totalCount} completadas</span>
-            </div>
-            <div className="gr-task-list">
-              {TASKS.map((t, i) => (
-                <div key={i} className={`gr-task-item ${tasks[i] ? 'gr-task-done' : ''}`}>
-                  <label className="gr-task-check-wrap">
-                    <input
-                      type="checkbox"
-                      checked={tasks[i]}
-                      onChange={() => toggleTask(i)}
-                      className="gr-checkbox-hidden"
-                    />
-                    <span className={`gr-checkbox-custom ${tasks[i] ? 'gr-checkbox-checked' : ''}`}>
-                      {tasks[i] && <span className="material-symbols-outlined" style={{fontSize:'0.8rem',color:'white'}}>check</span>}
-                    </span>
-                  </label>
-                  <div className="gr-task-icon-box">
-                    <span className="material-symbols-outlined">{t.icon}</span>
-                  </div>
-                  <div className="gr-task-body">
-                    <div className="gr-task-top">
-                      <p className={`gr-task-title ${tasks[i] ? 'gr-task-title-done' : ''}`}>{t.title}</p>
-                      <span className={`gr-priority-badge ${t.priorityClass}`}>{t.priority}</span>
+            <div className="gr-alerts-list">
+              {loading && (
+                <div className="gr-empty">
+                  <Loader2 size={24} className="spin" />
+                  <p>Cargando alertas...</p>
+                </div>
+              )}
+              {!loading && alertas.length === 0 && (
+                <div className="gr-empty">
+                  <AlertTriangle size={32} />
+                  <h3>Sin alertas activas</h3>
+                  <p>El sistema no ha detectado anomalias en sensores ni analisis.</p>
+                </div>
+              )}
+              {!loading && alertas.map((a, i) => {
+                const sev = SEVERIDAD_ICON[a.severidad] || SEVERIDAD_ICON.info;
+                const SevIcon = sev.icon;
+                return (
+                  <div key={i} className="gr-alert" style={{ borderLeftColor: sev.color }}>
+                    <div className="gr-alert-icon" style={{ background: sev.bg, color: sev.color }}>
+                      <SevIcon size={16} />
                     </div>
-                    <p className="gr-task-desc">{t.desc}</p>
+                    <div className="gr-alert-body">
+                      <div className="gr-alert-head">
+                        <span className="gr-alert-sev" style={{ color: sev.color }}>{a.severidad.toUpperCase()}</span>
+                        <span className="gr-alert-source">{a.fuente}</span>
+                      </div>
+                      <p className="gr-alert-msg">{a.mensaje}</p>
+                      {a.accion && <p className="gr-alert-action">{a.accion}</p>}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* COMPARATIVA + EXPORT */}
+          <div className="gr-grid-2col">
+            {/* COMPARATIVA */}
+            <div className="gr-card">
+              <div className="gr-card-head">
+                <div className="gr-card-head-left">
+                  <TrendingUp size={18} />
+                  <h2>Analisis Recientes</h2>
+                </div>
+              </div>
+              <div className="gr-analysis-list">
+                {loading && (
+                  <div className="gr-empty">
+                    <Loader2 size={24} className="spin" />
+                    <p>Cargando...</p>
+                  </div>
+                )}
+                {!loading && analyses.length === 0 && (
+                  <div className="gr-empty">
+                    <FileText size={32} />
+                    <h3>Sin analisis</h3>
+                    <p>Realiza tu primer analisis de parcela para verlo aqui.</p>
+                  </div>
+                )}
+                {!loading && analyses.map((a, i) => (
+                  <div key={i} className="gr-analysis-row">
+                    <div className="gr-analysis-info">
+                      <span className="gr-analysis-id">{a.id}</span>
+                      <span className="gr-analysis-crop">
+                        <Sprout size={13} /> {a.cultivo || '—'}
+                      </span>
+                      <span className="gr-analysis-score" style={{ color: SCORE_COLOR(a.score) }}>{a.score}%</span>
+                    </div>
+                    <div className="gr-analysis-meta">
+                      <span><MapPin size={11} /> {a.municipio || '—'}</span>
+                      <span><Calendar size={11} /> {a.fecha?.slice(0, 10) || '—'}</span>
+                    </div>
+                    <button
+                      className="gr-export-mini"
+                      onClick={() => handleExport(a.id)}
+                      disabled={exporting && selectedAnalysis === a.id}
+                    >
+                      {exporting && selectedAnalysis === a.id ? <Loader2 size={13} className="spin" /> : <Download size={13} />}
+                      Exportar
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* ESTADISTICAS */}
+            <div className="gr-card">
+              <div className="gr-card-head">
+                <div className="gr-card-head-left">
+                  <Gauge size={18} />
+                  <h2>Resumen</h2>
+                </div>
+              </div>
+              <div className="gr-summary-stats">
+                <div className="gr-summary-stat">
+                  <div className="gr-summary-icon" style={{ background: 'rgba(45,90,39,0.08)', color: '#2D5A27' }}>
+                    <FileText size={22} />
+                  </div>
+                  <div>
+                    <span className="gr-summary-num">{analyses.length}</span>
+                    <span className="gr-summary-label">Analisis totales</span>
                   </div>
                 </div>
-              ))}
-            </div>
-            <div className="gr-task-footer">
-              <div className="gr-task-progress-track">
-                <div className="gr-task-progress-fill" style={{width:`${progressPercent}%`}}></div>
+                <div className="gr-summary-stat">
+                  <div className="gr-summary-icon" style={{ background: 'rgba(184,134,11,0.08)', color: '#b8860b' }}>
+                    <AlertTriangle size={22} />
+                  </div>
+                  <div>
+                    <span className="gr-summary-num">{alertas.length}</span>
+                    <span className="gr-summary-label">Alertas activas</span>
+                  </div>
+                </div>
+                {analyses.length > 0 && (
+                  <div className="gr-summary-stat">
+                    <div className="gr-summary-icon" style={{ background: 'rgba(37,99,235,0.08)', color: '#2563eb' }}>
+                      <Sprout size={22} />
+                    </div>
+                    <div>
+                      <span className="gr-summary-num">
+                        {analyses[0]?.cultivo || '—'}
+                      </span>
+                      <span className="gr-summary-label">Ultimo cultivo</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
-
-          {/* Hydrological Chart */}
-          <div className="gr-card gr-hydro-card">
-            <div className="gr-card-header">
-              <span className="material-symbols-outlined gr-card-icon">water</span>
-              <h2 className="gr-card-title">Análisis Hidrológico Cruzado</h2>
-              <div className="gr-hydro-legend">
-                <span className="gr-leg-bar"></span><span className="gr-leg-label">Precipitación NASA POWER</span>
-                <span className="gr-leg-line"></span><span className="gr-leg-label">Humedad Suelo NDWI</span>
-              </div>
-            </div>
-            <HydroChart />
-          </div>
         </div>
-
-        {/* ── EXPORT CARD ── */}
-        <div className="gr-export-card">
-          <div className="gr-export-bg-pattern">
-            <svg viewBox="0 0 400 120" preserveAspectRatio="none" style={{width:'100%',height:'100%'}}>
-              <circle cx="320" cy="60" r="90" fill="rgba(255,255,255,.04)" />
-              <circle cx="360" cy="20" r="55" fill="rgba(255,255,255,.03)" />
-              <circle cx="50"  cy="100" r="70" fill="rgba(255,255,255,.03)" />
-            </svg>
-          </div>
-          <div className="gr-export-icon-box">
-            <span className="material-symbols-outlined" style={{fontSize:'1.6rem',color:'#10b981'}}>description</span>
-          </div>
-          <div className="gr-export-text">
-            <span className="gr-export-eyebrow">REPORTE TÉCNICO MENSUAL</span>
-            <h3 className="gr-export-title">Informe Consolidado de Parcela · Agosto 2024</h3>
-            <p className="gr-export-desc">
-              Genera un PDF con mapas NDVI de alta resolución, métricas de laboratorio y recomendaciones de IA
-              para auditoría crediticia y cumplimiento RSPO.
-            </p>
-          </div>
-          <div className="gr-export-actions">
-            <button className="gr-export-btn">
-              <span className="material-symbols-outlined">download</span>
-              Descargar PDF
-            </button>
-            <button className="gr-export-btn-ghost">
-              <span className="material-symbols-outlined">share</span>
-              Compartir
-            </button>
-            <span className="gr-export-meta">Generado con AgroCaribe IA · v4.2</span>
-          </div>
-        </div>
-
       </div>
     </ResearcherLayout>
   );

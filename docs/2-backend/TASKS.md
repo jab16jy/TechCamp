@@ -169,4 +169,13 @@ El productor pregunta "como controlo el gusano cogollero en maiz" → RAG busca 
 - [x] `pytest-asyncio` instalado
 - [x] `httpx` + `ASGITransport` para tests ASGI sin servidor
 
-## ⏳ Pendiente — TODOs menores
+## ✅ Completado — FASE 5: GestionReportes — Alertas + Comparativa + Export
+
+- [x] `api/reports.py` — 3 endpoints: `GET /reports/alerts` (sensores criticos + analisis bajo score), `POST /reports/compare` (comparativa por IDs), `POST /reports/export` (reporte completo para PDF)
+- [x] `schemas/reports.py` — AlertItem, CompareItem, ExportResponse con datos completos
+- [x] `router.py` — Incluye reports routes
+- [x] `useReportManager.js` — Hook nuevo: carga alertas + historial al montar, `handleExport()` genera reporte printable
+- [x] `GestionReportes.jsx` — Rebuild completo (0% mock). Seccion Alertas con colores por severidad. Seccion Analisis Recientes con boton Exportar. Vista de impresion (Ctrl+P → PDF) con reporte completo: ubicacion, clima, satelite, suelo, recomendaciones, resumen.
+- [x] `GestionReportes.css` — Glass design, scrollable, responsive, print stylesheet
+- [x] `api.js` — `getAlertas()`, `compararAnalisis()`, `exportarReporte()`
+- [x] Sin `material-symbols-outlined` — todo lucide-react

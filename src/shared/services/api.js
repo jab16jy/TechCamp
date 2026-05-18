@@ -309,4 +309,34 @@ export const getPrediccion = async (lat, lng) => {
   }
 };
 
+/** Obtener alertas del sistema (sensores + analisis) */
+export const getAlertas = async () => {
+  try {
+    const { data } = await apiClient.get('/reports/alerts');
+    return data;
+  } catch {
+    return { alertas: [], total_criticas: 0, total_advertencias: 0 };
+  }
+};
+
+/** Comparar analisis por IDs */
+export const compararAnalisis = async (analysisIds) => {
+  try {
+    const { data } = await apiClient.post('/reports/compare', { analysis_ids: analysisIds });
+    return data;
+  } catch {
+    return { items: [] };
+  }
+};
+
+/** Exportar reporte de un analisis */
+export const exportarReporte = async (analysisId) => {
+  try {
+    const { data } = await apiClient.post('/reports/export', { analysis_id: analysisId });
+    return data;
+  } catch {
+    return null;
+  }
+};
+
 export default apiClient;
