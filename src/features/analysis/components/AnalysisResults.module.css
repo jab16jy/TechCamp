@@ -177,6 +177,64 @@
   color: #b8860b;
 }
 
+/* Anomaly */
+.anomSource {
+  font-size: 0.5rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.08rem 0.35rem;
+  background: rgba(148,163,184,0.08);
+  border-radius: 0.25rem;
+}
+.anomGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.anomItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4rem 0.5rem;
+  background: rgba(255,255,255,0.35);
+  border-radius: 0.55rem;
+}
+.anomHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: #4a554c;
+  width: 90px;
+}
+.anomValues {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+.anomActual {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #1A1C1A;
+}
+.anomHist {
+  font-size: 0.5rem;
+  color: #94a3b8;
+}
+.anomDiff {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  font-size: 0.6rem;
+  font-weight: 700;
+  min-width: 55px;
+  justify-content: flex-end;
+}
+
 @media (max-width: 768px) {
   .grid { grid-template-columns: 1fr; }
 }

@@ -33,6 +33,18 @@ const FALLBACK_DATA = {
     cobertura_nube: 14.2,
     calidad_suelo: 'Alta',
   },
+  anomalia: {
+    temperatura_actual: 28.4,
+    temperatura_historica: 28.1,
+    anomalia_temperatura: 0.3,
+    precipitacion_actual: 12.0,
+    precipitacion_historica: 50.0,
+    anomalia_precipitacion: -38.0,
+    humedad_actual: 76.0,
+    humedad_historica: 78.0,
+    anomalia_humedad: -2.0,
+    fuente: 'NASA POWER',
+  },
 };
 
 export default function useResultado() {

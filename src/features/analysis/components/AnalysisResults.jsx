@@ -6,6 +6,7 @@ import {
   MapPin, Thermometer, Droplets, CloudRain, Sun,
   Sprout, FileText, Download, ArrowLeft, Gauge,
   FlaskConical, Satellite, BarChart3, ChevronDown,
+  TrendingUp, TrendingDown, Minus,
 } from 'lucide-react';
 import styles from './AnalysisResults.module.css';
 
@@ -67,6 +68,21 @@ function CropCard({ crop, rank, isBest }) {
   );
 }
 
+function AnomalyDiff({ value, unit }) {
+  const isUp = value > 1;
+  const isDown = value < -1;
+  const color = isUp ? '#f59e0b' : isDown ? '#3b82f6' : '#707973';
+  const Icon = isUp ? TrendingUp : isDown ? TrendingDown : Minus;
+  const sign = value > 0 ? '+' : '';
+
+  return (
+    <div className={styles.anomDiff} style={{ color }}>
+      <Icon size={11} />
+      <span>{sign}{value}{unit}</span>
+    </div>
+  );
+}
+
 const AnalysisResults = ({ data, onNewAnalysis, onDownloadPDF }) => {
   const [mapType, setMapType] = useState('satellite');
   const [showBreakdown, setShowBreakdown] = useState(true);
@@ -78,6 +94,7 @@ const AnalysisResults = ({ data, onNewAnalysis, onDownloadPDF }) => {
   const ubicacion = data.ubicacion || {};
   const clima = data.clima || {};
   const satelite = data.indicadores_satelite || {};
+  const anomalia = data.anomalia || null;
 
   const factors = useMemo(() => [
     { label: 'Temperatura', value: clima.temperatura || 0, max: 40, unit: '°C', color: '#f59e0b', icon: <Thermometer size={13} /> },
@@ -226,6 +243,50 @@ const AnalysisResults = ({ data, onNewAnalysis, onDownloadPDF }) => {
               )}
             </div>
           </section>
+
+          {anomalia && (
+            <section className={styles.card}>
+              <div className={styles.cardHead}>
+                <TrendingUp size={18} /> <h2>Anomalia Climatica</h2>
+                <span className={styles.anomSource}>{anomalia.fuente}</span>
+              </div>
+              <div className={styles.anomGrid}>
+                <div className={styles.anomItem}>
+                  <div className={styles.anomHeader}>
+                    <Thermometer size={12} />
+                    <span>Temperatura</span>
+                  </div>
+                  <div className={styles.anomValues}>
+                    <span className={styles.anomActual}>{anomalia.temperatura_actual}°C</span>
+                    <span className={styles.anomHist}>vs {anomalia.temperatura_historica}°C</span>
+                  </div>
+                  <AnomalyDiff value={anomalia.anomalia_temperatura} unit="°C" />
+                </div>
+                <div className={styles.anomItem}>
+                  <div className={styles.anomHeader}>
+                    <CloudRain size={12} />
+                    <span>Precipitacion</span>
+                  </div>
+                  <div className={styles.anomValues}>
+                    <span className={styles.anomActual}>{anomalia.precipitacion_actual}mm</span>
+                    <span className={styles.anomHist}>vs {anomalia.precipitacion_historica}mm</span>
+                  </div>
+                  <AnomalyDiff value={anomalia.anomalia_precipitacion} unit="mm" />
+                </div>
+                <div className={styles.anomItem}>
+                  <div className={styles.anomHeader}>
+                    <Droplets size={12} />
+                    <span>Humedad</span>
+                  </div>
+                  <div className={styles.anomValues}>
+                    <span className={styles.anomActual}>{anomalia.humedad_actual}%</span>
+                    <span className={styles.anomHist}>vs {anomalia.humedad_historica}%</span>
+                  </div>
+                  <AnomalyDiff value={anomalia.anomalia_humedad} unit="%" />
+                </div>
+              </div>
+            </section>
+          )}
 
           {data.es_mock && (
             <div className={styles.mockBanner}>
