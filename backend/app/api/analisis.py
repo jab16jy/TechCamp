@@ -9,7 +9,7 @@ from app.schemas.analisis import (
     AnalyzeResponse,
     RecomendacionCultivo,
 )
-from app.services.climate_service import get_climate_data, get_mock_climate
+from app.services.climate_service import get_climate_data, get_mock_climate, get_climate_anomaly
 from app.services.satellite_service import get_satellite_data
 from app.services.recommendation import generate_recommendations
 
@@ -31,6 +31,8 @@ async def analyze_location(
         es_mock = False
 
     satellite = await get_satellite_data(db, body.lat, body.lng)
+
+    anomaly = await get_climate_anomaly(body.lat, body.lng)
 
     try:
         recommendations = await generate_recommendations(
@@ -71,6 +73,7 @@ async def analyze_location(
         clima=climate,
         indicadores_satelite=satellite,
         recomendaciones=recommendations,
+        anomalia=anomaly,
         ubicacion={"lat": body.lat, "lng": body.lng},
         es_mock=es_mock,
     )

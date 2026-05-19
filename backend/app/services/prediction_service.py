@@ -2,40 +2,15 @@ import logging
 from datetime import datetime, timezone
 from dateutil.relativedelta import relativedelta
 
-import httpx
 import numpy as np
 
+import httpx
+
 from app.core.config import get_settings
+from app.services.climate_service import fetch_nasa_climatology, _monthly_climatology_from_nasa
 
 settings = get_settings()
 logger = logging.getLogger(__name__)
-
-NASA_POWER_URL = "https://power.larc.nasa.gov/api/temporal/climatology/point"
-
-MONTH_ABBR = {
-    "JAN": 1, "FEB": 2, "MAR": 3, "APR": 4,
-    "MAY": 5, "JUN": 6, "JUL": 7, "AUG": 8,
-    "SEP": 9, "OCT": 10, "NOV": 11, "DEC": 12,
-}
-
-
-async def fetch_nasa_climatology(lat: float, lng: float) -> dict | None:
-    params = {
-        "parameters": "T2M,PRECTOTCORR,RH2M,ALLSKY_SFC_SW_DWN",
-        "community": "AG",
-        "longitude": lng,
-        "latitude": lat,
-        "format": "JSON",
-    }
-    async with httpx.AsyncClient(timeout=15.0) as client:
-        try:
-            resp = await client.get(NASA_POWER_URL, params=params)
-            resp.raise_for_status()
-            data = resp.json()
-            return data.get("properties", {}).get("parameter", {})
-        except Exception as e:
-            logger.warning(f"NASA POWER unavailable: {e}")
-            return None
 
 
 async def fetch_current_climate(lat: float, lng: float) -> dict:
@@ -60,36 +35,6 @@ async def fetch_current_climate(lat: float, lng: float) -> dict:
             }
         except Exception:
             return {"temperatura": 28.0, "humedad": 75.0, "precipitacion": 80.0, "radiacion_solar": 18.0}
-
-
-def _monthly_climatology_from_nasa(nasa_data: dict | None) -> dict:
-    monthly = {}
-    if nasa_data is None:
-        monthly = {
-            "T2M": {1: 28.5, 2: 28.7, 3: 28.9, 4: 28.9, 5: 28.5, 6: 28.1,
-                    7: 28.0, 8: 28.0, 9: 27.8, 10: 27.7, 11: 28.0, 12: 28.3},
-            "PRECTOTCORR": {1: 5, 2: 8, 3: 15, 4: 50, 5: 120, 6: 100,
-                           7: 90, 8: 110, 9: 140, 10: 160, 11: 100, 12: 25},
-            "RH2M": {1: 72, 2: 70, 3: 69, 4: 72, 5: 78, 6: 80,
-                     7: 79, 8: 80, 9: 82, 10: 83, 11: 81, 12: 76},
-            "ALLSKY_SFC_SW_DWN": {1: 5.0, 2: 5.5, 3: 5.8, 4: 5.5, 5: 5.0, 6: 4.8,
-                                  7: 5.0, 8: 4.8, 9: 4.5, 10: 4.3, 11: 4.5, 12: 4.8},
-        }
-        return monthly
-
-    for param, values in nasa_data.items():
-        monthly[param] = {}
-        for month_str, val in values.items():
-            upper = month_str.upper()
-            if upper in MONTH_ABBR:
-                month_num = MONTH_ABBR[upper]
-            else:
-                try:
-                    month_num = int(month_str[:2]) if len(month_str) >= 2 else int(month_str)
-                except (ValueError, TypeError):
-                    continue
-            monthly[param][month_num] = float(val)
-    return monthly
 
 
 def _ndvi_estimate(month: int, base_ndvi: float = 0.42, precipitacion: float = 80) -> float:

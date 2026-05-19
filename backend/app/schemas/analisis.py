@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 from typing import Optional
 from uuid import UUID
 
-from app.schemas.clima import ClimateData
+from app.schemas.clima import ClimateData, AnomaliaClimatica
 from app.schemas.satelite import SatelliteData
 
 
@@ -34,6 +34,7 @@ class AnalyzeResponse(BaseModel):
     clima: ClimateData
     indicadores_satelite: SatelliteData
     recomendaciones: list[RecomendacionCultivo]
+    anomalia: AnomaliaClimatica | None = None
     ubicacion: dict
     es_mock: bool = True
 
