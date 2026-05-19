@@ -34,7 +34,7 @@ const COVER_CROP = {
     'Se prioriza como cultivo de cobertura por el bajo vigor detectado. Ayuda a proteger suelo, fijar nitrogeno y recuperar estructura biologica.',
 };
 
-const clampScore = (value) => Math.max(70, Math.min(97, Math.round(value)));
+const clampScore = (value) => Math.round(value);
 const toFixedString = (value, digits = 2) => Number(value || 0).toFixed(digits);
 
 const getTrendFromNdvi = (ndvi) => {

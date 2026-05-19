@@ -1,7 +1,4 @@
 import { useState, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, ZoomControl } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
 import {
   MapPin, Thermometer, Droplets, CloudRain, Sun,
   Sprout, FileText, Download, ArrowLeft, Gauge,
@@ -9,13 +6,6 @@ import {
   TrendingUp, TrendingDown, Minus,
 } from 'lucide-react';
 import styles from './AnalysisResults.module.css';
-
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
 
 const SCORE_COLOR = (s) => s >= 80 ? '#2D5A27' : s >= 55 ? '#b8860b' : '#ba1a1a';
 const SCORE_BG = (s) => s >= 80 ? 'rgba(45,106,79,0.08)' : s >= 55 ? 'rgba(184,134,11,0.08)' : 'rgba(186,26,26,0.08)';
@@ -84,7 +74,6 @@ function AnomalyDiff({ value, unit }) {
 }
 
 const AnalysisResults = ({ data, onNewAnalysis, onDownloadPDF }) => {
-  const [mapType, setMapType] = useState('satellite');
   const [showBreakdown, setShowBreakdown] = useState(true);
 
   if (!data) return null;
@@ -185,27 +174,6 @@ const AnalysisResults = ({ data, onNewAnalysis, onDownloadPDF }) => {
         </div>
 
         <div className={styles.sideCol}>
-          <section className={styles.card}>
-            <div className={styles.cardHead}>
-              <MapPin size={18} /> <h2>Mapa de Ubicacion</h2>
-            </div>
-            <div className={styles.mapWrap}>
-              <div className={styles.mapBtns}>
-                <button className={`${styles.mapBtn} ${mapType === 'satellite' ? styles.mapBtnActive : ''}`} onClick={() => setMapType('satellite')}>Satelite</button>
-                <button className={`${styles.mapBtn} ${mapType === 'terrain' ? styles.mapBtnActive : ''}`} onClick={() => setMapType('terrain')}>Terreno</button>
-              </div>
-              <MapContainer center={[ubicacion.lat || 10.5, ubicacion.lng || -74.8]} zoom={14} style={{ height: 200, width: '100%', borderRadius: '0 0 1rem 1rem' }} zoomControl={false}>
-                {mapType === 'satellite' ? (
-                  <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" />
-                ) : (
-                  <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                )}
-                <Marker position={[ubicacion.lat || 10.5, ubicacion.lng || -74.8]} />
-                <ZoomControl position="bottomright" />
-              </MapContainer>
-            </div>
-          </section>
-
           <section className={styles.card}>
             <div className={styles.cardHead}>
               <FlaskConical size={18} /> <h2>Parametros del Suelo</h2>
