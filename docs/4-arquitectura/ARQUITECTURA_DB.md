@@ -1,4 +1,4 @@
----
+﻿---
 titulo: "Arquitectura de Base de Datos"
 proyecto: AgroCaribe IA
 tags: [base-datos, postgresql, postgis, esquema, supabase]
@@ -172,3 +172,5 @@ mensajes: via conversacion_id IN (SELECT id FROM conversaciones WHERE usuario_id
 - [[4-arquitectura/VISION_SISTEMA]] — Flujo de datos en el sistema
 - [[4-arquitectura/FLUJO_DATOS]] — Mapeo de endpoints a tablas
 - [[4-arquitectura/DESPLIEGUE]] — Conexion Docker-Supabase y pooler
+- [[5-implementacion/CHAT_2025-05-19]] — Contexto de migracion a DB local
+

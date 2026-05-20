@@ -1,4 +1,4 @@
----
+﻿---
 titulo: "Flujo de Datos Completo"
 proyecto: AgroCaribe IA
 tags: [flujo, datos, pipeline, integracion]
@@ -133,3 +133,46 @@ La URL del backend se lee desde localStorage en `api.js` al importar el modulo.
 - [[4-arquitectura/ARQUITECTURA_DB]] — Tablas involucradas por endpoint
 - [[2-backend/ARQUITECTURA_BACKEND]] — Documentacion de endpoints
 - [[3-frontend/ARQUITECTURA_FRONTEND]] — Documentacion del frontend
+
+## Flujo SoilGrids (Datos de Suelo Automaticos)
+
+```
+Usuario hace clic en el mapa (MapSelector)
+  ↓
+handleMapChange() en useAnalisisCultivos.js
+  ↓
+GET /soil/data?lat=10.33&lng=-75.41
+  ↓
+soil_service.get_soil_data()
+  → POST rest.isric.org/soilgrids/v2.0/properties/query
+  → phh2o, soc, sand, silt, clay
+  → ph directo, MO = SOC * 1.724 / 10, textura = USDA triangle
+  ↓
+Response: { ph, materia_organica, textura_suelo, fuente }
+  ↓
+actualizarFormulario() → toast informativo
+  ↓
+usuario puede sobrescribir manualmente
+```
+
+## Flujo Motor Hibrido (Random Forest + Heuristico)
+
+```
+recommendation.generate_recommendations()
+  ↓
+inference.predict_crop_recommendations()
+  ↓
+1. Cargar modelo RF (crop_model_rf.joblib + crop_scaler.joblib)
+2. Si modelo existe:
+   - RF.predict_proba() → probabilidades por cultivo
+   - score = int(prob * 100)
+   - metodo = "random_forest", probabilidad = prob
+3. Si modelo no existe o falla:
+   - Fallback a CropClassifier.score() (reglas heuristicas)
+   - metodo = "heuristico", probabilidad = null
+  ↓
+Enriquecer con metadatos del CSV (emoji, ciclo, rendimiento)
+  ↓
+Retornar top 3 + metodo usado
+```
+

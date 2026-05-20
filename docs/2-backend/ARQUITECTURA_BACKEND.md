@@ -1,4 +1,4 @@
----
+﻿---
 titulo: "Arquitectura del Backend — AgroCaribe IA"
 proyecto: AgroCaribe IA
 tags: [backend, arquitectura, fastapi, postgresql, langgraph, docker]
@@ -68,20 +68,26 @@ backend/
 │   │   ├── clima.py               # GET /climate
 │   │   ├── satelite.py            # GET /satellite-indicators
 │   │   ├── municipios.py          # GET /municipalities
-│   │   └── historial.py           # GET /history
+│   │   ├── historial.py           # GET /history
+│   │   ├── soil.py                # GET /soil/data (NUEVO)
+│   │   └── ...                    # predict.py, auth.py, geo.py, ...
 │   │
 │   ├── services/
 │   │   ├── __init__.py
 │   │   ├── climate_service.py     # OpenMeteo API client
 │   │   ├── satellite_service.py   # NDVI lookups from DB
-│   │   ├── recommendation.py      # Hybrid engine: rules + Random Forest
-│   │   └── chat_service.py        # LangGraph agent orchestration
+│   │   ├── recommendation.py      # Hybrid engine: inference.py
+│   │   ├── soil_service.py        # ISRIC SoilGrids API (NUEVO)
+│   │   └── ...                    # prediction_service.py, chat_service.py
 │   │
 │   ├── ml/
 │   │   ├── __init__.py
-│   │   ├── model.py               # Random Forest model wrapper
-│   │   ├── training.py            # Training pipeline
-│   │   └── crops_requirements.csv # Crop optimal ranges (pH, temp, etc.)
+│   │   ├── inference.py           # RF inference with fallback (NUEVO)
+│   │   ├── model.py               # CropClassifier heuristico
+│   │   ├── training.py            # RF training pipeline
+│   │   ├── crops_requirements.csv # Crop optimal ranges
+│   │   ├── crop_model_rf.joblib   # RF trained model (NUEVO)
+│   │   └── crop_scaler.joblib     # RF scaler (NUEVO)
 │   │
 │   └── agent/
 │       ├── __init__.py
@@ -236,6 +242,7 @@ INSERT INTO sensores (nodo_id, nombre, lat, lng, estado, ubicacion) VALUES
 | `GET` | `/climate` | `lat, lng` (query) | `ClimateData` | ✅ `getClima()` |
 | `GET` | `/satellite-indicators` | `lat, lng` (query) | `SatelliteData` | ✅ `getIndicadoresSatelite()` |
 | `GET` | `/history` | — | `HistorialEntry[]` | ✅ `getHistorial()` |
+| `GET` | `/soil/data` | `lat, lng` (query) | `SoilGridsResponse` | ✅ `getSoilData()` (NUEVO) |
 | `POST` | `/chat` | `ChatRequest` | `ChatResponse` | Pendiente (hoy es mock) |
 | `POST` | `/auth/login` | `LoginRequest` | `TokenResponse` | Futuro (hoy sessionStorage) |
 
@@ -530,51 +537,59 @@ async def chat(request: ChatRequest, db=Depends(get_db)):
 
 ## 7. Docker Compose
 
-### 7.1 Servicios
+### 7.1 Servicios (Actual)
 
 ```yaml
-version: "3.9"
 services:
   db:
     image: postgis/postgis:16-3.4
+    container_name: agrocaribe-db
     environment:
-      POSTGRES_DB: agrocaribe
       POSTGRES_USER: agrocaribe
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-      - ./data/seeds:/docker-entrypoint-initdb.d
+      POSTGRES_PASSWORD: agrocaribe_secret
+      POSTGRES_DB: agrocaribe
     ports:
       - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./backend/data/seeds:/docker-entrypoint-initdb.d:ro
+    networks:
+      - backend_net
+    restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U agrocaribe"]
-      interval: 5s
+      test: ["CMD-SHELL", "pg_isready -U agrocaribe -d agrocaribe"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     environment:
-      DATABASE_URL: postgresql+asyncpg://agrocaribe:${DB_PASSWORD}@db:5432/agrocaribe
+      DATABASE_URL: postgresql+asyncpg://agrocaribe:agrocaribe_secret@db:5432/agrocaribe
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
       OPENMETEO_BASE_URL: https://api.open-meteo.com/v1
+      CORS_ORIGINS: http://localhost:5173,http://localhost:5173,http://localhost
     ports:
       - "8000:8000"
     depends_on:
       db:
         condition: service_healthy
-    volumes:
-      - ./backend:/app  # hot reload en desarrollo
-
-  frontend:
-    image: nginx:1.27-alpine
-    ports:
-      - "80:80"
-    volumes:
-      - ./frontend/dist:/usr/share/nginx/html
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
-    depends_on:
-      - backend
+    restart: unless-stopped
+    networks:
+      - backend_net
 
 volumes:
   pgdata:
+
+networks:
+  backend_net:
+    driver: bridge
 ```
 
 ### 7.2 Nginx Config
@@ -599,39 +614,39 @@ server {
 }
 ```
 
-### 7.3 Variables de Entorno
+### 7.3 Variables de Entorno (Actual)
 
 ```
 # .env
-DB_PASSWORD=agrocaribe_secret
-ENVIRONMENT=development
-LOG_LEVEL=DEBUG
+DATABASE_URL=postgresql+asyncpg://agrocaribe:agrocaribe_secret@localhost:5432/agrocaribe
+SUPABASE_URL=https://hpmjbgqjwopxlgurczna.supabase.co
+SUPABASE_ANON_KEY=eyJ...
+ENVIRONMENT=production
+LOG_LEVEL=INFO
 OPENMETEO_BASE_URL=https://api.open-meteo.com/v1
-CORS_ORIGINS=http://localhost:5173,http://localhost
+CORS_ORIGINS=http://localhost:5173,http://localhost:5173,http://localhost
+VITE_API_URL=http://localhost:8000
 ```
 
-### 7.4 Uso
+### 7.4 Uso (Actual)
 
 ```bash
-# Construir frontend
-cd frontend && npm run build && cd ..
+# Desarrollo local (sin Docker)
+cd backend && uvicorn app.main:app --reload        # Terminal 1
+npm run dev                                          # Terminal 2
 
-# Levantar todo
+# Con Docker (PostGIS local)
 docker compose up -d
-
-# Ver logs
 docker compose logs -f backend
 
-# Ejecutar migraciones
-docker compose exec backend alembic upgrade head
-
-# Sembrar datos iniciales
-docker compose exec backend python -m app.seeds.run
+# Verificar healthcheck
+docker compose ps
+# agrocaribe-db  should be "healthy"
+# backend        should be "up"
 
 # Acceder
-# Frontend: http://localhost
-# API:      http://localhost/api/docs
-# DB:       localhost:5432
+# API:      http://localhost:8000/docs
+# DB:       localhost:5432 (usuario: agrocaribe)
 ```
 
 ---
@@ -719,6 +734,9 @@ Para desactivar los mock basta con que el backend responda correctamente en `loc
 - [[4-arquitectura/MODULO_CLIMA]] — Servicio climatico (OpenMeteo + NASA POWER)
 - [[4-arquitectura/MODULO_SATELITAL]] — Servicio satelital (Sentinel-2 + NDVI)
 - [[4-arquitectura/MODULO_RECOMENDACION]] — Motor hibrido de recomendacion
+- [[4-arquitectura/MODULO_SUELO_SOILGRIDS]] — Integracion SoilGrids ISRIC (NUEVO)
 - [[4-arquitectura/FLUJO_DATOS]] — Mapa de conexion Frontend-Backend
 - [[4-arquitectura/DESPLIEGUE]] — Docker y produccion
 - [[4-arquitectura/GUIAS_QGIS]] — Guia para procesar imagenes satelitales
+- [[5-implementacion/CHAT_2025-05-19]] — Contexto de sesion (3 modulos implementados)
+

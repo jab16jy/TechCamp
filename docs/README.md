@@ -1,4 +1,4 @@
-# Documentacion AgroCaribe IA
+﻿# Documentacion AgroCaribe IA
 
 Plataforma de analisis agricola con inteligencia artificial para la region Caribe colombiana.
 React 19 + FastAPI + Supabase PostGIS + ML + LangChain.
@@ -54,6 +54,13 @@ docs/
 | `FLUJO_DATOS.md` | Mapa de conexion Frontend ↔ Backend, flujo de analisis, chat, prediccion |
 | `DESPLIEGUE.md` | Docker + Vercel: paso a paso, variables de entorno, configs |
 | `GUIAS_QGIS.md` | Guia paso a paso para procesar imagenes Sentinel-2 y poblar indices NDVI |
+| `MODULO_SUELO_SOILGRIDS.md` | Integracion ISRIC SoilGrids v2.0: pH, MO, textura automaticos (NUEVO) |
+
+## 5-implementacion — Registro de sesiones
+
+| Archivo | Contenido |
+|---------|-----------|
+| `CHAT_2025-05-19.md` | Implementacion: SoilGrids API, RF en produccion, migracion DB local (NUEVO) |
 
 ---
 
@@ -63,7 +70,8 @@ docs/
 |-----------|-----------|---------|
 | Frontend | React + Vite + Tailwind + Zustand | 19 / 8 / 3.4 / 5 |
 | Backend | FastAPI + SQLAlchemy + asyncpg | 0.115 / 2.0 / 0.30 |
-| Base de datos | PostgreSQL + PostGIS (Supabase) | 17 / 3.4 |
+| Base de datos | PostgreSQL + PostGIS (Docker local) | 17 / 3.4 |
+| Datos de suelo | ISRIC SoilGrids v2.0 API | REST |
 | ML | scikit-learn Random Forest | 1.6 |
 | Agente IA | LangChain + LangGraph + RAG | 0.3 |
 | Contenedores | Docker | 27+ |
@@ -75,12 +83,14 @@ docs/
 cd backend && uvicorn app.main:app --reload   # Terminal 1
 npm run dev                                    # Terminal 2
 
-# Docker (solo backend)
-docker compose up -d                   # Backend en :8000
+# Docker (PostGIS + Backend)
+docker compose up -d                   # DB en :5432, Backend en :8000
+docker compose logs -f backend         # Ver logs del backend
 
 # Tests
 cd backend && python -m pytest tests/ -v
 
 # Documentacion
-# Abrir docs/ en Obsidian o cualquier editor markdown
+# Abrir C:\Users\PC\OneDrive\Documentos\Documentos\Vault en Obsidian
 ```
+
