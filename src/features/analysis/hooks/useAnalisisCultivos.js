@@ -105,6 +105,14 @@ export function useAnalisisCultivos() {
     return all.sort((a, b) => new Date(b.fecha || 0) - new Date(a.fecha || 0));
   }, [serverHistory, historial]);
 
+  const historialRegistrosEstandar = useMemo(
+    () =>
+      historialRegistros.filter(
+        (r) => r.tipo === 'analisis' || r.tipo === 'simple',
+      ),
+    [historialRegistros],
+  );
+
   const selectedParcelaRecord = useMemo(
     () =>
       historialRegistros.find((item) => item.id === selectedParcela) || null,
@@ -452,6 +460,7 @@ export function useAnalisisCultivos() {
     selectedParcelaRecord,
     selectedParcelaLabel,
     historialRegistros,
+    historialRegistrosEstandar,
     // Datos derivados
     isProductor,
     clima,

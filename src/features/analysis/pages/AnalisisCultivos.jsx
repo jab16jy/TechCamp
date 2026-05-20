@@ -39,6 +39,7 @@ const AnalisisCultivos = () => {
     selectedParcelaRecord,
     selectedParcelaLabel,
     historialRegistros,
+    historialRegistrosEstandar,
     isProductor,
     clima,
     formulario,
@@ -285,7 +286,7 @@ const AnalisisCultivos = () => {
                     <option value="">
                       Seleccione un registro del historial...
                     </option>
-                    {historialRegistros.map((registro) => {
+                    {historialRegistrosEstandar.map((registro) => {
                       const fecha = registro.fecha
                         ? new Date(registro.fecha).toLocaleDateString("es-CO", {
                             day: "2-digit",

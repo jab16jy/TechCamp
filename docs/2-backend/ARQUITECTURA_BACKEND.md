@@ -1,4 +1,4 @@
-﻿---
+---
 titulo: "Arquitectura del Backend — AgroCaribe IA"
 proyecto: AgroCaribe IA
 tags: [backend, arquitectura, fastapi, postgresql, langgraph, docker]

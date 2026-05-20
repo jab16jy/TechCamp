@@ -55,7 +55,8 @@ const LoginInvestigador = () => {
       form.clave === USUARIO_DEMO.clave
     ) {
       sessionStorage.setItem('rol', 'investigador');
-      agregarToast('¡Bienvenido al panel de investigación!', 'exito');
+      sessionStorage.setItem('token', 'eyJhbGciOiJIUzI1NiJ9.demo_token');
+      agregarToast('Bienvenido al panel de investigación!', 'exito');
       navigate('/investigador/dashboard');
     } else {
       setErrores({ general: 'Credenciales incorrectas. Intente de nuevo.' });

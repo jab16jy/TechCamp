@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-from app.core.dependencies import get_db
+from app.core.dependencies import get_db, get_current_user
 from app.models.analisis import Analisis
 from app.models.municipio import Municipio
 from app.schemas.analisis import HistorialEntry
@@ -14,6 +14,7 @@ router = APIRouter(prefix="/history", tags=["historial"])
 @router.get("", response_model=list[HistorialEntry])
 async def get_history(
     db: AsyncSession = Depends(get_db),
+    current_user: dict | None = Depends(get_current_user),
     tipo: str | None = Query(None, description="Filtrar: simple, advanced, prediccion"),
     limit: int = Query(50, ge=1, le=200),
 ):

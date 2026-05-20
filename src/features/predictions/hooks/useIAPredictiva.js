@@ -2,6 +2,8 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import useAppStore from '@shared/store';
 import { getPrediccion, getHistorial as fetchHistorial } from '@shared/services/api';
 
+const isStandardAnalysis = (r) => r.tipo === 'analisis' || r.tipo === 'simple';
+
 export default function useIAPredictiva() {
   const { formulario, agregarToast, historial } = useAppStore();
   const [loading, setLoading] = useState(false);
@@ -12,7 +14,6 @@ export default function useIAPredictiva() {
   const [serverData, setServerData] = useState([]);
   const [selectedHistoryId, setSelectedHistoryId] = useState(null);
 
-  // Load server-side history
   useEffect(() => {
     fetchHistorial()
       .then((data) => {
@@ -21,7 +22,6 @@ export default function useIAPredictiva() {
       .catch(() => {});
   }, []);
 
-  // Combine local Zustand history and server history (duplicates removed by ID)
   const combined = useMemo(() => {
     const seen = new Set();
     const all = [];
@@ -39,6 +39,11 @@ export default function useIAPredictiva() {
     }
     return all.sort((a, b) => new Date(b.fecha || 0) - new Date(a.fecha || 0));
   }, [serverData, historial]);
+
+  const historialFiltrado = useMemo(
+    () => combined.filter(isStandardAnalysis),
+    [combined],
+  );
 
   const handleGenerate = useCallback(async () => {
     const latNum = parseFloat(lat);
@@ -74,23 +79,39 @@ export default function useIAPredictiva() {
     }
   }, [formulario, agregarToast]);
 
-  const handleSelectHistory = useCallback((id) => {
+  const handleSelectHistory = useCallback(async (id) => {
     if (!id) {
       setSelectedHistoryId(null);
       return;
     }
     const record = combined.find((item) => item.id === id);
-    if (record) {
-      if (record.coordenadas) {
-        setLat(String(record.coordenadas.lat));
-        setLng(String(record.coordenadas.lng));
-      }
-      setSelectedHistoryId(id);
-      
-      const locText = record.municipio && record.departamento
-        ? `${record.municipio}, ${record.departamento}`
-        : 'ubicación seleccionada';
-      agregarToast(`Coordenadas cargadas para: ${locText}`, 'info');
+    if (!record) return;
+
+    const coords = record.coordenadas;
+    if (coords) {
+      setLat(String(coords.lat));
+      setLng(String(coords.lng));
+    }
+
+    setSelectedHistoryId(id);
+
+    const locText = record.municipio && record.departamento
+      ? `${record.municipio}, ${record.departamento}`
+      : 'ubicacion seleccionada';
+    agregarToast(`Coordenadas cargadas para: ${locText}`, 'info');
+
+    const latNum = coords ? parseFloat(coords.lat) : null;
+    const lngNum = coords ? parseFloat(coords.lng) : null;
+    if (latNum == null || lngNum == null || isNaN(latNum) || isNaN(lngNum)) return;
+
+    setLoading(true);
+    try {
+      const result = await getPrediccion(latNum, lngNum);
+      if (result) setPrediction(result);
+    } catch {
+      agregarToast('Error al generar la prediccion desde el historial', 'error');
+    } finally {
+      setLoading(false);
     }
   }, [combined, agregarToast]);
 
@@ -118,7 +139,7 @@ export default function useIAPredictiva() {
     handleGenerate,
     handleUseLastAnalysis,
     hasLastAnalysis: !!(formulario.lat && formulario.lng),
-    historial: combined,
+    historial: historialFiltrado,
     selectedHistoryId,
     handleSelectHistory,
     handleClearSelection,
