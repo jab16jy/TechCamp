@@ -16,7 +16,7 @@ const STUDIO_ACTIONS = [
     title: 'Mapa de nutrientes',
     desc: 'Distribución NPK en parcela',
     icon: Map,
-    route: '/investigador/mapa',
+    route: '/investigador/analisis',
     color: 'green',
   },
   {

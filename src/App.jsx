@@ -11,7 +11,6 @@ import LoginInvestigador from '@features/auth/pages/LoginInvestigador';
 // ── Páginas del panel investigador ──
 import DashboardInvestigador from '@features/dashboard/pages/DashboardInvestigador';
 import AgroAsesor from '@features/chat/pages/AgroAsesor';
-import Mapa from '@features/map/pages/Mapa';
 import AnalisisCultivosInvestigador from '@features/analysis/pages/AnalisisCultivos';
 import ResultadoAvanzado from '@features/analysis/pages/ResultadoAvanzado';
 import IAPredictiva from '@features/predictions/pages/IAPredictiva';
@@ -41,7 +40,6 @@ const App = () => (
       <Route path="/investigador/dashboard" element={<DashboardInvestigador />} />
       <Route path="/dashboard" element={<DashboardInvestigador />} />
       <Route path="/investigador/mapas" element={<AgroAsesor />} />
-      <Route path="/investigador/mapa" element={<Mapa />} />
       <Route path="/investigador/historial" element={<Historial />} />
       <Route path="/investigador/ajustes" element={<Ajustes />} />
       <Route path="/investigador/analisis" element={<AnalisisCultivosInvestigador />} />
