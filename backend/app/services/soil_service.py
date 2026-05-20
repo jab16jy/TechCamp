@@ -1,12 +1,18 @@
 import logging
+from datetime import datetime, timezone
 
 import httpx
+from cachetools import TTLCache
 
 logger = logging.getLogger(__name__)
 
 ISRIC_URL = "https://rest.isric.org/soilgrids/v2.0/properties/query"
 ISRIC_PROPERTIES = ["phh2o", "soc", "sand", "silt", "clay"]
 ISRIC_DEPTH = "0-5cm"
+
+# Cache de SoilGrids: 256 entradas, TTL 7 dias = 604800 segundos
+# Las coordenadas se redondean a 3 decimales (~111m) para agrupar peticiones cercanas
+_soil_cache: TTLCache = TTLCache(maxsize=256, ttl=604800)
 
 
 def _usda_texture_class(sand: float, silt: float, clay: float) -> str:
@@ -47,8 +53,24 @@ def _usda_texture_class(sand: float, silt: float, clay: float) -> str:
     return "Franco"
 
 
+def _cache_key(lat: float, lng: float) -> tuple:
+    """Redondea a 3 decimales (~111m) para agrupar coordenadas cercanas."""
+    return (round(lat, 3), round(lng, 3))
+
+
 async def get_soil_data(lat: float, lng: float) -> dict | None:
-    """Obtiene pH, materia organica y textura desde ISRIC SoilGrids v2.0."""
+    """Obtiene pH, materia organica y textura desde ISRIC SoilGrids v2.0.
+
+    Usa cache en memoria (TTLCache) con duracion de 7 dias para evitar
+    llamadas repetidas a la API internacional.
+    """
+    key = _cache_key(lat, lng)
+    cached = _soil_cache.get(key)
+    if cached is not None:
+        logger.debug(f"SoilGrids cache hit para {key}")
+        cached["_cache_hit"] = True
+        return cached
+
     body = {
         "lon": lng,
         "lat": lat,
@@ -98,9 +120,14 @@ async def get_soil_data(lat: float, lng: float) -> dict | None:
         float(clay) if clay is not None else 0,
     )
 
-    return {
+    result = {
         "ph": ph,
         "materia_organica": materia_organica,
         "textura_suelo": textura,
         "fuente": "ISRIC SoilGrids v2.0",
+        "cached_at": datetime.now(timezone.utc).isoformat(),
     }
+
+    _soil_cache[key] = result
+    logger.debug(f"SoilGrids cache miss para {key} — guardado en cache")
+    return result

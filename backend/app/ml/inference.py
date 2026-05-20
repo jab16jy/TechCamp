@@ -5,7 +5,7 @@ import numpy as np
 from joblib import load
 
 from app.ml.model import get_crop_classifier
-from app.ml.training import FEATURE_COLS, MODEL_PATH, SCALER_PATH, train_model
+from app.ml.training import FEATURE_COLS, ENGINEERED_COLS, ALL_FEATURE_COLS, TEXTURE_MAP, MODEL_PATH, SCALER_PATH, train_model
 
 logger = logging.getLogger(__name__)
 
@@ -74,6 +74,10 @@ def predict_crop_recommendations(
 
     if model is not None and scaler is not None:
         try:
+            # Codificar textura si esta disponible, si no usar valor neutral (7 = Franco)
+            textura_encoded = TEXTURE_MAP.get(textura_suelo, 7.0)
+
+            # Construir vector con features originales + engineered
             features = {
                 "temperatura": temperatura,
                 "humedad": humedad,
@@ -81,8 +85,16 @@ def predict_crop_recommendations(
                 "ph_suelo": ph_suelo,
                 "materia_organica": materia_organica,
                 "ndvi": ndvi,
+                "textura_encoded": textura_encoded,
             }
-            X = np.array([[features.get(c, 0) for c in FEATURE_COLS]])
+
+            # Calcular interacciones (debe coincidir con training.py)
+            features["temp_hum_interaction"] = temperatura * humedad / 1000.0
+            features["ph_mo_interaction"] = ph_suelo * materia_organica
+            features["precip_hum_ratio"] = precipitacion / max(humedad, 1.0)
+
+            feat_vector = [features.get(c, 0) for c in ALL_FEATURE_COLS]
+            X = np.array([feat_vector])
             X_scaled = scaler.transform(X)
             probas = model.predict_proba(X_scaled)[0]
             classes = model.classes_
