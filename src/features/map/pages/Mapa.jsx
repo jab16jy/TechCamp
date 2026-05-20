@@ -1,8 +1,7 @@
 import { MapContainer, TileLayer, Marker, Popup, Circle, LayersControl, Polygon } from 'react-leaflet';
-import L from 'leaflet';
+import L from '@shared/utils/leafletDrawPatch';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-draw/dist/leaflet.draw.css';
-import 'leaflet-draw';
 import ResearcherLayout from '@shared/layout/ResearcherLayout/ResearcherLayout';
 import useAuthGuard from '@shared/hooks/useAuthGuard';
 import {

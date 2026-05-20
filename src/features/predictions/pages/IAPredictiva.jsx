@@ -55,11 +55,11 @@ const IAPredictiva = () => {
             <div className="ia-coord-controls">
               <div className="ia-coord-field">
                 <label>Latitud</label>
-                <input type="number" step="0.0001" value={lat} onChange={(e) => setLat(Number(e.target.value))} />
+                <input type="text" inputMode="decimal" placeholder="10.5" value={lat} onChange={(e) => setLat(e.target.value)} />
               </div>
               <div className="ia-coord-field">
                 <label>Longitud</label>
-                <input type="number" step="0.0001" value={lng} onChange={(e) => setLng(Number(e.target.value))} />
+                <input type="text" inputMode="decimal" placeholder="-74.8" value={lng} onChange={(e) => setLng(e.target.value)} />
               </div>
               {hasLastAnalysis && (
                 <button className="ia-use-last" onClick={handleUseLastAnalysis}>

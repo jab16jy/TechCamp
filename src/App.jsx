@@ -24,7 +24,7 @@ import Ajustes from '@features/settings/pages/Ajustes';
 import Resultado from '@features/analysis/pages/Resultado';
 
 const App = () => (
-  <BrowserRouter>
+  <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
     {/* Toast global — disponible en todas las rutas */}
     <Toast />
 

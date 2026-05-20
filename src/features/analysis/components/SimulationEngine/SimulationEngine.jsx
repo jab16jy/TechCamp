@@ -22,7 +22,7 @@ function SimChart({ rain, fert }) {
       <path d={path} fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
       {pts.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r="2.5" fill="#10b981" />)}
       {['E','F','M','A','M','J','J','A','S','O','N','D'].map((m, i) => (
-        <text key={m} x={30 + i * 22} y="172" fontSize="6.5" fill="#94a3b8" textAnchor="middle">{m}</text>
+        <text key={i} x={30 + i * 22} y="172" fontSize="6.5" fill="#94a3b8" textAnchor="middle">{m}</text>
       ))}
     </svg>
   );

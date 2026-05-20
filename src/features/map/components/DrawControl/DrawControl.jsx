@@ -1,8 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useMapEvents } from 'react-leaflet';
-import L from 'leaflet';
+import L from '@shared/utils/leafletDrawPatch';
 import 'leaflet-draw/dist/leaflet.draw.css';
-import 'leaflet-draw';
 
 const DrawControl = ({ onZoneCreated, onZoneCleared }) => {
   const map = useMapEvents({});
