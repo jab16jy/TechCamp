@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAppStore from '@shared/store';
 import AnalysisService from '@shared/services/analysisService';
+import { getSoilData } from '@shared/services/api';
 import { Leaf, Droplets, FlaskConical } from 'lucide-react';
 
 export function useAnalisisCultivos() {
@@ -46,11 +47,24 @@ export function useAnalisisCultivos() {
     actualizarFormulario(newFields);
   };
 
-  const handleMapChange = (latlng) => {
+  const handleMapChange = async (latlng) => {
     actualizarFormulario({
       lat: latlng.lat,
       lng: latlng.lng,
     });
+    try {
+      const soil = await getSoilData(latlng.lat, latlng.lng);
+      if (soil?.ph !== null && soil?.ph !== undefined) {
+        actualizarFormulario({
+          ph_suelo: String(soil.ph),
+          materia_organica: soil.materia_organica != null ? String(soil.materia_organica) : '',
+          textura_suelo: soil.textura_suelo || '',
+        });
+        agregarToast('Datos de suelo precargados desde ISRIC SoilGrids (pH, MO, textura)', 'info');
+      }
+    } catch {
+      // Silencioso: SoilGrids es opcional
+    }
   };
 
   const handleGeoDetected = (geo) => {

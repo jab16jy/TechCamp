@@ -48,7 +48,7 @@ def _ndvi_estimate(month: int, base_ndvi: float = 0.42, precipitacion: float = 8
 async def project_6_months(lat: float, lng: float, ph_suelo: float = 6.5,
                            materia_organica: float = 3.0, textura_suelo: str = "Franco",
                            tipo_suelo: str = "Franco-Arcilloso") -> dict:
-    from app.ml.model import get_crop_classifier
+    from app.ml.inference import predict_crop_recommendations
 
     nasa_data = await fetch_nasa_climatology(lat, lng)
     climatology = _monthly_climatology_from_nasa(nasa_data)
@@ -68,11 +68,11 @@ async def project_6_months(lat: float, lng: float, ph_suelo: float = 6.5,
     prec_anomaly = current_prec - hist_prec if hist_prec else 0
     hum_anomaly = current_hum - hist_hum if hist_hum else 0
 
-    classifier = get_crop_classifier()
     months = []
     best_score = 0
     best_month = None
     best_crop = None
+    metodo_usado = "heuristico"
 
     mes_labels = {
         1: "Enero", 2: "Febrero", 3: "Marzo", 4: "Abril",
@@ -95,7 +95,7 @@ async def project_6_months(lat: float, lng: float, ph_suelo: float = 6.5,
 
         ndvi = _ndvi_estimate(m, 0.42, proj_prec)
 
-        scores = classifier.score(
+        scores, metodo = predict_crop_recommendations(
             temperatura=proj_temp,
             humedad=proj_hum,
             precipitacion=proj_prec,
@@ -105,6 +105,7 @@ async def project_6_months(lat: float, lng: float, ph_suelo: float = 6.5,
             textura_suelo=textura_suelo,
             tipo_suelo=tipo_suelo,
         )
+        metodo_usado = metodo
 
         month_entry = {
             "month": mes_labels.get(m, "Desconocido"),
@@ -116,7 +117,7 @@ async def project_6_months(lat: float, lng: float, ph_suelo: float = 6.5,
             "ndvi_estimado": ndvi,
             "radiacion_solar": round(proj_rad, 1) if proj_rad else None,
             "cultivos_recomendados": [
-                {"cultivo": s["cultivo"], "score": s["score"], "riesgo": s["riesgo"], "emoji": s["emoji"]}
+                {"cultivo": s["cultivo"], "score": s["score"], "riesgo": s["riesgo"], "emoji": s["emoji"], "metodo": s.get("metodo", "heuristico"), "probabilidad": s.get("probabilidad")}
                 for s in scores
             ],
         }
@@ -132,5 +133,5 @@ async def project_6_months(lat: float, lng: float, ph_suelo: float = 6.5,
         "meses": months,
         "mejor_mes": best_month,
         "mejor_cultivo": best_crop,
-        "fuente": "NASA POWER + OpenMeteo" if nasa_data else "Datos historicos del Caribe + OpenMeteo",
+        "fuente": f"NASA POWER + OpenMeteo ({metodo_usado})" if nasa_data else f"Datos historicos del Caribe + OpenMeteo ({metodo_usado})",
     }

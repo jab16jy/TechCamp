@@ -1,6 +1,6 @@
 import logging
 
-from app.ml.model import get_crop_classifier
+from app.ml.inference import predict_crop_recommendations
 from app.schemas.clima import ClimateData
 from app.schemas.satelite import SatelliteData
 from app.schemas.analisis import RecomendacionCultivo
@@ -17,9 +17,7 @@ async def generate_recommendations(
     tipo_suelo: str,
     mes_siembra: str,
 ) -> list[RecomendacionCultivo]:
-    classifier = get_crop_classifier()
-
-    scores = classifier.score(
+    scores, metodo = predict_crop_recommendations(
         temperatura=climate.temperatura,
         humedad=climate.humedad,
         precipitacion=climate.precipitacion,
@@ -30,5 +28,6 @@ async def generate_recommendations(
         tipo_suelo=tipo_suelo,
         mes_siembra=mes_siembra,
     )
+    logger.info(f"Recomendaciones generadas via {metodo}")
 
     return [RecomendacionCultivo(**s) for s in scores]

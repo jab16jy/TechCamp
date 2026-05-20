@@ -157,8 +157,8 @@ const AnalysisService = {
     const payload = {
       ...formData,
       area_hectareas: Number(formData.area_hectareas) || 0,
-      ph_suelo: formData.ph_suelo ? Number(formData.ph_suelo) : null,
-      materia_organica: formData.materia_organica ? Number(formData.materia_organica) : null,
+      ph_suelo: formData.ph_suelo ? Number(formData.ph_suelo) : 6.5,
+      materia_organica: formData.materia_organica ? Number(formData.materia_organica) : 3.0,
     };
 
     try {

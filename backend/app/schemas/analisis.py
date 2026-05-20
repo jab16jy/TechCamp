@@ -28,6 +28,8 @@ class RecomendacionCultivo(BaseModel):
     emoji: str = ""
     ciclo_dias: Optional[int] = None
     rendimiento_estimado: Optional[str] = None
+    metodo: str = "heuristico"
+    probabilidad: Optional[float] = None
 
 
 class AnalyzeResponse(BaseModel):
@@ -55,6 +57,13 @@ class HistorialEntry(BaseModel):
     materia_organica: Optional[float] = None
     mes_siembra: Optional[str] = None
     recomendaciones: Optional[list] = None
+
+
+class SoilGridsResponse(BaseModel):
+    ph: Optional[float] = None
+    materia_organica: Optional[float] = None
+    textura_suelo: Optional[str] = None
+    fuente: str = "ISRIC SoilGrids v2.0"
 
 
 class MunicipioResponse(BaseModel):

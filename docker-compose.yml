@@ -1,21 +1,50 @@
 services:
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: agrocaribe-db
+    environment:
+      POSTGRES_USER: agrocaribe
+      POSTGRES_PASSWORD: agrocaribe_secret
+      POSTGRES_DB: agrocaribe
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./backend/data/seeds:/docker-entrypoint-initdb.d:ro
+    networks:
+      - backend_net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agrocaribe -d agrocaribe"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     environment:
-      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_URL: postgresql+asyncpg://agrocaribe:agrocaribe_secret@db:5432/agrocaribe
       SUPABASE_URL: ${SUPABASE_URL}
       SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
-      ENVIRONMENT: ${ENVIRONMENT:-production}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       OPENMETEO_BASE_URL: https://api.open-meteo.com/v1
       CORS_ORIGINS: http://localhost:5173,http://localhost:5173,http://localhost
     ports:
       - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - backend_net
+
+volumes:
+  pgdata:
+    driver: local
 
 networks:
   backend_net:

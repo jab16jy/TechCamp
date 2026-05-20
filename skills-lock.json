@@ -1,6 +1,21 @@
 {
   "version": 1,
   "skills": {
+    "docker-compose-orchestration": {
+      "source": "C:\\Users\\PC\\.agents\\skills\\docker-compose-orchestration",
+      "sourceType": "local",
+      "computedHash": "01831d0723a2ac491e233bd9bfdffdac8c0ae5500f140a3ca0382ac5f4a26159"
+    },
+    "docker-expert": {
+      "source": "C:\\Users\\PC\\.agents\\skills\\docker-expert",
+      "sourceType": "local",
+      "computedHash": "7be30b1c18b91628dcd8437a89e7e20acce76bae4349533e4ebdeb376a660bcb"
+    },
+    "fastapi-python": {
+      "source": "C:\\Users\\PC\\.agents\\skills\\fastapi-python",
+      "sourceType": "local",
+      "computedHash": "4521c6090735152b7b8df670cefe5c1c6d1dcaa115de67bb96e74ebf802d4f24"
+    },
     "find-skills": {
       "source": "vercel-labs/skills",
       "sourceType": "github",
@@ -13,6 +28,11 @@
       "skillPath": "skills/frontend-design/SKILL.md",
       "computedHash": "516bd2154eb843a8240e43d5b285229129853114ad7075a5e141e1c08e408c84"
     },
+    "sqlalchemy-alembic-expert-best-practices-code-review": {
+      "source": "C:\\Users\\PC\\.agents\\skills\\sqlalchemy-alembic-expert-best-practices-code-review",
+      "sourceType": "local",
+      "computedHash": "222668fee09abd99945cc57b9be37eb105470ea0428548e7e4f2e7284bd1d8e2"
+    },
     "supabase": {
       "source": "supabase/agent-skills",
       "sourceType": "github",
@@ -24,6 +44,16 @@
       "sourceType": "github",
       "skillPath": "skills/supabase-postgres-best-practices/SKILL.md",
       "computedHash": "8e41c7417894e6f394614ee7ca3ee5322b1e58d890255d441f42dea98732597f"
+    },
+    "vercel-react-best-practices": {
+      "source": "C:\\Users\\PC\\.agents\\skills\\vercel-react-best-practices",
+      "sourceType": "local",
+      "computedHash": "3219a1944e404ffc14d1d9d6aef6dd2e3855b81387ee0a044ccbfe14d34c2357"
+    },
+    "webapp-testing": {
+      "source": "C:\\Users\\PC\\.agents\\skills\\webapp-testing",
+      "sourceType": "local",
+      "computedHash": "3f14af7f5690695209c22fbf8c8d133769a86d64892602c09bb13f135e14e857"
     }
   }
 }

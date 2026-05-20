@@ -26,6 +26,8 @@ class CropScore(BaseModel):
     score: int
     riesgo: str
     emoji: str = ""
+    metodo: str = "heuristico"
+    probabilidad: Optional[float] = None
 
 
 class PredictResponse(BaseModel):

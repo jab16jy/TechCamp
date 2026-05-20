@@ -307,6 +307,16 @@ export const geoDecode = async (lat, lng) => {
   }
 };
 
+/** Obtener datos de suelo desde ISRIC SoilGrids v2.0 */
+export const getSoilData = async (lat, lng) => {
+  try {
+    const { data } = await apiClient.get('/soil/data', { params: { lat, lng } });
+    return data;
+  } catch {
+    return null;
+  }
+};
+
 /** Obtener prediccion climatica a 6 meses para una ubicacion */
 export const getPrediccion = async (lat, lng) => {
   try {
