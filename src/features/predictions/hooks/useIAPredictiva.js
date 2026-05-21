@@ -127,7 +127,7 @@ export default function useIAPredictiva() {
 
   const handleGenerate = useCallback(async () => {
     if (!analysisId) {
-      agregarToast('Selecciona un analisis del historico para comenzar', 'advertencia');
+      agregarToast('Debes seleccionar un analisis del historial antes de generar la proyeccion', 'advertencia');
       return;
     }
 

@@ -409,6 +409,46 @@
   color: #ba1a1a;
 }
 
+/* Require selection banner */
+.ia-require-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.5rem 1.75rem;
+  background: linear-gradient(135deg, rgba(234, 88, 12, 0.08), rgba(249, 115, 22, 0.04));
+  border: 1px solid rgba(234, 88, 12, 0.25);
+  border-radius: 1.25rem;
+  margin-bottom: 1.25rem;
+  animation: ia-slide-down 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.ia-require-banner-icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(234, 88, 12, 0.12);
+  border-radius: 0.75rem;
+  color: #c2410c;
+  flex-shrink: 0;
+}
+
+.ia-require-banner-content h3 {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #9a3412;
+  margin: 0 0 0.35rem;
+}
+
+.ia-require-banner-content p {
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: #6b3a1f;
+  margin: 0;
+  max-width: 600px;
+}
+
 /* Empty state */
 .ia-empty {
   background: rgba(255,255,255,0.55);

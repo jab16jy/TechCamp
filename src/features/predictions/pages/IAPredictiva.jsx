@@ -21,6 +21,7 @@ import {
   Leaf,
   Info,
   Shield,
+  AlertTriangle,
 } from "lucide-react";
 import ResearcherLayout from "@shared/layout/ResearcherLayout/ResearcherLayout";
 import useAuthGuard from "@shared/hooks/useAuthGuard";
@@ -623,16 +624,19 @@ const IAPredictiva = () => {
           {!prediction && !loading && (
             <div className="ia-empty">
               {!analysisId ? (
-                <>
-                  <div className="ia-empty-icon">
-                    <History size={48} />
+                <div className="ia-require-banner">
+                  <div className="ia-require-banner-icon">
+                    <AlertTriangle size={28} />
                   </div>
-                  <h2>Selecciona un analisis del historico para comenzar</h2>
-                  <p>
-                    Elige un analisis previo de cultivo o suelo para heredar sus
-                    datos base antes de generar la proyeccion de 90 dias.
-                  </p>
-                </>
+                  <div className="ia-require-banner-content">
+                    <h3>Se requiere seleccion de historial</h3>
+                    <p>
+                      Debes elegir un analisis previo del historial para heredar coordenadas,
+                      cultivo recomendado y datos de suelo. Sin esta informacion no es posible
+                      generar la proyeccion de 90 dias.
+                    </p>
+                  </div>
+                </div>
               ) : (
                 <>
                   <div className="ia-empty-icon">
