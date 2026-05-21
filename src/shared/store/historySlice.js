@@ -24,7 +24,7 @@ const saveHistorial = (historial) => {
 
 // ── Generador de IDs ──
 const generateId = (tipo) => {
-  const prefix = tipo === 'suelo' ? 'S' : 'C';
+  const prefix = tipo === 'suelo' ? 'S' : tipo === 'prediccion' ? 'P' : 'C';
   const num = Math.floor(Math.random() * 900) + 100;
   return `${prefix}-${num}`;
 };

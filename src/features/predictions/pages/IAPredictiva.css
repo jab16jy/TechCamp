@@ -84,6 +84,14 @@
   letter-spacing: 0.03em;
 }
 
+.ia-page-intent {
+  max-width: 760px;
+  margin: 0.55rem 0 0;
+  font-size: 0.78rem;
+  line-height: 1.55;
+  color: #4a554d;
+}
+
 /* Input Card */
 .ia-input-card {
   background: rgba(255,255,255,0.6);
@@ -503,6 +511,12 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
 }
 
+.ia-use-last span {
+  max-width: 230px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .ia-use-last:hover {
   background: rgba(45, 90, 39, 0.08);
   border-color: rgba(45, 90, 39, 0.25);
@@ -702,6 +716,26 @@
   font-weight: 600;
 }
 
+.ia-popover-item-metric {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.2rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid rgba(191, 201, 193, 0.18);
+  font-family: Manrope, sans-serif;
+  font-size: 0.62rem;
+  color: #707973;
+}
+
+.ia-popover-item-metric strong {
+  color: #1A1C1A;
+  font-size: 0.66rem;
+  font-weight: 800;
+  text-align: right;
+}
+
 /* Elegant Active Record preview card! */
 .ia-active-record-card {
   background: rgba(255, 255, 255, 0.45);
@@ -796,6 +830,24 @@
   min-width: 180px;
 }
 
+.ia-active-record-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  max-width: 520px;
+  margin-bottom: 0.1rem;
+  font-family: Manrope, sans-serif;
+  font-size: 0.68rem;
+  line-height: 1.35;
+  color: #4a554d;
+}
+
+.ia-active-record-note svg {
+  color: #386a20;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
 .ia-active-record-meta-item {
   display: flex;
   align-items: center;
@@ -856,6 +908,15 @@
 }
 
 @media (max-width: 580px) {
+  .ia-use-last span {
+    max-width: 170px;
+  }
+
+  .ia-history-popover {
+    left: 0;
+    width: min(340px, calc(100vw - 2rem));
+  }
+
   .ia-active-record-body {
     flex-direction: column;
     align-items: stretch;
@@ -865,4 +926,3 @@
     justify-content: space-around;
   }
 }
-

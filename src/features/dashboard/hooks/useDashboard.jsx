@@ -83,7 +83,7 @@ export default function useDashboard() {
   const moduleShortcuts = [
     { label: 'Agro-Asesor IA', sub: 'Mapa + Chatbot', path: '/investigador/mapas', icon: <BrainCircuit size={16} />, color: 'emerald', onClick: () => navigate('/investigador/mapas') },
     { label: 'Analisis Suelos', sub: 'Laboratorio digital', path: '/investigador/analisis', icon: <FlaskConical size={16} />, color: 'blue', onClick: () => navigate('/investigador/analisis') },
-    { label: 'IA Predictiva', sub: 'Proyeccion 6 meses', path: '/investigador/ia', icon: <Activity size={16} />, color: 'purple', onClick: () => navigate('/investigador/ia') },
+    { label: 'IA Predictiva', sub: 'Ventana siembra 6 meses', path: '/investigador/ia', icon: <Activity size={16} />, color: 'purple', onClick: () => navigate('/investigador/ia') },
     { label: 'Nodos IoT', sub: 'Sensores en campo', path: '/investigador/sensores', icon: <Radio size={16} />, color: 'amber', onClick: () => navigate('/investigador/sensores') },
   ];
 

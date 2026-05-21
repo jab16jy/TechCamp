@@ -72,7 +72,7 @@ function HistorialCard({ item, onView, onDelete }) {
               {isPred ? (
                 <div className="h-result-row">
                   <TrendingUp size={15} />
-                  <span className="h-result-crop">{item.cultivo || '—'}</span>
+                  <span className="h-result-crop">{item.mejor_cultivo || item.cultivo || '—'}</span>
                   {item.score != null && (
                     <>
                       <div className="h-score-line" style={{ flex: 1, maxWidth: 100 }}>
@@ -136,6 +136,24 @@ function HistorialCard({ item, onView, onDelete }) {
                 <div className="h-detail-item">
                   <span className="h-dt-label">Mes siembra</span>
                   <span className="h-dt-val">{item.mes_siembra}</span>
+                </div>
+              )}
+              {item.mejor_mes && (
+                <div className="h-detail-item">
+                  <span className="h-dt-label">Mejor mes</span>
+                  <span className="h-dt-val">{item.mejor_mes}</span>
+                </div>
+              )}
+              {item.mejor_cultivo && (
+                <div className="h-detail-item">
+                  <span className="h-dt-label">Cultivo recomendado</span>
+                  <span className="h-dt-val">{item.mejor_cultivo}</span>
+                </div>
+              )}
+              {item.fuente && (
+                <div className="h-detail-item">
+                  <span className="h-dt-label">Fuente</span>
+                  <span className="h-dt-val">{item.fuente}</span>
                 </div>
               )}
               {item.ph_suelo && (

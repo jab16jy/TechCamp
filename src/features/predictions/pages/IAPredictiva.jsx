@@ -19,6 +19,7 @@ import {
   X,
   FlaskConical,
   Leaf,
+  Info,
 } from "lucide-react";
 import ResearcherLayout from "@shared/layout/ResearcherLayout/ResearcherLayout";
 import useAuthGuard from "@shared/hooks/useAuthGuard";
@@ -78,7 +79,51 @@ const MESES = [
 const formatDate = (iso) => {
   if (!iso) return "—";
   const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
   return `${d.getDate()} ${MESES[d.getMonth()]} ${d.getFullYear()}`;
+};
+
+const getCoords = (record) => {
+  if (!record) return null;
+  const lat = record.coordenadas?.lat ?? record.lat;
+  const lng = record.coordenadas?.lng ?? record.lng;
+  const latNum = Number(lat);
+  const lngNum = Number(lng);
+
+  if (!Number.isFinite(latNum) || !Number.isFinite(lngNum)) return null;
+
+  return { lat: latNum, lng: lngNum };
+};
+
+const formatLocation = (record) =>
+  [record?.municipio, record?.departamento].filter(Boolean).join(", ") ||
+  "Ubicacion sin nombre";
+
+const formatRecordTrigger = (record) => {
+  if (!record) return "Seleccionar del historial";
+  return `${record.id} - ${record.municipio || record.mejor_cultivo || "Parcela"}`;
+};
+
+const getRecordMetric = (record) => {
+  if (!record) return null;
+  if (record.tipo === "analisis" || record.tipo === "simple") {
+    return {
+      label: "Cultivo",
+      value: record.cultivo || record.cultivo_top || "—",
+    };
+  }
+  if (record.tipo === "suelo" || record.tipo === "advanced") {
+    return {
+      label: "Suelo",
+      value:
+        record.calidad_suelo ||
+        (record.ph || record.ph_suelo ? `pH ${record.ph || record.ph_suelo}` : "—"),
+    };
+  }
+  return {
+    label: "Ventana",
+    value: record.mejor_mes || record.mes_siembra || "—",
+  };
 };
 
 const IAPredictiva = () => {
@@ -142,6 +187,12 @@ const IAPredictiva = () => {
               </h1>
               <span className="ia-badge-mode">NASA POWER + OpenMeteo</span>
             </div>
+            <p className="ia-page-intent">
+              Planificacion estacional para decidir ventana de siembra, cultivo
+              recomendado y riesgo climatico futuro. Analisis de Cultivo
+              diagnostica el lote actual; esta vista proyecta los proximos 6
+              meses.
+            </p>
           </div>
         </header>
 
@@ -155,7 +206,10 @@ const IAPredictiva = () => {
                   inputMode="decimal"
                   placeholder="10.5"
                   value={lat}
-                  onChange={(e) => setLat(e.target.value)}
+                  onChange={(e) => {
+                    setLat(e.target.value);
+                    handleClearSelection(true);
+                  }}
                 />
               </div>
               <div className="ia-coord-field">
@@ -165,7 +219,10 @@ const IAPredictiva = () => {
                   inputMode="decimal"
                   placeholder="-74.8"
                   value={lng}
-                  onChange={(e) => setLng(e.target.value)}
+                  onChange={(e) => {
+                    setLng(e.target.value);
+                    handleClearSelection(true);
+                  }}
                 />
               </div>
 
@@ -177,11 +234,7 @@ const IAPredictiva = () => {
                   onClick={() => setIsOpen(!isOpen)}
                 >
                   <History size={14} />
-                  <span>
-                    {selectedRecord
-                      ? `Historial: ${selectedRecord.id}`
-                      : "Seleccionar del Historial"}
-                  </span>
+                  <span>{formatRecordTrigger(selectedRecord)}</span>
                   <ChevronDown
                     size={14}
                     style={{
@@ -194,7 +247,7 @@ const IAPredictiva = () => {
                 {isOpen && (
                   <div className="ia-history-popover">
                     <div className="ia-popover-header">
-                      <span>Historial de Registros</span>
+                      <span>Registros con ubicacion</span>
                       <button
                         type="button"
                         className="ia-popover-close"
@@ -210,7 +263,7 @@ const IAPredictiva = () => {
                             size={24}
                             style={{ opacity: 0.4, marginBottom: "0.25rem" }}
                           />
-                          <span>Sin registros en el historial</span>
+                          <span>Sin registros con ubicacion reutilizable</span>
                         </div>
                       ) : (
                         historial.map((item) => {
@@ -218,6 +271,8 @@ const IAPredictiva = () => {
                             TIPO_CONFIG[item.tipo] || TIPO_CONFIG.analisis;
                           const IconComponent = config.icon;
                           const isSelected = item.id === selectedHistoryId;
+                          const coords = getCoords(item);
+                          const metric = getRecordMetric(item);
                           return (
                             <div
                               key={item.id}
@@ -248,20 +303,21 @@ const IAPredictiva = () => {
                               </div>
                               <div className="ia-popover-item-details">
                                 <MapPin size={10} />
-                                <span>
-                                  {item.municipio || "—"}
-                                  {item.departamento
-                                    ? `, ${item.departamento}`
-                                    : ""}
-                                </span>
+                                <span>{formatLocation(item)}</span>
                               </div>
-                              {item.coordenadas && (
+                              {coords && (
                                 <div className="ia-popover-item-coords">
                                   <Compass size={10} />
                                   <span>
-                                    {Number(item.coordenadas.lat).toFixed(4)},{" "}
-                                    {Number(item.coordenadas.lng).toFixed(4)}
+                                    {coords.lat.toFixed(4)},{" "}
+                                    {coords.lng.toFixed(4)}
                                   </span>
+                                </div>
+                              )}
+                              {metric && (
+                                <div className="ia-popover-item-metric">
+                                  <span>{metric.label}</span>
+                                  <strong>{metric.value}</strong>
                                 </div>
                               )}
                             </div>
@@ -294,7 +350,7 @@ const IAPredictiva = () => {
                   <div className="ia-active-record-title">
                     <History size={15} className="ia-active-record-icon" />
                     <span>
-                      Registro Activo:{" "}
+                      Parcela base:{" "}
                       <strong className="ia-active-record-id-text">
                         {selectedRecord.id}
                       </strong>
@@ -303,7 +359,7 @@ const IAPredictiva = () => {
                   <button
                     type="button"
                     className="ia-active-record-clear"
-                    onClick={handleClearSelection}
+                    onClick={() => handleClearSelection()}
                     title="Desvincular registro"
                   >
                     <X size={13} />
@@ -313,27 +369,27 @@ const IAPredictiva = () => {
 
                 <div className="ia-active-record-body">
                   <div className="ia-active-record-info">
+                    <div className="ia-active-record-note">
+                      <Info size={12} />
+                      <span>
+                        Este registro solo precarga coordenadas. Ejecuta
+                        Generar Proyeccion para calcular el escenario.
+                      </span>
+                    </div>
                     <div className="ia-active-record-meta-item">
                       <MapPin size={12} />
-                      <span>
-                        {selectedRecord.municipio || "—"}
-                        {selectedRecord.departamento
-                          ? `, ${selectedRecord.departamento}`
-                          : ""}
-                      </span>
+                      <span>{formatLocation(selectedRecord)}</span>
                     </div>
                     <div className="ia-active-record-meta-item">
                       <Calendar size={12} />
                       <span>{formatDate(selectedRecord.fecha)}</span>
                     </div>
-                    {selectedRecord.coordenadas && (
+                    {getCoords(selectedRecord) && (
                       <div className="ia-active-record-meta-item">
                         <Compass size={12} />
                         <span>
-                          Lat:{" "}
-                          {Number(selectedRecord.coordenadas.lat).toFixed(4)} |
-                          Lng:{" "}
-                          {Number(selectedRecord.coordenadas.lng).toFixed(4)}
+                          Lat: {getCoords(selectedRecord).lat.toFixed(4)} |
+                          Lng: {getCoords(selectedRecord).lng.toFixed(4)}
                         </span>
                       </div>
                     )}
@@ -412,12 +468,22 @@ const IAPredictiva = () => {
                             Cultivo Proyectado
                           </span>
                           <span className="ia-metric-value">
-                            {selectedRecord.cultivo || "—"}
+                            {selectedRecord.mejor_cultivo ||
+                              selectedRecord.cultivo ||
+                              "—"}
                           </span>
                         </div>
+                        {selectedRecord.mejor_mes && (
+                          <div className="ia-active-metric">
+                            <span className="ia-metric-label">Mejor Mes</span>
+                            <span className="ia-metric-value">
+                              {selectedRecord.mejor_mes}
+                            </span>
+                          </div>
+                        )}
                         {selectedRecord.score != null && (
                           <div className="ia-active-metric">
-                            <span className="ia-metric-label">Puntuación</span>
+                            <span className="ia-metric-label">Puntuacion</span>
                             <span
                               className="ia-metric-value"
                               style={{
@@ -549,9 +615,10 @@ const IAPredictiva = () => {
               <h2>Proyeccion climatica a 6 meses</h2>
               <p>
                 Ingresa las coordenadas de tu parcela o selecciona un registro
-                del historial. El sistema consultara NASA POWER y OpenMeteo para
-                proyectar temperatura, precipitacion, humedad y NDVI estimado
-                mes a mes, recomendando el cultivo mas apto para cada periodo.
+                del historial para precargar su ubicacion. El sistema consultara
+                NASA POWER y OpenMeteo para proyectar temperatura,
+                precipitacion, humedad y NDVI estimado mes a mes, recomendando
+                el cultivo mas apto para cada periodo.
               </p>
               <div className="ia-empty-steps">
                 <div className="ia-step">

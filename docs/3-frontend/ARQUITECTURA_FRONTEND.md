@@ -217,7 +217,7 @@ eliminarToast(id)
 
 ```javascript
 historial: []  // Cargado de localStorage('agrocaribe_historial')
-agregarAlHistorial(registro)  // Genera ID (C-XXX o S-XXX), timestamp, guarda
+agregarAlHistorial(registro)  // Genera ID (C-XXX, S-XXX o P-XXX), timestamp, guarda
 limpiarHistorial()
 
 // Migración automática de tipos antiguos:
@@ -438,7 +438,16 @@ El módulo principal. Dos modos:
 
 **Ruta:** `/investigador/ia`
 
+**Rol del modulo:** planificacion estacional. A diferencia de `AnalisisCultivos`,
+que diagnostica la aptitud actual de una parcela, `IA Predictiva` reutiliza
+coordenadas manuales o del historial para proyectar los proximos 6 meses y
+decidir ventana de siembra, cultivo recomendado y riesgo climatico futuro.
+
 **Características:**
+- Selector de historial que solo precarga coordenadas y contexto de parcela; la
+  proyeccion se ejecuta con `Generar Proyeccion`.
+- Persistencia de predicciones generadas como registros `tipo: prediccion` en
+  el historial local.
 - `SimulatorPanel` — sliders de riego y NPK
 - `GrowthChart` — SVG area chart de crecimiento vs estrés (6 meses)
 - `FieldMap` — visualización SVG de parcela

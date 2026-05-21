@@ -2,15 +2,41 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import useAppStore from '@shared/store';
 import { getPrediccion, getHistorial as fetchHistorial } from '@shared/services/api';
 
-const isStandardAnalysis = (r) => r.tipo === 'analisis' || r.tipo === 'simple';
+const VALID_HISTORY_TYPES = new Set(['analisis', 'simple', 'suelo', 'advanced', 'prediccion']);
+
+const getRecordCoords = (record) => {
+  if (!record) return null;
+
+  const lat = record.coordenadas?.lat ?? record.lat;
+  const lng = record.coordenadas?.lng ?? record.lng;
+  const latNum = Number(lat);
+  const lngNum = Number(lng);
+
+  if (!Number.isFinite(latNum) || !Number.isFinite(lngNum)) return null;
+
+  return { lat: latNum, lng: lngNum };
+};
+
+const getRecordLocation = (record, fallback = 'ubicacion seleccionada') => {
+  if (!record) return fallback;
+  return [record.municipio, record.departamento].filter(Boolean).join(', ') || fallback;
+};
+
+const getPredictionScore = (prediction) => {
+  const bestMonth = prediction?.meses?.find((month) => month.month === prediction.mejor_mes);
+  const bestCrop = bestMonth?.cultivos_recomendados?.find(
+    (crop) => crop.cultivo === prediction.mejor_cultivo,
+  );
+  return bestCrop?.score ?? bestMonth?.cultivos_recomendados?.[0]?.score ?? null;
+};
 
 export default function useIAPredictiva() {
-  const { formulario, agregarToast, historial } = useAppStore();
+  const { formulario, agregarToast, agregarAlHistorial, historial } = useAppStore();
   const [loading, setLoading] = useState(false);
   const [prediction, setPrediction] = useState(null);
   const [lat, setLat] = useState(String(formulario.lat || 10.5));
   const [lng, setLng] = useState(String(formulario.lng || -74.8));
-  const [source, setSource] = useState('analisis');
+  const [source, setSource] = useState('manual');
   const [serverData, setServerData] = useState([]);
   const [selectedHistoryId, setSelectedHistoryId] = useState(null);
 
@@ -26,13 +52,13 @@ export default function useIAPredictiva() {
     const seen = new Set();
     const all = [];
     for (const item of serverData) {
-      if (!seen.has(item.id)) {
+      if (item?.id && !seen.has(item.id)) {
         seen.add(item.id);
         all.push(item);
       }
     }
     for (const item of historial) {
-      if (!seen.has(item.id)) {
+      if (item?.id && !seen.has(item.id)) {
         seen.add(item.id);
         all.push(item);
       }
@@ -41,9 +67,16 @@ export default function useIAPredictiva() {
   }, [serverData, historial]);
 
   const historialFiltrado = useMemo(
-    () => combined.filter(isStandardAnalysis),
+    () =>
+      combined.filter(
+        (item) => VALID_HISTORY_TYPES.has(item.tipo) && getRecordCoords(item),
+      ),
     [combined],
   );
+
+  const selectedRecord = useMemo(() => {
+    return historialFiltrado.find((item) => item.id === selectedHistoryId) || null;
+  }, [historialFiltrado, selectedHistoryId]);
 
   const handleGenerate = useCallback(async () => {
     const latNum = parseFloat(lat);
@@ -57,6 +90,20 @@ export default function useIAPredictiva() {
       const result = await getPrediccion(latNum, lngNum);
       if (result) {
         setPrediction(result);
+        agregarAlHistorial({
+          tipo: 'prediccion',
+          municipio: selectedRecord?.municipio || result.ubicacion?.municipio || '',
+          departamento: selectedRecord?.departamento || result.ubicacion?.departamento || '',
+          lat: latNum,
+          lng: lngNum,
+          cultivo: result.mejor_cultivo || null,
+          cultivo_top: result.mejor_cultivo || null,
+          mejor_mes: result.mejor_mes || null,
+          mejor_cultivo: result.mejor_cultivo || null,
+          score: getPredictionScore(result),
+          fuente: result.fuente || '',
+          estado: 'Exitosa',
+        });
         agregarToast('Prediccion a 6 meses generada con exito', 'exito');
       } else {
         agregarToast('El servidor de prediccion no esta disponible', 'error');
@@ -66,66 +113,51 @@ export default function useIAPredictiva() {
     } finally {
       setLoading(false);
     }
-  }, [lat, lng, agregarToast]);
+  }, [lat, lng, selectedRecord, agregarAlHistorial, agregarToast]);
 
   const handleUseLastAnalysis = useCallback(() => {
     if (formulario.lat && formulario.lng) {
       setLat(String(formulario.lat));
       setLng(String(formulario.lng));
       setSource('analisis');
+      setSelectedHistoryId(null);
       agregarToast('Usando coordenadas del ultimo analisis', 'info');
     } else {
       agregarToast('No hay un analisis previo. Ingresa coordenadas manualmente.', 'advertencia');
     }
   }, [formulario, agregarToast]);
 
-  const handleSelectHistory = useCallback(async (id) => {
+  const handleSelectHistory = useCallback((id) => {
     if (!id) {
       setSelectedHistoryId(null);
+      setSource('manual');
       return;
     }
-    const record = combined.find((item) => item.id === id);
+    const record = historialFiltrado.find((item) => item.id === id);
     if (!record) return;
 
-    const coords = record.coordenadas;
-    if (coords) {
-      setLat(String(coords.lat));
-      setLng(String(coords.lng));
+    const coords = getRecordCoords(record);
+    if (!coords) {
+      agregarToast('El registro seleccionado no tiene coordenadas validas', 'advertencia');
+      return;
     }
 
+    setLat(String(coords.lat));
+    setLng(String(coords.lng));
     setSelectedHistoryId(id);
+    setSource('historial');
+    agregarToast(`Coordenadas precargadas para: ${getRecordLocation(record)}`, 'info');
+  }, [historialFiltrado, agregarToast]);
 
-    const locText = record.municipio && record.departamento
-      ? `${record.municipio}, ${record.departamento}`
-      : 'ubicacion seleccionada';
-    agregarToast(`Coordenadas cargadas para: ${locText}`, 'info');
-
-    const latNum = coords ? parseFloat(coords.lat) : null;
-    const lngNum = coords ? parseFloat(coords.lng) : null;
-    if (latNum == null || lngNum == null || isNaN(latNum) || isNaN(lngNum)) return;
-
-    setLoading(true);
-    try {
-      const result = await getPrediccion(latNum, lngNum);
-      if (result) setPrediction(result);
-    } catch {
-      agregarToast('Error al generar la prediccion desde el historial', 'error');
-    } finally {
-      setLoading(false);
-    }
-  }, [combined, agregarToast]);
-
-  const handleClearSelection = useCallback(() => {
+  const handleClearSelection = useCallback((silent = false) => {
     setSelectedHistoryId(null);
-  }, []);
+    setSource('manual');
+    if (!silent) agregarToast('Registro desvinculado. Puedes editar coordenadas manualmente.', 'info');
+  }, [agregarToast]);
 
   const getSelectedRecord = useCallback(() => {
-    return combined.find((item) => item.id === selectedHistoryId) || null;
-  }, [combined, selectedHistoryId]);
-
-  const selectedRecord = useMemo(() => {
-    return combined.find((item) => item.id === selectedHistoryId) || null;
-  }, [combined, selectedHistoryId]);
+    return selectedRecord;
+  }, [selectedRecord]);
 
   return {
     loading,
@@ -145,5 +177,6 @@ export default function useIAPredictiva() {
     handleClearSelection,
     getSelectedRecord,
     selectedRecord,
+    getRecordCoords,
   };
 }

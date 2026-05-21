@@ -19,7 +19,6 @@ export function formatTime(iso) {
 export default function useHistorial() {
   const navigate = useNavigate();
   const historial = useAppStore((s) => s.historial);
-  const agregarAlHistorial = useAppStore((s) => s.agregarAlHistorial);
 
   const [search, setSearch] = useState('');
   const [filterTipo, setFilterTipo] = useState('all');
@@ -58,7 +57,15 @@ export default function useHistorial() {
     const q = debounced.toLowerCase().trim();
     return combined.filter((item) => {
       if (q) {
-        const haystack = [item.id, item.municipio, item.departamento, item.cultivo, item.cultivo_top]
+        const haystack = [
+          item.id,
+          item.municipio,
+          item.departamento,
+          item.cultivo,
+          item.cultivo_top,
+          item.mejor_mes,
+          item.mejor_cultivo,
+        ]
           .filter(Boolean).join(' ').toLowerCase();
         if (!haystack.includes(q)) return false;
       }
@@ -84,7 +91,9 @@ export default function useHistorial() {
         }
       });
     }
-    if (item.tipo === 'advanced' || item.tipo === 'suelo') {
+    if (item.tipo === 'prediccion') {
+      navigate('/investigador/ia');
+    } else if (item.tipo === 'advanced' || item.tipo === 'suelo') {
       navigate('/investigador/resultado-avanzado');
     } else {
       navigate('/resultado');
@@ -97,7 +106,9 @@ export default function useHistorial() {
     try {
       localStorage.setItem('agrocaribe_historial', JSON.stringify(updated));
       useAppStore.setState({ historial: updated });
-    } catch {}
+    } catch {
+      // La eliminacion local no debe bloquear la UI si localStorage falla.
+    }
   }, [combined]);
 
   const handleClearAll = useCallback(() => {
