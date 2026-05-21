@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, Query
+import uuid as uuid_lib
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import select, cast, String
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from sqlalchemy.orm import selectinload
 
 from app.core.dependencies import get_db, get_current_user
 from app.models.analisis import Analisis
@@ -60,3 +61,46 @@ async def get_history(
         pass
 
     return []
+
+
+@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_history_entry(
+    id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict | None = Depends(get_current_user),
+):
+    try:
+        analysis = None
+        try:
+            uuid_obj = uuid_lib.UUID(id)
+            result = await db.execute(
+                select(Analisis).where(Analisis.id == uuid_obj)
+            )
+            analysis = result.scalar_one_or_none()
+        except ValueError:
+            pass
+
+        if analysis is None:
+            result = await db.execute(
+                select(Analisis).where(
+                    cast(Analisis.id, String).like(f"{id.lower()}%")
+                )
+            )
+            analysis = result.scalar_one_or_none()
+
+        if analysis is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Analisis con id '{id}' no encontrado",
+            )
+
+        await db.delete(analysis)
+        await db.commit()
+    except HTTPException:
+        raise
+    except Exception:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al eliminar el analisis",
+        )

@@ -568,6 +568,16 @@ export const getIndicadoresSatelite = async (lat, lng) => {
   }
 };
 
+/** Eliminar un registro del historial */
+export const deleteHistory = async (id) => {
+  try {
+    await apiClient.delete(`/history/${id}`);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 /** Obtener historial de consultas */
 export const getHistorial = async () => {
   try {

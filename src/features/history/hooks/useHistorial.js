@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAppStore from '@shared/store';
-import { getHistorial as fetchHistorial } from '@shared/services/api';
+import { getHistorial as fetchHistorial, deleteHistory as apiDeleteHistory } from '@shared/services/api';
 
 const MESES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
@@ -101,13 +101,15 @@ export default function useHistorial() {
   }, [navigate]);
 
   const handleDelete = useCallback((id) => {
+    apiDeleteHistory(id);
     const updated = combined.filter((h) => h.id !== id);
     setServerData((p) => p.filter((h) => h.id !== id));
     try {
       localStorage.setItem('agrocaribe_historial', JSON.stringify(updated));
       useAppStore.setState({ historial: updated });
+      useAppStore.getState().agregarToast('Registro eliminado del historial', 'success');
     } catch {
-      // La eliminacion local no debe bloquear la UI si localStorage falla.
+      useAppStore.getState().agregarToast('Error al eliminar el registro', 'error');
     }
   }, [combined]);
 
