@@ -43,3 +43,15 @@ La documentación del proyecto está organizada bajo el framework Diátaxis en `
 
 ## 🧪 Estado del Proyecto
 Actualmente el proyecto se encuentra en fase de **Prototipo de Alta Fidelidad (Frontend)**. Todas las interacciones están implementadas y consumen servicios que simulan la respuesta de una IA mediante datos mock cuando el servidor no está presente.
+
+## 🌿 Workflow con OpenCode
+
+Este proyecto se desarrolla usando OpenCode con branches por tarea:
+
+- `feature/*` — nuevas funcionalidades
+- `fix/*` — corrección de bugs
+- `refactor/*` — refactorización de código
+- `docs/*` — documentación
+- `infra/*` — infraestructura y CI/CD
+
+Los cambios se hacen en branches aislados y se integran a `main` via Pull Request.
