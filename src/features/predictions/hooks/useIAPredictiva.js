@@ -224,7 +224,27 @@ export default function useIAPredictiva() {
 
       setLoading(true);
       try {
-        const data = await getAnalysis(id);
+        let data = await getAnalysis(id);
+
+        // Fallback: if backend has no record, search local combined history
+        if (!data) {
+          const localItem = combined.find((item) => item.id === id);
+          if (localItem) {
+            data = {
+              lat: localItem.coordenadas?.lat ?? localItem.lat,
+              lng: localItem.coordenadas?.lng ?? localItem.lng,
+              cultivo: localItem.cultivo,
+              cultivo_recomendado: localItem.cultivo,
+              ph_suelo: localItem.ph ?? localItem.ph_suelo,
+              ph: localItem.ph,
+              materia_organica: localItem.materia_organica,
+              tipo_suelo: localItem.tipo_suelo ?? localItem.textura_suelo,
+              textura_suelo: localItem.textura_suelo,
+              mes_siembra: localItem.mes_siembra,
+            };
+          }
+        }
+
         if (!data) {
           console.warn(`[handleSelectAnalysis] getAnalysis returned null for id: ${id}`);
           setAnalysisId(null);
@@ -255,7 +275,7 @@ export default function useIAPredictiva() {
         setLoading(false);
       }
     },
-    [agregarToast, resetCoordinates],
+    [agregarToast, resetCoordinates, combined],
   );
 
   const handleSelectHistory = useCallback(
