@@ -72,12 +72,24 @@ def predict_crop_recommendations(
 ) -> tuple[list[dict], str]:
     model, scaler = _load_rf()
 
+    classifier = get_crop_classifier()
+    heuristic_scores = classifier.score_with_factors(
+        temperatura=temperatura,
+        humedad=humedad,
+        precipitacion=precipitacion,
+        ph_suelo=ph_suelo,
+        materia_organica=materia_organica,
+        ndvi=ndvi,
+        textura_suelo=textura_suelo,
+        tipo_suelo=tipo_suelo,
+        mes_siembra=mes_siembra,
+    )
+    _heuristic_by_crop = {h["cultivo"]: h.get("factor_weights", []) for h in heuristic_scores}
+
     if model is not None and scaler is not None:
         try:
-            # Codificar textura si esta disponible, si no usar valor neutral (7 = Franco)
             textura_encoded = TEXTURE_MAP.get(textura_suelo, 7.0)
 
-            # Construir vector con features originales + engineered
             features = {
                 "temperatura": temperatura,
                 "humedad": humedad,
@@ -88,7 +100,6 @@ def predict_crop_recommendations(
                 "textura_encoded": textura_encoded,
             }
 
-            # Calcular interacciones (debe coincidir con training.py)
             features["temp_hum_interaction"] = temperatura * humedad / 1000.0
             features["ph_mo_interaction"] = ph_suelo * materia_organica
             features["precip_hum_ratio"] = precipitacion / max(humedad, 1.0)
@@ -102,19 +113,19 @@ def predict_crop_recommendations(
             results = []
             for cultivo, prob in zip(classes, probas):
                 score = int(prob * 100)
-                results.append(
-                    {
-                        "cultivo": cultivo.replace("_", " "),
-                        "score": score,
-                        "riesgo": "bajo" if score >= 80 else ("medio" if score >= 55 else "alto"),
-                        "justificacion": f"Probabilidad estimada por modelo Random Forest: {prob:.1%}",
-                        "emoji": "",
-                        "ciclo_dias": None,
-                        "rendimiento_estimado": None,
-                        "metodo": "random_forest",
-                        "probabilidad": round(float(prob), 4),
-                    }
-                )
+                crop_name = cultivo.replace("_", " ")
+                results.append({
+                    "cultivo": crop_name,
+                    "score": score,
+                    "riesgo": "bajo" if score >= 80 else ("medio" if score >= 55 else "alto"),
+                    "justificacion": f"Probabilidad estimada por modelo Random Forest: {prob:.1%}",
+                    "emoji": "",
+                    "ciclo_dias": None,
+                    "rendimiento_estimado": None,
+                    "metodo": "random_forest",
+                    "probabilidad": round(float(prob), 4),
+                    "factor_weights": _heuristic_by_crop.get(crop_name, []),
+                })
 
             results.sort(key=lambda r: r["score"], reverse=True)
             results = _enrich_with_metadata(results[:3])
@@ -122,19 +133,7 @@ def predict_crop_recommendations(
         except Exception as e:
             logger.warning(f"Error en prediccion RF: {e}. Fallback a heuristico.")
 
-    classifier = get_crop_classifier()
-    scores = classifier.score(
-        temperatura=temperatura,
-        humedad=humedad,
-        precipitacion=precipitacion,
-        ph_suelo=ph_suelo,
-        materia_organica=materia_organica,
-        ndvi=ndvi,
-        textura_suelo=textura_suelo,
-        tipo_suelo=tipo_suelo,
-        mes_siembra=mes_siembra,
-    )
-    for s in scores:
+    for s in heuristic_scores:
         s["metodo"] = "heuristico"
         s["probabilidad"] = None
-    return scores, "heuristico"
+    return heuristic_scores, "heuristico"

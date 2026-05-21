@@ -123,6 +123,96 @@ class CropClassifier:
         results.sort(key=lambda r: r["score"], reverse=True)
         return results[:3]
 
+    def score_with_factors(
+        self,
+        temperatura: float,
+        humedad: float,
+        precipitacion: float,
+        ph_suelo: float,
+        materia_organica: float,
+        ndvi: float,
+        textura_suelo: str = "",
+        tipo_suelo: str = "",
+        mes_siembra: str = "",
+    ) -> list[dict]:
+        results = []
+        weights = {"temp": 0.25, "hum": 0.15, "prec": 0.20, "ph": 0.15, "mo": 0.10, "suelo": 0.10, "ndvi": 0.05}
+        factor_labels = {
+            "temp": "Temperatura",
+            "hum": "Humedad",
+            "prec": "Precipitacion",
+            "ph": "pH del Suelo",
+            "mo": "Materia Organica",
+            "suelo": "Tipo de Suelo",
+            "ndvi": "NDVI",
+        }
+
+        for crop in self.crops:
+            s_temp = self._is_in_range(temperatura, crop["temp_min"], crop["temp_max"])
+            s_hum = self._is_in_range(humedad, crop["humedad_min"], crop["humedad_max"])
+            s_prec = self._is_in_range(precipitacion, crop["precipitacion_min"], crop["precipitacion_max"])
+            s_ph = self._is_in_range(ph_suelo, crop["ph_min"], crop["ph_max"])
+            s_mo = 1.0 if materia_organica >= crop["materia_organica_min"] else materia_organica / max(crop["materia_organica_min"], 0.001)
+            s_suelo = 1.0
+            if tipo_suelo and tipo_suelo not in crop["tipo_suelo"]:
+                s_suelo = 0.3
+            s_ndvi = min(1.0, max(0.2, ndvi / 0.5)) if ndvi > 0 else 0.5
+
+            raw_scores = {
+                "temp": s_temp, "hum": s_hum, "prec": s_prec,
+                "ph": s_ph, "mo": s_mo, "suelo": s_suelo, "ndvi": s_ndvi,
+            }
+
+            contributions = {}
+            total_contrib = 0.0
+            for key, w in weights.items():
+                contrib = raw_scores[key] * w
+                contributions[key] = contrib
+                total_contrib += contrib
+
+            score = int(min(98, max(10, total_contrib * 100)))
+            riesgo = "bajo" if score >= 80 else ("medio" if score >= 55 else "alto")
+
+            factor_weights = []
+            factor_sum = sum(contributions.values())
+            for key in weights:
+                pct = round(contributions[key] / max(factor_sum, 0.001) * 100, 1)
+                factor_weights.append({
+                    "factor": factor_labels[key],
+                    "peso": weights[key],
+                    "score_parcial": round(raw_scores[key], 3),
+                    "porcentaje_impacto": pct,
+                })
+
+            justificacion_parts = []
+            if s_temp < 0.5:
+                justificacion_parts.append(f"temperatura fuera del rango optimo ({crop['temp_min']}-{crop['temp_max']}°C)")
+            if s_prec < 0.5:
+                justificacion_parts.append("precipitacion insuficiente")
+            if s_ph < 0.5:
+                justificacion_parts.append(f"pH fuera del rango ({crop['ph_min']}-{crop['ph_max']})")
+            justificacion = (
+                f"Las condiciones son favorables para {crop['cultivo'].replace('_', ' ')}."
+                if score >= 70
+                else f"Condiciones regulares para {crop['cultivo'].replace('_', ' ')}."
+            )
+            if justificacion_parts:
+                justificacion += " " + "; ".join(justificacion_parts) + "."
+
+            results.append({
+                "cultivo": crop["cultivo"].replace("_", " "),
+                "score": score,
+                "riesgo": riesgo,
+                "justificacion": justificacion,
+                "emoji": crop["emoji"],
+                "ciclo_dias": crop["ciclo_dias"],
+                "rendimiento_estimado": f"{crop['rendimiento_promedio']} t/ha",
+                "factor_weights": factor_weights,
+            })
+
+        results.sort(key=lambda r: r["score"], reverse=True)
+        return results[:3]
+
 
 _crop_classifier: CropClassifier | None = None
 

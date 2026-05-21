@@ -1,8 +1,7 @@
 import logging
+import math
 from datetime import datetime, timezone
 from dateutil.relativedelta import relativedelta
-
-import numpy as np
 
 import httpx
 
@@ -11,6 +10,15 @@ from app.services.climate_service import fetch_nasa_climatology, _monthly_climat
 
 settings = get_settings()
 logger = logging.getLogger(__name__)
+
+MES_NOMBRES = {
+    1: "Enero", 2: "Febrero", 3: "Marzo", 4: "Abril",
+    5: "Mayo", 6: "Junio", 7: "Julio", 8: "Agosto",
+    9: "Septiembre", 10: "Octubre", 11: "Noviembre", 12: "Diciembre",
+}
+
+MES_NOMBRE_A_NUM = {v.lower(): k for k, v in MES_NOMBRES.items()}
+DECAY_ALPHA = 0.3
 
 
 async def fetch_current_climate(lat: float, lng: float) -> dict:
@@ -38,6 +46,7 @@ async def fetch_current_climate(lat: float, lng: float) -> dict:
 
 
 def _ndvi_estimate(month: int, base_ndvi: float = 0.42, precipitacion: float = 80) -> float:
+    import numpy as np
     precip_factor = min(1.2, max(0.7, precipitacion / 100.0))
     if 4 <= month <= 11:
         precip_factor += 0.1
@@ -45,9 +54,177 @@ def _ndvi_estimate(month: int, base_ndvi: float = 0.42, precipitacion: float = 8
     return round(min(0.95, max(0.15, ndvi)), 2)
 
 
-async def project_6_months(lat: float, lng: float, ph_suelo: float = 6.5,
-                           materia_organica: float = 3.0, textura_suelo: str = "Franco",
-                           tipo_suelo: str = "Franco-Arcilloso") -> dict:
+def _mes_siembra_to_num(mes_siembra: str | None) -> int:
+    if not mes_siembra:
+        return (datetime.now(timezone.utc).month % 12) + 1
+    lowered = mes_siembra.strip().lower()
+    return MES_NOMBRE_A_NUM.get(lowered, (datetime.now(timezone.utc).month % 12) + 1)
+
+
+def _compute_npk_riego_factors(npk: float | None, riego: float | None) -> tuple[float, float]:
+    npk_factor = 1.0
+    if npk is not None:
+        npk_norm = npk / 120.0
+        npk_factor = 0.7 + 0.3 * min(2.0, max(0.5, npk_norm))
+
+    riego_factor = 1.0
+    if riego is not None:
+        riego_norm = riego / 75.0
+        riego_factor = 0.75 + 0.25 * min(1.5, max(0.5, riego_norm))
+
+    return npk_factor, riego_factor
+
+
+def _detect_disease_risks(months_projected: list[dict]) -> list[dict]:
+    alerts = []
+    consecutive_high_hum = 0
+    fungal_triggered = False
+
+    for i, m in enumerate(months_projected):
+        hum = m.get("humedad", 0)
+        prec = m.get("precipitacion", 0)
+
+        is_high_hum = hum > 85
+        is_rainy = prec > 100
+
+        if is_high_hum and is_rainy:
+            consecutive_high_hum += 1
+        else:
+            consecutive_high_hum = 0
+
+        if consecutive_high_hum >= 1 and not fungal_triggered:
+            fungal_triggered = True
+            # Prioritaria: Roya del Café por ser cultivo estrella del Caribe colombiano
+            cultivos_cultivados = [c["cultivo"] for c in m.get("cultivos_recomendados", [])]
+            if "Cafe" in cultivos_cultivados or any("cafe" in c.lower() for c in cultivos_cultivados):
+                alerts.append({
+                    "tipo": "fitosanitario",
+                    "severidad": "critico",
+                    "mensaje": "Riesgo alto de Roya del Cafe: humedad >85% y lluvias persistentes. Aplicar fungicida preventivo a base de cobre.",
+                    "cultivo_afectado": "Cafe",
+                    "mes": m.get("month_num"),
+                    "enfermedad": "Roya del Cafe (Hemileia vastatrix)",
+                })
+            else:
+                alerts.append({
+                    "tipo": "fitosanitario",
+                    "severidad": "alto",
+                    "mensaje": "Riesgo de Pudricion del Cogollo: humedad >85% y lluvias constantes favorecen Phytophthora. Monitorear drenaje y aplicar fungicida si hay sintomas.",
+                    "cultivo_afectado": None,
+                    "mes": m.get("month_num"),
+                    "enfermedad": "Pudricion del Cogollo (Phytophthora spp.)",
+                })
+
+        # Riesgo de estres hidrico
+        if hum < 50:
+            alerts.append({
+                "tipo": "estres_hidrico",
+                "severidad": "alto" if hum < 40 else "moderado",
+                "mensaje": f"Humedad critica proyectada ({hum}%) en {m.get('month', '')}. Programar riego suplementario.",
+                "cultivo_afectado": None,
+                "mes": m.get("month_num"),
+                "enfermedad": None,
+            })
+
+        # Riesgo de estres termico (temperatura >35°C = Escenario Nino)
+        temp = m.get("temperatura", 0)
+        if temp > 35:
+            alerts.append({
+                "tipo": "estres_termico",
+                "severidad": "critico",
+                "mensaje": f"Temperatura extrema proyectada ({temp}°C) en {m.get('month', '')}. Riesgo de aborto floral. Evaluar sombra temporal o riego por microaspersion.",
+                "cultivo_afectado": None,
+                "mes": m.get("month_num"),
+                "enfermedad": None,
+            })
+
+    return alerts
+
+
+async def _find_optimal_window(lat: float, lng: float, start_month: int, n_months: int,
+                               climatology: dict, temp_anomaly: float, prec_anomaly: float,
+                               hum_anomaly: float) -> dict | None:
+    now = datetime.now(timezone.utc)
+    window_size = 7
+    best_score = float("inf")
+    best_start = None
+    best_end = None
+
+    total_days = 0
+    if n_months >= 1:
+        first_date = datetime(now.year, start_month, 1)
+        if start_month <= now.month:
+            first_date = datetime(now.year + 1 if start_month <= now.month else now.year, start_month, 1)
+        last_date = first_date + relativedelta(months=n_months)
+        total_days = (last_date - first_date).days
+
+    step = 3
+    for day_offset in range(0, max(1, total_days - window_size), step):
+        window_start = first_date + relativedelta(days=day_offset)
+        window_end = window_start + relativedelta(days=window_size)
+        risk_score = 0.0
+        risk_reasons = []
+
+        for d in range(window_size):
+            day = window_start + relativedelta(days=d)
+            m = day.month
+
+            # Proyectar condiciones para ese dia usando el mismo decay
+            month_idx = (m - start_month) % 12
+            if month_idx < 0:
+                month_idx += 12
+            if month_idx >= n_months:
+                continue
+
+            decay = math.exp(-DECAY_ALPHA * month_idx)
+            proj_temp = climatology.get("T2M", {}).get(m, 28.5) + temp_anomaly * decay
+            proj_hum = climatology.get("RH2M", {}).get(m, 75) + hum_anomaly * decay
+
+            if proj_temp > 35:
+                risk_score += 5.0
+                risk_reasons.append("temp_extrema(>35°C)")
+            elif proj_temp > 33:
+                risk_score += 2.0
+
+            if proj_hum < 50:
+                risk_score += 3.0
+                risk_reasons.append("humedad_baja(<50%)")
+            elif proj_hum < 60:
+                risk_score += 1.0
+
+        if risk_score < best_score:
+            best_score = risk_score
+            best_start = window_start
+            best_end = window_end
+
+    if best_start is None:
+        return None
+
+    confianza = max(10, min(100, 100 - best_score * 5))
+    return {
+        "ventana_inicio": best_start.strftime("%d de %B"),
+        "ventana_fin": best_end.strftime("%d de %B"),
+        "confianza": round(confianza, 1),
+        "justificacion": (
+            f"Ventana de {window_size} dias con menor riesgo acumulado de eventos extremos "
+            f"(score de riesgo: {best_score:.1f})"
+        ),
+        "riesgo_minimizado": list(set(["Temperatura >35°C", "Humedad <50%"])) if best_score > 0 else [],
+    }
+
+
+async def project_window(
+    lat: float,
+    lng: float,
+    start_month: int | None = None,
+    n_months: int = 3,
+    ph_suelo: float = 6.5,
+    materia_organica: float = 3.0,
+    textura_suelo: str = "Franco",
+    tipo_suelo: str = "Franco-Arcilloso",
+    npk_override: float | None = None,
+    riego_override: float | None = None,
+) -> dict:
     from app.ml.inference import predict_crop_recommendations
 
     nasa_data = await fetch_nasa_climatology(lat, lng)
@@ -56,6 +233,10 @@ async def project_6_months(lat: float, lng: float, ph_suelo: float = 6.5,
 
     now = datetime.now(timezone.utc)
     current_month = now.month
+
+    if start_month is None:
+        start_month = (current_month % 12) + 1
+
     current_temp = current["temperatura"]
     current_hum = current["humedad"]
     current_prec = current["precipitacion"]
@@ -68,39 +249,44 @@ async def project_6_months(lat: float, lng: float, ph_suelo: float = 6.5,
     prec_anomaly = current_prec - hist_prec if hist_prec else 0
     hum_anomaly = current_hum - hist_hum if hist_hum else 0
 
+    npk_factor, riego_factor = _compute_npk_riego_factors(npk_override, riego_override)
+
     months = []
     best_score = 0
     best_month = None
     best_crop = None
     metodo_usado = "heuristico"
 
-    mes_labels = {
-        1: "Enero", 2: "Febrero", 3: "Marzo", 4: "Abril",
-        5: "Mayo", 6: "Junio", 7: "Julio", 8: "Agosto",
-        9: "Septiembre", 10: "Octubre", 11: "Noviembre", 12: "Diciembre",
-    }
-
-    for i in range(6):
+    for i in range(n_months):
         future = now + relativedelta(months=i + 1)
-        m = future.month
+        effective_month = ((start_month - 1 + i) % 12) + 1
         y = future.year
 
-        proj_temp = climatology.get("T2M", {}).get(m, 28.5) + temp_anomaly * (0.8 ** (i + 1))
-        proj_prec = climatology.get("PRECTOTCORR", {}).get(m, 80) + prec_anomaly * (0.7 ** (i + 1))
-        proj_hum = climatology.get("RH2M", {}).get(m, 75) + hum_anomaly * (0.8 ** (i + 1))
-        proj_rad = climatology.get("ALLSKY_SFC_SW_DWN", {}).get(m, 5.0)
+        decay = math.exp(-DECAY_ALPHA * i)
 
-        proj_prec = max(0, proj_prec)
-        proj_hum = min(98, max(30, proj_hum))
+        proj_temp = climatology.get("T2M", {}).get(effective_month, 28.5) + temp_anomaly * decay
+        proj_prec = climatology.get("PRECTOTCORR", {}).get(effective_month, 80) + prec_anomaly * decay
+        proj_hum = climatology.get("RH2M", {}).get(effective_month, 75) + hum_anomaly * decay
+        proj_rad = climatology.get("ALLSKY_SFC_SW_DWN", {}).get(effective_month, 5.0)
 
-        ndvi = _ndvi_estimate(m, 0.42, proj_prec)
+        # Aplicar factores de NPK y riego
+        proj_hum = min(98, max(30, proj_hum * riego_factor))
+        proj_prec = max(0, proj_prec * riego_factor)
+
+        ndvi = _ndvi_estimate(effective_month, 0.42, proj_prec)
+
+        # NPK afecta NDVI (mas fertilizacion → mas vigor)
+        ndvi = min(0.95, ndvi * npk_factor)
+
+        # NPK afecta la materia organica efectiva
+        mo_effective = materia_organica * npk_factor
 
         scores, metodo = predict_crop_recommendations(
             temperatura=proj_temp,
             humedad=proj_hum,
             precipitacion=proj_prec,
             ph_suelo=ph_suelo,
-            materia_organica=materia_organica,
+            materia_organica=mo_effective,
             ndvi=ndvi,
             textura_suelo=textura_suelo,
             tipo_suelo=tipo_suelo,
@@ -108,16 +294,24 @@ async def project_6_months(lat: float, lng: float, ph_suelo: float = 6.5,
         metodo_usado = metodo
 
         month_entry = {
-            "month": mes_labels.get(m, "Desconocido"),
+            "month": MES_NOMBRES.get(effective_month, "Desconocido"),
             "year": y,
-            "month_num": m,
+            "month_num": effective_month,
             "temperatura": round(proj_temp, 1),
             "precipitacion": round(proj_prec, 1),
             "humedad": round(proj_hum, 1),
             "ndvi_estimado": ndvi,
             "radiacion_solar": round(proj_rad, 1) if proj_rad else None,
             "cultivos_recomendados": [
-                {"cultivo": s["cultivo"], "score": s["score"], "riesgo": s["riesgo"], "emoji": s["emoji"], "metodo": s.get("metodo", "heuristico"), "probabilidad": s.get("probabilidad")}
+                {
+                    "cultivo": s["cultivo"],
+                    "score": s["score"],
+                    "riesgo": s["riesgo"],
+                    "emoji": s["emoji"],
+                    "metodo": s.get("metodo", "heuristico"),
+                    "probabilidad": s.get("probabilidad"),
+                    "factor_weights": s.get("factor_weights", []),
+                }
                 for s in scores
             ],
         }
@@ -125,13 +319,29 @@ async def project_6_months(lat: float, lng: float, ph_suelo: float = 6.5,
 
         if scores and scores[0]["score"] > best_score:
             best_score = scores[0]["score"]
-            best_month = mes_labels.get(m)
+            best_month = MES_NOMBRES.get(effective_month)
             best_crop = scores[0]["cultivo"]
+
+    alertas = _detect_disease_risks(months)
+
+    best_window = await _find_optimal_window(
+        lat=lat, lng=lng, start_month=start_month, n_months=n_months,
+        climatology=climatology, temp_anomaly=temp_anomaly,
+        prec_anomaly=prec_anomaly, hum_anomaly=hum_anomaly,
+    )
+
+    fuente = (
+        f"NASA POWER + OpenMeteo ({metodo_usado})"
+        if nasa_data
+        else f"Datos historicos del Caribe + OpenMeteo ({metodo_usado})"
+    )
 
     return {
         "ubicacion": {"lat": lat, "lng": lng},
         "meses": months,
         "mejor_mes": best_month,
         "mejor_cultivo": best_crop,
-        "fuente": f"NASA POWER + OpenMeteo ({metodo_usado})" if nasa_data else f"Datos historicos del Caribe + OpenMeteo ({metodo_usado})",
+        "fuente": fuente,
+        "alertas_globales": alertas,
+        "best_window": best_window,
     }

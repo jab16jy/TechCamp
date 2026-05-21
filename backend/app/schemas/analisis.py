@@ -66,6 +66,21 @@ class SoilGridsResponse(BaseModel):
     fuente: str = "ISRIC SoilGrids v2.0"
 
 
+class AnalysisDetailResponse(BaseModel):
+    id: str
+    tipo: str
+    lat: float
+    lng: float
+    cultivo_recomendado: Optional[str] = None
+    score: Optional[int] = None
+    datos_formulario: dict = {}
+    resultado_completo: dict = {}
+    created_at: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
 class MunicipioResponse(BaseModel):
     id: int
     nombre: str

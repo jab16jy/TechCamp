@@ -1,5 +1,8 @@
 import logging
-from fastapi import APIRouter, Depends
+from uuid import UUID
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import get_db
@@ -77,3 +80,46 @@ async def analyze_location(
         ubicacion={"lat": body.lat, "lng": body.lng},
         es_mock=es_mock,
     )
+
+
+from sqlalchemy import cast, String
+import uuid
+
+analysis_router = APIRouter(prefix="/analysis", tags=["analisis"])
+
+
+@analysis_router.get("/{id}")
+async def get_analysis_by_id(id: str, db: AsyncSession = Depends(get_db)):
+    query = select(Analisis)
+    if len(id) == 8:
+        query = query.where(cast(Analisis.id, String).like(f"{id.lower()}%"))
+    else:
+        try:
+            uid = uuid.UUID(id)
+            query = query.where(Analisis.id == uid)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="ID de analisis invalido")
+
+    result = await db.execute(query)
+    ana = result.scalars().first()
+    if not ana:
+        raise HTTPException(status_code=404, detail="Analisis no encontrado")
+
+    datos = ana.datos_formulario or {}
+    return {
+        "id": str(ana.id)[:8].upper(),
+        "lat": ana.lat,
+        "lng": ana.lng,
+        "municipio": datos.get("municipio", ""),
+        "departamento": datos.get("departamento", ""),
+        "tipo_suelo": datos.get("tipo_suelo") or datos.get("textura_suelo") or "",
+        "ph_suelo": datos.get("ph_suelo") or datos.get("ph"),
+        "materia_organica": datos.get("materia_organica"),
+        "textura_suelo": datos.get("textura_suelo"),
+        "mes_siembra": datos.get("mes_siembra"),
+        "cultivo": ana.cultivo_recomendado,
+        "score": ana.score,
+        "tipo": ana.tipo,
+        "fecha": ana.created_at.isoformat() if ana.created_at else "",
+    }
+

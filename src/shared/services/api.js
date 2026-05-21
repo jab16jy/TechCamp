@@ -578,6 +578,48 @@ export const getHistorial = async () => {
   }
 };
 
+/** Obtener detalles de un análisis previo */
+export const getAnalysis = async (id) => {
+  try {
+    const { data } = await apiClient.get(`/analysis/${id}`);
+    return data;
+  } catch {
+    const localHistorialStr = localStorage.getItem("agrocaribe_historial");
+    const localHistorial = localHistorialStr
+      ? JSON.parse(localHistorialStr)
+      : [];
+    const allHistorial = [...localHistorial, ...(MOCK_DATA.historial || [])];
+    const record = allHistorial.find((item) => item.id === id);
+    if (record) {
+      const fallbackMonth = record.fecha
+        ? new Date(record.fecha).toLocaleDateString("es-CO", {
+            month: "long",
+          })
+        : "Mayo";
+
+      return {
+        id: record.id,
+        lat: record.coordenadas?.lat ?? record.lat ?? 10.9685,
+        lng: record.coordenadas?.lng ?? record.lng ?? -74.7813,
+        municipio: record.municipio || "Barranquilla",
+        departamento: record.departamento || "Atlántico",
+        tipo_suelo: record.tipo_suelo || record.textura_suelo || "Franco",
+        ph_suelo: record.ph_suelo ?? record.ph ?? 6.8,
+        materia_organica: record.materia_organica ?? 2.2,
+        textura_suelo: record.textura_suelo ?? "Franco",
+        mes_siembra: record.mes_siembra ?? fallbackMonth,
+        cultivo:
+          record.cultivo ||
+          record.cultivo_top ||
+          record.mejor_cultivo ||
+          "Maíz",
+      };
+    }
+    return null;
+  }
+};
+
+
 /** Iniciar sesion con Supabase Auth */
 export const login = async (email, password) => {
   const { data } = await apiClient.post("/auth/login", { email, password });
@@ -663,10 +705,29 @@ export const getSoilData = async (lat, lng) => {
   }
 };
 
-/** Obtener prediccion climatica a 6 meses para una ubicacion */
-export const getPrediccion = async (lat, lng) => {
+/** Obtener prediccion climatica para una ubicacion */
+export const getPrediccion = async (
+  lat,
+  lng,
+  analysisId = null,
+  months = 3,
+  npk = null,
+  riego = null,
+) => {
   try {
-    const { data } = await apiClient.post("/predict", { lat, lng });
+    const payload = {
+      analysis_id: analysisId,
+      meses: months,
+      npk,
+      riego,
+    };
+
+    if (lat != null && lng != null) {
+      payload.lat = lat;
+      payload.lng = lng;
+    }
+
+    const { data } = await apiClient.post("/predict", payload);
     return data;
   } catch {
     const latNum = Number(lat);
@@ -681,7 +742,7 @@ export const getPrediccion = async (lat, lng) => {
     );
     const now = new Date();
 
-    const meses = Array.from({ length: 6 }, (_, index) => {
+    const meses = Array.from({ length: months }, (_, index) => {
       const date = new Date(now.getFullYear(), now.getMonth() + index + 1, 1);
       const seasonalRainFactor =
         0.85 + (Math.sin(((date.getMonth() + 1) / 12) * Math.PI * 2) + 1) * 0.2;
