@@ -8,6 +8,38 @@ tags: [troubleshooting, errores, soluciones, roadmap]
 
 ## Problemas Comunes
 
+### IA Predictiva: dropdown vacio o no deja seleccionar
+- **Causa 1:** Backend devuelve `[]` y no se mergea con MOCK_DATA
+- **Solucion:** Verificar que `getHistorial()` en `api.js` tenga el merge con `MOCK_DATA.historial`
+- **Causa 2:** Popover tapado por el `<div class="ia-empty">`
+- **Solucion:** Verificar que `.ia-input-card` tenga `position: relative; z-index: 10;` en CSS
+
+### IA Predictiva: "Generar Proyeccion" deshabilitado
+- **Causa:** `analysisId` es null (no se ha seleccionado ningun analisis)
+- **Solucion:** Seleccionar un item del dropdown historial primero
+- **Nota:** El boton requiere `analysisId` para habilitarse
+
+### IA Predictiva: loading infinito al seleccionar historial
+- **Causa:** `getAnalysis(id)` falla para IDs no-UUID (ej. "C-0421")
+- **Solucion:** `handleSelectAnalysis` debe tener fallback local al historial combinado
+
+### Docker: BD no tiene tablas o columnas faltantes
+- **Causa:** Migraciones de Alembic no ejecutadas o volumen corrupto
+- **Solucion:** `docker compose exec backend alembic upgrade head`
+- Si persiste: `docker compose down -v && docker compose up -d && docker compose exec backend alembic upgrade head`
+
+### Docker: "Cannot drop spatial_ref_sys" en migracion
+- **Causa:** Alembic genero `op.drop_table('spatial_ref_sys')` que es parte de PostGIS
+- **Solucion:** Eliminar esa linea de la migracion generada, es parte de la extension
+
+### Docker: backend no arranca por modulo faltante
+- **Causa:** `requirements.txt` no tiene todas las dependencias (ej. `cachetools`)
+- **Solucion:** Agregar modulo faltante a `requirements.txt` y reconstruir
+
+### Backend: columna `municipios.geometry` no existe
+- **Causa:** Seed SQL creo la tabla sin la columna PostGIS
+- **Solucion:** `ALTER TABLE municipios ADD COLUMN IF NOT EXISTS geometry geometry(MultiPolygon, 4326);`
+
 ### Tailwind CSS no aplica
 - **Causa:** Servidor de desarrollo no detecto cambios o PostCSS fallo
 - **Solucion:** Reiniciar `npm run dev`, verificar `content` en `tailwind.config.js`, confirmar directivas `@tailwind` en `index.css`

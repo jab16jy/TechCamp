@@ -66,56 +66,54 @@ Rangos:
   < 0.2:  Suelo desnudo / agua
 ```
 
-## Guia QGIS para procesar Sentinel-2
+## Procesamiento real: QGIS + Sentinel-2
 
-### Paso 1: Descargar imagenes
-1. Ir a [Copernicus Browser](https://browser.dataspace.copernicus.eu/)
-2. Seleccionar Sentinel-2 L2A (reflectancia de superficie)
-3. Dibujar area de interes en el Caribe colombiano
-4. Filtrar por cobertura de nubes < 20%
-5. Descargar bandas B04 y B08
+Los datos actuales provienen de imagenes **Sentinel-2 L2A procesadas en QGIS** para 7 regiones del Caribe.
 
-### Paso 2: Calcular NDVI en QGIS
+Pipeline:
 ```
-Raster Calculator:
-("B08" - "B04") / ("B08" + "B04" + 0.0001)
-```
-
-### Paso 3: Generar puntos
-1. `Processing → Create Grid` (puntos cada 500m)
-2. `Sample Raster Values` sobre el NDVI
-3. Exportar tabla resultante
-
-### Paso 4: Exportar a CSV
-```csv
-lat,lng,ndvi,ndwi,calidad_suelo,cobertura_nube
-10.9685,-74.7813,0.62,0.18,Media-Alta,8
+Sentinel-2 L2A (Copernicus Browser)
+  → Descargar B04 + B08 (< 20% nubes)
+  → QGIS Raster Calc: NDVI = (B08 - B04) / (B08 + B04)
+  → Create Grid (puntos cada 500m)
+  → Sample Raster Values
+  → Exportar CSV por region (7 partes)
+  → import_ndvi_local.py → INSERT masivo en PostGIS
 ```
 
-### Paso 5: Insertar en Supabase
-```sql
-INSERT INTO indices_satelitales (lat, lng, ndvi, ndwi, calidad_suelo, cobertura_nube, ubicacion)
-VALUES (10.9685, -74.7813, 0.62, 0.18, 'Media-Alta', 8,
-  ST_SetSRID(ST_MakePoint(-74.7813, 10.9685), 4326));
-```
+## Script de importacion
+
+`backend/data/seeds/import_ndvi_local.py` procesa los 7 CSVs:
+
+| Region | Config (sample_every, ndvi_min) |
+|--------|:-------------------------------:|
+| Riohacha | cada 20 filas, NDVI > 0.15 |
+| Barranquilla | cada 10 filas, NDVI > 0.10 |
+| Santa Marta | cada 10 filas, NDVI > 0.10 |
+| Cartagena | cada 10 filas, NDVI > 0.10 |
+| Sincelejo | cada 10 filas, NDVI > 0.10 |
+| Monteria | cada 10 filas, NDVI > 0.10 |
+
+## Datos actuales en DB
+
+Actualmente hay **2,517,987 puntos NDVI reales** de Sentinel-2, importados desde CSVs de QGIS (7 regiones).
+
+| Region | Puntos NDVI | CSV original |
+|--------|:----------:|:------------:|
+| Riohacha | 162,696 | 678 MB |
+| Barranquilla | 670,717 | ~750 MB |
+| Santa Marta-A | 127,690 | ~750 MB |
+| Cartagena | 581,900 | ~750 MB |
+| Santa Marta-B | 81,499 | ~750 MB |
+| Sincelejo | 383,583 | ~750 MB |
+| Monteria | 509,902 | ~750 MB |
+| **Total** | **2,517,987** | **~5.2 GB** |
+
+Tamano real en BD: **587 MB** con indices GIST y btree.
 
 ## Version Avanzada (Futuro)
 
 Backend descarga Sentinel-2 via Copernicus Data Space API, calcula NDVI automaticamente y lo cachea en `indices_satelitales`. Requiere `rasterio` + `sentinelhub` + API key.
-
-## Datos actuales en DB
-
-Actualmente hay **18 puntos** de NDVI insertados manualmente con valores plausibles para la region Caribe. No son datos reales de Sentinel-2, sino valores ajustados a cada zona:
-
-| Zona | NDVI tipico | Caracteristica |
-|------|-------------|----------------|
-| Santa Marta | 0.71 | Alta vegetacion (Sierra Nevada) |
-| Monteria | 0.68 | Valle del Sinu, alta produccion |
-| Barranquilla | 0.42 | Urbano/secano |
-| Valledupar | 0.55 | Valle semiarido |
-| Sincelejo | 0.50 | Sabana |
-| Riohacha | 0.28 | Arido (La Guajira) |
-| Cartagena | 0.35 | Costero/urbano |
 
 ---
 

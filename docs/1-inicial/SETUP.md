@@ -26,13 +26,60 @@ cd backend
 pip install -r requirements.txt
 ```
 
+## Docker Compose (Recomendado)
+
+El proyecto usa Docker Compose para la BD PostgreSQL/PostGIS y el backend FastAPI.
+
+```bash
+# Iniciar todo (BD + Backend)
+docker compose up -d
+
+# Solo la BD
+docker compose up -d db
+
+# Ver logs
+docker compose logs -f backend
+
+# Reconstruir backend tras cambios
+docker compose up -d --build backend
+
+# Detener y eliminar volumen de BD (pierde datos)
+docker compose down -v
+```
+
+**BD local:** `localhost:5432`, usuario `agrocaribe`, password `agrocaribe_secret`, BD `agrocaribe`.
+**Backend:** `localhost:8000`, healthcheck en `/health`.
+
+## Migraciones (Alembic)
+
+Si la BD se crea desde cero, ejecutar las migraciones:
+
+```bash
+docker compose exec backend alembic upgrade head
+```
+
+Para generar una nueva migracion:
+
+```bash
+docker compose exec backend alembic revision --autogenerate -m "descripcion"
+```
+
+## Seeds
+
+Los seeds de municipios se ejecutan automaticamente al crear el contenedor DB por primera vez.
+Datos satelitales NDVI (2.5M puntos) requieren importacion manual:
+
+```bash
+docker compose exec backend python /app/data/seeds/import_ndvi_local.py
+```
+
 ## Variables de Entorno
 
-Crear `.env` en la raiz del proyecto (backend Docker) o `backend/.env` (local):
+Crear `.env` en la raiz del proyecto:
 
 | Variable | Descripcion | Default |
 |----------|-------------|---------|
-| `DATABASE_URL` | Conexion PostgreSQL (Supabase pooler) | — |
+| `DATABASE_URL` | Conexion PostgreSQL (Docker: `postgresql+asyncpg://agrocaribe:agrocaribe_secret@db:5432/agrocaribe`) | — |
 | `SUPABASE_URL` | URL del proyecto Supabase | — |
 | `SUPABASE_ANON_KEY` | Anon key de Supabase | — |
 | `VITE_API_URL` | URL del backend para el frontend | `http://localhost:8000` |

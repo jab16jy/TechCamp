@@ -33,6 +33,10 @@ GET /reports/alerts          →   api/reports.py          →   PostgreSQL (sen
 POST /reports/compare        →   api/reports.py          →   PostgreSQL (analisis)
 POST /reports/export         →   api/reports.py          →   PostgreSQL (analisis)
 GET /dashboard/summary       →   api/dashboard.py        →   PostgreSQL (analisis + sensores)
+GET /analysis/{id}           →   api/analisis.py         →   PostgreSQL (analisis detail)
+POST /predict                →   api/predict.py          →   NASA POWER + OpenMeteo
+POST /predict/optimal-day    →   api/predict.py          →   NASA POWER + OpenMeteo
+GET /soil/data               →   api/soil.py             →   ISRIC SoilGrids REST API
 ```
 
 ## Flujo de un analisis tipico
@@ -84,28 +88,47 @@ chat_service.process_chat_message()
 7. Retornar respuesta
 ```
 
-## Flujo IA Predictiva
+## Flujo IA Predictiva (Digital Twin 90D)
 
 ```
 Usuario va a IA Predictiva
   ↓
-useIAPredictiva.js detecta ultimas coordenadas del analisis
+useIAPredictiva.js carga historial (getHistorial → servidor + MOCK_DATA)
   ↓
-Usuario hace clic en "Generar Proyeccion"
+Usuario abre dropdown → selecciona un analisis del historico
   ↓
-POST /predict {"lat": 10.96, "lng": -74.78}
+handleSelectAnalysis(id):
+  1. GET /analysis/{id}  →  servidor (hereda coordenadas, cultivo, pH, MO, textura)
+  2. Si falla o ID no UUID → fallback a datos locales del historial combinado
+  3. Muestra tarjeta "Datos heredados" con variables agronomicas
   ↓
-prediction_service.project_6_months()
+Usuario ajusta NPK (fertilizacion) y Riego (sliders) en SimulatorPanel
   ↓
-1. fetch_nasa_climatology(lat, lng) → NASA POWER API (promedios mensuales historicos)
-2. fetch_current_climate(lat, lng) → OpenMeteo (clima actual)
-3. Calcular anomalia: current - historical mean
-4. Para cada mes (proximos 6):
-   a. Proyectar: historical_month + anomaly * decay_factor(0.8^i)
-   b. Calcular NDVI estimado desde precipitacion proyectada
-   c. Ejecutar CropClassifier
-5. Identificar mejor mes y mejor cultivo
-6. Retornar proyeccion
+Clic en "Generar Proyeccion"
+  ↓
+POST /predict {"lat", "lng", "analysis_id", "meses": 3, "npk_override", "riego_override"}
+  ↓
+prediction_service.project_window()
+  ↓
+1. fetch_nasa_climatology(lat, lng) → NASA POWER
+2. fetch_current_climate(lat, lng) → OpenMeteo
+3. Anomalia: current - historical mean
+4. Si analysis_id: resolver datos heredados (cultivo, pH, MO, textura)
+5. Para cada mes (proximos 3, ventana 90 dias):
+   a. Proyectar clima: historical_month + anomaly * decay_factor(exp(-0.3*i))
+   b. Aplicar NPK_override y riego_override como factores de ajuste
+   c. score_with_factors() → incorpora temp, humedad, precip, pH, MO, textura, NDVI, NPK, riego
+   d. Detectar riesgo de enfermedades (Roya si humedad > 80% y temp 20-25°C)
+6. Identificar mejor mes, mejor cultivo, ventana optima de siembra
+  ↓
+Response: meses[], factor_weights[], alertas_globales[], best_window{}
+  ↓
+Frontend renderiza:
+  - GrowthChart: curva biomasa vs estres (3 meses)
+  - FeatureChart: factores de influencia (barras)
+  - AIAlertsPanel: alertas (Roya, Pudricion)
+  - BestWindowCard: ventana optima de siembra
+  - Timeline 90 dias con cultivos recomendados mes a mes
 ```
 
 ## Pagina de Ajustes

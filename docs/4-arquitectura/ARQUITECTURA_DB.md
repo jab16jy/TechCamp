@@ -137,7 +137,51 @@ LIMIT 1;
 
 Las tablas `analisis.datos_formulario` y `analisis.resultado_completo` usan JSONB para flexibilidad: cada tipo de analisis (simple/advanced) tiene campos distintos. Esto evita columnas NULL y permite extender el formulario sin migraciones.
 
+## Seed Data Inicial
+
+### Municipios
+Los 8 municipios del Caribe colombiano se insertan via seed SQL automatico en Docker (`backend/data/seeds/01_municipios.sql`).
+
+### Sensores IoT (6 nodos)
+
+| Nodo | Ubicacion | Estado |
+|------|-----------|:------:|
+| SN-MTR-001 | Monteria Centro | ✅ ok |
+| SN-BAQ-002 | Barranquilla Puerto | ✅ ok |
+| SN-SM-003 | Santa Marta Cerro | ⚠️ warn |
+| SN-VDP-004 | Valledupar Valle | 🔴 critical |
+| SN-CTG-005 | Cartagena Bocagrande | ✅ ok |
+| SN-SNJ-006 | Sincelejo Norte | ⚠️ warn |
+
+Cada sensor tiene 21 lecturas historicas (3 diarias × 7 dias) en `lecturas_sensores`.
+
+### Parcelas de prueba
+
+| Nombre | Area | Ubicacion |
+|--------|:----:|-----------|
+| El Trebol | 12.5 ha | Monteria |
+| La Esperanza | 8.3 ha | Barranquilla |
+| El Porvenir | 20.0 ha | Cartagena |
+
+### Analisis historicos
+5 registros de prueba con cultivos (Maiz, Yuca, Platano, Algodon) y tipos (analisis, simple, advanced).
+
+### Datos satelitales NDVI
+**2,517,987 puntos** NDVI importados desde CSVs procesados en QGIS (7 regiones del Caribe).
+
+## Migraciones (Alembic)
+
+Las migraciones de Alembic estan en `backend/data/migrations/`. Para ejecutar:
+
+```bash
+docker compose exec backend alembic upgrade head
+```
+
+`env.py` lee `DATABASE_URL` del entorno (apunta a `db:5432` dentro de Docker).
+
 ## RLS (Row Level Security)
+
+> **Nota:** La BD local no tiene RLS activado. Las politicas existen solo en Supabase.
 
 Actualmente todas las politicas RLS permiten SELECT sin restricciones (`USING (true)`) para que el backend pueda leer datos sin autenticacion. Esto es para desarrollo/demo. En produccion, las politicas originales deben restaurarse:
 
@@ -153,16 +197,16 @@ conversaciones: FOR SELECT USING (usuario_id = auth.uid())
 mensajes: via conversacion_id IN (SELECT id FROM conversaciones WHERE usuario_id = auth.uid())
 ```
 
-## Conexion
+## Conexion (Local Docker)
 
 | Propiedad | Valor |
 |-----------|-------|
-| Host | aws-1-us-west-1.pooler.supabase.com |
-| Puerto | 6543 |
-| Base de datos | postgres |
-| Usuario | postgres.hpmjbgqjwopxlgurczna |
-| SSL | Requerido (pooler transaction mode) |
-| Prepared stmts | DESHABILITADOS (`prepared_statement_cache_size=0`) |
+| Host | `localhost` (o `db` dentro de Docker) |
+| Puerto | 5432 |
+| Base de datos | agrocaribe |
+| Usuario | agrocaribe |
+| Password | agrocaribe_secret |
+| Volumen | `pgdata` (Docker volume persistente) |
 
 ---
 
