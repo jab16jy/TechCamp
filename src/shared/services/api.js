@@ -572,7 +572,17 @@ export const getIndicadoresSatelite = async (lat, lng) => {
 export const getHistorial = async () => {
   try {
     const { data } = await apiClient.get("/history");
-    return data;
+    if (Array.isArray(data)) {
+      const seen = new Set(data.map(d => d.id));
+      const merged = [...data];
+      for (const mock of MOCK_DATA.historial) {
+        if (!seen.has(mock.id)) {
+          merged.push(mock);
+        }
+      }
+      return merged;
+    }
+    return MOCK_DATA.historial;
   } catch {
     return MOCK_DATA.historial;
   }
@@ -584,38 +594,43 @@ export const getAnalysis = async (id) => {
     const { data } = await apiClient.get(`/analysis/${id}`);
     return data;
   } catch {
-    const localHistorialStr = localStorage.getItem("agrocaribe_historial");
-    const localHistorial = localHistorialStr
-      ? JSON.parse(localHistorialStr)
-      : [];
-    const allHistorial = [...localHistorial, ...(MOCK_DATA.historial || [])];
-    const record = allHistorial.find((item) => item.id === id);
-    if (record) {
-      const fallbackMonth = record.fecha
-        ? new Date(record.fecha).toLocaleDateString("es-CO", {
-            month: "long",
-          })
-        : "Mayo";
+    try {
+      const localHistorialStr = localStorage.getItem("agrocaribe_historial");
+      const localHistorial = localHistorialStr
+        ? JSON.parse(localHistorialStr)
+        : [];
+      const allHistorial = [...localHistorial, ...(MOCK_DATA.historial || [])];
+      const record = allHistorial.find((item) => item.id === id);
+      if (record) {
+        const fallbackMonth = record.fecha
+          ? new Date(record.fecha).toLocaleDateString("es-CO", {
+              month: "long",
+            })
+          : "Mayo";
 
-      return {
-        id: record.id,
-        lat: record.coordenadas?.lat ?? record.lat ?? 10.9685,
-        lng: record.coordenadas?.lng ?? record.lng ?? -74.7813,
-        municipio: record.municipio || "Barranquilla",
-        departamento: record.departamento || "Atlántico",
-        tipo_suelo: record.tipo_suelo || record.textura_suelo || "Franco",
-        ph_suelo: record.ph_suelo ?? record.ph ?? 6.8,
-        materia_organica: record.materia_organica ?? 2.2,
-        textura_suelo: record.textura_suelo ?? "Franco",
-        mes_siembra: record.mes_siembra ?? fallbackMonth,
-        cultivo:
-          record.cultivo ||
-          record.cultivo_top ||
-          record.mejor_cultivo ||
-          "Maíz",
-      };
+        return {
+          id: record.id,
+          lat: record.coordenadas?.lat ?? record.lat ?? 10.9685,
+          lng: record.coordenadas?.lng ?? record.lng ?? -74.7813,
+          municipio: record.municipio || "Barranquilla",
+          departamento: record.departamento || "Atlántico",
+          tipo_suelo: record.tipo_suelo || record.textura_suelo || "Franco",
+          ph_suelo: record.ph_suelo ?? record.ph ?? 6.8,
+          materia_organica: record.materia_organica ?? 2.2,
+          textura_suelo: record.textura_suelo ?? "Franco",
+          mes_siembra: record.mes_siembra ?? fallbackMonth,
+          cultivo:
+            record.cultivo ||
+            record.cultivo_top ||
+            record.mejor_cultivo ||
+            "Maíz",
+        };
+      }
+      return null;
+    } catch (mockErr) {
+      console.error('[getAnalysis] Error en mock fallback:', mockErr);
+      return null;
     }
-    return null;
   }
 };
 
@@ -718,8 +733,8 @@ export const getPrediccion = async (
     const payload = {
       analysis_id: analysisId,
       meses: months,
-      npk,
-      riego,
+      npk_override: npk,
+      riego_override: riego,
     };
 
     if (lat != null && lng != null) {
@@ -771,6 +786,25 @@ export const getPrediccion = async (
         ).toFixed(2),
       );
 
+      const dynamicRecs = getDynamicRecommendations(
+        muniName,
+        { ...climaLocal, temperatura, precipitacion, humedad },
+        ndviEstimado,
+      ).slice(0, 3);
+
+      // Enrich with factor_weights for XAI
+      const enrichedRecs = dynamicRecs.map((rec) => ({
+        ...rec,
+        factor_weights: [
+          { factor: 'Precipitacion', peso: 0.20, score_parcial: 0.9, porcentaje_impacto: 35 },
+          { factor: 'Temperatura', peso: 0.25, score_parcial: 0.85, porcentaje_impacto: 28 },
+          { factor: 'Humedad', peso: 0.15, score_parcial: 0.8, porcentaje_impacto: 18 },
+          { factor: 'pH del Suelo', peso: 0.15, score_parcial: 0.75, porcentaje_impacto: 12 },
+          { factor: 'Materia Organica', peso: 0.10, score_parcial: 0.7, porcentaje_impacto: 5 },
+          { factor: 'NDVI', peso: 0.05, score_parcial: 0.85, porcentaje_impacto: 2 },
+        ],
+      }));
+
       return {
         month: date
           .toLocaleDateString("es-CO", { month: "short" })
@@ -780,11 +814,7 @@ export const getPrediccion = async (
         precipitacion,
         humedad,
         ndvi_estimado: ndviEstimado,
-        cultivos_recomendados: getDynamicRecommendations(
-          muniName,
-          { ...climaLocal, temperatura, precipitacion, humedad },
-          ndviEstimado,
-        ).slice(0, 3),
+        cultivos_recomendados: enrichedRecs,
       };
     });
 
@@ -800,6 +830,51 @@ export const getPrediccion = async (
       return currentScore > bestScore ? current : best;
     }, meses[0]);
 
+    // Generate contextual alerts based on projected conditions
+    const alertasGlobales = [];
+    const maxHumMonth = meses.reduce((max, m) => (m.humedad > max.humedad ? m : max), meses[0]);
+    if (maxHumMonth.humedad > 85 && maxHumMonth.precipitacion > 100) {
+      alertasGlobales.push({
+        tipo: 'fitosanitario',
+        severidad: 'critico',
+        mensaje: `Riesgo alto de Roya del Cafe: humedad ${maxHumMonth.humedad}% y lluvias persistentes en ${maxHumMonth.month}. Aplicar fungicida preventivo.`,
+        cultivo_afectado: 'Cafe',
+        mes: maxHumMonth.month,
+        enfermedad: 'Roya del Cafe (Hemileia vastatrix)',
+      });
+    }
+    const minHumMonth = meses.reduce((min, m) => (m.humedad < min.humedad ? m : min), meses[0]);
+    if (minHumMonth.humedad < 50) {
+      alertasGlobales.push({
+        tipo: 'estres_hidrico',
+        severidad: minHumMonth.humedad < 40 ? 'critico' : 'alto',
+        mensaje: `Humedad critica proyectada (${minHumMonth.humedad}%) en ${minHumMonth.month}. Programar riego suplementario.`,
+        cultivo_afectado: null,
+        mes: minHumMonth.month,
+        enfermedad: null,
+      });
+    }
+    const maxTempMonth = meses.reduce((max, m) => (m.temperatura > max.temperatura ? m : max), meses[0]);
+    if (maxTempMonth.temperatura > 35) {
+      alertasGlobales.push({
+        tipo: 'estres_termico',
+        severidad: 'critico',
+        mensaje: `Temperatura extrema proyectada (${maxTempMonth.temperatura}°C) en ${maxTempMonth.month}. Riesgo de aborto floral.`,
+        cultivo_afectado: null,
+        mes: maxTempMonth.month,
+        enfermedad: null,
+      });
+    }
+
+    // Compute best window mock
+    const bestWindow = {
+      ventana_inicio: `${meses[0].month} 12`,
+      ventana_fin: `${meses[0].month} 18`,
+      confianza: 87,
+      justificacion: 'Ventana de 7 dias con menor riesgo acumulado de eventos extremos',
+      riesgo_minimizado: ['Temperatura >35°C', 'Humedad <50%'],
+    };
+
     return {
       mejor_mes: bestMonth.month,
       mejor_cultivo: recomendacionesBase[0]?.cultivo || "Yuca",
@@ -807,6 +882,8 @@ export const getPrediccion = async (
       ubicacion: { lat: latNum, lng: lngNum, municipio: muniName },
       meses,
       es_mock: true,
+      alertas_globales: alertasGlobales,
+      best_window: bestWindow,
     };
   }
 };

@@ -20,10 +20,15 @@ import {
   FlaskConical,
   Leaf,
   Info,
+  Shield,
 } from "lucide-react";
 import ResearcherLayout from "@shared/layout/ResearcherLayout/ResearcherLayout";
 import useAuthGuard from "@shared/hooks/useAuthGuard";
 import useIAPredictiva from "@features/predictions/hooks/useIAPredictiva";
+import SimulatorPanel from "@features/predictions/components/SimulatorPanel/SimulatorPanel";
+import GrowthChart from "@features/predictions/components/GrowthChart/GrowthChart";
+import FeatureChart from "@features/predictions/components/FeatureChart/FeatureChart";
+import AIAlertsPanel from "@features/predictions/components/AIAlertsPanel/AIAlertsPanel";
 import "./IAPredictiva.css";
 
 const TIPO_CONFIG = {
@@ -149,6 +154,15 @@ const IAPredictiva = () => {
     selectedRecord,
     analysisId,
     inheritedData,
+    npk,
+    riego,
+    handleNPKChange,
+    handleRiegoChange,
+    handleResetSim,
+    bestWindow,
+    alerts,
+    factorWeights,
+    stale,
   } = useIAPredictiva();
 
   const [isOpen, setIsOpen] = useState(false);
@@ -472,6 +486,64 @@ const IAPredictiva = () => {
                       {prediction.fuente}
                     </span>
                   </div>
+                </div>
+              </div>
+
+              {bestWindow && (
+                <div className="ia-best-window-card">
+                  <Shield size={18} className="ia-bw-icon" />
+                  <div className="ia-bw-content">
+                    <span className="ia-bw-label">Ventana optima de siembra</span>
+                    <span className="ia-bw-value">
+                      {bestWindow.ventana_inicio} — {bestWindow.ventana_fin}
+                    </span>
+                    <span className="ia-bw-confidence">
+                      Confianza: {bestWindow.confianza}%
+                    </span>
+                    {bestWindow.justificacion && (
+                      <span className="ia-bw-desc">{bestWindow.justificacion}</span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div className="ia-simulation-grid">
+                <div className="ia-simulation-left">
+                  {stale && (
+                    <div className="ia-stale-badge">
+                      <Info size={12} />
+                      <span>Valores de simulacion cambiados. Recalcula para ver resultados actualizados.</span>
+                    </div>
+                  )}
+                  <SimulatorPanel
+                    riego={riego}
+                    npk={npk}
+                    simulando={loading}
+                    simResult={!!prediction}
+                    onRiegoChange={handleRiegoChange}
+                    onNpkChange={handleNPKChange}
+                    onSimular={handleGenerate}
+                    onClearSim={handleResetSim}
+                    fechaSiembra=""
+                    variedad="Variedad Tradicional"
+                    onFechaChange={() => {}}
+                    onVariedadChange={() => {}}
+                    onCompareToggle={() => {}}
+                    compare={false}
+                  />
+                  {factorWeights.length > 0 && (
+                    <div className="ia-card ia-factor-card">
+                      <div className="ia-card-header">
+                        <Target size={16} className="ia-card-icon" />
+                        <h2 className="ia-card-title">Factores de Influencia</h2>
+                      </div>
+                      <FeatureChart features={factorWeights} />
+                    </div>
+                  )}
+                </div>
+                <div className="ia-simulation-right">
+                  <GrowthChart prediction={prediction} riego={riego} npk={npk} />
+                  <AIAlertsPanel alerts={alerts} />
                 </div>
               </div>
 

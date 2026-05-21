@@ -41,18 +41,22 @@ async def _resolve_analysis(
     try:
         uid = UUID(analysis_id)
     except (ValueError, TypeError):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"analysis_id invalido: {analysis_id}",
-        )
+        logger.warning(f"analysis_id no es un UUID valido: {analysis_id}, usando defaults")
+        return None
+    except Exception:
+        logger.warning(f"Error al consultar analysis_id {analysis_id}, usando defaults")
+        return None
 
-    result = await db.execute(select(Analisis).where(Analisis.id == uid))
-    ana = result.scalar_one_or_none()
+    try:
+        result = await db.execute(select(Analisis).where(Analisis.id == uid))
+        ana = result.scalar_one_or_none()
+    except Exception:
+        logger.warning(f"Error de DB al consultar analysis_id {analysis_id}, usando defaults")
+        return None
+
     if ana is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Analisis con id {analysis_id} no encontrado",
-        )
+        logger.info(f"analysis_id {analysis_id} no encontrado en DB, usando defaults")
+        return None
 
     formulario = ana.datos_formulario or {}
     return {

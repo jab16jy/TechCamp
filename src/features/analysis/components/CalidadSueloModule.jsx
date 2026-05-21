@@ -1,4 +1,5 @@
-import React from 'react';
+/* eslint-disable react/prop-types */
+import React, { useEffect } from 'react';
 import {
   FlaskConical,
   History,
@@ -8,15 +9,71 @@ import {
   MapPin,
   ArrowLeft,
   ChevronRight,
+  Sprout,
+  Waves,
 } from 'lucide-react';
+import { CircleMarker, MapContainer, TileLayer, useMap } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
 import { useCalidadSuelo } from '@features/analysis/hooks/useCalidadSuelo';
 import styles from './CalidadSueloModule.module.css';
+
+const MapViewport = ({ center }) => {
+  const map = useMap();
+
+  useEffect(() => {
+    if (center?.lat != null && center?.lng != null) {
+      map.flyTo([center.lat, center.lng], 11, { duration: 0.8 });
+    }
+  }, [center, map]);
+
+  return null;
+};
+
+const LocationPreviewMap = ({ coords, municipality }) => {
+  if (!coords) return null;
+
+  return (
+    <div className={styles.mapCard}>
+      <div className={styles.mapHeader}>
+        <span className={styles.mapEyebrow}>Mapa de referencia</span>
+        <p>{municipality || 'Ubicacion seleccionada'}</p>
+      </div>
+      <div className={styles.mapFrame}>
+        <MapContainer
+          center={[coords.lat, coords.lng]}
+          zoom={11}
+          scrollWheelZoom={false}
+          zoomControl={false}
+          className={styles.mapCanvas}
+        >
+          <TileLayer
+            attribution='&copy; OpenStreetMap contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          <MapViewport center={coords} />
+          <CircleMarker
+            center={[coords.lat, coords.lng]}
+            radius={10}
+            pathOptions={{
+              color: '#0f5238',
+              weight: 2,
+              fillColor: '#7bd389',
+              fillOpacity: 0.92,
+            }}
+          />
+        </MapContainer>
+      </div>
+    </div>
+  );
+};
 
 const CalidadSueloModule = ({ onBack }) => {
   const {
     allRecords,
     selectedId,
     selectedRecord,
+    selectedCoords,
+    selectedMunicipio,
     selectedLabel,
     sueloParams,
     cargandoAnalisis,
@@ -30,10 +87,10 @@ const CalidadSueloModule = ({ onBack }) => {
       <div className={styles.breadcrumbRow}>
         <button className={styles.backButton} onClick={onBack}>
           <ArrowLeft size={14} />
-          Volver al selector de módulos
+          Volver al selector de modulos
         </button>
         <nav className={styles.breadcrumb}>
-          <span>Módulos</span>
+          <span>Modulos</span>
           <ChevronRight size={12} />
           <span className={styles.breadcrumbActive}>Calidad del Suelo</span>
         </nav>
@@ -46,8 +103,8 @@ const CalidadSueloModule = ({ onBack }) => {
               <History size={22} />
             </div>
             <div className={styles.historyContent}>
-              <h4>Seleccionar registro histórico de suelo</h4>
-              <p>Carga mediciones previas o inicia con datos nuevos.</p>
+              <h4>Seleccionar registro historico de suelo</h4>
+              <p>Al elegir una ubicacion se completan los datos con historial y SoilGrids.</p>
             </div>
             <div className={styles.historySelectWrap}>
               <select
@@ -73,8 +130,7 @@ const CalidadSueloModule = ({ onBack }) => {
                     : '';
                   return (
                     <option key={record.id} value={record.id}>
-                      {record.id} · {record.municipio || 'Sin municipio'} ·{' '}
-                      {fecha} · {tipo}
+                      {record.id} · {record.municipio || 'Sin municipio'} · {fecha} · {tipo}
                       {coords}
                     </option>
                   );
@@ -98,14 +154,14 @@ const CalidadSueloModule = ({ onBack }) => {
             <div className={styles.soilCardHeader}>
               <div className={styles.soilCardTitleRow}>
                 <FlaskConical size={22} className={styles.soilCardIcon} />
-                <h3>Parámetros del Suelo</h3>
+                <h3>Parametros del Suelo</h3>
               </div>
               <div className={styles.dataOrigin}>
                 <Info size={12} />
                 <span>
                   {selectedRecord
                     ? `Datos de: ${selectedLabel}`
-                    : 'Ingrese mediciones directas de laboratorio'}
+                    : 'Ingrese mediciones directas o cargue un historial'}
                 </span>
               </div>
             </div>
@@ -129,7 +185,7 @@ const CalidadSueloModule = ({ onBack }) => {
               </div>
               <div className={styles.fieldGroup}>
                 <label>
-                  Nitrógeno (N) <span className={styles.required}>*</span>
+                  Nitrogeno (N) <span className={styles.required}>*</span>
                 </label>
                 <input
                   type="number"
@@ -162,7 +218,7 @@ const CalidadSueloModule = ({ onBack }) => {
 
             <div className={styles.optionalRow}>
               <div className={styles.fieldGroup}>
-                <label className={styles.optionalLabel}>Fósforo (P) — Opcional</label>
+                <label className={styles.optionalLabel}>Fosforo (P) — Opcional</label>
                 <input
                   type="number"
                   className={styles.optionalInput}
@@ -183,13 +239,38 @@ const CalidadSueloModule = ({ onBack }) => {
                   min="0"
                 />
               </div>
+              <div className={styles.fieldGroup}>
+                <label className={styles.optionalLabel}>Materia Organica — SoilGrids</label>
+                <input
+                  type="number"
+                  className={styles.optionalInput}
+                  placeholder="%"
+                  value={sueloParams.materia_organica}
+                  onChange={(e) => handleParamChange('materia_organica', e.target.value)}
+                  step="0.1"
+                  min="0"
+                />
+              </div>
+              <div className={styles.fieldGroup}>
+                <label className={styles.optionalLabel}>Textura / Tipo de suelo</label>
+                <input
+                  type="text"
+                  className={styles.optionalInput}
+                  placeholder="Franco, Arcilloso..."
+                  value={sueloParams.textura_suelo}
+                  onChange={(e) => {
+                    handleParamChange('textura_suelo', e.target.value);
+                    handleParamChange('tipo_suelo', e.target.value);
+                  }}
+                />
+              </div>
             </div>
           </section>
 
           <div className={styles.submitCta}>
             <p className={styles.submitDesc}>
-              El motor de IA procesará estos parámetros para generar recomendaciones
-              de fertilización, enmiendas y manejo del suelo.
+              El motor de IA procesara estos parametros para generar recomendaciones
+              de fertilizacion, enmiendas y manejo del suelo.
             </p>
             <button
               type="submit"
@@ -222,45 +303,78 @@ const CalidadSueloModule = ({ onBack }) => {
                 <>
                   <div className={styles.locationBox}>
                     <p className={styles.locationTitle}>
-                      {selectedRecord.municipio || 'Ubicación'}
+                      {selectedRecord.municipio || selectedMunicipio || 'Ubicacion'}
                     </p>
                     <p className={styles.locationMeta}>
-                      {[
-                        selectedRecord.municipio,
-                        selectedRecord.departamento,
-                      ]
+                      {[selectedRecord.municipio || selectedMunicipio, selectedRecord.departamento]
                         .filter(Boolean)
                         .join(', ')}
                     </p>
-                    {selectedRecord.coordenadas && (
+                    {selectedCoords && (
                       <p className={styles.locationMeta}>
-                        {Number(selectedRecord.coordenadas.lat).toFixed(4)} N,{' '}
-                        {Number(selectedRecord.coordenadas.lng).toFixed(4)} W
+                        {Number(selectedCoords.lat).toFixed(4)} N, {Number(selectedCoords.lng).toFixed(4)} W
                       </p>
                     )}
                   </div>
-                  {selectedRecord.tipo === 'suelo' || selectedRecord.tipo === 'advanced' ? (
-                    <div className={styles.chipRow}>
-                      {selectedRecord.ph != null && (
-                        <span className={styles.chip}>pH {selectedRecord.ph}</span>
-                      )}
-                      {selectedRecord.nitrogeno != null && (
-                        <span className={styles.chip}>N {selectedRecord.nitrogeno}</span>
-                      )}
-                      {selectedRecord.textura_suelo && (
-                        <span className={styles.chip}>{selectedRecord.textura_suelo}</span>
-                      )}
+
+                  <LocationPreviewMap
+                    coords={selectedCoords}
+                    municipality={selectedRecord.municipio || selectedMunicipio}
+                  />
+
+                  <div className={styles.metricStack}>
+                    <div className={styles.metricTile}>
+                      <Sprout size={15} />
+                      <div>
+                        <span>Textura</span>
+                        <strong>{sueloParams.textura_suelo || 'Sin dato'}</strong>
+                      </div>
                     </div>
-                  ) : (
+                    <div className={styles.metricTile}>
+                      <Waves size={15} />
+                      <div>
+                        <span>Materia organica</span>
+                        <strong>
+                          {sueloParams.materia_organica ? `${sueloParams.materia_organica}%` : 'Sin dato'}
+                        </strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={styles.chipRow}>
+                    {sueloParams.ph_suelo && (
+                      <span className={styles.chip}>pH {sueloParams.ph_suelo}</span>
+                    )}
+                    {sueloParams.nitrogeno && (
+                      <span className={styles.chip}>N {sueloParams.nitrogeno}</span>
+                    )}
+                    {sueloParams.fosforo && (
+                      <span className={styles.chip}>P {sueloParams.fosforo}</span>
+                    )}
+                    {sueloParams.potasio && (
+                      <span className={styles.chip}>K {sueloParams.potasio}</span>
+                    )}
+                    {sueloParams.humedad_suelo && (
+                      <span className={styles.chip}>H {sueloParams.humedad_suelo}%</span>
+                    )}
+                  </div>
+
+                  {sueloParams.fuente_suelo && (
+                    <p className={styles.sourceHint}>
+                      Datos de suelo complementados desde {sueloParams.fuente_suelo}.
+                    </p>
+                  )}
+
+                  {!selectedRecord.nitrogeno && !selectedRecord.fosforo && !selectedRecord.potasio && (
                     <p className={styles.noDataHint}>
-                      Registro de tipo cultivo. Se usarán solo coordenadas.
+                      El historial aporto ubicacion y SoilGrids completo pH, materia organica y textura.
                     </p>
                   )}
                 </>
               ) : (
                 <div className={styles.emptyState}>
                   <History size={32} className={styles.emptyIcon} />
-                  <p>Selecciona un registro histórico para ver su ubicación y datos previos.</p>
+                  <p>Selecciona un registro historico para ver su ubicacion, mapa y datos previos.</p>
                 </div>
               )}
             </section>
@@ -273,7 +387,7 @@ const CalidadSueloModule = ({ onBack }) => {
                   <p className={styles.modelVersion}>Random Forest · v4.2.0</p>
                 </div>
               </div>
-              <span className={styles.modelPill}>PRECISIÓN 94.2%</span>
+              <span className={styles.modelPill}>PRECISION 94.2%</span>
             </div>
           </div>
         </div>

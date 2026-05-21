@@ -404,6 +404,81 @@
   font-family: 'Manrope', sans-serif;
 }
 
+.mapCard {
+  margin-bottom: 0.9rem;
+}
+
+.mapHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 0.55rem;
+}
+
+.mapEyebrow {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #2d6a4f;
+  font-family: 'Manrope', sans-serif;
+}
+
+.mapHeader p {
+  margin: 0;
+  color: #404943;
+  font-size: 0.74rem;
+  font-weight: 600;
+  font-family: 'Manrope', sans-serif;
+}
+
+.mapFrame {
+  overflow: hidden;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(45, 106, 79, 0.12);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(232, 245, 233, 0.8));
+}
+
+.mapCanvas {
+  height: 220px;
+  width: 100%;
+}
+
+.metricStack {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-bottom: 0.85rem;
+}
+
+.metricTile {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem;
+  background: rgba(243, 244, 245, 0.82);
+  border-radius: 1rem;
+  color: #2d6a4f;
+}
+
+.metricTile span {
+  display: block;
+  margin-bottom: 2px;
+  color: #707973;
+  font-size: 0.64rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-family: 'Manrope', sans-serif;
+}
+
+.metricTile strong {
+  color: #191c1d;
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-family: 'Manrope', sans-serif;
+}
+
 .chipRow {
   display: flex;
   flex-wrap: wrap;
@@ -429,6 +504,14 @@
   text-align: center;
   background: #f3f4f5;
   border-radius: 0.75rem;
+}
+
+.sourceHint {
+  margin: 0.75rem 0 0;
+  color: #5d6b63;
+  font-size: 0.68rem;
+  line-height: 1.5;
+  font-family: 'Manrope', sans-serif;
 }
 
 .emptyState {
@@ -511,6 +594,9 @@
     width: 100%;
   }
   .optionalRow {
+    grid-template-columns: 1fr;
+  }
+  .metricStack {
     grid-template-columns: 1fr;
   }
   .soilCardHeader {
