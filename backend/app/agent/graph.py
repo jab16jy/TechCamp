@@ -14,27 +14,45 @@ from app.services.llm_service import generate_response as ollama_generate
 
 logger = logging.getLogger(__name__)
 
-SYSTEM_PROMPT = (
+_SYSTEM_PROMPT = (
     "Eres AgroAsesor IA, un asistente agronomico especializado en la region "
-    "Caribe colombiana (Atlantico, Bolivar, Cesar, Cordoba, La Guajira, "
-    "Magdalena, Sucre).\n\n"
-    "CONOCIMIENTO AGRICOLA (RAG):\n"
-    "{rag_knowledge}\n\n"
-    "DATOS DEL USUARIO (DB):\n"
-    "{db_context}\n\n"
-    "HISTORIAL DE CONVERSACION:\n"
-    "{history}\n\n"
-    "INSTRUCCIONES:\n"
-    "- Responde con informacion de la base de conocimiento proporcionada.\n"
-    "- Si algo no esta en la base, dilo claramente y sugiere fuentes como "
-    "Agrosavia, ICA o FAO.\n"
-    "- Se conciso y directo. Usa formato Markdown.\n"
-    "- Incluye datos numericos (dosis kg/ha, temperaturas C, pH) cuando "
-    "esten en la base de conocimiento.\n"
-    "- Adapta la respuesta a los datos del usuario si existen.\n"
-    "- NUNCA inventes datos agronomicos.\n"
-    "- Responde en espanol, tono profesional pero accesible."
+    "Caribe colombiana.\n\n"
+    "CONOCIMIENTO:\n{rag_knowledge}\n\n"
+    "DATOS USUARIO:\n{db_context}\n\n"
+    "INSTRUCCIONES: Responde con la info proporcionada. Se conciso. "
+    "Usa Markdown. NUNCA inventes datos. Responde en espanol."
 )
+
+_KEYWORD_CATEGORIES = {
+    "maiz": ["maiz", "maíz", "cereal"],
+    "yuca": ["yuca", "mandioca", "casabe"],
+    "platano": ["platano", "plátano", "banano"],
+    "arroz": ["arroz", "paddy"],
+    "cacao": ["cacao", "chocolate"],
+    "palma": ["palma", "aceite", "palma aceitera"],
+    "name": ["name", "ñame"],
+    "frijol": ["frijol", "fríjol", "leguminosa"],
+    "algodon": ["algodon", "algodón"],
+    "sorgo": ["sorgo"],
+    "plagas": ["plaga", "plagas", "enfermedad", "hongo", "insecto", "gusano"],
+    "fertilizacion": ["fertiliz", "abono", "nutriente", "npk", "compost"],
+    "riego": ["riego", "regar", "agua", "sequia", "sequía", "drenaje"],
+    "suelo": ["suelo", "ph", "tierra", "materia organica", "textura"],
+    "clima": ["clima", "temperatura", "lluvia", "precipitacion", "humedad"],
+    "ndvi": ["ndvi", "satelite", "satélite", "indice vegetacion"],
+    "siembra": ["siembra", "sembrar", "epoca", "calendario", "cosecha"],
+}
+
+
+def _extract_keywords(message: str) -> str:
+    lower = message.lower()
+    matched = []
+    for category, terms in _KEYWORD_CATEGORIES.items():
+        if any(t in lower for t in terms):
+            matched.append(category)
+    if matched:
+        return " ".join(matched[:3])
+    return message.strip()
 
 
 def create_agent_graph(
@@ -62,35 +80,28 @@ def _make_orchestrator(db: AsyncSession, user_id: str | None):
         message = state.get("user_message", "")
         logger.info(f"Agent orchestrating: {message[:80]}...")
 
-        intent = _classify_intent(message)
-        rag_results = search_rag(message, k=6)
-        db_context = ""
-        history_text = state.get("history_text", "")
+        keywords = _extract_keywords(message)
+        logger.info(f"Keywords: {keywords[:80]}")
 
+        intent = _classify_intent(message)
+        rag_results = search_rag(keywords, k=2)
+
+        db_context = ""
         try:
             if intent == "db_sensors":
                 db_context = await get_sensor_status(db)
-            elif intent == "db_analysis":
-                if user_id:
-                    db_context = await get_last_analysis(db, user_id)
-            elif intent == "db_history":
-                if user_id:
-                    db_context = await get_history_summary(db, user_id)
-            elif intent == "db_all":
-                parts = []
-                if user_id:
-                    parts.append(await get_last_analysis(db, user_id))
-                    parts.append(await get_history_summary(db, user_id))
-                parts.append(await get_sensor_status(db))
-                db_context = "\n\n".join(p for p in parts if p and "Error" not in p)
+            elif intent == "db_analysis" and user_id:
+                db_context = await get_last_analysis(db, user_id)
+            elif intent == "db_history" and user_id:
+                db_context = await get_history_summary(db, user_id)
         except Exception as e:
-            logger.warning(f"Tool execution error: {e}")
+            logger.warning(f"Tool error: {e}")
 
         return {
             "intent": intent,
+            "search_keywords": keywords,
             "rag_results": rag_results,
             "db_context": db_context,
-            "history_text": history_text,
         }
 
     return orchestrate
@@ -98,21 +109,16 @@ def _make_orchestrator(db: AsyncSession, user_id: str | None):
 
 def _make_generate_node():
     async def generate(state: AgentState) -> dict:
-        rag = "\n\n".join(state.get("rag_results", []))
-        db_ctx = state.get("db_context", "")
-        history = state.get("history_text", "")
+        rag = "\n\n".join(state.get("rag_results", []))[:2000] or "(sin resultados)"
+        db_ctx = state.get("db_context", "") or "(sin datos de usuario)"
 
-        system_prompt = SYSTEM_PROMPT.format(
-            rag_knowledge=rag or "(sin resultados RAG para esta consulta)",
-            db_context=db_ctx or "(sin datos de usuario disponibles)",
-            history=history or "(nueva conversacion)",
-        )
+        prompt = _SYSTEM_PROMPT.format(rag_knowledge=rag, db_context=db_ctx)
 
         response = await ollama_generate(
             message=state["user_message"],
-            system_prompt=system_prompt,
+            system_prompt=prompt,
             temperature=0.3,
-            max_tokens=1024,
+            max_tokens=150,
         )
 
         if not response:
@@ -129,16 +135,10 @@ def _make_generate_node():
 
 def _classify_intent(text: str) -> str:
     lower = text.lower()
-
     if any(w in lower for w in ["sensor", "sensores", "iot", "nodo"]):
         return "db_sensors"
     if any(w in lower for w in ["historial", "historico"]):
         return "db_history"
-    if any(w in lower for w in ["ultimo analisis", "mis analisis", "mi analisis",
-                                 "mi ultimo", "analisis anterior"]):
+    if any(w in lower for w in ["ultimo analisis", "mis analisis", "mi ultimo"]):
         return "db_analysis"
-    if any(w in lower for w in ["mis analisis", "mis datos", "mi historial",
-                                 "mis sensores", "todo", "resumen"]):
-        return "db_all"
-
     return "rag_query"

@@ -5,6 +5,7 @@ class AgentState(TypedDict):
     user_message: str
     user_id: str | None
     history_text: str
+    search_keywords: str
     rag_results: list[str]
     db_context: str
     intent: str

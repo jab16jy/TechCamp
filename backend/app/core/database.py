@@ -1,21 +1,19 @@
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy.pool import NullPool
 
 from app.core.config import get_settings
 
 settings = get_settings()
 
 connect_args = {
-    "statement_cache_size": 0,
     "timeout": 60,
+    "ssl": "disable",
 }
 
 engine = create_async_engine(
     settings.DATABASE_URL,
-    echo=settings.ENVIRONMENT == "development",
-    poolclass=NullPool,
+    echo=False,
     connect_args=connect_args,
 )
 
@@ -37,5 +35,6 @@ async def get_db():
             await session.commit()
         except SQLAlchemyError:
             await session.rollback()
+            raise
         finally:
             await session.close()

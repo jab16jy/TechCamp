@@ -135,7 +135,7 @@ def search_rag(query: str, k: int = 8) -> list[str]:
         doc_name = chunk["doc_name"]
         if doc_name not in seen_docs:
             seen_docs.add(doc_name)
-            results.append(chunk["text"][:2000])
+            results.append(chunk["text"][:800])
             if len(results) >= k:
                 break
 
@@ -143,7 +143,7 @@ def search_rag(query: str, k: int = 8) -> list[str]:
         for idx in top_indices:
             if len(results) >= k:
                 break
-            text = _chunks[idx]["text"][:2000]
+            text = _chunks[idx]["text"][:800]
             if text not in results:
                 results.append(text)
 
@@ -175,12 +175,12 @@ def _keyword_search(query: str, k: int = 5) -> list[str]:
             scored.append((score, doc))
 
     scored.sort(key=lambda x: x[0], reverse=True)
-    return [d["content"][:2000] for _, d in scored[:k]]
+    return [d["content"][:800] for _, d in scored[:k]]
 
 
 def get_full_knowledge() -> str:
     docs = _load_documents()
-    return "\n\n".join(d["content"][:1500] for d in docs[:12])
+    return "\n\n".join(d["content"][:800] for d in docs[:8])
 
 
 def get_all_knowledge() -> str:

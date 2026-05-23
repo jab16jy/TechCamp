@@ -651,7 +651,7 @@ export const login = async (email, password) => {
   return data;
 };
 
-/** Enviar mensaje al chat del AgroAsesor */
+/** Enviar mensaje al chat del AgroAsesor (timeout extendido: 5 min) */
 export const enviarMensajeChat = async (
   message,
   conversationId = null,
@@ -661,7 +661,7 @@ export const enviarMensajeChat = async (
     message,
     conversation_id: conversationId,
     user_id: userId,
-  });
+  }, { timeout: 300000 });
   return data;
 };
 

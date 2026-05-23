@@ -6,5 +6,7 @@ from app.models.indice_satelital import IndiceSatelital
 from app.models.sensor import Sensor
 from app.models.lectura_sensor import LecturaSensor
 from app.models.parcela import Parcela
+from app.models.conversacion import Conversacion
+from app.models.mensaje import Mensaje
 
-__all__ = ["Base", "Municipio", "Analisis", "Usuario", "IndiceSatelital", "Sensor", "LecturaSensor", "Parcela"]
+__all__ = ["Base", "Municipio", "Analisis", "Usuario", "IndiceSatelital", "Sensor", "LecturaSensor", "Parcela", "Conversacion", "Mensaje"]

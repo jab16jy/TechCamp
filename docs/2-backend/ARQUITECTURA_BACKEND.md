@@ -8,17 +8,17 @@ tags: [backend, arquitectura, fastapi, postgresql, langgraph, docker]
 
 ## 1. Technology Stack
 
-| Componente | Tecnología | Versión | Propósito |
-|------------|-----------|---------|-----------|
-| Framework API | FastAPI | 0.115+ | Framework REST asíncrono con validación Pydantic y OpenAPI automático |
-| Base de datos | PostgreSQL | 16 | Datos relacionales: análisis, usuarios, parcelas, historial |
-| Extensión espacial | PostGIS | 3.4 | Consultas geoespaciales (coordenadas, polígonos, NDVI) |
-| ORM | SQLAlchemy | 2.0+ | Mapeo objeto-relacional con soporte async vía asyncpg |
-| Cliente DB asíncrono | asyncpg | 0.30+ | Conexión nativa PostgreSQL desde FastAPI asíncrono |
-| Chatbot | LangGraph | 0.3+ | Agente conversacional con estado, herramientas y persistencia |
-| Modelo ML | scikit-learn (Random Forest) | 1.6+ | Clasificación de aptitud de cultivos |
-| Contenedores | Docker + Docker Compose | 27+ / 2.30+ | Orquestación multi-servicio para desarrollo y despliegue |
-| Proxy inverso | Nginx | 1.27 | Servir frontend build + enrutar `/api/*` al backend |
+| Componente           | Tecnología                   | Versión     | Propósito                                                             |
+| -------------------- | ---------------------------- | ----------- | --------------------------------------------------------------------- |
+| Framework API        | FastAPI                      | 0.115+      | Framework REST asíncrono con validación Pydantic y OpenAPI automático |
+| Base de datos        | PostgreSQL                   | 16          | Datos relacionales: análisis, usuarios, parcelas, historial           |
+| Extensión espacial   | PostGIS                      | 3.4         | Consultas geoespaciales (coordenadas, polígonos, NDVI)                |
+| ORM                  | SQLAlchemy                   | 2.0+        | Mapeo objeto-relacional con soporte async vía asyncpg                 |
+| Cliente DB asíncrono | asyncpg                      | 0.30+       | Conexión nativa PostgreSQL desde FastAPI asíncrono                    |
+| Chatbot              | LangGraph                    | 0.3+        | Agente conversacional con estado, herramientas y persistencia         |
+| Modelo ML            | scikit-learn (Random Forest) | 1.6+        | Clasificación de aptitud de cultivos                                  |
+| Contenedores         | Docker + Docker Compose      | 27+ / 2.30+ | Orquestación multi-servicio para desarrollo y despliegue              |
+| Proxy inverso        | Nginx                        | 1.27        | Servir frontend build + enrutar `/api/*` al backend                   |
 
 ### Justificación de elecciones
 
