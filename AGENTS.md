@@ -99,6 +99,9 @@ Skills live in `.agents/skills/` and are loaded automatically:
 - `tailwind-design-system` — Tailwind v4 patterns (project uses v3)
 - `hono` — backend API patterns
 - `performance-optimizer` — performance auditing
+- `langgraph-fundamentals` — LangGraph StateGraph, nodes, edges, streaming (v0.3.x)
+- `embedding-strategies` — Embedding model selection, chunking, RAG optimization
+- `hybrid-search-implementation` — Combine vector + keyword search for retrieval
 
 Browse more skills: `npx skills find <query>`
 
@@ -114,43 +117,66 @@ Browse more skills: `npx skills find <query>`
 - **Docker**: Backend runs in container (see `backend/Dockerfile`), PostGIS in `docker-compose.yml`
 - **Style**: Type hints mandatory on all functions, async def for all endpoints
 
-## Multi-Agent Workflow (OpenCode + Codex CLI)
+### Chatbot Architecture (Gemma 2:2b + LangGraph + RAG)
 
-This project uses a hybrid multi-agent setup:
-- **OpenCode** → orchestration, planning, code review, architecture decisions
-- **Codex CLI** → implementation workers (one terminal per domain)
-
-| Agent | Terminal Launcher | Scope |
-|-------|------------------|-------|
-| backend | `.\codex-backend.ps1` | `backend/app/api/`, `services/`, `models/`, `schemas/`, `core/`, `tests/` |
-| frontend | `.\codex-frontend.ps1` | `src/features/`, `src/shared/` |
-
-### Codex CLI Skills (aparecen en `/agents`)
-
-| Skill | Ruta | Contenido |
-|-------|------|-----------|
-| Backend API | `~/.codex/skills/backend-api/` | FastAPI, async, SQLAlchemy, Alembic, LangGraph, ML |
-| Frontend SPA | `~/.codex/skills/frontend-spa/` | React 19, Tailwind, Zustand, diseño, rutas |
-| Infra Docker | `~/.codex/skills/infra-docker/` | Docker Compose, PostGIS, networking |
-
-### Delegación desde OpenCode a Codex
-
-OpenCode indica la tarea y da el comando exacto. El usuario abre Codex manualmente en otra terminal.
-
-**Flujo:**
-1. OpenCode: "Parte 1 la hago yo. Para parte 2, abre Codex con:"
-2. OpenCode da el comando exacto listo para copiar/pegar
-3. El usuario pega en otra terminal → Codex trabaja en su ventana
-4. OpenCode sigue trabajando en paralelo
-5. Codex termina → usuario avisa a OpenCode → OpenCode revisa
-
-**Comandos que OpenCode puede dar:**
-```bash
-codex exec -C D:\PROYECTOS\TechCamp --add-dir backend "tarea"
-codex exec -C D:\PROYECTOS\TechCamp "tarea frontend"
+```
+POST /chat → chat.py
+  ↓
+chat_service.py → process_chat_message()
+  ↓
+  ├─ (1) LangGraph Agent → source "langgraph-agent"
+  │   ├─ [orchestrator] → classify intent + search_rag(TF-IDF) + execute DB tools
+  │   └─ [generate] → format prompt + ollama_generate(gemma2:2b)
+  ├─ (2) Direct LLM → source "llm" (fallback)
+  └─ (3) Keyword match → source "keyword-fallback"
 ```
 
-El usuario también puede usar `.\codex-backend.ps1 "tarea"` o seleccionar un skill en `/agents` de Codex.
+**Agent tools** (`agent/tools.py`): `get_last_analysis`, `get_history_summary`, `get_sensor_status`
+
+**RAG**: 40 Markdown docs in `data/rag/`, TF-IDF vectorized with sklearn, chunking by `##` sections
+
+**LLM**: Ollama container in docker-compose, `gemma2:2b` model, OpenAI-compatible endpoint at `http://ollama:11434/v1`
+
+### Docker Services
+
+| Service | Image | Port | Notes |
+|---------|-------|------|-------|
+| `db` | postgis/postgis:16-3.4 | 5432 | Local PG for dev |
+| `ollama` | ollama/ollama:latest | 11434 | Auto-pull gemma2:2b on start |
+| `backend` | Dockerfile | 8000 | FastAPI + uvicorn, depends on db[healthy] + ollama[started] |
+
+## Git Branch Workflow
+
+OpenCode corre en un **sandbox aislado** que comparte el `.git` con el proyecto. Cada tarea que implique cambios debe crear un **branch** para proteger `main`. Los comandos se ejecutan dentro del sandbox (sin `-C`).
+
+### Flujo obligatorio
+
+```powershell
+git checkout -b feature/mi-feature origin/main
+# editar archivos
+git add -A
+git commit -m "feat: descripcion"
+git push origin feature/mi-feature
+gh pr create --fill
+git checkout main
+```
+
+### Naming Convention
+
+| Prefix | Uso |
+|--------|-----|
+| `feature/*` | Nuevas funcionalidades |
+| `fix/*` | Bug fixes |
+| `refactor/*` | Refactorización |
+| `infra/*` | Docker, CI/CD, scripts |
+| `experiment/*` | Pruebas temporales |
+
+### Notas
+
+- Solo crear branch si vas a editar archivos. Tareas de lectura no necesitan branch.
+- Cada sandbox puede trabajar en branches distintos sin colisionar porque cada uno tiene su propio working tree y HEAD.
+- El `git push` sube el branch a GitHub donde puedes crear el PR.
+- Para volver al estado inicial del sandbox: `git checkout main`.
 
 ## Deployment
 

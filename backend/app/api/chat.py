@@ -1,4 +1,5 @@
 import logging
+import traceback
 import uuid as _uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -9,10 +10,25 @@ from app.core.dependencies import get_db
 from app.models.usuario import Usuario
 from app.schemas.chat import ChatRequest, ChatResponse, ChatMessage
 from app.services.chat_service import process_chat_message
+from app.services.llm_service import is_available, generate_response
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/chat", tags=["chat"])
+
+
+@router.get("/test-llm")
+async def test_llm():
+    if not is_available():
+        return {"status": "error", "message": "OLLAMA_BASE_URL not configured"}
+
+    test_msg = "Responde solo 'OK' si funcionas correctamente"
+
+    result = await generate_response(test_msg, temperature=0, max_tokens=10)
+    if result:
+        return {"status": "ok", "provider": "llm", "response": result}
+
+    return {"status": "error", "message": "All providers failed — check logs"}
 
 
 @router.post("", response_model=ChatResponse)
@@ -45,12 +61,13 @@ async def chat(
             message=ChatMessage(**resp["message"]),
         )
     except Exception as e:
-        logger.warning(f"Chat fallback mode (DB no disponible): {e}")
+        logger.warning(f"Chat endpoint error: {e}")
+        logger.warning(f"Traceback: {traceback.format_exc()}")
         fallback_id = body.conversation_id or str(_uuid.uuid4())
         fallback_msg = ChatMessage(
             rol="ia",
             contenido=(
-                "Procese tu mensaje, pero la base de datos no esta disponible en este momento. "
+                "Procese tu mensaje, pero ocurrio un error interno. "
                 "Algunas funciones avanzadas (consulta de historial, sensores) no estan activas. "
                 "Puedes seguir usando el chat para obtener orientacion general sobre cultivos, clima y uso de la plataforma."
             ),

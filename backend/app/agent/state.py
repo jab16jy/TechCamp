@@ -1,8 +1,11 @@
-from langgraph.graph.message import add_messages
-from typing import TypedDict, Annotated, Sequence
+from typing import TypedDict
 
 
 class AgentState(TypedDict):
-    messages: Annotated[Sequence[dict], add_messages]
-    user_id: str
-    contexto: dict
+    user_message: str
+    user_id: str | None
+    history_text: str
+    rag_results: list[str]
+    db_context: str
+    intent: str
+    final_response: str
