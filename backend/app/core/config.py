@@ -7,13 +7,18 @@ class Settings(BaseSettings):
     SUPABASE_URL: str = ""
     SUPABASE_ANON_KEY: str = ""
     SUPABASE_JWT_SECRET: str = ""
-    OPENAI_API_KEY: str = ""
+    OLLAMA_BASE_URL: str = "http://localhost:11434"
+    OLLAMA_MODEL: str = "gemma2:2b"
     ENVIRONMENT: str = "development"
     LOG_LEVEL: str = "DEBUG"
     OPENMETEO_BASE_URL: str = "https://api.open-meteo.com/v1"
     CORS_ORIGINS: str = "http://localhost:5173,http://localhost"
 
-    model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
+    model_config = {
+        "env_file": ".env",
+        "env_file_encoding": "utf-8",
+        "extra": "ignore",
+    }
 
 
 @lru_cache

@@ -21,6 +21,26 @@ services:
       retries: 5
       start_period: 30s
 
+  ollama:
+    image: ollama/ollama:latest
+    container_name: agrocaribe-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+      - ./backend/docker/ollama-entrypoint.sh:/entrypoint.sh:ro
+    networks:
+      - backend_net
+    restart: unless-stopped
+    environment:
+      OLLAMA_KEEP_ALIVE: 24h
+      OLLAMA_HOST: 0.0.0.0
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+    entrypoint: ["/bin/sh", "/entrypoint.sh"]
+
   backend:
     build:
       context: ./backend
@@ -32,18 +52,24 @@ services:
       ENVIRONMENT: ${ENVIRONMENT:-development}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       OPENMETEO_BASE_URL: https://api.open-meteo.com/v1
+      OLLAMA_BASE_URL: http://ollama:11434
+      OLLAMA_MODEL: gemma2:2b
       CORS_ORIGINS: http://localhost:5173,http://localhost:5173,http://localhost
     ports:
       - "8000:8000"
     depends_on:
       db:
         condition: service_healthy
+      ollama:
+        condition: service_started
     restart: unless-stopped
     networks:
       - backend_net
 
 volumes:
   pgdata:
+    driver: local
+  ollama_data:
     driver: local
 
 networks:
