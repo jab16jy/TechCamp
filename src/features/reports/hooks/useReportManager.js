@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import useAppStore from '@shared/store';
 import { getAlertas, getHistorial, exportarReporte } from '@shared/services/api';
 
 export default function useReportManager() {
-  const { agregarToast } = useAppStore();
+  const { agregarToast, historial } = useAppStore();
   const [alertas, setAlertas] = useState([]);
   const [analyses, setAnalyses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -42,8 +42,13 @@ export default function useReportManager() {
 
   const clearExport = useCallback(() => setExportData(null), []);
 
+  const tareasRiego = useMemo(
+    () => historial.filter((item) => item.tipo === 'plan_riego'),
+    [historial],
+  );
+
   return {
     alertas, analyses, loading, exporting, selectedAnalysis,
-    exportData, handleExport, clearExport,
+    exportData, handleExport, clearExport, tareasRiego,
   };
 }

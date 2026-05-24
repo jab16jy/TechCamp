@@ -1,655 +1,296 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft,
-  ChevronRight,
-  Calendar,
-  MapPin,
-  TrendingUp,
-  Thermometer,
-  Droplets,
-  CloudRain,
-  Sprout,
-  Sparkles,
-  Target,
-  Loader2,
-  Compass,
-  History,
-  ChevronDown,
-  X,
-  FlaskConical,
-  Leaf,
-  Info,
-  Shield,
-  AlertTriangle,
-} from "lucide-react";
-import ResearcherLayout from "@shared/layout/ResearcherLayout/ResearcherLayout";
-import useAuthGuard from "@shared/hooks/useAuthGuard";
-import useIAPredictiva from "@features/predictions/hooks/useIAPredictiva";
-import SimulatorPanel from "@features/predictions/components/SimulatorPanel/SimulatorPanel";
-import GrowthChart from "@features/predictions/components/GrowthChart/GrowthChart";
-import FeatureChart from "@features/predictions/components/FeatureChart/FeatureChart";
-import AIAlertsPanel from "@features/predictions/components/AIAlertsPanel/AIAlertsPanel";
-import "./IAPredictiva.css";
-
-const TIPO_CONFIG = {
-  simple: {
-    label: "Analisis Cultivo",
-    icon: Leaf,
-    color: "#2d6a4f",
-    bg: "rgba(45,106,79,0.08)",
-  },
-  analisis: {
-    label: "Analisis Cultivo",
-    icon: Leaf,
-    color: "#2d6a4f",
-    bg: "rgba(45,106,79,0.08)",
-  },
-  advanced: {
-    label: "Calidad Suelo",
-    icon: FlaskConical,
-    color: "#75584d",
-    bg: "rgba(117,88,77,0.08)",
-  },
-  suelo: {
-    label: "Calidad Suelo",
-    icon: FlaskConical,
-    color: "#75584d",
-    bg: "rgba(117,88,77,0.08)",
-  },
-  prediccion: {
-    label: "Prediccion IA",
-    icon: TrendingUp,
-    color: "#386a20",
-    bg: "rgba(56,106,32,0.08)",
-  },
-};
-
-const MESES = [
-  "Ene",
-  "Feb",
-  "Mar",
-  "Abr",
-  "May",
-  "Jun",
-  "Jul",
-  "Ago",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dic",
-];
-
-const formatDate = (iso) => {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
-  return `${d.getDate()} ${MESES[d.getMonth()]} ${d.getFullYear()}`;
-};
-
-const getCoords = (record) => {
-  if (!record) return null;
-  const lat = record.coordenadas?.lat ?? record.lat;
-  const lng = record.coordenadas?.lng ?? record.lng;
-  const latNum = Number(lat);
-  const lngNum = Number(lng);
-
-  if (!Number.isFinite(latNum) || !Number.isFinite(lngNum)) return null;
-
-  return { lat: latNum, lng: lngNum };
-};
-
-const formatLocation = (record) =>
-  [record?.municipio, record?.departamento].filter(Boolean).join(", ") ||
-  "Ubicacion sin nombre";
-
-const formatRecordTrigger = (record) => {
-  if (!record) return "Seleccionar analisis";
-  return `${record.id} - ${record.municipio || record.mejor_cultivo || "Parcela"}`;
-};
-
-const getRecordMetric = (record) => {
-  if (!record) return null;
-  if (record.tipo === "analisis" || record.tipo === "simple") {
-    return {
-      label: "Cultivo",
-      value: record.cultivo || record.cultivo_top || "—",
-    };
-  }
-  if (record.tipo === "suelo" || record.tipo === "advanced") {
-    return {
-      label: "Suelo",
-      value:
-        record.calidad_suelo ||
-        (record.ph || record.ph_suelo ? `pH ${record.ph || record.ph_suelo}` : "—"),
-    };
-  }
-  return {
-    label: "Ventana",
-    value: record.mejor_mes || record.mes_siembra || "—",
-  };
-};
-
-const formatInheritedMetric = (value, suffix = "") => {
-  if (value === null || value === undefined || value === "" || value === "—") {
-    return "—";
-  }
-  return `${value}${suffix}`;
-};
+  ArrowLeft, AlertTriangle, Loader2, Sparkles, Shield, History,
+} from 'lucide-react';
+import ResearcherLayout from '@shared/layout/ResearcherLayout/ResearcherLayout';
+import useAuthGuard from '@shared/hooks/useAuthGuard';
+import usePlanRiegoActivo from '@features/predictions/hooks/usePlanRiegoActivo';
+import RiskDetectionPanel from '@features/predictions/components/RiskDetectionPanel/RiskDetectionPanel';
+import PlanVisualizationCard from '@features/predictions/components/PlanVisualizationCard/PlanVisualizationCard';
+import StressReductionChart from '@features/predictions/components/StressReductionChart/StressReductionChart';
+import AnalisisSelector from '@features/predictions/components/AnalisisSelector/AnalisisSelector';
+import FenologiaTimeline from '@features/predictions/components/FenologiaTimeline/FenologiaTimeline';
+import MonthlyProjectionGrid from '@features/predictions/components/MonthlyProjectionGrid/MonthlyProjectionGrid';
+import MitigationSimulator from '@features/predictions/components/MitigationSimulator/MitigationSimulator';
+import FeatureChart from '@features/predictions/components/FeatureChart/FeatureChart';
+import ClimateRiskPanel from '@features/predictions/components/ClimateRiskPanel/ClimateRiskPanel';
+import ExportPlanButton from '@features/predictions/components/ExportPlanButton/ExportPlanButton';
+import './IAPredictiva.css';
 
 const IAPredictiva = () => {
-  const authorized = useAuthGuard("investigador");
+  const authorized = useAuthGuard('investigador');
   const navigate = useNavigate();
   const {
-    loading,
-    prediction,
-    lat,
-    setLat,
-    lng,
-    setLng,
-    handleGenerate,
-    historial,
-    selectedHistoryId,
-    handleSelectHistory,
-    handleClearSelection,
-    selectedRecord,
-    analysisId,
-    inheritedData,
-    npk,
-    riego,
-    handleNPKChange,
-    handleRiegoChange,
-    handleResetSim,
-    bestWindow,
-    alerts,
-    factorWeights,
-    stale,
-  } = useIAPredictiva();
+    sensores, selectedSensorId, selectedSensor,
+    loadingScan, riskStatus, sensorRiskMap, sensoresEnRiesgo,
+    plan, generandoPlan, previewActive, umbrales, historialPlanes,
+    selectedAnalysisId, fechaSiembra, etapaFenologica, proyeccion6M,
+    loadingProyeccion, analisisConCoordenadas, inheritedRecord,
+    npkSim, riegoSim, stale, setNpkSim, setRiegoSim,
+    handleSelectSensor, handleGenerarPlan, togglePreview,
+    handleExportarTareas, handleClearPlan,
+    handleSelectAnalysis, handleSimularContramedida, handleClearProyeccion,
+  } = usePlanRiegoActivo();
 
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  const [analysisDropdownOpen, setAnalysisDropdownOpen] = useState(false);
 
   if (!authorized) return null;
+
+  const isCritico = riskStatus === 'critico' || riskStatus === 'alto';
 
   return (
     <ResearcherLayout activeTab="ia">
       <div className="ia-root">
+        {/* HEADER */}
         <header className="ia-header">
           <div className="ia-header-left">
-            <div className="ia-nav-row">
-              <button
-                className="ia-back-btn"
-                onClick={() => navigate("/investigador/dashboard")}
-              >
-                <ArrowLeft size={14} />
-                Volver al Dashboard
-              </button>
-              <nav className="ia-breadcrumb">
-                <span>Modulos</span>
-                <ChevronRight size={12} />
-                <span className="ia-crumb-active">IA Predictiva</span>
-              </nav>
-            </div>
-            <div className="ia-title-row">
-              <h1 className="ia-title">
-                IA Predictiva{" "}
-                <span className="ia-title-light">
-                  {analysisId ? "- Proyeccion 90 Dias" : "- Seleccion desde historial"}
-                </span>
-              </h1>
-              <span className="ia-badge-mode">NASA POWER + OpenMeteo</span>
-            </div>
+            <button className="ia-back-btn" onClick={() => navigate('/investigador/dashboard')}>
+              <ArrowLeft size={14} />
+              Volver al Dashboard
+            </button>
+            <h1 className="ia-title">
+              IA Predictiva
+              <span className="ia-title-light"> — DSS Integral</span>
+            </h1>
             <p className="ia-page-intent">
-              Hereda ubicacion y variables agronomicas desde un analisis previo
-              para proyectar la siguiente ventana de 90 dias. Esta vista estima
-              clima, NDVI y cultivos recomendados para los proximos 3 meses del
-              lote seleccionado.
+              Sistema de Soporte a Decisiones que integra proyecciones climaticas (NASA POWER + OpenMeteo)
+              con sensores IoT en tiempo real para anticipar riesgos, recomendar cultivos y generar
+              planes de mitigacion activos.
             </p>
+            <div className="flex items-center gap-2 mt-2">
+              <span className="ia-badge-mode">NASA POWER + OpenMeteo + IoT</span>
+              {isCritico && (
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full flex items-center gap-1"
+                  style={{ background: 'rgba(186,26,26,0.1)', color: '#ba1a1a' }}>
+                  <AlertTriangle size={11} />
+                  Riesgo de Deficit Critico Detectado
+                </span>
+              )}
+            </div>
           </div>
         </header>
 
         <div className="ia-content">
-          <div className="ia-input-card">
-            <div className="ia-coord-controls">
-              {!analysisId && (
-                <>
-                  <div className="ia-coord-field">
-                    <label>Latitud</label>
-                    <input
-                      type="text"
-                      inputMode="decimal"
-                      placeholder="10.5"
-                      value={lat}
-                      onChange={(e) => {
-                        setLat(e.target.value);
-                        handleClearSelection(true);
-                      }}
-                    />
-                  </div>
-                  <div className="ia-coord-field">
-                    <label>Longitud</label>
-                    <input
-                      type="text"
-                      inputMode="decimal"
-                      placeholder="-74.8"
-                      value={lng}
-                      onChange={(e) => {
-                        setLng(e.target.value);
-                        handleClearSelection(true);
-                      }}
-                    />
-                  </div>
-                </>
-              )}
+          {/* ================================================================ */}
+          {/* SECCION 1: DSS PROACTIVO — Sensores + Plan de Riego             */}
+          {/* ================================================================ */}
+          <RiskDetectionPanel
+            sensores={sensores}
+            selectedSensorId={selectedSensorId}
+            onSelect={handleSelectSensor}
+            riskStatus={riskStatus}
+            sensorRiskMap={sensorRiskMap}
+            sensoresEnRiesgo={sensoresEnRiesgo}
+            loading={loadingScan}
+          />
 
-              <div className="ia-dropdown-container" ref={dropdownRef}>
-                <button
-                  type="button"
-                  className={`ia-use-last ${isOpen ? "active" : ""}`}
-                  onClick={() => setIsOpen(!isOpen)}
-                >
-                  <History size={14} />
-                  <span>{formatRecordTrigger(selectedRecord)}</span>
-                  <ChevronDown
-                    size={14}
-                    style={{
-                      transform: isOpen ? "rotate(180deg)" : "none",
-                      transition: "transform 0.2s",
-                    }}
-                  />
-                </button>
-
-                {isOpen && (
-                  <div className="ia-history-popover">
-                    <div className="ia-popover-header">
-                      <span>Analisis reutilizables</span>
-                      <button
-                        type="button"
-                        className="ia-popover-close"
-                        onClick={() => setIsOpen(false)}
-                      >
-                        <X size={12} />
-                      </button>
-                    </div>
-                    <div className="ia-popover-list">
-                      {historial.length === 0 ? (
-                        <div className="ia-popover-empty">
-                          <History
-                            size={24}
-                            style={{ opacity: 0.4, marginBottom: "0.25rem" }}
-                          />
-                          <span>Sin registros con ubicacion reutilizable</span>
-                        </div>
-                      ) : (
-                        historial.map((item) => {
-                          const config =
-                            TIPO_CONFIG[item.tipo] || TIPO_CONFIG.analisis;
-                          const IconComponent = config.icon;
-                          const isSelected = item.id === selectedHistoryId;
-                          const coords = getCoords(item);
-                          const metric = getRecordMetric(item);
-                          return (
-                            <div
-                              key={item.id}
-                              className={`ia-popover-item ${isSelected ? "selected" : ""}`}
-                              onClick={() => {
-                                handleSelectHistory(item.id);
-                                setIsOpen(false);
-                              }}
-                            >
-                              <div className="ia-popover-item-header">
-                                <span className="ia-popover-item-id">
-                                  {item.id}
-                                </span>
-                                <span
-                                  className="ia-popover-item-badge"
-                                  style={{
-                                    background: config.bg,
-                                    color: config.color,
-                                  }}
-                                >
-                                  <IconComponent size={10} />
-                                  {config.label}
-                                </span>
-                              </div>
-                              <div className="ia-popover-item-date">
-                                <Calendar size={10} />
-                                {formatDate(item.fecha)}
-                              </div>
-                              <div className="ia-popover-item-details">
-                                <MapPin size={10} />
-                                <span>{formatLocation(item)}</span>
-                              </div>
-                              {coords && (
-                                <div className="ia-popover-item-coords">
-                                  <Compass size={10} />
-                                  <span>
-                                    {coords.lat.toFixed(4)},{" "}
-                                    {coords.lng.toFixed(4)}
-                                  </span>
-                                </div>
-                              )}
-                              {metric && (
-                                <div className="ia-popover-item-metric">
-                                  <span>{metric.label}</span>
-                                  <strong>{metric.value}</strong>
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })
-                      )}
-                    </div>
-                  </div>
-                )}
+          {selectedSensor && (
+            <div className="ia-status-grid">
+              <div className="ia-status-card" style={{
+                borderColor: riskStatus === 'critico' ? 'rgba(186,26,26,0.3)' : riskStatus === 'alto' ? 'rgba(184,134,11,0.3)' : 'rgba(15,82,56,0.2)',
+              }}>
+                <span className="ia-status-label">
+                  {selectedSensor.nodo_id || selectedSensor.id?.slice(0, 8)}
+                </span>
+                <div className="ia-status-row">
+                  <span className="ia-status-value">{selectedSensor.ultima_lectura?.humedad ?? '—'}%</span>
+                  <span className="ia-status-unit">Humedad suelo</span>
+                </div>
+                <span className="ia-status-badge" style={{
+                  color: riskStatus === 'critico' ? '#ba1a1a' : riskStatus === 'alto' ? '#b8860b' : '#0f5238',
+                  background: riskStatus === 'critico' ? 'rgba(186,26,26,0.08)' : riskStatus === 'alto' ? 'rgba(184,134,11,0.08)' : 'rgba(15,82,56,0.08)',
+                }}>
+                  {riskStatus === 'critico' ? 'Critico' : riskStatus === 'alto' ? 'Alto' : riskStatus === 'moderado' ? 'Monitoreo' : 'Normal'}
+                </span>
               </div>
+            </div>
+          )}
 
-              <button
-                className="ia-generate-btn"
-                onClick={handleGenerate}
-                disabled={loading || !analysisId}
-              >
-                {loading ? (
-                  <Loader2 size={16} className="spin" />
-                ) : (
-                  <Sparkles size={16} />
-                )}
-                {loading ? "Generando..." : "Generar Proyeccion"}
+          {isCritico && !plan && !generandoPlan && (
+            <div className="ia-action-banner">
+              <AlertTriangle size={20} style={{ color: '#ba1a1a' }} />
+              <div>
+                <h3 className="text-sm font-bold text-[#1A1C1A]">Riesgo de Deficit Critico Detectado</h3>
+                <p className="text-xs text-[#6b7280]">
+                  La humedad del suelo esta por debajo del umbral y la proyeccion climatica indica baja
+                  probabilidad de lluvia. Se recomienda generar un plan de riego.
+                </p>
+              </div>
+              <button className="ia-generate-btn" onClick={handleGenerarPlan}>
+                <Shield size={15} /> Generar Plan de Riego
               </button>
             </div>
+          )}
 
-            {analysisId && inheritedData && (
-              <div className="ia-active-record-card inherited-card">
-                <div className="ia-active-record-header">
-                  <div className="ia-active-record-title">
-                    <History size={15} className="ia-active-record-icon" />
-                    <span>
-                      Datos heredados del analisis{" "}
-                      <strong className="ia-active-record-id-text">
-                        {analysisId}
-                      </strong>
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    className="ia-active-record-clear"
-                    onClick={() => handleClearSelection()}
-                    title="Desvincular registro"
-                  >
-                    <X size={13} />
-                    Desvincular
-                  </button>
+          {generandoPlan && (
+            <div className="flex items-center justify-center py-8 gap-3 text-[#4a4a4a]">
+              <Loader2 size={20} className="animate-spin" />
+              <span className="text-sm">Generando plan de riego optimizado...</span>
+            </div>
+          )}
+
+          {/* ================================================================ */}
+          {/* SECCION 2: HISTORIAL + PROYECCION 6 MESES + FENOLOGIA           */}
+          {/* ================================================================ */}
+          <div
+            className="rounded-2xl p-5"
+            style={{ background: 'rgba(255,255,255,0.55)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.25)' }}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-bold text-[#1A1C1A] flex items-center gap-2">
+                <History size={16} />
+                Proyeccion Estacional desde Historial
+              </h2>
+              {selectedAnalysisId && (
+                <button
+                  onClick={handleClearProyeccion}
+                  className="text-xs text-[#6b7280] hover:text-[#ba1a1a] transition-colors"
+                >
+                  Desvincular analisis
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center gap-3 flex-wrap">
+              <AnalisisSelector
+                analisis={analisisConCoordenadas}
+                selectedId={selectedAnalysisId}
+                onSelect={handleSelectAnalysis}
+                onClear={handleClearProyeccion}
+                isOpen={analysisDropdownOpen}
+                onToggle={() => setAnalysisDropdownOpen((p) => !p)}
+              />
+
+              {selectedAnalysisId && inheritedRecord && (
+                <div className="text-xs text-[#4a4a4a] flex items-center gap-3 ml-2">
+                  <span>{inheritedRecord.cultivo || '—'}</span>
+                  <span className="text-[#6b7280]">|</span>
+                  <span>{[inheritedRecord.municipio, inheritedRecord.departamento].filter(Boolean).join(', ') || '—'}</span>
+                  {fechaSiembra && (
+                    <>
+                      <span className="text-[#6b7280]">|</span>
+                      <span>Siembra: {fechaSiembra.toLocaleDateString('es-CO')}</span>
+                    </>
+                  )}
                 </div>
+              )}
+            </div>
 
-                <div className="ia-active-record-body">
-                  <div className="ia-active-record-info">
-                    <div className="ia-active-record-note">
-                      <Info size={12} />
-                      <span>
-                        La proyeccion hereda cultivo recomendado, suelo,
-                        coordenadas y mes de siembra del analisis seleccionado.
-                      </span>
-                    </div>
-                    {selectedRecord && (
-                      <>
-                        <div className="ia-active-record-meta-item">
-                          <MapPin size={12} />
-                          <span>{formatLocation(selectedRecord)}</span>
-                        </div>
-                        {selectedRecord.fecha && (
-                          <div className="ia-active-record-meta-item">
-                            <Calendar size={12} />
-                            <span>{formatDate(selectedRecord.fecha)}</span>
-                          </div>
-                        )}
-                      </>
-                    )}
-                    <div className="ia-active-record-meta-item">
-                      <Compass size={12} />
-                      <span>
-                        Lat: {lat ? parseFloat(lat).toFixed(4) : "—"} | Lng:{" "}
-                        {lng ? parseFloat(lng).toFixed(4) : "—"}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="ia-active-record-metrics">
-                    <div className="ia-active-metric">
-                      <span className="ia-metric-label">Cultivo Recomendado</span>
-                      <span className="ia-metric-value">{inheritedData.cultivo}</span>
-                    </div>
-                    <div className="ia-active-metric">
-                      <span className="ia-metric-label">pH Suelo</span>
-                      <span className="ia-metric-value">
-                        {formatInheritedMetric(inheritedData.ph_suelo)}
-                      </span>
-                    </div>
-                    <div className="ia-active-metric">
-                      <span className="ia-metric-label">Materia Organica</span>
-                      <span className="ia-metric-value">
-                        {formatInheritedMetric(inheritedData.materia_organica, "%")}
-                      </span>
-                    </div>
-                    <div className="ia-active-metric">
-                      <span className="ia-metric-label">Textura</span>
-                      <span className="ia-metric-value">
-                        {formatInheritedMetric(inheritedData.textura_suelo)}
-                      </span>
-                    </div>
-                    <div className="ia-active-metric">
-                      <span className="ia-metric-label">Mes Siembra</span>
-                      <span className="ia-metric-value">
-                        {formatInheritedMetric(inheritedData.mes_siembra)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+            {loadingProyeccion && (
+              <div className="flex items-center justify-center py-6 gap-3 text-[#4a4a4a]">
+                <Loader2 size={20} className="animate-spin" />
+                <span className="text-sm">Calculando proyeccion 6 meses...</span>
               </div>
+            )}
+
+            {!loadingProyeccion && !selectedAnalysisId && (
+              <p className="text-xs text-[#6b7280] mt-3">
+                Selecciona un analisis del historial para cargar la proyeccion estacional de 6 meses con datos de NASA POWER y OpenMeteo.
+              </p>
             )}
           </div>
 
-          {prediction && (
+          {!loadingProyeccion && proyeccion6M && etapaFenologica && (
+            <FenologiaTimeline
+              etapaActual={etapaFenologica.etapa}
+              diasDesdeSiembra={etapaFenologica.diasDesdeSiembra}
+              cicloDias={etapaFenologica.cicloDias}
+              pctCompletado={etapaFenologica.pct}
+            />
+          )}
+
+          {!loadingProyeccion && proyeccion6M && (
+            <MonthlyProjectionGrid
+              proyeccion={proyeccion6M}
+              mejorMes={proyeccion6M.mejor_mes}
+              mejorCultivo={proyeccion6M.mejor_cultivo}
+              loading={false}
+            />
+          )}
+
+          {/* ================================================================ */}
+          {/* SECCION 3: MITIGATION SIMULATOR                                   */}
+          {/* ================================================================ */}
+          {proyeccion6M && (
             <>
-              <div className="ia-highlight-row">
-                <div className="ia-highlight-card best">
-                  <Target size={18} />
-                  <div>
-                    <span className="ia-hl-label">Mejor mes para sembrar</span>
-                    <span className="ia-hl-value">
-                      {prediction.mejor_mes || "—"}
-                    </span>
-                  </div>
-                </div>
-                <div className="ia-highlight-card crop">
-                  <Sprout size={18} />
-                  <div>
-                    <span className="ia-hl-label">Cultivo mas apto</span>
-                    <span className="ia-hl-value">
-                      {prediction.mejor_cultivo || "—"}
-                    </span>
-                  </div>
-                </div>
-                <div className="ia-highlight-card source">
-                  <MapPin size={18} />
-                  <div>
-                    <span className="ia-hl-label">Fuente de datos</span>
-                    <span className="ia-hl-value fs-sm">
-                      {prediction.fuente}
-                    </span>
-                  </div>
-                </div>
-              </div>
+              <MitigationSimulator
+                npkSim={npkSim}
+                riegoSim={riegoSim}
+                stale={stale}
+                loading={loadingProyeccion}
+                onNpkChange={setNpkSim}
+                onRiegoChange={setRiegoSim}
+                onSimular={handleSimularContramedida}
+              />
 
-              {bestWindow && (
-                <div className="ia-best-window-card">
-                  <Shield size={18} className="ia-bw-icon" />
-                  <div className="ia-bw-content">
-                    <span className="ia-bw-label">Ventana optima de siembra</span>
-                    <span className="ia-bw-value">
-                      {bestWindow.ventana_inicio} — {bestWindow.ventana_fin}
-                    </span>
-                    <span className="ia-bw-confidence">
-                      Confianza: {bestWindow.confianza}%
-                    </span>
-                    {bestWindow.justificacion && (
-                      <span className="ia-bw-desc">{bestWindow.justificacion}</span>
-                    )}
-                  </div>
-                </div>
-              )}
+              <FeatureChart
+                factors={
+                  proyeccion6M.meses?.[0]?.cultivos_recomendados?.[0]?.factor_weights
+                  || []
+                }
+              />
 
-              <div className="ia-simulation-grid">
-                <div className="ia-simulation-left">
-                  {stale && (
-                    <div className="ia-stale-badge">
-                      <Info size={12} />
-                      <span>Valores de simulacion cambiados. Recalcula para ver resultados actualizados.</span>
-                    </div>
-                  )}
-                  <SimulatorPanel
-                    riego={riego}
-                    npk={npk}
-                    simulando={loading}
-                    simResult={!!prediction}
-                    onRiegoChange={handleRiegoChange}
-                    onNpkChange={handleNPKChange}
-                    onSimular={handleGenerate}
-                    onClearSim={handleResetSim}
-                    fechaSiembra=""
-                    variedad="Variedad Tradicional"
-                    onFechaChange={() => {}}
-                    onVariedadChange={() => {}}
-                    onCompareToggle={() => {}}
-                    compare={false}
-                  />
-                  {factorWeights.length > 0 && (
-                    <div className="ia-card ia-factor-card">
-                      <div className="ia-card-header">
-                        <Target size={16} className="ia-card-icon" />
-                        <h2 className="ia-card-title">Factores de Influencia</h2>
-                      </div>
-                      <FeatureChart features={factorWeights} />
-                    </div>
-                  )}
-                </div>
-                <div className="ia-simulation-right">
-                  <GrowthChart prediction={prediction} riego={riego} npk={npk} />
-                  <AIAlertsPanel alerts={alerts} />
-                </div>
-              </div>
+              <ClimateRiskPanel proyeccion={proyeccion6M} />
 
-              <div className="ia-timeline-section">
-                <h3 className="ia-section-title">
-                  <TrendingUp size={16} />
-                  Proyeccion 90 dias
-                </h3>
-                <div className="ia-timeline">
-                  {prediction.meses.map((mes, i) => (
-                    <div
-                      key={i}
-                      className={`ia-month-card ${prediction.mejor_mes === mes.month ? "is-best" : ""}`}
-                    >
-                      <div className="ia-month-header">
-                        <Calendar size={14} />
-                        <strong>
-                          {mes.month} {mes.year}
-                        </strong>
-                        {prediction.mejor_mes === mes.month && (
-                          <span className="ia-best-badge">Optimo</span>
-                        )}
-                      </div>
-
-                      <div className="ia-month-stats">
-                        <div className="ia-stat">
-                          <Thermometer size={13} />
-                          <span>{mes.temperatura}°C</span>
-                        </div>
-                        <div className="ia-stat">
-                          <CloudRain size={13} />
-                          <span>{mes.precipitacion} mm</span>
-                        </div>
-                        <div className="ia-stat">
-                          <Droplets size={13} />
-                          <span>{mes.humedad}%</span>
-                        </div>
-                        <div className="ia-stat ndvi-stat">
-                          <span
-                            className="ia-ndvi-dot"
-                            style={{
-                              background: `hsl(${100 + mes.ndvi_estimado * 40}, 50%, ${30 + mes.ndvi_estimado * 20}%)`,
-                            }}
-                          />
-                          <span>NDVI {mes.ndvi_estimado}</span>
-                        </div>
-                      </div>
-
-                      {mes.cultivos_recomendados.length > 0 && (
-                        <div className="ia-month-crops">
-                          <span className="ia-crops-label">
-                            Cultivos recomendados:
-                          </span>
-                          {mes.cultivos_recomendados.slice(0, 2).map((c, j) => (
-                            <div key={j} className="ia-crop-row">
-                              <span className="ia-crop-emoji">{c.emoji}</span>
-                              <span className="ia-crop-name">{c.cultivo}</span>
-                              <span
-                                className={`ia-crop-score score-${c.riesgo}`}
-                              >
-                                {c.score}%
-                              </span>
-                              <span className={`ia-risk-tag risk-${c.riesgo}`}>
-                                {c.riesgo}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
+              <div className="flex justify-end mt-2">
+                <ExportPlanButton
+                  proyeccion={proyeccion6M}
+                  plan={plan}
+                  disabled={!proyeccion6M}
+                />
               </div>
             </>
           )}
 
-          {!prediction && !loading && (
-            <div className="ia-empty">
-              {!analysisId ? (
-                <div className="ia-require-banner">
-                  <div className="ia-require-banner-icon">
-                    <AlertTriangle size={28} />
-                  </div>
-                  <div className="ia-require-banner-content">
-                    <h3>Se requiere seleccion de historial</h3>
-                    <p>
-                      Debes elegir un analisis previo del historial para heredar coordenadas,
-                      cultivo recomendado y datos de suelo. Sin esta informacion no es posible
-                      generar la proyeccion de 90 dias.
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <div className="ia-empty-icon">
-                    <Sparkles size={48} />
-                  </div>
-                  <h2>Listo para proyectar</h2>
-                  <p>
-                    Haz clic en &quot;Generar Proyeccion&quot; para obtener la simulacion
-                    climatica y de NDVI de los proximos 3 meses.
-                  </p>
-                </>
-              )}
+          {/* ================================================================ */}
+          {/* PLAN + STRESS CHART                                             */}
+          {/* ================================================================ */}
+          {plan && (
+            <>
+              <PlanVisualizationCard
+                plan={plan}
+                previewActive={previewActive}
+                onTogglePreview={togglePreview}
+                onExport={handleExportarTareas}
+              />
+              <StressReductionChart plan={plan} previewActive={previewActive} sensorLectura={selectedSensor?.ultima_lectura} />
+              <button onClick={handleClearPlan} className="text-xs text-[#6b7280] mt-2 hover:text-[#4a4a4a] transition-colors">
+                Descartar plan actual
+              </button>
+            </>
+          )}
+
+          {!isCritico && !loadingScan && !plan && !generandoPlan && selectedSensor && !proyeccion6M && (
+            <div className="rounded-2xl p-6 text-center" style={{ background: 'rgba(255,255,255,0.55)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.25)' }}>
+              <Sparkles size={32} className="mx-auto mb-3" style={{ color: '#0f5238', opacity: 0.6 }} />
+              <h3 className="text-sm font-bold text-[#1A1C1A] mb-1">Monitoreo Activo</h3>
+              <p className="text-xs text-[#6b7280]">
+                Los niveles de humedad del sensor seleccionado estan dentro de los rangos aceptables.
+              </p>
             </div>
+          )}
+
+          {historialPlanes.length > 0 && (
+            <section className="mt-6">
+              <h2 className="text-sm font-bold text-[#1A1C1A] flex items-center gap-2 mb-3">
+                <History size={16} /> Historial de Planes Generados
+              </h2>
+              <div className="space-y-2">
+                {historialPlanes.map((p) => (
+                  <div key={p.plan_id} className="flex items-center justify-between p-3 rounded-xl text-xs"
+                    style={{ background: 'rgba(255,255,255,0.55)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.25)' }}>
+                    <div>
+                      <span className="font-semibold text-[#1A1C1A]">{p.plan_id}</span>
+                      <span className="ml-2 text-[#6b7280]">{p.cultivo} · {p.volumen_total_m3_ha} m³/ha</span>
+                    </div>
+                    <span className="px-2 py-0.5 rounded-full font-semibold" style={{ background: 'rgba(15,82,56,0.08)', color: '#0f5238' }}>
+                      Generado
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </section>
           )}
         </div>
       </div>

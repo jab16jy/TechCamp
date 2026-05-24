@@ -738,6 +738,9 @@ export const getPrediccion = async (
   months = 3,
   npk = null,
   riego = null,
+  fechaInicio = null,
+  diasDesdeSiembra = null,
+  cicloDias = null,
 ) => {
   try {
     const payload = {
@@ -751,6 +754,9 @@ export const getPrediccion = async (
       payload.lat = lat;
       payload.lng = lng;
     }
+    if (fechaInicio) payload.fecha_inicio = fechaInicio;
+    if (diasDesdeSiembra != null) payload.dias_desde_siembra = diasDesdeSiembra;
+    if (cicloDias != null) payload.ciclo_dias = cicloDias;
 
     const { data } = await apiClient.post("/predict", payload);
     return data;
@@ -815,6 +821,8 @@ export const getPrediccion = async (
         ],
       }));
 
+      const etapas = ['germinacion', 'desarrollo-vegetativo', 'floracion', 'floracion', 'llenado', 'maduracion'];
+
       return {
         month: date
           .toLocaleDateString("es-CO", { month: "short" })
@@ -824,6 +832,7 @@ export const getPrediccion = async (
         precipitacion,
         humedad,
         ndvi_estimado: ndviEstimado,
+        etapa_fenologica: diasDesdeSiembra != null ? etapas[index % etapas.length] : null,
         cultivos_recomendados: enrichedRecs,
       };
     });
@@ -885,6 +894,19 @@ export const getPrediccion = async (
       riesgo_minimizado: ['Temperatura >35°C', 'Humedad <50%'],
     };
 
+    // Climate patterns mock (El Niño / La Niña)
+    const alertasPatrones = [];
+    const hotMonths = meses.filter(m => m.temperatura > 35);
+    const wetMonths = meses.filter(m => m.precipitacion > 150 && m.temperatura < 26);
+    if (hotMonths.length >= 2) {
+      alertasPatrones.push({
+        tipo: 'fenomeno_nino', severidad: 'critico',
+        mensaje: `Patron El Niño detectado: ${hotMonths.length} meses con temperatura extrema y deficit hidrico acumulado`,
+        cultivo_afectado: null, mes: null,
+        accion: 'Preparar sistemas de riego suplementario. Evaluar cultivos tolerantes a sequia (Yuca, Sorgo).',
+      });
+    }
+
     return {
       mejor_mes: bestMonth.month,
       mejor_cultivo: recomendacionesBase[0]?.cultivo || "Yuca",
@@ -893,6 +915,7 @@ export const getPrediccion = async (
       meses,
       es_mock: true,
       alertas_globales: alertasGlobales,
+      alertas_patrones: alertasPatrones,
       best_window: bestWindow,
     };
   }
@@ -939,6 +962,98 @@ export const getDashboardSummary = async () => {
     return data;
   } catch {
     return null;
+  }
+};
+
+/** Generar plan de riego optimizado desde sensor IoT */
+export const generarPlanRiego = async (sensorId, analysisId = null, cultivo = null) => {
+  try {
+    const payload = { sensor_id: sensorId };
+    if (analysisId) payload.analysis_id = analysisId;
+    if (cultivo) payload.cultivo = cultivo;
+    const { data } = await apiClient.post("/irrigation-plans", payload);
+    return data;
+  } catch {
+    const sensorIdStr = String(sensorId).slice(0, 8);
+    const cultivoSeleccionado = cultivo || "Maiz";
+    const textura = ["Franco", "Arenoso", "Franco-Arcilloso", "Franco-Arenoso"][Math.floor(Math.random() * 4)];
+    const now = new Date();
+    const diasSemana = ["Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom"];
+    const eventos = [];
+    for (let i = 0; i < 7; i++) {
+      const dia = new Date(now);
+      dia.setDate(dia.getDate() + 1 + i);
+      eventos.push({
+        dia: diasSemana[dia.getDay() === 0 ? 6 : dia.getDay() - 1],
+        fecha: dia.toLocaleDateString("es-CO", { day: "2-digit", month: "short", year: "numeric" }),
+        hora: "05:00 - 07:00",
+        litros_ha: Math.round((4.5 + Math.random() * 3) * 10) / 10,
+        motivo: i === 0 ? "Aplicacion para compensar deficit hidrico" : `Riego de mantenimiento en suelo ${textura.toLowerCase()}`,
+      });
+    }
+    const volTotal = eventos.reduce((s, e) => s + e.litros_ha, 0);
+    return {
+      plan_id: `PLAN-${Math.floor(Math.random() * 9000) + 1000}`,
+      sensor_id: sensorIdStr,
+      sensor_nodo: `SN-${sensorIdStr}`,
+      cultivo: cultivoSeleccionado,
+      humedad_actual: Math.floor(Math.random() * 10) + 12,
+      umbral_cultivo: 20,
+      prob_lluvia_7d: Math.round((Math.random() * 0.12) * 100) / 100,
+      prob_lluvia_14d: Math.round((Math.random() * 0.10 + 0.03) * 100) / 100,
+      riesgo: "critico",
+      volumen_total_m3_ha: Math.round(volTotal * 10) / 10,
+      frecuencia_dias: textura === "Arenoso" ? 2 : textura === "Arcilloso" ? 4 : 3,
+      horario_optimo: "05:00 - 07:00",
+      ventana_inicio: eventos[0]?.fecha || "Prox dia",
+      ventana_fin: eventos[eventos.length - 1]?.fecha || "En 7 dias",
+      eventos,
+      justificacion_xai: `Plan sugerido para compensar 14 dias de ausencia de lluvias (probabilidad estimada: 7%) y radiacion solar extrema. La humedad del suelo actual esta por debajo del umbral critico para ${cultivoSeleccionado}. El suelo ${textura.toLowerCase()} tiene alta capacidad de drenaje, requiriendo riego mas frecuente. Se recomienda aplicar en horario de menor evaporacion (05:00 - 07:00) para maximizar la eficiencia hidrica.`,
+      textura_suelo: textura,
+      et0_mm_dia: Math.round((4.5 + Math.random() * 2) * 10) / 10,
+      temperatura_media: Math.round((27 + Math.random() * 5) * 10) / 10,
+      coordenadas: { lat: 10.5 + Math.random() * 1.5, lng: -74.8 - Math.random() * 1.5 },
+      es_mock: true,
+    };
+  }
+};
+
+/** Exportar plan de riego como tarea prioritaria */
+export const exportarPlanATareas = async (plan) => {
+  try {
+    const { data } = await apiClient.post("/tasks", { plan_id: plan.plan_id });
+    return data;
+  } catch {
+    return {
+      task_id: `T-${Date.now()}`,
+      titulo: `Riego ${plan.cultivo} — ${plan.sensor_nodo || plan.sensor_id}`,
+      estado: "pendiente",
+      prioridad: "alta",
+      plan_id: plan.plan_id,
+    };
+  }
+};
+
+/** Obtener umbrales de estres hidrico por cultivo */
+export const getUmbralesCultivos = async () => {
+  try {
+    const { data } = await apiClient.get("/irrigation-plans/thresholds");
+    return data;
+  } catch {
+    return {
+      cultivos: [
+        { cultivo: "Maiz", umbral_estres_hidrico_pct: 20, et0_mm_dia: 5.2, factor_raiz: 1.0 },
+        { cultivo: "Yuca", umbral_estres_hidrico_pct: 18, et0_mm_dia: 4.1, factor_raiz: 1.2 },
+        { cultivo: "Platano", umbral_estres_hidrico_pct: 25, et0_mm_dia: 4.8, factor_raiz: 0.9 },
+        { cultivo: "Arroz", umbral_estres_hidrico_pct: 30, et0_mm_dia: 6.0, factor_raiz: 0.7 },
+        { cultivo: "Frijol", umbral_estres_hidrico_pct: 22, et0_mm_dia: 4.5, factor_raiz: 0.8 },
+        { cultivo: "Name", umbral_estres_hidrico_pct: 20, et0_mm_dia: 4.3, factor_raiz: 1.1 },
+        { cultivo: "Cacao", umbral_estres_hidrico_pct: 28, et0_mm_dia: 3.5, factor_raiz: 0.7 },
+        { cultivo: "Algodon", umbral_estres_hidrico_pct: 18, et0_mm_dia: 5.8, factor_raiz: 1.0 },
+        { cultivo: "Sorgo", umbral_estres_hidrico_pct: 18, et0_mm_dia: 5.5, factor_raiz: 1.1 },
+        { cultivo: "Palma Aceitera", umbral_estres_hidrico_pct: 28, et0_mm_dia: 4.0, factor_raiz: 0.9 },
+      ],
+    };
   }
 };
 

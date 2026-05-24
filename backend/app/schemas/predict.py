@@ -25,6 +25,9 @@ class PredictRequest(BaseModel):
     meses: int = Field(default=3, ge=1, le=6, description="Numero de meses a proyectar (1-6)")
     npk_override: Optional[float] = Field(default=None, description="Ajuste de fertilizacion NPK (0-250 kg/ha)")
     riego_override: Optional[float] = Field(default=None, description="Ajuste de riego (0-100%)")
+    fecha_inicio: Optional[str] = Field(default=None, description="Fecha ISO de inicio de la proyeccion (ej. 2025-05-01)")
+    dias_desde_siembra: Optional[int] = Field(default=None, description="Dias transcurridos desde la siembra")
+    ciclo_dias: Optional[int] = Field(default=None, description="Duracion total del ciclo del cultivo en dias")
 
 
 class OptimalDayRequest(BaseModel):
@@ -61,6 +64,7 @@ class MonthProjection(BaseModel):
     humedad: float
     ndvi_estimado: float
     radiacion_solar: Optional[float] = None
+    etapa_fenologica: Optional[str] = None
     cultivos_recomendados: list[CropScore] = []
     alertas: list[Alert] = []
 
@@ -72,5 +76,6 @@ class PredictResponse(BaseModel):
     mejor_cultivo: Optional[str] = None
     fuente: str = "NASA POWER + OpenMeteo"
     alertas_globales: list[Alert] = []
+    alertas_patrones: list[Alert] = []
     best_window: Optional[OptimalDayResponse] = None
     analysis_inherited: Optional[dict] = None

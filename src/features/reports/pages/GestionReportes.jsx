@@ -3,6 +3,7 @@ import {
   ArrowLeft, AlertTriangle, ShieldAlert, Bell, FileText,
   TrendingUp, MapPin, Calendar, Download, Printer, X,
   Sprout, Gauge, Droplets, Thermometer, Loader2, BarChart3,
+  ListChecks,
 } from 'lucide-react';
 import ResearcherLayout from '@shared/layout/ResearcherLayout/ResearcherLayout';
 import useAuthGuard from '@shared/hooks/useAuthGuard';
@@ -22,7 +23,7 @@ const GestionReportes = () => {
   const navigate = useNavigate();
   const {
     alertas, analyses, loading, exporting, selectedAnalysis,
-    exportData, handleExport, clearExport,
+    exportData, handleExport, clearExport, tareasRiego,
   } = useReportManager();
 
   if (!authorized) return null;
@@ -173,6 +174,65 @@ const GestionReportes = () => {
                       </div>
                       <p className="gr-alert-msg">{a.mensaje}</p>
                       {a.accion && <p className="gr-alert-action">{a.accion}</p>}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* TAREAS DE RIEGO ACTIVAS */}
+          <div className="gr-card">
+            <div className="gr-card-head">
+              <div className="gr-card-head-left">
+                <ListChecks size={18} />
+                <h2>Tareas de Riego y Alertas Climaticas</h2>
+              </div>
+              {tareasRiego.filter((t) => t.estado === 'Pendiente').length > 0 && (
+                <span className="gr-alert-count">
+                  {tareasRiego.filter((t) => t.estado === 'Pendiente').length} pendientes
+                </span>
+              )}
+            </div>
+            <div className="gr-alerts-list">
+              {tareasRiego.length === 0 && (
+                <div className="gr-empty">
+                  <Droplets size={32} />
+                  <h3>Sin tareas de riego ni alertas</h3>
+                  <p>Los planes exportados desde IA Predictiva y las alertas climaticas apareceran aqui.</p>
+                </div>
+              )}
+              {tareasRiego.map((t, i) => {
+                const isRiego = t.tipo === 'plan_riego';
+                const isClimatica = t.tipo === 'riesgo_climatico';
+                const sevColor = t.severidad === 'critico' ? '#ba1a1a' : t.prioridad === 'alta' ? '#ba1a1a' : '#b8860b';
+                const sevBg = t.severidad === 'critico' ? 'rgba(186,26,26,0.08)' : 'rgba(184,134,11,0.08)';
+                return (
+                  <div key={i} className="gr-alert" style={{ borderLeftColor: sevColor }}>
+                    <div className="gr-alert-icon" style={{ background: sevBg, color: sevColor }}>
+                      {isRiego ? <Droplets size={16} /> : <AlertTriangle size={16} />}
+                    </div>
+                    <div className="gr-alert-body">
+                      <div className="gr-alert-head">
+                        <span className="gr-alert-sev" style={{ color: sevColor }}>
+                          {isClimatica ? t.severidad?.toUpperCase() || 'ALERTA' : 'ALTA PRIORIDAD'}
+                        </span>
+                        <span className="gr-alert-source">
+                          {isRiego ? 'Plan de Riego' : 'Riesgo Climatico'}
+                          {t.mes_afectado ? ` · Mes ${t.mes_afectado}` : ''}
+                        </span>
+                      </div>
+                      <p className="gr-alert-msg">
+                        <strong>{t.titulo}</strong>
+                        {t.cultivo || t.cultivo_afectado ? ` — ${t.cultivo || t.cultivo_afectado}` : ''}
+                        {t.volumen_total_m3_ha && ` · ${t.volumen_total_m3_ha} m³/ha`}
+                      </p>
+                      {(t.descripcion || t.accion_recomendada) && (
+                        <p className="gr-alert-action" style={{ fontSize: '0.7rem' }}>
+                          {(t.descripcion || t.accion_recomendada).slice(0, 200)}
+                          {(t.descripcion || t.accion_recomendada).length > 200 ? '...' : ''}
+                        </p>
+                      )}
                     </div>
                   </div>
                 );

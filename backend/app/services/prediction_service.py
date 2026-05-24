@@ -213,6 +213,65 @@ async def _find_optimal_window(lat: float, lng: float, start_month: int, n_month
     }
 
 
+CICLOS_DIAS = {
+    "Maíz": 90, "Yuca": 270, "Arroz": 120, "Frijol": 75,
+    "Ñame": 210, "Plátano": 365, "Cacao": 180, "Algodón": 150,
+    "Sorgo": 110, "Palma Aceitera": 365,
+}
+
+
+def _etapa_fenologica(dias_desde_siembra: int, ciclo_dias: int) -> str:
+    if dias_desde_siembra < 0:
+        return "pre-siembra"
+    pct = min(1.0, dias_desde_siembra / max(ciclo_dias, 1))
+    if pct < 0.10:
+        return "germinacion"
+    if pct < 0.30:
+        return "desarrollo-vegetativo"
+    if pct < 0.55:
+        return "floracion"
+    if pct < 0.80:
+        return "llenado"
+    return "maduracion"
+
+
+def _detect_climate_patterns(months_projected: list[dict], temp_anomaly: float, prec_anomaly: float) -> list[dict]:
+    patterns = []
+    hot_dry = sum(1 for m in months_projected if m["temperatura"] > 35 and m["precipitacion"] < 50)
+    cold_wet = sum(1 for m in months_projected if m["temperatura"] < 26 and m["precipitacion"] > 150)
+    max_temp_anom = max((m["temperatura"] - 28 for m in months_projected if "temperatura" in m), default=0)
+    min_prec_anom = min((m["precipitacion"] for m in months_projected if "precipitacion" in m), default=100)
+
+    if hot_dry >= 2 and temp_anomaly > 2.0:
+        patterns.append({
+            "tipo": "fenomeno_nino",
+            "severidad": "critico",
+            "mensaje": f"Patron El Niño detectado: {hot_dry} meses con temperatura extrema (>35°C) y deficit hidrico. Anomalia termica: +{temp_anomaly:.1f}°C.",
+            "cultivo_afectado": None,
+            "mes": None,
+            "accion": "Preparar sistemas de riego suplementario. Evaluar cultivos tolerantes a sequia (Yuca, Sorgo).",
+        })
+    if cold_wet >= 2 and prec_anomaly > 30:
+        patterns.append({
+            "tipo": "fenomeno_nina",
+            "severidad": "alto",
+            "mensaje": f"Patron La Niña detectado: {cold_wet} meses con exceso de lluvia y temperaturas bajo lo normal. Anomalia de precipitacion: +{prec_anomaly:.1f}%.",
+            "cultivo_afectado": None,
+            "mes": None,
+            "accion": "Preparar sistemas de drenaje. Monitorear riesgos fungicos (Roya, Pudricion del Cogollo).",
+        })
+    if not patterns and temp_anomaly > 1.5:
+        patterns.append({
+            "tipo": "tendencia_calida",
+            "severidad": "moderado",
+            "mensaje": f"Tendencia mas calida de lo normal. Anomalia termica: +{temp_anomaly:.1f}°C sobre el historico.",
+            "cultivo_afectado": None,
+            "mes": None,
+            "accion": "Ajustar fechas de siembra para evitar picos de calor en floracion.",
+        })
+    return patterns
+
+
 async def project_window(
     lat: float,
     lng: float,
@@ -224,6 +283,9 @@ async def project_window(
     tipo_suelo: str = "Franco-Arcilloso",
     npk_override: float | None = None,
     riego_override: float | None = None,
+    fecha_inicio: str | None = None,
+    dias_desde_siembra: int | None = None,
+    ciclo_dias: int | None = None,
 ) -> dict:
     from app.ml.inference import predict_crop_recommendations
 
@@ -232,6 +294,11 @@ async def project_window(
     current = await fetch_current_climate(lat, lng)
 
     now = datetime.now(timezone.utc)
+    if fecha_inicio:
+        try:
+            now = datetime.fromisoformat(fecha_inicio.replace("Z", "+00:00"))
+        except (ValueError, AttributeError):
+            now = datetime.now(timezone.utc)
     current_month = now.month
 
     if start_month is None:
@@ -302,6 +369,9 @@ async def project_window(
             "humedad": round(proj_hum, 1),
             "ndvi_estimado": ndvi,
             "radiacion_solar": round(proj_rad, 1) if proj_rad else None,
+            "etapa_fenologica": _etapa_fenologica(
+                (dias_desde_siembra or 0) + i * 30, ciclo_dias or 90
+            ) if dias_desde_siembra is not None else None,
             "cultivos_recomendados": [
                 {
                     "cultivo": s["cultivo"],
@@ -323,6 +393,7 @@ async def project_window(
             best_crop = scores[0]["cultivo"]
 
     alertas = _detect_disease_risks(months)
+    alertas_patrones = _detect_climate_patterns(months, temp_anomaly, prec_anomaly)
 
     best_window = await _find_optimal_window(
         lat=lat, lng=lng, start_month=start_month, n_months=n_months,
@@ -343,5 +414,6 @@ async def project_window(
         "mejor_cultivo": best_crop,
         "fuente": fuente,
         "alertas_globales": alertas,
+        "alertas_patrones": alertas_patrones,
         "best_window": best_window,
     }
