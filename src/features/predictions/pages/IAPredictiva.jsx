@@ -1,20 +1,23 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft, AlertTriangle, Loader2, Sparkles, Shield, History,
+  ArrowLeft, AlertTriangle, Loader2, Sparkles, Settings2,
+  Search, Droplets, Shield, Eye,
 } from 'lucide-react';
 import ResearcherLayout from '@shared/layout/ResearcherLayout/ResearcherLayout';
 import useAuthGuard from '@shared/hooks/useAuthGuard';
 import usePlanRiegoActivo from '@features/predictions/hooks/usePlanRiegoActivo';
-import RiskDetectionPanel from '@features/predictions/components/RiskDetectionPanel/RiskDetectionPanel';
-import PlanVisualizationCard from '@features/predictions/components/PlanVisualizationCard/PlanVisualizationCard';
-import StressReductionChart from '@features/predictions/components/StressReductionChart/StressReductionChart';
-import AnalisisSelector from '@features/predictions/components/AnalisisSelector/AnalisisSelector';
+import BentoGrid from '@features/predictions/components/BentoGrid/BentoGrid';
+import BentoCard from '@features/predictions/components/BentoGrid/BentoCard';
+import QueryConfigModal from '@features/predictions/components/QueryConfigModal/QueryConfigModal';
+import SensorMicroGrid from '@features/predictions/components/SensorMicroGrid/SensorMicroGrid';
 import FenologiaTimeline from '@features/predictions/components/FenologiaTimeline/FenologiaTimeline';
-import MonthlyProjectionGrid from '@features/predictions/components/MonthlyProjectionGrid/MonthlyProjectionGrid';
+import MonthlyProjectionTabs from '@features/predictions/components/MonthlyProjectionTabs/MonthlyProjectionTabs';
 import MitigationSimulator from '@features/predictions/components/MitigationSimulator/MitigationSimulator';
 import FeatureChart from '@features/predictions/components/FeatureChart/FeatureChart';
 import ClimateRiskPanel from '@features/predictions/components/ClimateRiskPanel/ClimateRiskPanel';
+import PlanVisualizationCard from '@features/predictions/components/PlanVisualizationCard/PlanVisualizationCard';
+import StressReductionChart from '@features/predictions/components/StressReductionChart/StressReductionChart';
 import ExportPlanButton from '@features/predictions/components/ExportPlanButton/ExportPlanButton';
 import './IAPredictiva.css';
 
@@ -33,187 +36,197 @@ const IAPredictiva = () => {
     handleSelectAnalysis, handleSimularContramedida, handleClearProyeccion,
   } = usePlanRiegoActivo();
 
-  const [analysisDropdownOpen, setAnalysisDropdownOpen] = useState(false);
+  const [queryModalOpen, setQueryModalOpen] = useState(false);
 
   if (!authorized) return null;
 
   const isCritico = riskStatus === 'critico' || riskStatus === 'alto';
 
+  // Query config handler — triggers analysis and fenology calculation
+  const handleQueryApply = ({ lote, cultivo, fechaSiembra }) => {
+    // If an analysis was already selected in the modal, the hook handles it.
+    // For manual fields, we could extend the hook in the future.
+    setQueryModalOpen(false);
+  };
+
   return (
     <ResearcherLayout activeTab="ia">
       <div className="ia-root">
-        {/* HEADER */}
+        {/* ——— HEADER ——— */}
         <header className="ia-header">
           <div className="ia-header-left">
             <button className="ia-back-btn" onClick={() => navigate('/investigador/dashboard')}>
               <ArrowLeft size={14} />
-              Volver al Dashboard
+              Dashboard
             </button>
-            <h1 className="ia-title">
-              IA Predictiva
-              <span className="ia-title-light"> — DSS Integral</span>
-            </h1>
+            <div className="ia-header-row">
+              <h1 className="ia-title">
+                DSS Integral
+                <span className="ia-title-light"> — IA Predictiva</span>
+              </h1>
+              <button
+                className="ia-config-btn"
+                onClick={() => setQueryModalOpen(true)}
+                title="Configurar consulta"
+              >
+                <Settings2 size={16} />
+              </button>
+            </div>
             <p className="ia-page-intent">
-              Sistema de Soporte a Decisiones que integra proyecciones climaticas (NASA POWER + OpenMeteo)
-              con sensores IoT en tiempo real para anticipar riesgos, recomendar cultivos y generar
-              planes de mitigacion activos.
+              Proyecciones climaticas (NASA POWER + OpenMeteo) con sensores IoT en tiempo real.
+              Anticipa riesgos, recomienda cultivos y genera planes de mitigacion.
             </p>
-            <div className="flex items-center gap-2 mt-2">
+            <div className="flex items-center gap-2 mt-2 flex-wrap">
               <span className="ia-badge-mode">NASA POWER + OpenMeteo + IoT</span>
               {isCritico && (
                 <span className="text-xs font-semibold px-2 py-0.5 rounded-full flex items-center gap-1"
                   style={{ background: 'rgba(186,26,26,0.1)', color: '#ba1a1a' }}>
                   <AlertTriangle size={11} />
-                  Riesgo de Deficit Critico Detectado
+                  Riesgo Critico
+                </span>
+              )}
+              {selectedAnalysisId && inheritedRecord && (
+                <span className="text-xs text-[#4a4a4a] flex items-center gap-1.5"
+                  style={{ background: 'rgba(15,82,56,0.06)', padding: '0.15rem 0.6rem', borderRadius: 9999 }}>
+                  <Eye size={10} style={{ color: '#0f5238' }} />
+                  {inheritedRecord.cultivo || '—'} · {[inheritedRecord.municipio, inheritedRecord.departamento].filter(Boolean).join(', ') || 'Sin ubicacion'}
+                  {fechaSiembra && ` · Siembra: ${fechaSiembra.toLocaleDateString('es-CO')}`}
                 </span>
               )}
             </div>
           </div>
         </header>
 
-        <div className="ia-content">
-          {/* ================================================================ */}
-          {/* SECCION 1: DSS PROACTIVO — Sensores + Plan de Riego             */}
-          {/* ================================================================ */}
-          <RiskDetectionPanel
-            sensores={sensores}
-            selectedSensorId={selectedSensorId}
-            onSelect={handleSelectSensor}
-            riskStatus={riskStatus}
-            sensorRiskMap={sensorRiskMap}
-            sensoresEnRiesgo={sensoresEnRiesgo}
-            loading={loadingScan}
-          />
+        {/* ——— QUERY CONFIG MODAL ——— */}
+        <QueryConfigModal
+          isOpen={queryModalOpen}
+          onClose={() => setQueryModalOpen(false)}
+          onApply={handleQueryApply}
+          analisis={analisisConCoordenadas}
+          selectedAnalysisId={selectedAnalysisId}
+          onSelectAnalysis={(id) => { handleSelectAnalysis(id); }}
+          loading={loadingProyeccion}
+        />
 
-          {selectedSensor && (
-            <div className="ia-status-grid">
-              <div className="ia-status-card" style={{
-                borderColor: riskStatus === 'critico' ? 'rgba(186,26,26,0.3)' : riskStatus === 'alto' ? 'rgba(184,134,11,0.3)' : 'rgba(15,82,56,0.2)',
-              }}>
-                <span className="ia-status-label">
-                  {selectedSensor.nodo_id || selectedSensor.id?.slice(0, 8)}
-                </span>
-                <div className="ia-status-row">
-                  <span className="ia-status-value">{selectedSensor.ultima_lectura?.humedad ?? '—'}%</span>
-                  <span className="ia-status-unit">Humedad suelo</span>
-                </div>
-                <span className="ia-status-badge" style={{
-                  color: riskStatus === 'critico' ? '#ba1a1a' : riskStatus === 'alto' ? '#b8860b' : '#0f5238',
-                  background: riskStatus === 'critico' ? 'rgba(186,26,26,0.08)' : riskStatus === 'alto' ? 'rgba(184,134,11,0.08)' : 'rgba(15,82,56,0.08)',
-                }}>
-                  {riskStatus === 'critico' ? 'Critico' : riskStatus === 'alto' ? 'Alto' : riskStatus === 'moderado' ? 'Monitoreo' : 'Normal'}
-                </span>
-              </div>
-            </div>
-          )}
-
-          {isCritico && !plan && !generandoPlan && (
-            <div className="ia-action-banner">
-              <AlertTriangle size={20} style={{ color: '#ba1a1a' }} />
-              <div>
-                <h3 className="text-sm font-bold text-[#1A1C1A]">Riesgo de Deficit Critico Detectado</h3>
-                <p className="text-xs text-[#6b7280]">
-                  La humedad del suelo esta por debajo del umbral y la proyeccion climatica indica baja
-                  probabilidad de lluvia. Se recomienda generar un plan de riego.
-                </p>
-              </div>
-              <button className="ia-generate-btn" onClick={handleGenerarPlan}>
-                <Shield size={15} /> Generar Plan de Riego
-              </button>
-            </div>
-          )}
-
-          {generandoPlan && (
-            <div className="flex items-center justify-center py-8 gap-3 text-[#4a4a4a]">
-              <Loader2 size={20} className="animate-spin" />
-              <span className="text-sm">Generando plan de riego optimizado...</span>
-            </div>
-          )}
-
-          {/* ================================================================ */}
-          {/* SECCION 2: HISTORIAL + PROYECCION 6 MESES + FENOLOGIA           */}
-          {/* ================================================================ */}
-          <div
-            className="rounded-2xl p-5"
-            style={{ background: 'rgba(255,255,255,0.55)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.25)' }}
+        {/* ——— BENTO GRID ——— */}
+        <BentoGrid>
+          {/* ——— ROW 1: CRITICAL KPIs ——— */}
+          <BentoCard
+            span={{ col: 12, row: 1 }}
+            variant={isCritico ? 'critical' : 'default'}
+            title="Riesgos Activos y Sensores IoT"
+            icon={Search}
+            badge={sensoresEnRiesgo.length > 0 ? `${sensoresEnRiesgo.length} alerta${sensoresEnRiesgo.length > 1 ? 's' : ''}` : undefined}
           >
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-bold text-[#1A1C1A] flex items-center gap-2">
-                <History size={16} />
-                Proyeccion Estacional desde Historial
-              </h2>
-              {selectedAnalysisId && (
-                <button
-                  onClick={handleClearProyeccion}
-                  className="text-xs text-[#6b7280] hover:text-[#ba1a1a] transition-colors"
-                >
-                  Desvincular analisis
-                </button>
-              )}
-            </div>
+            <SensorMicroGrid
+              sensores={sensores}
+              selectedSensorId={selectedSensorId}
+              onSelect={handleSelectSensor}
+              riskStatus={riskStatus}
+              sensorRiskMap={sensorRiskMap}
+              sensoresEnRiesgo={sensoresEnRiesgo}
+              loading={loadingScan}
+            />
 
-            <div className="flex items-center gap-3 flex-wrap">
-              <AnalisisSelector
-                analisis={analisisConCoordenadas}
-                selectedId={selectedAnalysisId}
-                onSelect={handleSelectAnalysis}
-                onClear={handleClearProyeccion}
-                isOpen={analysisDropdownOpen}
-                onToggle={() => setAnalysisDropdownOpen((p) => !p)}
-              />
-
-              {selectedAnalysisId && inheritedRecord && (
-                <div className="text-xs text-[#4a4a4a] flex items-center gap-3 ml-2">
-                  <span>{inheritedRecord.cultivo || '—'}</span>
-                  <span className="text-[#6b7280]">|</span>
-                  <span>{[inheritedRecord.municipio, inheritedRecord.departamento].filter(Boolean).join(', ') || '—'}</span>
-                  {fechaSiembra && (
-                    <>
-                      <span className="text-[#6b7280]">|</span>
-                      <span>Siembra: {fechaSiembra.toLocaleDateString('es-CO')}</span>
-                    </>
-                  )}
+            {/* Critical action banner */}
+            {isCritico && !plan && !generandoPlan && (
+              <div className="ia-action-banner">
+                <AlertTriangle size={18} style={{ color: '#ba1a1a' }} />
+                <div className="flex-1">
+                  <h3 className="text-sm font-bold text-[#1A1C1A]">Riesgo de Deficit Critico Detectado</h3>
+                  <p className="text-xs text-[#6b7280]">
+                    Humedad bajo umbral. Se recomienda generar un plan de riego.
+                  </p>
                 </div>
-              )}
-            </div>
-
-            {loadingProyeccion && (
-              <div className="flex items-center justify-center py-6 gap-3 text-[#4a4a4a]">
-                <Loader2 size={20} className="animate-spin" />
-                <span className="text-sm">Calculando proyeccion 6 meses...</span>
+                <button className="ia-generate-btn" onClick={handleGenerarPlan}>
+                  <Shield size={14} /> Generar Plan
+                </button>
               </div>
             )}
+          </BentoCard>
 
-            {!loadingProyeccion && !selectedAnalysisId && (
-              <p className="text-xs text-[#6b7280] mt-3">
-                Selecciona un analisis del historial para cargar la proyeccion estacional de 6 meses con datos de NASA POWER y OpenMeteo.
-              </p>
-            )}
-          </div>
-
-          {!loadingProyeccion && proyeccion6M && etapaFenologica && (
-            <FenologiaTimeline
-              etapaActual={etapaFenologica.etapa}
-              diasDesdeSiembra={etapaFenologica.diasDesdeSiembra}
-              cicloDias={etapaFenologica.cicloDias}
-              pctCompletado={etapaFenologica.pct}
-            />
+          {/* ——— ROW 2: FENOLOGIA + PROYECCION ——— */}
+          {etapaFenologica && (
+            <BentoCard
+              span={{ col: 12, row: 1 }}
+              variant="highlight"
+              title="Estado Fenologico"
+              icon={Sparkles}
+              badge={`${etapaFenologica.pct}% completado`}
+            >
+              <FenologiaTimeline
+                etapaActual={etapaFenologica.etapa}
+                diasDesdeSiembra={etapaFenologica.diasDesdeSiembra}
+                cicloDias={etapaFenologica.cicloDias}
+                pctCompletado={etapaFenologica.pct}
+              />
+            </BentoCard>
           )}
 
-          {!loadingProyeccion && proyeccion6M && (
-            <MonthlyProjectionGrid
-              proyeccion={proyeccion6M}
-              mejorMes={proyeccion6M.mejor_mes}
-              mejorCultivo={proyeccion6M.mejor_cultivo}
-              loading={false}
-            />
-          )}
-
-          {/* ================================================================ */}
-          {/* SECCION 3: MITIGATION SIMULATOR                                   */}
-          {/* ================================================================ */}
+          {/* ——— ROW 3: PROYECCION TABS ——— */}
           {proyeccion6M && (
-            <>
+            <BentoCard
+              span={{ col: 8, row: 1 }}
+              variant="default"
+              title="Proyeccion Estacional"
+              icon={Droplets}
+            >
+              <MonthlyProjectionTabs
+                proyeccion={proyeccion6M}
+                mejorMes={proyeccion6M.mejor_mes}
+                mejorCultivo={proyeccion6M.mejor_cultivo}
+                loading={false}
+              />
+            </BentoCard>
+          )}
+
+          {/* ——— ROW 3: CLIMATE RISK (side) ——— */}
+          {proyeccion6M && (
+            <BentoCard
+              span={{ col: 4, row: 1 }}
+              variant="default"
+            >
+              <ClimateRiskPanel proyeccion={proyeccion6M} />
+            </BentoCard>
+          )}
+
+          {/* Loading state */}
+          {loadingProyeccion && (
+            <BentoCard span={{ col: 12, row: 1 }} variant="default">
+              <div className="flex items-center justify-center py-8 gap-3 text-[#4a4a4a]">
+                <Loader2 size={20} className="animate-spin" />
+                <span className="text-sm">Calculando proyeccion estacional...</span>
+              </div>
+            </BentoCard>
+          )}
+
+          {/* Empty state — prompt user to configure */}
+          {!loadingProyeccion && !selectedAnalysisId && (
+            <BentoCard span={{ col: 12, row: 1 }} variant="default">
+              <div className="flex flex-col items-center justify-center py-8 gap-3">
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(15,82,56,0.08)' }}>
+                  <Settings2 size={28} style={{ color: '#0f5238', opacity: 0.6 }} />
+                </div>
+                <div className="text-center">
+                  <h3 className="text-sm font-bold text-[#1A1C1A] mb-1">Configura tu Consulta</h3>
+                  <p className="text-xs text-[#6b7280] max-w-md">
+                    Define lote, cultivo y fecha de siembra para generar la proyeccion estacional
+                    y el estado fenologico del cultivo.
+                  </p>
+                </div>
+                <button
+                  className="ia-generate-btn mt-2"
+                  onClick={() => setQueryModalOpen(true)}
+                >
+                  <Settings2 size={15} /> Configurar Consulta
+                </button>
+              </div>
+            </BentoCard>
+          )}
+
+          {/* ——— ROW 4: SIMULATOR + XAI side by side ——— */}
+          {proyeccion6M && (
+            <BentoCard span={{ col: 6, row: 1 }} variant="default">
               <MitigationSimulator
                 npkSim={npkSim}
                 riegoSim={riegoSim}
@@ -223,63 +236,69 @@ const IAPredictiva = () => {
                 onRiegoChange={setRiegoSim}
                 onSimular={handleSimularContramedida}
               />
-
-              <FeatureChart
-                factors={
-                  proyeccion6M.meses?.[0]?.cultivos_recomendados?.[0]?.factor_weights
-                  || []
-                }
-              />
-
-              <ClimateRiskPanel proyeccion={proyeccion6M} />
-
-              <div className="flex justify-end mt-2">
-                <ExportPlanButton
-                  proyeccion={proyeccion6M}
-                  plan={plan}
-                  disabled={!proyeccion6M}
-                />
-              </div>
-            </>
+            </BentoCard>
           )}
 
-          {/* ================================================================ */}
-          {/* PLAN + STRESS CHART                                             */}
-          {/* ================================================================ */}
+          {proyeccion6M && (
+            <BentoCard span={{ col: 6, row: 1 }} variant="default">
+              <FeatureChart
+                factors={
+                  proyeccion6M.meses?.[0]?.cultivos_recomendados?.[0]?.factor_weights || []
+                }
+              />
+            </BentoCard>
+          )}
+
+          {/* ——— ROW 5: PLAN (conditional) ——— */}
           {plan && (
-            <>
+            <BentoCard span={{ col: 12, row: 1 }} variant="highlight">
               <PlanVisualizationCard
                 plan={plan}
                 previewActive={previewActive}
                 onTogglePreview={togglePreview}
                 onExport={handleExportarTareas}
               />
-              <StressReductionChart plan={plan} previewActive={previewActive} sensorLectura={selectedSensor?.ultima_lectura} />
-              <button onClick={handleClearPlan} className="text-xs text-[#6b7280] mt-2 hover:text-[#4a4a4a] transition-colors">
-                Descartar plan actual
-              </button>
-            </>
+            </BentoCard>
           )}
 
-          {!isCritico && !loadingScan && !plan && !generandoPlan && selectedSensor && !proyeccion6M && (
-            <div className="rounded-2xl p-6 text-center" style={{ background: 'rgba(255,255,255,0.55)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.25)' }}>
-              <Sparkles size={32} className="mx-auto mb-3" style={{ color: '#0f5238', opacity: 0.6 }} />
-              <h3 className="text-sm font-bold text-[#1A1C1A] mb-1">Monitoreo Activo</h3>
-              <p className="text-xs text-[#6b7280]">
-                Los niveles de humedad del sensor seleccionado estan dentro de los rangos aceptables.
-              </p>
+          {plan && (
+            <BentoCard span={{ col: 12, row: 1 }} variant="default">
+              <StressReductionChart
+                plan={plan}
+                previewActive={previewActive}
+                sensorLectura={selectedSensor?.ultima_lectura}
+              />
+            </BentoCard>
+          )}
+
+          {/* ——— EXPORT ——— */}
+          {proyeccion6M && (
+            <div className="flex justify-end mt-1" style={{ gridColumn: 'span 12' }}>
+              <ExportPlanButton
+                proyeccion={proyeccion6M}
+                plan={plan}
+                disabled={!proyeccion6M}
+              />
             </div>
           )}
 
+          {/* ——— GENERANDO PLAN LOADING ——— */}
+          {generandoPlan && (
+            <BentoCard span={{ col: 12, row: 1 }} variant="default">
+              <div className="flex items-center justify-center py-8 gap-3 text-[#4a4a4a]">
+                <Loader2 size={20} className="animate-spin" />
+                <span className="text-sm">Generando plan de riego optimizado...</span>
+              </div>
+            </BentoCard>
+          )}
+
+          {/* ——— PLAN HISTORY ——— */}
           {historialPlanes.length > 0 && (
-            <section className="mt-6">
-              <h2 className="text-sm font-bold text-[#1A1C1A] flex items-center gap-2 mb-3">
-                <History size={16} /> Historial de Planes Generados
-              </h2>
+            <BentoCard span={{ col: 12, row: 1 }} variant="default" title="Historial de Planes" icon={Shield}>
               <div className="space-y-2">
                 {historialPlanes.map((p) => (
                   <div key={p.plan_id} className="flex items-center justify-between p-3 rounded-xl text-xs"
-                    style={{ background: 'rgba(255,255,255,0.55)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.25)' }}>
+                    style={{ background: 'rgba(255,255,255,0.4)', border: '1px solid rgba(0,0,0,0.05)' }}>
                     <div>
                       <span className="font-semibold text-[#1A1C1A]">{p.plan_id}</span>
                       <span className="ml-2 text-[#6b7280]">{p.cultivo} · {p.volumen_total_m3_ha} m³/ha</span>
@@ -290,9 +309,31 @@ const IAPredictiva = () => {
                   </div>
                 ))}
               </div>
-            </section>
+            </BentoCard>
           )}
-        </div>
+
+          {/* ——— MONITOREO NORMAL ——— */}
+          {!isCritico && !loadingScan && !plan && !generandoPlan && selectedSensor && !proyeccion6M && (
+            <BentoCard span={{ col: 12, row: 1 }} variant="default">
+              <div className="flex flex-col items-center justify-center py-6 gap-3">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(15,82,56,0.08)' }}>
+                  <Sparkles size={24} style={{ color: '#0f5238', opacity: 0.6 }} />
+                </div>
+                <div className="text-center">
+                  <h3 className="text-sm font-bold text-[#1A1C1A] mb-1">Monitoreo Activo</h3>
+                  <p className="text-xs text-[#6b7280]">Niveles de humedad dentro de rangos aceptables.</p>
+                </div>
+              </div>
+            </BentoCard>
+          )}
+        </BentoGrid>
+
+        {/* Clear plan link */}
+        {plan && (
+          <button onClick={handleClearPlan} className="text-xs text-[#6b7280] mt-2 hover:text-[#4a4a4a] transition-colors">
+            Descartar plan actual
+          </button>
+        )}
       </div>
     </ResearcherLayout>
   );
