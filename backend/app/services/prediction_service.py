@@ -46,11 +46,21 @@ async def fetch_current_climate(lat: float, lng: float) -> dict:
 
 
 def _ndvi_estimate(month: int, base_ndvi: float = 0.42, precipitacion: float = 80) -> float:
+    """Estima NDVI mensual usando base real o sintetico con variacion estacional.
+
+    Si base_ndvi viene de Sentinel-2 (BD), genera una variacion estacional
+    suave alrededor de ese valor. Si es sintetico, usa el modelo original.
+    """
     import numpy as np
+    # Factor de precipitacion: mas lluvia -> mas NDVI
     precip_factor = min(1.2, max(0.7, precipitacion / 100.0))
+    # Factor estacional: meses humedos (abril-noviembre) tienen mas vegetacion
     if 4 <= month <= 11:
         precip_factor += 0.1
-    ndvi = base_ndvi * precip_factor * (0.95 + np.random.default_rng(42 + month).random() * 0.1)
+    # Variacion aleatoria determinista (reproducible por mes)
+    rng = np.random.default_rng(42 + month)
+    seasonal_noise = 0.95 + rng.random() * 0.1
+    ndvi = base_ndvi * precip_factor * seasonal_noise
     return round(min(0.95, max(0.15, ndvi)), 2)
 
 
@@ -286,6 +296,8 @@ async def project_window(
     fecha_inicio: str | None = None,
     dias_desde_siembra: int | None = None,
     ciclo_dias: int | None = None,
+    base_ndvi: float | None = None,
+    cultivo: str | None = None,
 ) -> dict:
     from app.ml.inference import predict_crop_recommendations
 
@@ -340,7 +352,9 @@ async def project_window(
         proj_hum = min(98, max(30, proj_hum * riego_factor))
         proj_prec = max(0, proj_prec * riego_factor)
 
-        ndvi = _ndvi_estimate(effective_month, 0.42, proj_prec)
+        # Usar NDVI real de la BD si existe, si no estimar con modelo
+        ndvi_base = base_ndvi if base_ndvi is not None else 0.42
+        ndvi = _ndvi_estimate(effective_month, ndvi_base, proj_prec)
 
         # NPK afecta NDVI (mas fertilizacion → mas vigor)
         ndvi = min(0.95, ndvi * npk_factor)

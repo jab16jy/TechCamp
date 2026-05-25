@@ -7,7 +7,7 @@ import {
 
 const UMBRALES_FALLBACK = {
   Maiz: 20, Yuca: 18, Platano: 25, Arroz: 30,
-  Frijol: 22, Name: 20, Cacao: 28, Algodon: 18,
+  Frijel: 22, Name: 20, Cacao: 28, Algodon: 18,
   Sorgo: 18, "Palma Aceitera": 28,
 };
 
@@ -38,6 +38,9 @@ export default function usePlanRiegoActivo() {
   const [npkSim, setNpkSim] = useState(120);
   const [riegoSim, setRiegoSim] = useState(75);
   const [stale, setStale] = useState(false);
+
+  // Datos del analisis seleccionado para preview en el modal
+  const [selectedAnalysisData, setSelectedAnalysisData] = useState(null);
 
   const selectedSensor = useMemo(
     () => sensores.find((s) => s.id === selectedSensorId) || null,
@@ -141,17 +144,72 @@ export default function usePlanRiegoActivo() {
     setPreviewActive(false);
   }, []);
 
+  // Funcion helper para ejecutar proyeccion con coordenadas
+  const _runPrediccion = useCallback(async (lat, lng, options = {}) => {
+    const {
+      analysisId = null,
+      cultivo = 'Maiz',
+      fechaSiembraStr = null,
+      npk = npkSim,
+      riego = riegoSim,
+    } = options;
+
+    const ciclo = CICLOS_DIAS[cultivo] || 90;
+
+    // Calcular dias desde siembra
+    let diasDesdeSiembra = null;
+    let fechaBase = null;
+    if (fechaSiembraStr) {
+      fechaBase = fechaSiembraStr;
+      try {
+        const siembraDate = new Date(fechaSiembraStr);
+        diasDesdeSiembra = Math.max(0, Math.floor((Date.now() - siembraDate.getTime()) / 86400000));
+      } catch {
+        diasDesdeSiembra = null;
+      }
+    }
+
+    setFechaSiembra(fechaSiembraStr ? new Date(fechaSiembraStr) : null);
+    setLoadingProyeccion(true);
+
+    try {
+      const result = await getPrediccion(
+        lat, lng, analysisId, 6, npk, riego,
+        fechaBase, diasDesdeSiembra, ciclo,
+        cultivo, fechaSiembraStr,
+      );
+      if (result) {
+        setProyeccion6M(result);
+        if (diasDesdeSiembra !== null && diasDesdeSiembra >= 0) {
+          const etapa = result.meses?.[0]?.etapa_fenologica || 'germinacion';
+          setEtapaFenologica({
+            etapa, diasDesdeSiembra, cicloDias: ciclo,
+            pct: Math.min(100, Math.round((diasDesdeSiembra / ciclo) * 100)),
+          });
+        }
+        setStale(false);
+        return result;
+      }
+    } catch {
+      agregarToast('Error al cargar la proyeccion', 'error');
+    } finally {
+      setLoadingProyeccion(false);
+    }
+    return null;
+  }, [npkSim, riegoSim, agregarToast]);
+
   const handleSelectAnalysis = useCallback(async (analysisId) => {
     if (!analysisId) {
       setSelectedAnalysisId(null);
       setFechaSiembra(null);
       setEtapaFenologica(null);
       setProyeccion6M(null);
+      setSelectedAnalysisData(null);
       return;
     }
 
-    setLoadingProyeccion(true);
     setSelectedAnalysisId(analysisId);
+    setLoadingProyeccion(true);
 
     try {
       let data = await getAnalysis(analysisId);
@@ -164,6 +222,11 @@ export default function usePlanRiegoActivo() {
             cultivo: local.cultivo,
             created_at: local.fecha,
             mes_siembra: local.mes_siembra,
+            ph_suelo: local.ph ?? local.ph_suelo,
+            materia_organica: local.materia_organica,
+            textura_suelo: local.textura_suelo,
+            departamento: local.departamento,
+            municipio: local.municipio,
           };
         }
       }
@@ -175,35 +238,36 @@ export default function usePlanRiegoActivo() {
 
       const lat = Number(data.lat);
       const lng = Number(data.lng);
-      const cultivo = data.cultivo || 'Maiz';
+      const cultivo = data.cultivo || data.cultivo_recomendado || inheritedRecord?.cultivo || 'Maiz';
       const fechaBase = data.created_at || data.fecha;
-      const ciclo = CICLOS_DIAS[cultivo] || 90;
-      const diasDesdeSiembra = fechaBase
-        ? Math.floor((Date.now() - new Date(fechaBase).getTime()) / 86400000)
-        : 0;
 
-      setFechaSiembra(fechaBase ? new Date(fechaBase) : null);
+      setSelectedAnalysisData(data);
 
-      const result = await getPrediccion(
-        lat, lng, analysisId, 6, npkSim, riegoSim,
-        fechaBase,
-        diasDesdeSiembra,
-        ciclo,
-      );
-      if (result) {
-        setProyeccion6M(result);
-        if (diasDesdeSiembra >= 0) {
-          const etapa = result.meses?.[0]?.etapa_fenologica || 'germinacion';
-          setEtapaFenologica({ etapa, diasDesdeSiembra, cicloDias: ciclo, pct: Math.min(100, Math.round((diasDesdeSiembra / ciclo) * 100)) });
-        }
-        setStale(false);
-      }
+      await _runPrediccion(lat, lng, {
+        analysisId,
+        cultivo,
+        fechaSiembraStr: fechaBase,
+      });
     } catch {
       agregarToast('Error al cargar la proyeccion', 'error');
-    } finally {
       setLoadingProyeccion(false);
     }
-  }, [historial, npkSim, riegoSim, agregarToast]);
+  }, [historial, _runPrediccion, agregarToast, inheritedRecord]);
+
+  const handleManualQuery = useCallback(async ({ lat, lng, cultivo, fechaSiembra }) => {
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+      agregarToast('Selecciona una ubicacion valida', 'advertencia');
+      return;
+    }
+    setSelectedAnalysisId(null);
+    setSelectedAnalysisData(null);
+
+    await _runPrediccion(lat, lng, {
+      analysisId: null,
+      cultivo: cultivo || 'Maiz',
+      fechaSiembraStr: fechaSiembra || null,
+    });
+  }, [_runPrediccion, agregarToast]);
 
   const handleSimularContramedida = useCallback(async () => {
     if (!selectedAnalysisId) return;
@@ -293,6 +357,7 @@ export default function usePlanRiegoActivo() {
     setFechaSiembra(null);
     setEtapaFenologica(null);
     setProyeccion6M(null);
+    setSelectedAnalysisData(null);
   }, []);
 
   return {
@@ -301,10 +366,11 @@ export default function usePlanRiegoActivo() {
     plan, generandoPlan, previewActive, umbrales, historialPlanes,
     selectedAnalysisId, fechaSiembra, etapaFenologica, proyeccion6M,
     loadingProyeccion, analisisConCoordenadas, inheritedRecord,
+    selectedAnalysisData,
     npkSim, riegoSim, stale,
     setNpkSim, setRiegoSim,
     handleSelectSensor, handleGenerarPlan, togglePreview,
     handleExportarTareas, handleClearPlan,
-    handleSelectAnalysis, handleSimularContramedida, handleClearProyeccion,
+    handleSelectAnalysis, handleManualQuery, handleSimularContramedida, handleClearProyeccion,
   };
 }

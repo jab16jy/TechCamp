@@ -30,10 +30,11 @@ const IAPredictiva = () => {
     plan, generandoPlan, previewActive, umbrales, historialPlanes,
     selectedAnalysisId, fechaSiembra, etapaFenologica, proyeccion6M,
     loadingProyeccion, analisisConCoordenadas, inheritedRecord,
+    selectedAnalysisData,
     npkSim, riegoSim, stale, setNpkSim, setRiegoSim,
     handleSelectSensor, handleGenerarPlan, togglePreview,
     handleExportarTareas, handleClearPlan,
-    handleSelectAnalysis, handleSimularContramedida, handleClearProyeccion,
+    handleSelectAnalysis, handleManualQuery, handleSimularContramedida, handleClearProyeccion,
   } = usePlanRiegoActivo();
 
   const [queryModalOpen, setQueryModalOpen] = useState(false);
@@ -42,10 +43,17 @@ const IAPredictiva = () => {
 
   const isCritico = riskStatus === 'critico' || riskStatus === 'alto';
 
-  // Query config handler — triggers analysis and fenology calculation
-  const handleQueryApply = ({ lote, cultivo, fechaSiembra }) => {
-    // If an analysis was already selected in the modal, the hook handles it.
-    // For manual fields, we could extend the hook in the future.
+  // Query config handler — connects the modal to the backend
+  const handleQueryApply = ({ lat, lng, cultivo, fechaSiembra, source }) => {
+    if (source === 'analysis' && lat && lng) {
+      // Analysis was selected — hook already handled it via handleSelectAnalysis
+      setQueryModalOpen(false);
+      return;
+    }
+    // Manual query — lat/lng must come from somewhere (the selected analysis or manual input)
+    if (lat && lng) {
+      handleManualQuery({ lat, lng, cultivo, fechaSiembra });
+    }
     setQueryModalOpen(false);
   };
 
@@ -106,6 +114,7 @@ const IAPredictiva = () => {
           selectedAnalysisId={selectedAnalysisId}
           onSelectAnalysis={(id) => { handleSelectAnalysis(id); }}
           loading={loadingProyeccion}
+          analysisData={selectedAnalysisData}
         />
 
         {/* ——— BENTO GRID ——— */}

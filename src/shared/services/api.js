@@ -13,7 +13,7 @@ const getBaseUrl = () => {
   } catch {
     // localStorage may be unavailable in restricted browser contexts.
   }
-  return import.meta.env.VITE_API_URL || "http://localhost:8000";
+  return import.meta.env.VITE_API_URL || "";
 };
 
 const BASE_URL = getBaseUrl();
@@ -741,6 +741,8 @@ export const getPrediccion = async (
   fechaInicio = null,
   diasDesdeSiembra = null,
   cicloDias = null,
+  cultivo = null,
+  fechaSiembra = null,
 ) => {
   try {
     const payload = {
@@ -757,6 +759,8 @@ export const getPrediccion = async (
     if (fechaInicio) payload.fecha_inicio = fechaInicio;
     if (diasDesdeSiembra != null) payload.dias_desde_siembra = diasDesdeSiembra;
     if (cicloDias != null) payload.ciclo_dias = cicloDias;
+    if (cultivo) payload.cultivo = cultivo;
+    if (fechaSiembra) payload.fecha_siembra = fechaSiembra;
 
     const { data } = await apiClient.post("/predict", payload);
     return data;

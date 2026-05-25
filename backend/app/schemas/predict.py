@@ -22,12 +22,22 @@ class PredictRequest(BaseModel):
     lat: Optional[float] = None
     lng: Optional[float] = None
     analysis_id: Optional[str] = None
+    cultivo: Optional[str] = Field(default=None, description="Cultivo seleccionado para la proyeccion")
     meses: int = Field(default=3, ge=1, le=6, description="Numero de meses a proyectar (1-6)")
     npk_override: Optional[float] = Field(default=None, description="Ajuste de fertilizacion NPK (0-250 kg/ha)")
     riego_override: Optional[float] = Field(default=None, description="Ajuste de riego (0-100%)")
     fecha_inicio: Optional[str] = Field(default=None, description="Fecha ISO de inicio de la proyeccion (ej. 2025-05-01)")
+    fecha_siembra: Optional[str] = Field(default=None, description="Fecha ISO de siembra (ej. 2025-04-01)")
     dias_desde_siembra: Optional[int] = Field(default=None, description="Dias transcurridos desde la siembra")
     ciclo_dias: Optional[int] = Field(default=None, description="Duracion total del ciclo del cultivo en dias")
+
+
+CICLOS_DIAS_MAP = {
+    "Maiz": 90, "Yuca": 270, "Arroz": 120, "Frijol": 75,
+    "Name": 210, "Platano": 365, "Cacao": 180, "Algodon": 150,
+    "Sorgo": 110, "Palma Aceitera": 365,
+    "Maíz": 90, "Ñame": 210, "Plátano": 365, "Palma Aceitera": 365,
+}
 
 
 class OptimalDayRequest(BaseModel):
