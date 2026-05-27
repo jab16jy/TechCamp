@@ -22,6 +22,9 @@ class LecturaResponse(BaseModel):
     ndvi: Optional[float] = None
     humedad: Optional[float] = None
     temperatura: Optional[float] = None
+    viento_kmh: Optional[float] = None
+    pluviometria_mm: Optional[float] = None
+    humectacion_hoja_pct: Optional[float] = None
     created_at: Optional[str] = None
 
     model_config = {"from_attributes": True}
@@ -50,3 +53,6 @@ class CreateLecturaRequest(BaseModel):
     ndvi: Optional[float] = None
     humedad: Optional[float] = None
     temperatura: Optional[float] = None
+    viento_kmh: Optional[float] = None
+    pluviometria_mm: Optional[float] = None
+    humectacion_hoja_pct: Optional[float] = None

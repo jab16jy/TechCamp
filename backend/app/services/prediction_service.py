@@ -247,8 +247,12 @@ def _etapa_fenologica(dias_desde_siembra: int, ciclo_dias: int) -> str:
 
 def _detect_climate_patterns(months_projected: list[dict], temp_anomaly: float, prec_anomaly: float) -> list[dict]:
     patterns = []
-    hot_dry = sum(1 for m in months_projected if m["temperatura"] > 35 and m["precipitacion"] < 50)
+    # Niño: temperatura >35°C Y precipitacion <10mm (umbral refinado, antes <50mm)
+    hot_dry = sum(1 for m in months_projected if m["temperatura"] > 35 and m["precipitacion"] < 10)
+    # Niña: humedad >85% Y exceso de lluvia (>150mm)
     cold_wet = sum(1 for m in months_projected if m["temperatura"] < 26 and m["precipitacion"] > 150)
+    # Niña adicional: humedad >85% en meses consecutivos
+    high_hum_months = sum(1 for m in months_projected if m.get("humedad", 0) > 85)
     max_temp_anom = max((m["temperatura"] - 28 for m in months_projected if "temperatura" in m), default=0)
     min_prec_anom = min((m["precipitacion"] for m in months_projected if "precipitacion" in m), default=100)
 
@@ -256,16 +260,17 @@ def _detect_climate_patterns(months_projected: list[dict], temp_anomaly: float, 
         patterns.append({
             "tipo": "fenomeno_nino",
             "severidad": "critico",
-            "mensaje": f"Patron El Niño detectado: {hot_dry} meses con temperatura extrema (>35°C) y deficit hidrico. Anomalia termica: +{temp_anomaly:.1f}°C.",
+            "mensaje": f"Patron El Niño detectado: {hot_dry} meses con temperatura extrema (>35°C) y deficit hidrico severo (<10mm). Anomalia termica: +{temp_anomaly:.1f}°C.",
             "cultivo_afectado": None,
             "mes": None,
             "accion": "Preparar sistemas de riego suplementario. Evaluar cultivos tolerantes a sequia (Yuca, Sorgo).",
         })
-    if cold_wet >= 2 and prec_anomaly > 30:
+    # Niña con humedad >85% y suelo saturado (exceso de lluvia)
+    if (cold_wet >= 2 or high_hum_months >= 2) and prec_anomaly > 30:
         patterns.append({
             "tipo": "fenomeno_nina",
             "severidad": "alto",
-            "mensaje": f"Patron La Niña detectado: {cold_wet} meses con exceso de lluvia y temperaturas bajo lo normal. Anomalia de precipitacion: +{prec_anomaly:.1f}%.",
+            "mensaje": f"Patron La Niña detectado: {cold_wet} meses con exceso de lluvia y {high_hum_months} meses con humedad >85%. Anomalia de precipitacion: +{prec_anomaly:.1f}%.",
             "cultivo_afectado": None,
             "mes": None,
             "accion": "Preparar sistemas de drenaje. Monitorear riesgos fungicos (Roya, Pudricion del Cogollo).",
@@ -430,4 +435,175 @@ async def project_window(
         "alertas_globales": alertas,
         "alertas_patrones": alertas_patrones,
         "best_window": best_window,
+    }
+
+
+async def project_window_with_scenario(
+    lat: float = 10.97,
+    lng: float = -74.78,
+    n_months: int = 6,
+    precip_delta_pct: float = 0,
+    temp_delta_c: float = 0,
+    npk_override: float | None = None,
+    riego_override: float | None = None,
+    ph_suelo: float = 6.5,
+    materia_organica: float = 3.0,
+    textura_suelo: str = "Franco",
+    tipo_suelo: str = "Franco-Arcilloso",
+    cultivo: str | None = None,
+) -> dict:
+    """Proyecta ventana de siembra con escenario climatico alterado.
+
+    Extiende project_window() aplicando deltas de precipitacion y
+    temperatura antes de la prediccion. Util para simulaciones
+    what-if (Niño, Niña, escenarios personalizados).
+
+    Args:
+        lat: Latitud de la ubicacion.
+        lng: Longitud de la ubicacion.
+        n_months: Meses a proyectar (1-6).
+        precip_delta_pct: Delta porcentual de precipitacion (-80 a +80).
+        temp_delta_c: Delta de temperatura en °C (-5 a +5).
+        npk_override: Ajuste de fertilizacion NPK en kg/ha.
+        riego_override: Ajuste de riego en %.
+        ph_suelo: pH del suelo.
+        materia_organica: Materia organica en %.
+        textura_suelo: Clasificacion USDA de textura.
+        tipo_suelo: Tipo de suelo general.
+        cultivo: Cultivo objetivo para la proyeccion.
+
+    Returns:
+        Diccionario con la proyeccion ajustada por escenario.
+    """
+    from app.ml.inference import predict_crop_recommendations
+
+    nasa_data = await fetch_nasa_climatology(lat, lng)
+    climatology = _monthly_climatology_from_nasa(nasa_data)
+    current = await fetch_current_climate(lat, lng)
+
+    now = datetime.now(timezone.utc)
+    current_month = now.month
+    start_month = (current_month % 12) + 1
+
+    # Clima base actual
+    current_temp = current["temperatura"] + temp_delta_c
+    current_hum = current["humedad"]
+    current_prec = current["precipitacion"] * (1 + precip_delta_pct / 100.0)
+
+    hist_temp = climatology.get("T2M", {}).get(current_month, current_temp)
+    hist_prec = climatology.get("PRECTOTCORR", {}).get(current_month, current_prec)
+    hist_hum = climatology.get("RH2M", {}).get(current_month, current_hum)
+
+    temp_anomaly = current_temp - hist_temp if hist_temp else temp_delta_c
+    prec_anomaly = current_prec - hist_prec if hist_prec else precip_delta_pct
+    hum_anomaly = current_hum - hist_hum if hist_hum else 0
+
+    npk_factor, riego_factor = _compute_npk_riego_factors(npk_override, riego_override)
+
+    months = []
+    best_score = 0
+    best_month = None
+    best_crop = None
+    metodo_usado = "heuristico"
+
+    for i in range(n_months):
+        future = now + relativedelta(months=i + 1)
+        effective_month = ((start_month - 1 + i) % 12) + 1
+        y = future.year
+
+        decay = math.exp(-DECAY_ALPHA * i)
+
+        # Aplicar deltas de escenario
+        proj_temp = (
+            climatology.get("T2M", {}).get(effective_month, 28.5)
+            + (temp_anomaly * decay)
+            + temp_delta_c * decay
+        )
+        proj_prec = (
+            climatology.get("PRECTOTCORR", {}).get(effective_month, 80)
+            + prec_anomaly * decay
+        ) * (1 + precip_delta_pct / 100.0 * decay)
+        proj_hum = climatology.get("RH2M", {}).get(effective_month, 75) + hum_anomaly * decay
+        proj_rad = climatology.get("ALLSKY_SFC_SW_DWN", {}).get(effective_month, 5.0)
+
+        proj_hum = min(98, max(30, proj_hum * riego_factor))
+        proj_prec = max(0, proj_prec * riego_factor)
+
+        ndvi = _ndvi_estimate(effective_month, 0.42, proj_prec)
+        ndvi = min(0.95, ndvi * npk_factor)
+        mo_effective = materia_organica * npk_factor
+
+        scores, metodo = predict_crop_recommendations(
+            temperatura=proj_temp,
+            humedad=proj_hum,
+            precipitacion=proj_prec,
+            ph_suelo=ph_suelo,
+            materia_organica=mo_effective,
+            ndvi=ndvi,
+            textura_suelo=textura_suelo,
+            tipo_suelo=tipo_suelo,
+        )
+        metodo_usado = metodo
+
+        month_entry = {
+            "month": MES_NOMBRES.get(effective_month, "Desconocido"),
+            "year": y,
+            "month_num": effective_month,
+            "temperatura": round(proj_temp, 1),
+            "precipitacion": round(proj_prec, 1),
+            "humedad": round(proj_hum, 1),
+            "ndvi_estimado": ndvi,
+            "radiacion_solar": round(proj_rad, 1) if proj_rad else None,
+            "etapa_fenologica": None,
+            "cultivos_recomendados": [
+                {
+                    "cultivo": s["cultivo"],
+                    "score": s["score"],
+                    "riesgo": s["riesgo"],
+                    "emoji": s["emoji"],
+                    "metodo": s.get("metodo", "heuristico"),
+                    "probabilidad": s.get("probabilidad"),
+                    "factor_weights": s.get("factor_weights", []),
+                }
+                for s in scores
+            ],
+        }
+        months.append(month_entry)
+
+        if scores and scores[0]["score"] > best_score:
+            best_score = scores[0]["score"]
+            best_month = MES_NOMBRES.get(effective_month)
+            best_crop = scores[0]["cultivo"]
+
+    alertas = _detect_disease_risks(months)
+    alertas_patrones = _detect_climate_patterns(months, temp_anomaly, prec_anomaly)
+
+    best_window = await _find_optimal_window(
+        lat=lat, lng=lng, start_month=start_month, n_months=n_months,
+        climatology=climatology, temp_anomaly=temp_anomaly,
+        prec_anomaly=prec_anomaly, hum_anomaly=hum_anomaly,
+    )
+
+    fuente = (
+        f"NASA POWER + OpenMeteo ({metodo_usado}) [Escenario: "
+        f"precip {precip_delta_pct:+.0f}%, temp {temp_delta_c:+.1f}°C]"
+        if nasa_data
+        else f"Datos historicos Caribe ({metodo_usado}) [Escenario]"
+    )
+
+    return {
+        "ubicacion": {"lat": lat, "lng": lng},
+        "meses": months,
+        "mejor_mes": best_month,
+        "mejor_cultivo": best_crop,
+        "fuente": fuente,
+        "alertas_globales": alertas,
+        "alertas_patrones": alertas_patrones,
+        "best_window": best_window,
+        "scenario_applied": {
+            "precip_delta_pct": precip_delta_pct,
+            "temp_delta_c": temp_delta_c,
+            "npk_override": npk_override,
+            "riego_override": riego_override,
+        },
     }

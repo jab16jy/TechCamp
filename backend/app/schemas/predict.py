@@ -1,5 +1,41 @@
+from enum import Enum
 from pydantic import BaseModel, Field
 from typing import Optional
+
+
+class ScenarioPreset(str, Enum):
+    """Presets climaticos predefinidos para el simulador de escenarios."""
+    nino = "nino"
+    nina = "nina"
+    normal = "normal"
+
+
+class ScenarioRequest(BaseModel):
+    """Solicitud de proyeccion con escenario what-if.
+
+    Permite simular condiciones climaticas alteradas (deltas)
+    y ajustes de insumos para evaluar su impacto en los cultivos.
+    """
+    lat: Optional[float] = None
+    lng: Optional[float] = None
+    meses: int = Field(default=6, ge=1, le=6, description="Meses a proyectar")
+    precip_delta_pct: float = Field(
+        default=0, ge=-80, le=80,
+        description="Delta porcentual de precipitacion (-80 a +80)"
+    )
+    temp_delta_c: float = Field(
+        default=0, ge=-5, le=5,
+        description="Delta de temperatura en °C (-5 a +5)"
+    )
+    npk_override: Optional[float] = Field(
+        default=None, description="Ajuste de fertilizacion NPK (kg/ha)"
+    )
+    riego_override: Optional[float] = Field(
+        default=None, description="Ajuste de riego (%)"
+    )
+    preset: Optional[ScenarioPreset] = Field(
+        default=None, description="Preset climatico predefinido"
+    )
 
 
 class FactorWeight(BaseModel):
