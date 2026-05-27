@@ -69,7 +69,32 @@ def predict_crop_recommendations(
     textura_suelo: str = "",
     tipo_suelo: str = "",
     mes_siembra: str = "",
+    lstm_anomalies: dict | None = None,
 ) -> tuple[list[dict], str]:
+    """Predice recomendaciones de cultivo con ensemble RF+LSTM.
+
+    Combina Random Forest (60%) con ajuste heuristico basado en
+    anomalias LSTM (40%) cuando el LSTM esta disponible.
+    Si lstm_anomalies es None, opera en modo RF puro (fallback).
+
+    Args:
+        temperatura: Temperatura actual en °C.
+        humedad: Humedad relativa en %.
+        precipitacion: Precipitacion acumulada en mm.
+        ph_suelo: pH del suelo.
+        materia_organica: Materia organica en %.
+        ndvi: Indice de vegetacion NDVI.
+        textura_suelo: Clasificacion USDA de textura.
+        tipo_suelo: Tipo de suelo general.
+        mes_siembra: Mes de siembra previsto.
+        lstm_anomalies: Anomalias climaticas del LSTM a 6 meses
+            (dict con temp_anomalies, precip_anomalies, hum_anomalies, confidence).
+            None para usar solo RF.
+
+    Returns:
+        Tupla (resultados, metodo) donde metodo indica el motor usado:
+        'ensemble_rf_lstm', 'rf_fallback', o 'heuristico'.
+    """
     model, scaler = _load_rf()
 
     classifier = get_crop_classifier()
@@ -128,8 +153,18 @@ def predict_crop_recommendations(
                 })
 
             results.sort(key=lambda r: r["score"], reverse=True)
+
+            # --- Ensemble RF + LSTM (60/40) ---
+            if lstm_anomalies is not None:
+                results = _apply_lstm_ensemble(
+                    results, lstm_anomalies, temperatura, humedad, precipitacion
+                )
+                metodo_detectado = "ensemble_rf_lstm"
+            else:
+                metodo_detectado = "random_forest"
+
             results = _enrich_with_metadata(results[:3])
-            return results, "random_forest"
+            return results, metodo_detectado
         except Exception as e:
             logger.warning(f"Error en prediccion RF: {e}. Fallback a heuristico.")
 
@@ -137,3 +172,66 @@ def predict_crop_recommendations(
         s["metodo"] = "heuristico"
         s["probabilidad"] = None
     return heuristic_scores, "heuristico"
+
+
+def _apply_lstm_ensemble(
+    rf_results: list[dict],
+    lstm_anomalies: dict,
+    temperatura: float,
+    humedad: float,
+    precipitacion: float,
+) -> list[dict]:
+    """Aplica ajuste de ensemble 60% RF + 40% LSTM sobre los scores.
+
+    El LSTM ajusta los scores del RF basado en las anomalias climaticas
+    proyectadas a 6 meses. Anomalias extremas reducen el score,
+    condiciones favorables lo mantienen o mejoran ligeramente.
+
+    Args:
+        rf_results: Resultados ordenados del Random Forest.
+        lstm_anomalies: Diccionario con anomalias del LSTM.
+        temperatura: Temperatura base.
+        humedad: Humedad base.
+        precipitacion: Precipitacion base.
+
+    Returns:
+        Lista de resultados con scores ajustados por ensemble.
+    """
+    temp_anoms = lstm_anomalies.get("temp_anomalies", [0] * 6)
+    precip_anoms = lstm_anomalies.get("precip_anomalies", [0] * 6)
+    hum_anoms = lstm_anomalies.get("hum_anomalies", [0] * 6)
+    lstm_confidence = lstm_anomalies.get("confidence", 0.7)
+
+    # Calcular factor de ajuste LSTM basado en anomalias promedio
+    avg_temp_anom = sum(temp_anoms) / max(len(temp_anoms), 1)
+    avg_precip_anom = sum(precip_anoms) / max(len(precip_anoms), 1)
+    avg_hum_anom = sum(hum_anoms) / max(len(hum_anoms), 1)
+
+    # Factor LSTM: penaliza anomalias extremas
+    # Temp: ideal 0-1°C, critico >4°C o < -2°C
+    temp_factor = max(0.5, 1.0 - abs(avg_temp_anom) / 8.0)
+    # Precip: deficit severo (< -30%) o exceso (> +40%) penalizan
+    precip_factor = 1.0
+    if avg_precip_anom < -20:
+        precip_factor = max(0.4, 1.0 - abs(avg_precip_anom) / 50.0)
+    elif avg_precip_anom > 30:
+        precip_factor = max(0.6, 1.0 - (avg_precip_anom - 30) / 70.0)
+    # Humedad: desviaciones >10% penalizan
+    hum_factor = max(0.6, 1.0 - abs(avg_hum_anom) / 20.0)
+
+    # Factor combinado LSTM (ponderado por confianza del modelo)
+    lstm_factor = (temp_factor * 0.4 + precip_factor * 0.35 + hum_factor * 0.25)
+    lstm_factor = lstm_factor * lstm_confidence + 1.0 * (1.0 - lstm_confidence)
+
+    for result in rf_results:
+        rf_score = result["score"] / 100.0  # Normalizar 0-1
+        # Ensemble: 60% RF + 40% LSTM heuristico
+        ensemble_score = rf_score * 0.6 + lstm_factor * 0.4
+        result["score"] = int(max(5, min(98, ensemble_score * 100)))
+        result["metodo"] = "ensemble_rf_lstm"
+        # Agregar info de anomalias al resultado
+        result["lstm_confidence"] = lstm_confidence
+        result["temp_anomaly_avg"] = round(avg_temp_anom, 2)
+        result["precip_anomaly_avg"] = round(avg_precip_anom, 1)
+
+    return rf_results

@@ -1,0 +1,49 @@
+schema: spec-driven
+
+context: |
+  AgroCaribe AI — agricultural analysis platform
+  Frontend: React 19 SPA, Vite 8, Tailwind CSS 3, Zustand 5, React Router 6, Leaflet, Framer Motion
+  Backend: FastAPI 0.115, Python 3.12, SQLAlchemy 2.0 (async), PostGIS 16, Alembic, LangGraph, scikit-learn, Ollama
+  Architecture: Feature-based FE (src/features/), shared modules (src/shared/), FastAPI layered BE (app/api, models, schemas, services)
+  Path aliases: @features, @shared, @assets
+  Package manager: npm (FE), pip (BE), Docker Compose for services
+
+testing:
+  strict_tdd: true
+  frotend:
+    test_runner: none
+    test_command: ""
+  backend:
+    test_runner: pytest
+    test_command: "pytest backend/tests/"
+    coverage_command: ""
+    lint_command: "npm run lint"
+  e2e: none
+  coverage: false
+  quality:
+    linter: eslint
+    type_checker: none
+    formatter: none
+
+rules:
+  proposal:
+    - Include rollback plan for risky changes
+  specs:
+    - Use Given/When/Then for scenarios
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY)
+  design:
+    - Include sequence diagrams for complex flows
+    - Document architecture decisions with rationale
+  tasks:
+    - Group by phase, use hierarchical numbering
+    - Keep tasks completable in one session
+  apply:
+    - Follow existing code patterns (feature-based FE, layered BE)
+    tdd: true
+    test_command: "pytest backend/tests/"
+  verify:
+    test_command: "pytest backend/tests/"
+    build_command: "npm run build"
+    coverage_threshold: 0
+  archive:
+    - Warn before merging destructive deltas

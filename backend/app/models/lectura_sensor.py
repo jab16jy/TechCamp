@@ -25,6 +25,9 @@ class LecturaSensor(Base):
     ndvi: Mapped[float] = mapped_column(Float, nullable=True)
     humedad: Mapped[float] = mapped_column(Float, nullable=True)
     temperatura: Mapped[float] = mapped_column(Float, nullable=True)
+    viento_kmh: Mapped[float] = mapped_column(Float, nullable=True)
+    pluviometria_mm: Mapped[float] = mapped_column(Float, nullable=True)
+    humectacion_hoja_pct: Mapped[float] = mapped_column(Float, nullable=True)
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
 
     sensor = relationship("Sensor", back_populates="lecturas")

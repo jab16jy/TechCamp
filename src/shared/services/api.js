@@ -969,6 +969,33 @@ export const getDashboardSummary = async () => {
   }
 };
 
+/** Simular escenario climático what-if (POST /predict/scenario) */
+export const postScenario = async (
+  lat,
+  lng,
+  months = 6,
+  precipDeltaPct = 0,
+  tempDeltaC = 0,
+  npkOverride = null,
+  riegoOverride = null,
+) => {
+  try {
+    const payload = {
+      lat,
+      lng,
+      meses: months,
+      precip_delta_pct: precipDeltaPct,
+      temp_delta_c: tempDeltaC,
+    };
+    if (npkOverride != null) payload.npk_override = npkOverride;
+    if (riegoOverride != null) payload.riego_override = riegoOverride;
+    const { data } = await apiClient.post("/predict/scenario", payload);
+    return data;
+  } catch {
+    return null;
+  }
+};
+
 /** Generar plan de riego optimizado desde sensor IoT */
 export const generarPlanRiego = async (sensorId, analysisId = null, cultivo = null) => {
   try {

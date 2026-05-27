@@ -16,4 +16,6 @@ pyjwt==2.10.1
 python-dateutil==2.9.0
 langgraph==0.3.0
 langchain-core==0.3.0
+tensorflow==2.21.0
+joblib==1.5.3
 cachetools==5.5.0

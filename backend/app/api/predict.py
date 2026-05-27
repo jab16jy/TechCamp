@@ -10,8 +10,9 @@ from app.models.analisis import Analisis
 from app.schemas.predict import (
     PredictRequest, PredictResponse, OptimalDayRequest, OptimalDayResponse,
     MonthProjection, CropScore, FactorWeight, Alert, CICLOS_DIAS_MAP,
+    ScenarioRequest, ScenarioPreset,
 )
-from app.services.prediction_service import project_window, _mes_siembra_to_num
+from app.services.prediction_service import project_window, project_window_with_scenario, _mes_siembra_to_num
 from app.services.soil_service import get_soil_data
 from app.services.satellite_service import get_satellite_data
 
@@ -242,4 +243,90 @@ async def find_optimal_day(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error calculando ventana optima: {e}",
+        )
+
+
+# --- Presets de escenario climatico ---
+SCENARIO_PRESETS = {
+    ScenarioPreset.nino: {
+        "precip_delta_pct": -30.0,
+        "temp_delta_c": 3.0,
+        "npk_override": 140.0,
+        "riego_override": 90.0,
+    },
+    ScenarioPreset.nina: {
+        "precip_delta_pct": 40.0,
+        "temp_delta_c": -1.5,
+        "npk_override": 100.0,
+        "riego_override": 40.0,
+    },
+    ScenarioPreset.normal: {
+        "precip_delta_pct": 0.0,
+        "temp_delta_c": 0.0,
+        "npk_override": 120.0,
+        "riego_override": 75.0,
+    },
+}
+
+
+@router.post("/scenario", response_model=PredictResponse)
+async def predict_scenario(
+    body: ScenarioRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """Proyecta escenarios climaticos what-if con deltas configurables.
+
+    Permite simular condiciones de El Niño, La Niña o escenarios
+    personalizados ajustando precipitacion, temperatura, NPK y riego.
+    """
+    # Resolver preset si se especifico
+    precip_delta = body.precip_delta_pct
+    temp_delta = body.temp_delta_c
+    npk = body.npk_override
+    riego = body.riego_override
+
+    if body.preset and body.preset in SCENARIO_PRESETS:
+        preset_values = SCENARIO_PRESETS[body.preset]
+        precip_delta = preset_values["precip_delta_pct"]
+        temp_delta = preset_values["temp_delta_c"]
+        if npk is None:
+            npk = preset_values["npk_override"]
+        if riego is None:
+            riego = preset_values["riego_override"]
+
+    # Resolver coordenadas
+    lat = body.lat or 10.97
+    lng = body.lng or -74.78
+
+    _validate_coords(lat, lng)
+
+    try:
+        result = await project_window_with_scenario(
+            lat=lat,
+            lng=lng,
+            n_months=body.meses,
+            precip_delta_pct=precip_delta,
+            temp_delta_c=temp_delta,
+            npk_override=npk,
+            riego_override=riego,
+        )
+
+        return PredictResponse(
+            ubicacion=result["ubicacion"],
+            meses=[MonthProjection(**m) for m in result["meses"]],
+            mejor_mes=result.get("mejor_mes"),
+            mejor_cultivo=result.get("mejor_cultivo"),
+            fuente=result["fuente"],
+            alertas_globales=[Alert(**a) for a in result.get("alertas_globales", [])],
+            alertas_patrones=[Alert(**a) for a in result.get("alertas_patrones", [])],
+            best_window=OptimalDayResponse(**result["best_window"]) if result.get("best_window") else None,
+            analysis_inherited=result.get("scenario_applied"),
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("Scenario prediction error")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error generando escenario: {e}",
         )
