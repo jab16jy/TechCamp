@@ -18,20 +18,20 @@ export default function GrowthStressChart({ proyeccion }) {
     if (!meses.length) return null;
 
     return meses.map((m, i) => {
-      const growth = m.score_parcial != null
-        ? Math.round((m.score_parcial || 0) * 100)
-        : m.crecimiento_pct != null
-          ? m.crecimiento_pct
-          : Math.max(20, 100 - i * 10);
+      // Derive growth from first crop score, or estimate from position
+      const cropScore = m.cultivos_recomendados?.[0]?.score;
+      const growth = cropScore != null
+        ? cropScore
+        : Math.max(20, 100 - i * 10);
 
-      // Derive stress from anomalies
-      const tempAnomaly = Math.abs(m.temp_anomalia || m.temp_media ? (m.temp_media || 25) - 28 : 0);
-      const precipAnomaly = Math.abs(m.precipitacion ? Math.max(0, 80 - m.precipitacion) / 2 : 0);
+      // Derive stress from temperature and precipitation anomalies relative to ideal
+      const tempAnomaly = Math.abs((m.temperatura || 28) - 28);
+      const precipAnomaly = Math.max(0, 80 - (m.precipitacion || 80));
       const stressTermico = Math.min(100, Math.round(tempAnomaly * 15));
       const stressHidrico = Math.min(100, Math.round(precipAnomaly * 1.2));
 
       return {
-        month: m.mes || i + 1,
+        month: m.month_num || i + 1,
         growth: Math.max(0, Math.min(100, growth)),
         stressTermico: Math.max(0, stressTermico),
         stressHidrico: Math.max(0, Math.min(100, stressHidrico)),

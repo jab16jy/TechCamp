@@ -10,7 +10,7 @@ const SEVERIDAD_LABEL = {
 function getSeveridad(proyeccion) {
   // Derive severity from temperature and precipitation data
   const meses = proyeccion?.meses || [];
-  const temps = meses.map((m) => m.temp_media || 0).filter((t) => t > 0);
+  const temps = meses.map((m) => m.temperatura || 0).filter((t) => t > 0);
   const precips = meses.map((m) => m.precipitacion || 0).filter((p) => p > 0);
   const avgTemp = temps.length ? temps.reduce((a, b) => a + b, 0) / temps.length : 30;
   const totalPrecip = precips.length ? precips.reduce((a, b) => a + b, 0) : 10;
@@ -30,7 +30,7 @@ export default function NinoPanel({ proyeccion }) {
 
   const severidad = getSeveridad(proyeccion);
   const meses = proyeccion.meses || [];
-  const temps = meses.map((m) => m.temp_media || 0).filter((t) => t > 0);
+  const temps = meses.map((m) => m.temperatura || 0).filter((t) => t > 0);
   const tempActual = temps[0] || 0;
   const tempProyectada = temps.length > 1 ? Math.max(...temps) : tempActual;
   const precipTotal = meses.reduce((a, m) => a + (m.precipitacion || 0), 0);

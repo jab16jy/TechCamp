@@ -9,7 +9,7 @@ const SEVERIDAD_LABEL = {
 
 function getSeveridad(proyeccion) {
   const meses = proyeccion?.meses || [];
-  const hums = meses.map((m) => m.humedad || m.humedad_relativa || 0).filter((h) => h > 0);
+  const hums = meses.map((m) => m.humedad || 0).filter((h) => h > 0);
   const avgHum = hums.length ? hums.reduce((a, b) => a + b, 0) / hums.length : 70;
   const precips = meses.map((m) => m.precipitacion || 0).filter((p) => p > 0);
   const totalPrecip = precips.length ? precips.reduce((a, b) => a + b, 0) : 50;
@@ -29,13 +29,13 @@ export default function NinaPanel({ proyeccion }) {
 
   const severidad = getSeveridad(proyeccion);
   const meses = proyeccion.meses || [];
-  const hums = meses.map((m) => m.humedad || m.humedad_relativa || 0).filter((h) => h > 0);
+  const hums = meses.map((m) => m.humedad || 0).filter((h) => h > 0);
   const humActual = hums[0] || 0;
   const humMax = hums.length > 1 ? Math.max(...hums) : humActual;
   const precipTotal = meses.reduce((a, m) => a + (m.precipitacion || 0), 0);
 
   // NDVI tracking — use first available
-  const ndvi = meses.find((m) => m.ndvi != null)?.ndvi;
+  const ndvi = meses.find((m) => m.ndvi_estimado != null)?.ndvi_estimado;
 
   const sevColor = severidad === 'extrema' ? '#ba1a1a'
     : severidad === 'alta' ? '#2563eb'
