@@ -208,6 +208,7 @@ export default function usePlanRiegoActivo() {
       return;
     }
 
+    // Solo pre-carga los datos del analisis — NO dispara proyeccion
     setSelectedAnalysisId(analysisId);
     setLoadingProyeccion(true);
 
@@ -236,38 +237,34 @@ export default function usePlanRiegoActivo() {
         return;
       }
 
-      const lat = Number(data.lat);
-      const lng = Number(data.lng);
-      const cultivo = data.cultivo || data.cultivo_recomendado || inheritedRecord?.cultivo || 'Maiz';
-      const fechaBase = data.created_at || data.fecha;
-
+      // Guarda los datos para preview en el modal
       setSelectedAnalysisData(data);
-
-      await _runPrediccion(lat, lng, {
-        analysisId,
-        cultivo,
-        fechaSiembraStr: fechaBase,
-      });
+      setLoadingProyeccion(false);
     } catch {
-      agregarToast('Error al cargar la proyeccion', 'error');
+      agregarToast('Error al cargar los datos del analisis', 'error');
       setLoadingProyeccion(false);
     }
-  }, [historial, _runPrediccion, agregarToast, inheritedRecord]);
+  }, [historial, agregarToast]);
 
-  const handleManualQuery = useCallback(async ({ lat, lng, cultivo, fechaSiembra }) => {
+  const handleManualQuery = useCallback(async ({ lat, lng, cultivo, fechaSiembra, source, analysisId }) => {
     if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
       agregarToast('Selecciona una ubicacion valida', 'advertencia');
       return;
     }
-    setSelectedAnalysisId(null);
-    setSelectedAnalysisData(null);
+
+    const finalAnalysisId = source === 'analysis' ? (analysisId || selectedAnalysisId) : null;
+
+    if (source !== 'analysis') {
+      setSelectedAnalysisId(null);
+      setSelectedAnalysisData(null);
+    }
 
     await _runPrediccion(lat, lng, {
-      analysisId: null,
+      analysisId: finalAnalysisId,
       cultivo: cultivo || 'Maiz',
       fechaSiembraStr: fechaSiembra || null,
     });
-  }, [_runPrediccion, agregarToast]);
+  }, [_runPrediccion, selectedAnalysisId, agregarToast]);
 
   const handleSimularContramedida = useCallback(async () => {
     if (!selectedAnalysisId) return;

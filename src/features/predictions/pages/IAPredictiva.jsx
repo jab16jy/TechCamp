@@ -44,15 +44,16 @@ const IAPredictiva = () => {
   const isCritico = riskStatus === 'critico' || riskStatus === 'alto';
 
   // Query config handler — connects the modal to the backend
-  const handleQueryApply = ({ lat, lng, cultivo, fechaSiembra, source }) => {
+  const handleQueryApply = ({ lat, lng, cultivo, fechaSiembra, source, analysisId }) => {
     if (source === 'analysis' && lat && lng) {
-      // Analysis was selected — hook already handled it via handleSelectAnalysis
+      // Analisis pre-seleccionado → disparar proyeccion con sus datos
+      handleManualQuery({ lat, lng, cultivo, fechaSiembra, source, analysisId });
       setQueryModalOpen(false);
       return;
     }
-    // Manual query — lat/lng must come from somewhere (the selected analysis or manual input)
+    // Manual query desde los campos del formulario
     if (lat && lng) {
-      handleManualQuery({ lat, lng, cultivo, fechaSiembra });
+      handleManualQuery({ lat, lng, cultivo, fechaSiembra, source });
     }
     setQueryModalOpen(false);
   };
