@@ -36,16 +36,16 @@ Chain strategy: pending
 
 ## Fase 2: Hooks Frontend
 
-- [ ] 2.1 Crear `src/features/predictions/hooks/useSensores.js`: fetch `GET /sensors`, cálculo de riesgo (`critico`|`alto`|`moderado`|`ok`) por tipo de sensor, selección de sensor activo. Capacidad: weather-station-dashboard.
-- [ ] 2.2 Crear `src/features/predictions/hooks/usePrediccion.js`: fetch `POST /predict` y `POST /predict/scenario`, máquina de estados (`IDLE`→`LOADING`→`PROJECTED`→`SIMULATING`→`PROJECTED`), manejo de errores. Capacidad: hybrid-prediction-engine, scenario-simulator.
-- [ ] 2.3 Crear `src/features/predictions/hooks/usePlanRiego.js`: `POST /sensors/{id}/plan`, toggle preview, exportación de plan. Agregar función `postScenario()` a `src/shared/services/api.js`. Capacidad: optimal-planting-window.
+- [x] 2.1 Crear `src/features/predictions/hooks/useSensores.js`: fetch `GET /sensors`, cálculo de riesgo (`critico`|`alto`|`moderado`|`ok`) por tipo de sensor, selección de sensor activo. Capacidad: weather-station-dashboard.
+- [x] 2.2 Crear `src/features/predictions/hooks/usePrediccion.js`: fetch `POST /predict` y `POST /predict/scenario`, máquina de estados (`IDLE`→`LOADING`→`PROJECTED`→`SIMULATING`→`PROJECTED`), manejo de errores. Capacidad: hybrid-prediction-engine, scenario-simulator.
+- [x] 2.3 Crear `src/features/predictions/hooks/usePlanRiego.js`: `POST /sensors/{id}/plan`, toggle preview, exportación de plan. Agregar función `postScenario()` a `src/shared/services/api.js`. Capacidad: optimal-planting-window.
 
 ## Fase 3: Componentes Frontend
 
-- [ ] 3.1 Crear `SensorDashboard/SensorDashboard.jsx` (grid 3×2 con `SensorCard`) y `SensorCard/SensorCard.jsx` (ícono Lucide, valor+unidad, umbral, badge riesgo con animación pulso para estado crítico). Capacidad: weather-station-dashboard.
-- [ ] 3.2 Crear `NinoPanel/NinoPanel.jsx` (termómetro, temp/precip, alerta «Riego Crítico», severidad, mulch tip) y `NinaPanel/NinaPanel.jsx` (humedad, alerta «Riesgo Hongos», tracking NDVI, severidad). Capacidad: climate-scenario-panels.
-- [ ] 3.3 Crear `ScenarioSimulator/ScenarioSimulator.jsx` (4 sliders con valor numérico visible), `ScenarioSelector.jsx` (3 presets: Niño/Niña/Normal), `GrowthStressChart.jsx` (SVG inline: trayectoria crecimiento vs estrés hídrico+térmico con interpolación animada). Capacidad: scenario-simulator.
-- [ ] 3.4 Crear `OptimalWindowCard/OptimalWindowCard.jsx`: fechas inicio/fin 7 días, confianza %, justificación agronómica, estado «Sin ventana óptima» con factores limitantes. Capacidad: optimal-planting-window.
+- [x] 3.1 Crear `SensorDashboard/SensorDashboard.jsx` (grid 3×2 con `SensorCard`) y `SensorCard/SensorCard.jsx` (ícono Lucide, valor+unidad, umbral, badge riesgo con animación pulso para estado crítico). Capacidad: weather-station-dashboard.
+- [x] 3.2 Crear `NinoPanel/NinoPanel.jsx` (termómetro, temp/precip, alerta «Riego Crítico», severidad, mulch tip) y `NinaPanel/NinaPanel.jsx` (humedad, alerta «Riesgo Hongos», tracking NDVI, severidad). Capacidad: climate-scenario-panels.
+- [x] 3.3 Crear `ScenarioSimulator/ScenarioSimulator.jsx` (4 sliders con valor numérico visible), `ScenarioSelector.jsx` (3 presets: Niño/Niña/Normal), `GrowthStressChart.jsx` (SVG inline: trayectoria crecimiento vs estrés hídrico+térmico con interpolación animada). Capacidad: scenario-simulator.
+- [x] 3.4 Crear `OptimalWindowCard/OptimalWindowCard.jsx`: fechas inicio/fin 7 días, confianza %, justificación agronómica, estado «Sin ventana óptima» con factores limitantes. Capacidad: optimal-planting-window.
 
 ## Fase 4: Integración
 
