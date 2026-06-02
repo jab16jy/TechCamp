@@ -11,7 +11,7 @@ from app.models.lectura_sensor import LecturaSensor
 from app.models.plan_riego import PlanRiego
 from app.models.parcela import Parcela
 from app.services.prediction_service import project_window
-from app.services.climate_service import fetch_current_climate
+from app.services.prediction_service import fetch_current_climate
 
 logger = logging.getLogger(__name__)
 

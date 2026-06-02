@@ -123,7 +123,7 @@ export default function usePrediccion() {
       const lat = Number(data.lat), lng = Number(data.lng);
       const cultivo = data.cultivo || data.cultivo_recomendado || 'Maiz';
       setSelectedAnalysisData(data);
-      return await fetchProyeccion({ lat, lng, cultivo, meses: 6, analysisId, fechaSiembraStr: data.created_at || data.fecha });
+      return await fetchProyeccion({ lat, lng, cultivo, meses: 6, analysisId, fechaSiembraStr: data.fecha_siembra || data.fecha || data.created_at });
     } catch {
       agregarToast('Error al cargar la proyección', 'error');
       setEstado(ESTADOS.IDLE); setLoadingProyeccion(false);

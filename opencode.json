@@ -1,0 +1,49 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "shell": "/usr/bin/zsh",
+  "mcp": {
+    "context7": {
+      "enabled": true,
+      "type": "remote",
+      "url": "https://mcp.context7.com/mcp"
+    },
+    "obsidian": {
+      "command": [
+        "npx",
+        "-y",
+        "@fazer-ai/mcp-obsidian",
+        "/home/jabyn/Documents/Obsidian Vault"
+      ],
+      "enabled": false,
+      "type": "local"
+    },
+    "supabase": {
+      "enabled": true,
+      "type": "remote",
+      "url": "https://mcp.supabase.com/mcp?project_ref=hpmjbgqjwopxlgurczna",
+      "headers": {
+        "Authorization": "Bearer sbp_d6edbf4fdba89bd065c57f5ed36ab1f325a5d310"
+      }
+    }
+  },
+  "permission": {
+    "bash": {
+      "*": "allow",
+      "git commit *": "ask",
+      "git push": "ask",
+      "git push *": "ask",
+      "git push --force *": "ask",
+      "git rebase *": "ask",
+      "git reset --hard *": "ask"
+    },
+    "read": {
+      "*": "allow",
+      "**/.env": "deny",
+      "**/.env.*": "deny",
+      "**/credentials.json": "deny",
+      "**/secrets/**": "deny",
+      "*.env": "deny",
+      "*.env.*": "deny"
+    }
+  }
+}

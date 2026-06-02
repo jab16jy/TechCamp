@@ -162,9 +162,12 @@ async def _find_optimal_window(lat: float, lng: float, start_month: int, n_month
 
     total_days = 0
     if n_months >= 1:
-        first_date = datetime(now.year, start_month, 1)
-        if start_month <= now.month:
-            first_date = datetime(now.year + 1 if start_month <= now.month else now.year, start_month, 1)
+        if start_month < now.month:
+            first_date = datetime(now.year + 1, start_month, 1)
+        elif start_month == now.month:
+            first_date = datetime(now.year, now.month, now.day)
+        else:
+            first_date = datetime(now.year, start_month, 1)
         last_date = first_date + relativedelta(months=n_months)
         total_days = (last_date - first_date).days
 

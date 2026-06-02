@@ -15,7 +15,7 @@ export default function OptimalWindowCard({ proyeccion }) {
   const bestWindow = proyeccion?.best_window;
 
   // ── No window found ──
-  if (!bestWindow || (!bestWindow.fecha_inicio && !bestWindow.start)) {
+  if (!bestWindow || (!bestWindow.ventana_inicio && !bestWindow.fecha_inicio && !bestWindow.start)) {
     const factoresLimitantes = proyeccion?.factores_limitantes || [];
     const nearestWindow = proyeccion?.nearest_window;
 
@@ -57,7 +57,7 @@ export default function OptimalWindowCard({ proyeccion }) {
           >
             <p className="text-[10px] font-semibold text-[#6b7280] uppercase mb-1">Ventana más cercana</p>
             <p className="text-xs font-bold text-[#1A1C1A]">
-              {formatDate(nearestWindow.fecha_inicio || nearestWindow.start)} — {formatDate(nearestWindow.fecha_fin || nearestWindow.end)}
+              {formatDate(nearestWindow.ventana_inicio || nearestWindow.fecha_inicio || nearestWindow.start)} — {formatDate(nearestWindow.ventana_fin || nearestWindow.fecha_fin || nearestWindow.end)}
             </p>
             <p className="text-[10px] text-[#6b7280] mt-0.5">
               Confianza reducida: {nearestWindow.confianza || nearestWindow.confidence || '<50%'}
@@ -96,11 +96,11 @@ export default function OptimalWindowCard({ proyeccion }) {
   }
 
   // ── Window found ──
-  const inicio = bestWindow.fecha_inicio || bestWindow.start;
-  const fin = bestWindow.fecha_fin || bestWindow.end;
+  const inicio = bestWindow.ventana_inicio || bestWindow.fecha_inicio || bestWindow.start;
+  const fin = bestWindow.ventana_fin || bestWindow.fecha_fin || bestWindow.end;
   const confianza = bestWindow.confianza || bestWindow.confidence || 0;
   const justificacion = bestWindow.justificacion || bestWindow.rationale || '';
-  const confianzaPct = Math.round(Number(confianza) * 100) || confianza;
+  const confianzaPct = Math.round(Number(confianza)) || 0;
 
   const confColor = confianzaPct >= 80 ? '#0f5238'
     : confianzaPct >= 60 ? '#2563eb'

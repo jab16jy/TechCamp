@@ -4,15 +4,15 @@ import {
 } from 'lucide-react';
 
 const CULTIVOS = [
-  'Maiz', 'Yuca', 'Arroz', 'Frijel', 'Platano',
+  'Maiz', 'Yuca', 'Arroz', 'Frijol', 'Platano',
   'Name', 'Cacao', 'Algodón', 'Sorgo', 'Palma Aceitera',
 ];
 
 const CICLOS_DIAS = {
-  Maiz: 90, Yuca: 270, Arroz: 120, Frijel: 75,
+  Maiz: 90, Yuca: 270, Arroz: 120, Frijol: 75,
   Name: 210, Platano: 365, Cacao: 180, Algodón: 150,
   Sorgo: 110, 'Palma Aceitera': 365,
-  'Maíz': 90, 'Frijol': 75, 'Ñame': 210, 'Plátano': 365, 'Algodón': 150,
+  'Maíz': 90, 'Ñame': 210, 'Plátano': 365,
 };
 
 const ETAPAS = [
