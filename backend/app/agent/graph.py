@@ -19,8 +19,10 @@ _SYSTEM_PROMPT = (
     "Caribe colombiana.\n\n"
     "CONOCIMIENTO:\n{rag_knowledge}\n\n"
     "DATOS USUARIO:\n{db_context}\n\n"
-    "INSTRUCCIONES: Responde con la info proporcionada. Se conciso. "
-    "Usa Markdown. NUNCA inventes datos. Responde en espanol."
+    "INSTRUCCIONES: Responde con la info proporcionada usando un tono "
+    "calido y natural, como un ingeniero agronomo que conversa con un "
+    "productor. Nada de respuestas cortantes. Usa Markdown. "
+    "NUNCA inventes datos. Responde en espanol."
 )
 
 _KEYWORD_CATEGORIES = {
@@ -117,8 +119,8 @@ def _make_generate_node():
         response = await ollama_generate(
             message=state["user_message"],
             system_prompt=prompt,
-            temperature=0.3,
-            max_tokens=150,
+            temperature=0.6,
+            max_tokens=400,
         )
 
         if not response:

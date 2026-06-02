@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Bot } from 'lucide-react';
+import { Bot, User } from 'lucide-react';
 
 const ChatMessages = ({ mensajes, loading, endRef }) => {
   const internalRef = useRef(null);
@@ -8,7 +8,7 @@ const ChatMessages = ({ mensajes, loading, endRef }) => {
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [mensajes]);
+  }, [mensajes, loading]);
 
   return (
     <div className="agro-chat">
@@ -16,16 +16,14 @@ const ChatMessages = ({ mensajes, loading, endRef }) => {
         {mensajes.map((msg, i) => (
           <motion.div
             key={i}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2 }}
+            initial={{ opacity: 0, x: msg.rol === 'ia' ? -16 : 16, y: 8 }}
+            animate={{ opacity: 1, x: 0, y: 0 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
             className={`agro-msg agro-msg-${msg.rol}`}
           >
-            {msg.rol === 'ia' && (
-              <div className="agro-msg-avatar">
-                <Bot size={14} strokeWidth={1.5} />
-              </div>
-            )}
+            <div className={`agro-msg-avatar agro-avatar-${msg.rol}`}>
+              {msg.rol === 'ia' ? <Bot size={14} strokeWidth={1.5} /> : <User size={14} strokeWidth={1.5} />}
+            </div>
             <div className="agro-msg-bubble">
               <p
                 className="agro-msg-text"
@@ -42,8 +40,13 @@ const ChatMessages = ({ mensajes, loading, endRef }) => {
         ))}
 
         {loading && (
-          <div className="agro-msg agro-msg-ia">
-            <div className="agro-msg-avatar">
+          <motion.div
+            initial={{ opacity: 0, x: -16, y: 8 }}
+            animate={{ opacity: 1, x: 0, y: 0 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+            className="agro-msg agro-msg-ia"
+          >
+            <div className="agro-msg-avatar agro-avatar-ia">
               <Bot size={14} strokeWidth={1.5} />
             </div>
             <div className="agro-msg-bubble agro-msg-loading">
@@ -51,7 +54,7 @@ const ChatMessages = ({ mensajes, loading, endRef }) => {
                 <span /><span /><span />
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
         <div ref={chatEndRef} />
       </div>

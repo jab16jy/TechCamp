@@ -8,8 +8,8 @@ const ChatInput = ({ input, onInputChange, onEnviar, loading }) => {
           type="text"
           value={input}
           onChange={(e) => onInputChange(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && onEnviar()}
-          placeholder="Escribe tu pregunta al Agro-Asesor..."
+          onKeyDown={(e) => e.key === 'Enter' && !loading && onEnviar()}
+          placeholder="Pregúntame sobre cultivos, plagas, o tu parcela..."
           className="agro-input"
           disabled={loading}
         />
@@ -22,7 +22,7 @@ const ChatInput = ({ input, onInputChange, onEnviar, loading }) => {
         </button>
       </div>
       <p className="agro-input-hint">
-        <span>💡</span> Pregúntame sobre análisis, recomendaciones o sensores.
+        <span>🌱</span> Consulta sobre maíz, yuca, sensor IoT o NDVI
       </p>
     </div>
   );

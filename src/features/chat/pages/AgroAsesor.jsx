@@ -32,7 +32,7 @@ const AgroAsesor = () => {
         </div>
 
         <div className="agro-center-panel">
-          <ChatHeader />
+          <ChatHeader loading={loading} />
           <ChatMessages mensajes={mensajes} loading={loading} endRef={messagesEndRef} />
           <QuickActions acciones={ACCIONES_RAPIDAS} onAccion={handleAccion} />
           <ChatInput input={input} onInputChange={setInput} onEnviar={enviar} loading={loading} />

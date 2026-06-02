@@ -1,6 +1,6 @@
 import { Bot } from 'lucide-react';
 
-const ChatHeader = () => {
+const ChatHeader = ({ loading }) => {
   return (
     <div className="agro-header">
       <div className="agro-avatar">
@@ -9,8 +9,8 @@ const ChatHeader = () => {
       <div className="agro-header-info">
         <h2>Agro-Asesor IA</h2>
         <div className="agro-header-status">
-          <span className="agro-status-dot" />
-          <span>Conectado</span>
+          <span className={`agro-status-dot ${loading ? 'agro-status-writing' : ''}`} />
+          <span>{loading ? 'Escribiendo...' : 'Conectado'}</span>
         </div>
       </div>
     </div>

@@ -91,6 +91,32 @@
   50% { opacity: 0.6; transform: scale(0.85); }
 }
 
+@keyframes pulse-writing {
+  0%, 100% { background: #f59e0b; transform: scale(1); }
+  50% { background: #fbbf24; transform: scale(0.8); }
+}
+
+.agro-status-writing {
+  background: #f59e0b !important;
+  animation: pulse-writing 1s infinite ease-in-out !important;
+}
+
+/* ── Message grouping ── */
+.agro-msg-ia + .agro-msg-ia,
+.agro-msg-user + .agro-msg-user {
+  margin-top: -6px;
+}
+
+.agro-msg-ia + .agro-msg-ia .agro-msg-avatar,
+.agro-msg-user + .agro-msg-user .agro-msg-avatar {
+  visibility: hidden;
+}
+
+.agro-msg-ia + .agro-msg-user,
+.agro-msg-user + .agro-msg-ia {
+  margin-top: 8px;
+}
+
 /* ── Chat area ── */
 .agro-chat {
   flex: 1;
@@ -127,15 +153,24 @@
 }
 
 .agro-msg-avatar {
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   border-radius: 10px;
-  background: rgba(45, 106, 79, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #2D5A27;
   flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.agro-avatar-ia {
+  background: rgba(45, 106, 79, 0.1);
+  color: #2D5A27;
+}
+
+.agro-avatar-usuario {
+  background: rgba(0, 166, 80, 0.1);
+  color: #00A650;
 }
 
 .agro-msg-bubble {
@@ -187,7 +222,12 @@
   font-size: 10px;
   font-family: monospace;
   margin-top: 6px;
-  opacity: 0.5;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.agro-msg-bubble:hover .agro-msg-hora {
+  opacity: 0.6;
 }
 
 .agro-msg-user .agro-msg-hora {
@@ -197,6 +237,11 @@
 
 .agro-msg-ia .agro-msg-hora {
   color: #9aa0a6;
+}
+
+/* Show timestamps always on welcome message */
+.agro-msg:first-child .agro-msg-hora {
+  opacity: 0.4;
 }
 
 /* Loading */

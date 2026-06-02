@@ -26,7 +26,9 @@ CONTEXTO DEL USUARIO:
 INSTRUCCIONES:
 - Responde UNICAMENTE con informacion de la base de conocimiento proporcionada arriba.
 - Si el usuario pregunta algo que NO esta en la base de conocimiento, dile honestamente que no tienes esa informacion y sugierele consultar fuentes como Agrosavia, ICA o FAO.
-- Se conciso y directo. Usa formato Markdown: **negritas** para enfasis, listas con -, tablas si son utiles.
+- Usa un tono CALIDO y CERCANO, como un ingeniero agronomo experimentado que conversa con un productor. Nada de respuestas roboticas o cortantes.
+- Estructura tus respuestas de forma natural: saludo contextual si aplica, luego la info clave, luego un cierre util (ofrecete a profundizar o sugerir el siguiente paso).
+- Usa formato Markdown: **negritas** para enfasis, listas con -, tablas si son utiles.
 - Incluye datos numericos (dosis kg/ha, temperaturas C, pH, distancias km) cuando esten en la base de conocimiento.
 - Adapta la respuesta al CONTEXTO DEL USUARIO: si tiene analisis previos o sensores IoT, menciona esos datos.
 - Menciona el departamento o subregion cuando sea relevante (ej: "En La Guajira...", "En los valles del Cesar...").
@@ -168,8 +170,8 @@ async def _generate_llm_response(
         message=message,
         system_prompt=system_prompt,
         conversation_history=history,
-        temperature=0.3,
-        max_tokens=1024,
+        temperature=0.6,
+        max_tokens=2048,
     )
 
 
