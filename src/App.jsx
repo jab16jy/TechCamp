@@ -12,7 +12,6 @@ import LoginInvestigador from '@features/auth/pages/LoginInvestigador';
 import DashboardInvestigador from '@features/dashboard/pages/DashboardInvestigador';
 import AgroAsesor from '@features/chat/pages/AgroAsesor';
 import AnalisisCultivosInvestigador from '@features/analysis/pages/AnalisisCultivos';
-import ResultadoAvanzado from '@features/analysis/pages/ResultadoAvanzado';
 import IAPredictiva from '@features/predictions/pages/IAPredictiva';
 import SensoresIoT from '@features/sensors/pages/SensoresIoT';
 import GestionReportes from '@features/reports/pages/GestionReportes';
@@ -43,7 +42,6 @@ const App = () => (
       <Route path="/investigador/historial" element={<Historial />} />
       <Route path="/investigador/ajustes" element={<Ajustes />} />
       <Route path="/investigador/analisis" element={<AnalisisCultivosInvestigador />} />
-      <Route path="/investigador/resultado-avanzado" element={<ResultadoAvanzado />} />
       <Route path="/investigador/ia" element={<IAPredictiva />} />
       <Route path="/investigador/sensores" element={<SensoresIoT />} />
       <Route path="/investigador/reportes" element={<GestionReportes />} />

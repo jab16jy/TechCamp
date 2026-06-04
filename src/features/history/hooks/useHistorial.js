@@ -93,8 +93,6 @@ export default function useHistorial() {
     }
     if (item.tipo === 'prediccion') {
       navigate('/investigador/ia');
-    } else if (item.tipo === 'advanced' || item.tipo === 'suelo') {
-      navigate('/investigador/resultado-avanzado');
     } else {
       navigate('/resultado');
     }

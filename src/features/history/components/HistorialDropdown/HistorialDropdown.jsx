@@ -135,7 +135,7 @@ const HistorialDropdown = () => {
                         </div>
                         <div className="hd-item-actions">
                           <Link
-                            to={item.tipo === 'suelo' ? '/investigador/resultado-avanzado' : '/resultado'}
+                            to={'/resultado'}
                             onClick={() => setOpen(false)}
                             className="hd-action-btn"
                             title="Ver detalle"

@@ -94,6 +94,15 @@ export default function usePrediccion() {
     try {
       const result = await _runPrediccion(Number(lat), Number(lng), cultivo, meses, analysisId, fechaSiembraStr, npkSim, riegoSim);
       if (result) {
+        // Normalize: ensure meses exists as an array (defensive against field name mismatches)
+        console.debug('[usePrediccion] fetchProyeccion result shape:', {
+          hasMeses: !!result.meses,
+          mesesLength: result.meses?.length,
+          keys: Object.keys(result),
+        });
+        if (!result.meses) {
+          result.meses = [];
+        }
         setProyeccion6M(result);
         _resolveFenologia(fechaSiembraStr, cultivo, result);
         setStale(false);

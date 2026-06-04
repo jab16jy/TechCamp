@@ -1,0 +1,194 @@
+/* ── MitigationActions.css ── */
+/* Glassmorphism risk-action cards matching AgroCaribe design system */
+
+.mitigation-container {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  animation: mitigation-fade-in-up 0.4s ease;
+}
+
+@keyframes mitigation-fade-in-up {
+  0% { opacity: 0; transform: translateY(12px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Header ── */
+.mitigation-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.mitigation-header h2 {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #1a1c1a;
+  margin: 0;
+}
+
+.mitigation-count {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  background: rgba(186, 26, 26, 0.08);
+  color: #ba1a1a;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+/* ── Card Grid ── */
+.mitigation-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .mitigation-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ── Individual Card ── */
+.mitigation-card {
+  border-radius: 0.75rem;
+  padding: 0.85rem;
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-left: 3px solid;
+  transition: all 0.2s ease;
+}
+
+.mitigation-card:hover {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.mitigation-card-header {
+  display: flex;
+  gap: 0.65rem;
+}
+
+.mitigation-card-icon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.mitigation-card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.mitigation-card-tags {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.2rem;
+}
+
+.mitigation-severity {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.mitigation-tipo {
+  font-size: 0.6rem;
+  color: #6b7280;
+  text-transform: capitalize;
+}
+
+.mitigation-message {
+  font-size: 0.7rem;
+  color: #4a4a4a;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.mitigation-cultivo {
+  font-size: 0.6rem;
+  color: #6b7280;
+  margin-top: 0.2rem;
+  display: block;
+}
+
+/* ── Action Button & Detail ── */
+.mitigation-card-action {
+  margin-top: 0.55rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.mitigation-action-btn {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.3rem 0.85rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(15, 82, 56, 0.25);
+  background: transparent;
+  color: #0f5238;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: Manrope, sans-serif;
+}
+
+.mitigation-action-btn:hover {
+  background: rgba(15, 82, 56, 0.08);
+  border-color: rgba(15, 82, 56, 0.4);
+}
+
+.mitigation-action-detail {
+  margin-top: 0.5rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 0.5rem;
+  font-size: 0.7rem;
+  line-height: 1.55;
+  color: #1a1c1a;
+  background: rgba(15, 82, 56, 0.04);
+  border: 1px solid rgba(15, 82, 56, 0.1);
+}
+
+/* ── Empty State ── */
+.mitigation-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 0;
+  gap: 0.6rem;
+  text-align: center;
+}
+
+.mitigation-empty-icon {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 82, 56, 0.08);
+}
+
+.mitigation-empty h3 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #1a1c1a;
+  margin: 0;
+}
+
+.mitigation-empty p {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin: 0;
+  max-width: 400px;
+}

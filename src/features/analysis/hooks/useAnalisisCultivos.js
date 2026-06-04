@@ -64,13 +64,8 @@ export function useAnalisisCultivos() {
   const [serverHistory, setServerHistory] = useState([]);
   const rol = sessionStorage.getItem("rol");
   const isProductor = rol === "productor";
-  const [mode, setMode] = useState("simple");
   const [activeTab, setActiveTab] = useState("analisis");
   const [selectedParcela, setSelectedParcela] = useState("");
-
-  useEffect(() => {
-    if (isProductor) setMode("simple");
-  }, [isProductor]);
 
   useEffect(() => {
     AnalysisService.getAvailableLocations().then(setMunicipiosLista);
@@ -273,45 +268,26 @@ export function useAnalisisCultivos() {
 
       const topRec = resultado.recomendaciones?.[0];
       agregarAlHistorial({
-        tipo: mode === "advanced" ? "suelo" : "analisis",
+        tipo: "analisis",
         municipio: formulario.municipio,
         departamento: formulario.departamento,
         lat: formulario.lat,
         lng: formulario.lng,
         area_hectareas: formulario.area_hectareas,
-        ...(mode === "simple"
-          ? {
-              cultivo: topRec?.cultivo || null,
-              score: topRec?.score || null,
-              cultivo_top: topRec?.cultivo || null,
-              rankings:
-                resultado.structuredRecommendation?.output?.ranking?.map(
-                  (r, i) => ({
-                    rank: i + 1,
-                    crop: r.crop,
-                    score: r.score,
-                  }),
-                ) || [],
-            }
-          : {
-              ph: formulario.ph_suelo || null,
-              nitrogeno: formulario.nitrogeno || null,
-              humedad_suelo: formulario.humedad_suelo || clima.humedad,
-              fosforo: formulario.fosforo || null,
-              potasio: formulario.potasio || null,
-              materia_organica: formulario.materia_organica || null,
-              textura_suelo: formulario.textura_suelo || null,
-              calidad_suelo:
-                resultado.indicadores_satelite?.calidad_suelo || null,
-              ndvi: resultado.indicadores_satelite?.ndvi || null,
+        cultivo: topRec?.cultivo || null,
+        score: topRec?.score || null,
+        cultivo_top: topRec?.cultivo || null,
+        rankings:
+          resultado.structuredRecommendation?.output?.ranking?.map(
+            (r, i) => ({
+              rank: i + 1,
+              crop: r.crop,
+              score: r.score,
             }),
+          ) || [],
       });
 
-      if (mode === "advanced") {
-        navigate("/investigador/resultado-avanzado");
-      } else {
-        navigate("/resultado");
-      }
+      navigate("/resultado");
     } catch {
       agregarToast(
         "Error al procesar el analisis. Intentalo de nuevo.",
@@ -451,8 +427,6 @@ export function useAnalisisCultivos() {
   return {
     // Estados
     municipiosLista,
-    mode,
-    setMode,
     activeTab,
     setActiveTab,
     selectedParcela,

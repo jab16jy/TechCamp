@@ -21,6 +21,13 @@ const TAB_ICONS = {
 };
 
 export default function MonthlyProjectionTabs({ proyeccion, mejorMes, mejorCultivo, loading }) {
+  // ── Debug: log proyeccion shape to diagnose data pipeline ──
+  console.debug('[MonthlyProjectionTabs] proyeccion:', proyeccion);
+  console.debug('[MonthlyProjectionTabs] meses:', proyeccion?.meses);
+  if (proyeccion?.meses?.length) {
+    console.debug('[MonthlyProjectionTabs] first mes shape:', proyeccion.meses[0]);
+  }
+
   const [activeTab, setActiveTab] = useState('overview');
   const [scrollIndex, setScrollIndex] = useState(0);
 

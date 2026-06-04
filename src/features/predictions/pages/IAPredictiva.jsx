@@ -1,64 +1,36 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  ArrowLeft, AlertTriangle, Loader2, Sparkles, Settings2,
-  Search, Shield, Thermometer, CloudRain, Sun,
-} from 'lucide-react';
+import { ArrowLeft, Loader2, Settings2, Search, Sun } from 'lucide-react';
 import ResearcherLayout from '@shared/layout/ResearcherLayout/ResearcherLayout';
 import useAuthGuard from '@shared/hooks/useAuthGuard';
 import useAppStore from '@shared/store';
-import useSensores from '@features/predictions/hooks/useSensores';
 import usePrediccion from '@features/predictions/hooks/usePrediccion';
-import usePlanRiego from '@features/predictions/hooks/usePlanRiego';
 import { BentoGrid, BentoCard } from '@shared/ui/BentoGrid';
 import QueryConfigModal from '@features/predictions/components/QueryConfigModal/QueryConfigModal';
-import SensorDashboard from '@features/predictions/components/SensorDashboard/SensorDashboard';
-import NinoPanel from '@features/predictions/components/NinoPanel/NinoPanel';
-import NinaPanel from '@features/predictions/components/NinaPanel/NinaPanel';
 import ScenarioSimulator from '@features/predictions/components/ScenarioSimulator/ScenarioSimulator';
-import ScenarioSelector from '@features/predictions/components/ScenarioSimulator/ScenarioSelector';
 import GrowthStressChart from '@features/predictions/components/ScenarioSimulator/GrowthStressChart';
-import OptimalWindowCard from '@features/predictions/components/OptimalWindowCard/OptimalWindowCard';
-import FenologiaTimeline from '@features/predictions/components/FenologiaTimeline/FenologiaTimeline';
 import MonthlyProjectionTabs from '@features/predictions/components/MonthlyProjectionTabs/MonthlyProjectionTabs';
 import FeatureChart from '@features/predictions/components/FeatureChart/FeatureChart';
 import ClimateRiskPanel from '@features/predictions/components/ClimateRiskPanel/ClimateRiskPanel';
-import PlanVisualizationCard from '@features/predictions/components/PlanVisualizationCard/PlanVisualizationCard';
-import StressReductionChart from '@features/predictions/components/StressReductionChart/StressReductionChart';
-import ExportPlanButton from '@features/predictions/components/ExportPlanButton/ExportPlanButton';
+import MitigationActions from '@features/predictions/components/MitigationActions/MitigationActions';
 import './IAPredictiva.css';
-
-// ── Feature flag ──
-const USE_NEW_HOOKS = import.meta.env.VITE_USE_NEW_PREDICTION_HOOKS === 'true';
 
 const IAPredictiva = () => {
   const authorized = useAuthGuard('investigador');
   const navigate = useNavigate();
   const { historial } = useAppStore();
 
-  // ── New specialized hooks ──
-  const sensorHook = useSensores();
+  // ── Hook: only usePrediccion remains ──
   const predHook = usePrediccion();
-  const planHook = usePlanRiego();
 
   // ── Destructure for convenience ──
   const {
-    proyeccion6M, loadingProyeccion, estado, npkSim, riegoSim, stale: predStale,
-    fenologia, etapaFenologica, fechaSiembra, selectedAnalysisData,
+    proyeccion6M, loadingProyeccion, estado,
+    npkSim, riegoSim, stale: predStale,
+    fechaSiembra, selectedAnalysisData,
     setNpkSim, setRiegoSim,
-    fetchProyeccion, simularEscenario, selectAnalysis, handleManualQuery, clearProyeccion,
-    marcarPlanListo,
+    simularEscenario, selectAnalysis, handleManualQuery, clearProyeccion,
   } = predHook;
-
-  const {
-    sensores, selectedSensorId, selectedSensor,
-    sensoresEnRiesgo, riskStatus,
-  } = sensorHook;
-
-  const {
-    plan, generandoPlan, previewActive, historialPlanes,
-    generarPlan, togglePreview, exportarPlan, clearPlan,
-  } = planHook;
 
   // ── Local state ──
   const [queryModalOpen, setQueryModalOpen] = useState(false);
@@ -81,17 +53,6 @@ const IAPredictiva = () => {
     () => analisisConCoordenadas.find((item) => item.id === selectedAnalysisId) || null,
     [analisisConCoordenadas, selectedAnalysisId],
   );
-
-  // ── Climate pattern detection ──
-  const showNino = proyeccion6M?.alertas_patrones?.some(
-    (a) => a.tipo === 'fenomeno_nino',
-  );
-  const showNina = proyeccion6M?.alertas_patrones?.some(
-    (a) => a.tipo === 'fenomeno_nina',
-  );
-
-  // ── Risk status for header ──
-  const isCritico = riskStatus === 'critico' || riskStatus === 'alto';
 
   // ── Handlers ──
   const handleQueryApply = useCallback(({ lat, lng, cultivo, fechaSiembra, source }) => {
@@ -135,19 +96,13 @@ const IAPredictiva = () => {
     });
   }, [simularEscenario, precipDeltaPct, tempDeltaC, npkSim, riegoSim, queryCoords]);
 
-  const handleGenerarPlan = useCallback(async () => {
-    const result = await generarPlan(selectedSensorId);
-    if (result) marcarPlanListo();
-  }, [generarPlan, selectedSensorId, marcarPlanListo]);
-
   const handleClearAll = useCallback(() => {
     clearProyeccion();
-    clearPlan();
     setSelectedAnalysisId(null);
     setQueryCoords(null);
     setPrecipDeltaPctState(0);
     setTempDeltaCState(0);
-  }, [clearProyeccion, clearPlan]);
+  }, [clearProyeccion]);
 
   // ── Precip/temp setters that also trigger stale ──
   const handlePrecipChange = useCallback((v) => {
@@ -159,13 +114,6 @@ const IAPredictiva = () => {
     setTempDeltaCState(v);
     setRiegoSim(riegoSim); // trigger stale flag via usePrediccion
   }, [setRiegoSim, riegoSim]);
-
-  const handleSelectPreset = useCallback((values) => {
-    if (values.precipDeltaPct != null) setPrecipDeltaPctState(values.precipDeltaPct);
-    if (values.tempDeltaC != null) setTempDeltaCState(values.tempDeltaC);
-    if (values.npkOverride != null) setNpkSim(values.npkOverride);
-    if (values.riegoOverride != null) setRiegoSim(values.riegoOverride);
-  }, [setNpkSim, setRiegoSim]);
 
   // ── Derived: feature chart factors ──
   const featureFactors = useMemo(
@@ -191,8 +139,8 @@ const IAPredictiva = () => {
             </button>
             <div className="ia-header-row">
               <h1 className="ia-title">
-                DSS Integral
-                <span className="ia-title-light"> — IA Predictiva</span>
+                IA Predictiva
+                <span className="ia-title-light"> — Riesgos y Mitigación</span>
               </h1>
               <button
                 className="ia-config-btn"
@@ -203,36 +151,11 @@ const IAPredictiva = () => {
               </button>
             </div>
             <p className="ia-page-intent">
-              Proyecciones climáticas (NASA POWER + OpenMeteo + LSTM) con sensores IoT en tiempo real.
-              Anticipa riesgos, recomienda cultivos y genera planes de mitigación.
+              Proyecciones climáticas con simulación de escenarios, detección de riesgos
+              y recomendaciones de mitigación para cultivos del Caribe colombiano.
             </p>
             <div className="flex items-center gap-2 mt-2 flex-wrap">
-              <span className="ia-badge-mode">NASA POWER + OpenMeteo + IoT + LSTM</span>
-              {showNino && (
-                <span
-                  className="ia-badge-mode flex items-center gap-1"
-                  style={{ background: 'rgba(186,26,26,0.08)', color: '#ba1a1a' }}
-                >
-                  <Thermometer size={11} />
-                  Niño Activo
-                </span>
-              )}
-              {showNina && (
-                <span
-                  className="ia-badge-mode flex items-center gap-1"
-                  style={{ background: 'rgba(37,99,235,0.08)', color: '#2563eb' }}
-                >
-                  <CloudRain size={11} />
-                  Niña Activa
-                </span>
-              )}
-              {isCritico && !showNino && !showNina && (
-                <span className="text-xs font-semibold px-2 py-0.5 rounded-full flex items-center gap-1"
-                  style={{ background: 'rgba(186,26,26,0.1)', color: '#ba1a1a' }}>
-                  <AlertTriangle size={11} />
-                  Riesgo Crítico
-                </span>
-              )}
+              <span className="ia-badge-mode">NASA POWER + OpenMeteo + LSTM</span>
               {selectedAnalysisId && inheritedRecord && (
                 <span
                   className="text-xs text-[#4a4a4a] flex items-center gap-1.5"
@@ -272,7 +195,7 @@ const IAPredictiva = () => {
                   <h3 className="text-sm font-bold text-[#1A1C1A] mb-1">Configura tu Consulta</h3>
                   <p className="text-xs text-[#6b7280] max-w-md">
                     Define lote, cultivo y fecha de siembra para generar la proyección estacional
-                    y el estado fenológico del cultivo.
+                    y el análisis de riesgos.
                   </p>
                 </div>
                 <button className="ia-generate-btn mt-2" onClick={() => setQueryModalOpen(true)}>
@@ -299,36 +222,7 @@ const IAPredictiva = () => {
           {/* ── STATE: PROJECTED / PLAN_READY — full dashboard ── */}
           {isProjected && (
             <>
-              {/* ROW 1: SensorDashboard (col-span-8) + Niño/Niña panel (col-span-4) */}
-              <BentoCard span={{ col: 8, row: 1 }} variant="default">
-                <SensorDashboard />
-              </BentoCard>
-
-              {showNino && (
-                <BentoCard span={{ col: 4, row: 1 }} variant="critical">
-                  <NinoPanel proyeccion={proyeccion6M} />
-                </BentoCard>
-              )}
-
-              {showNina && !showNino && (
-                <BentoCard span={{ col: 4, row: 1 }} variant="highlight">
-                  <NinaPanel proyeccion={proyeccion6M} />
-                </BentoCard>
-              )}
-
-              {!showNino && !showNina && (
-                /* Placeholder for alignment when no climate pattern */
-                <BentoCard span={{ col: 4, row: 1 }} variant="default">
-                  <div className="flex flex-col items-center justify-center py-4 gap-2 text-center">
-                    <Sparkles size={20} style={{ color: '#386a20', opacity: 0.5 }} />
-                    <p className="text-xs text-[#6b7280]">
-                      Sin fenómenos climáticos extremos detectados
-                    </p>
-                  </div>
-                </BentoCard>
-              )}
-
-              {/* ROW 2: MonthlyProjectionTabs + ClimateRiskPanel */}
+              {/* ROW 1: MonthlyProjectionTabs (col-8) + ClimateRiskPanel (col-4) */}
               <BentoCard
                 span={{ col: 8, row: 1 }}
                 variant="default"
@@ -347,31 +241,8 @@ const IAPredictiva = () => {
                 <ClimateRiskPanel proyeccion={proyeccion6M} />
               </BentoCard>
 
-              {/* ROW 3: OptimalWindowCard (col-span-12) */}
-              <BentoCard span={{ col: 12, row: 1 }} variant="highlight">
-                <OptimalWindowCard proyeccion={proyeccion6M} />
-              </BentoCard>
-
-              {/* Critical action banner — trigger plan generation */}
-              {isCritico && !plan && !generandoPlan && selectedSensorId && (
-                <div className="ia-action-banner" style={{ gridColumn: 'span 12' }}>
-                  <AlertTriangle size={18} style={{ color: '#ba1a1a' }} />
-                  <div className="flex-1">
-                    <h3 className="text-sm font-bold text-[#1A1C1A]">
-                      Riesgo de Déficit Crítico Detectado
-                    </h3>
-                    <p className="text-xs text-[#6b7280]">
-                      Humedad bajo umbral. Se recomienda generar un plan de riego.
-                    </p>
-                  </div>
-                  <button className="ia-generate-btn" onClick={handleGenerarPlan}>
-                    <Shield size={14} /> Generar Plan
-                  </button>
-                </div>
-              )}
-
-              {/* ROW 4: ScenarioSimulator (col-span-8) + ScenarioSelector (col-span-4) */}
-              <BentoCard span={{ col: 8, row: 1 }} variant="default">
+              {/* ROW 2: ScenarioSimulator (col-12) */}
+              <BentoCard span={{ col: 12, row: 1 }} variant="default">
                 <ScenarioSimulator
                   precipDeltaPct={precipDeltaPct}
                   tempDeltaC={tempDeltaC}
@@ -387,11 +258,7 @@ const IAPredictiva = () => {
                 />
               </BentoCard>
 
-              <BentoCard span={{ col: 4, row: 1 }} variant="default">
-                <ScenarioSelector onSelectPreset={handleSelectPreset} />
-              </BentoCard>
-
-              {/* ROW 5: GrowthStressChart (col-span-6) + FeatureChart (col-span-6) */}
+              {/* ROW 3: GrowthStressChart (col-6) + FeatureChart (col-6) */}
               <BentoCard span={{ col: 6, row: 1 }} variant="default">
                 <GrowthStressChart proyeccion={proyeccion6M} />
               </BentoCard>
@@ -400,99 +267,21 @@ const IAPredictiva = () => {
                 <FeatureChart factors={featureFactors} />
               </BentoCard>
 
-              {/* ROW 6: FenologiaTimeline (col-span-12, conditional) */}
-              {etapaFenologica && (
-                <BentoCard
-                  span={{ col: 12, row: 1 }}
-                  variant="highlight"
-                  title="Estado Fenológico"
-                  icon={Sparkles}
-                  badge={`${etapaFenologica.pct}% completado`}
-                >
-                  <FenologiaTimeline
-                    etapaActual={etapaFenologica.etapa}
-                    diasDesdeSiembra={etapaFenologica.diasDesdeSiembra}
-                    cicloDias={etapaFenologica.cicloDias}
-                    pctCompletado={etapaFenologica.pct}
-                  />
-                </BentoCard>
-              )}
-
-              {/* ═══════════ PLAN SECTION (conditional) ═══════════ */}
-              {plan && (
-                <BentoCard span={{ col: 12, row: 1 }} variant="highlight">
-                  <PlanVisualizationCard
-                    plan={plan}
-                    previewActive={previewActive}
-                    onTogglePreview={togglePreview}
-                    onExport={exportarPlan}
-                    planGenerado
-                  />
-                </BentoCard>
-              )}
-
-              {plan && (
-                <BentoCard span={{ col: 12, row: 1 }} variant="default">
-                  <StressReductionChart
-                    plan={plan}
-                    previewActive={previewActive}
-                    sensorLectura={selectedSensor?.ultima_lectura}
-                  />
-                </BentoCard>
-              )}
-
-              {/* ═══════════ EXPORT ═══════════ */}
-              <div className="flex justify-end mt-1" style={{ gridColumn: 'span 12' }}>
-                <ExportPlanButton
-                  proyeccion={proyeccion6M}
-                  plan={plan}
-                  disabled={!proyeccion6M}
-                />
-              </div>
-
-              {/* ═══════════ GENERANDO PLAN LOADING ═══════════ */}
-              {generandoPlan && (
-                <BentoCard span={{ col: 12, row: 1 }} variant="default">
-                  <div className="flex items-center justify-center py-8 gap-3 text-[#4a4a4a]">
-                    <Loader2 size={20} className="animate-spin" />
-                    <span className="text-sm">Generando plan de riego optimizado...</span>
-                  </div>
-                </BentoCard>
-              )}
-
-              {/* ═══════════ PLAN HISTORY ═══════════ */}
-              {historialPlanes.length > 0 && (
-                <BentoCard span={{ col: 12, row: 1 }} variant="default" title="Historial de Planes" icon={Shield}>
-                  <div className="space-y-2">
-                    {historialPlanes.map((p) => (
-                      <div
-                        key={p.plan_id}
-                        className="flex items-center justify-between p-3 rounded-xl text-xs"
-                        style={{ background: 'rgba(255,255,255,0.4)', border: '1px solid rgba(0,0,0,0.05)' }}
-                      >
-                        <div>
-                          <span className="font-semibold text-[#1A1C1A]">{p.plan_id}</span>
-                          <span className="ml-2 text-[#6b7280]">{p.cultivo} · {p.volumen_total_m3_ha} m³/ha</span>
-                        </div>
-                        <span className="px-2 py-0.5 rounded-full font-semibold" style={{ background: 'rgba(15,82,56,0.08)', color: '#0f5238' }}>
-                          Generado
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </BentoCard>
-              )}
+              {/* ROW 4: MitigationActions (col-12) */}
+              <BentoCard span={{ col: 12, row: 1 }} variant="default">
+                <MitigationActions proyeccion={proyeccion6M} />
+              </BentoCard>
             </>
           )}
         </BentoGrid>
 
-        {/* ── Clear plan / projection ── */}
-        {(plan || proyeccion6M) && (
+        {/* ── Clear projection ── */}
+        {proyeccion6M && (
           <button
             onClick={handleClearAll}
             className="text-xs text-[#6b7280] mt-3 hover:text-[#4a4a4a] transition-colors"
           >
-            {plan ? 'Descartar plan y proyección actual' : 'Descartar proyección actual'}
+            Descartar proyección actual
           </button>
         )}
       </div>

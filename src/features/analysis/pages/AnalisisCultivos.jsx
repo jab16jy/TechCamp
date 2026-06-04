@@ -4,14 +4,12 @@ import ProductorLayout from "@shared/layout/ProductorLayout/ProductorLayout";
 import MapSelector from "@features/analysis/components/MapSelector";
 import AnalysisForm from "@features/analysis/components/AnalysisForm";
 import MetricCardsGrid from "@features/analysis/components/MetricCardsGrid/MetricCardsGrid";
-import CalidadSueloModule from "@features/analysis/components/CalidadSueloModule";
 import HistorialTab from "@features/analysis/components/HistorialTab/HistorialTab";
 import { useAnalisisCultivos } from "@features/analysis/hooks/useAnalisisCultivos";
 import {
   Sparkles,
   Map,
   SlidersHorizontal,
-  FlaskConical,
   MapPin,
   Zap,
   ArrowLeft,
@@ -21,7 +19,6 @@ import {
   Share2,
   Loader2,
   Sprout,
-  Beaker,
 } from "lucide-react";
 import { BentoGrid, BentoCard } from "@shared/ui/BentoGrid";
 import "./AnalisisCultivos.css";
@@ -57,8 +54,7 @@ const AnalisisCultivos = () => {
     : { activeTab, onTabChange: setActiveTab };
 
   const getModuleTitle = () => {
-    if (modulo === "cultivo") return { main: "Análisis de Cultivo", sub: "Datos de Parcela" };
-    if (modulo === "suelo") return { main: "Análisis de Parcela", sub: "Calidad del Suelo" };
+    if (modulo) return { main: "Análisis de Cultivo", sub: "Datos de Parcela" };
     return { main: "Análisis de Parcela", sub: "Selecciona un Módulo" };
   };
 
@@ -180,48 +176,6 @@ const AnalisisCultivos = () => {
                 >
                   <SlidersHorizontal size={16} />
                   Comenzar Análisis
-                </span>
-              </div>
-            </BentoCard>
-
-            <BentoCard span={{ col: 6, row: 1 }}>
-              <div
-                onClick={() => setModulo("suelo")}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) =>
-                  e.key === "Enter" && setModulo("suelo")
-                }
-                className="flex flex-col items-start gap-4 h-full cursor-pointer group"
-              >
-                <div
-                  className="flex items-center justify-center w-[72px] h-[72px] rounded-[1.25rem] shrink-0 transition-transform duration-300 group-hover:scale-110"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, rgba(117,88,77,0.12), rgba(117,88,77,0.06))",
-                    color: "#75584d",
-                  }}
-                >
-                  <Beaker size={36} />
-                </div>
-                <h2 className="text-[1.25rem] font-extrabold text-[#191c1d] tracking-tight m-0">
-                  Calidad del Suelo
-                </h2>
-                <p className="text-[0.85rem] text-[#707973] leading-relaxed flex-1 m-0">
-                  Analiza los parámetros fisicoquímicos del suelo: pH,
-                  nitrógeno, fósforo, potasio y humedad. Carga datos
-                  históricos o ingresa mediciones directas de laboratorio
-                  para un diagnóstico preciso.
-                </p>
-                <span
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-[0.8rem] font-bold mt-1 transition-all duration-300 group-hover:bg-[#2D5A27] group-hover:text-white group-hover:shadow-lg"
-                  style={{
-                    background: "rgba(45,106,79,0.08)",
-                    color: "#2d6a4f",
-                  }}
-                >
-                  <FlaskConical size={16} />
-                  Comenzar Diagnóstico
                 </span>
               </div>
             </BentoCard>
@@ -348,11 +302,6 @@ const AnalisisCultivos = () => {
               </BentoCard>
             </BentoGrid>
           </form>
-        )}
-
-        {/* ── MÓDULO: Calidad del Suelo ── */}
-        {activeTab === "analisis" && modulo === "suelo" && (
-          <CalidadSueloModule onBack={() => setModulo(null)} />
         )}
 
         {/* Historial Tab */}
