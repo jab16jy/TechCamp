@@ -18,58 +18,6 @@
   animation: fade-in-up 0.4s ease;
 }
 
-/* ── Bento Grid ── */
-.bento-grid {
-  display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  gap: 1rem;
-}
-
-/* ── Bento Card ── */
-.bento-card {
-  padding: 1rem;
-  border-radius: 1.25rem;
-  backdrop-filter: blur(16px);
-  transition: all 0.3s ease;
-  animation: fade-in-up 0.3s ease;
-}
-
-.bento-card:hover {
-  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-}
-
-.bento-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.75rem;
-}
-
-.bento-card-title {
-  font-family: Manrope, sans-serif;
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #1A1C1A;
-}
-
-/* ── Responsive Bento Grid ── */
-@media (max-width: 1024px) {
-  .bento-grid {
-    grid-template-columns: repeat(8, 1fr);
-  }
-}
-
-@media (max-width: 768px) {
-  .bento-grid {
-    grid-template-columns: 1fr;
-  }
-  /* Force all cards to span 1 on mobile */
-  .bento-grid > * {
-    grid-column: span 1 !important;
-    grid-row: span 1 !important;
-  }
-}
-
 /* ── Header ── */
 .ia-header {
   margin-bottom: 1.5rem;

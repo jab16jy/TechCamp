@@ -56,32 +56,7 @@
 .ra-btn-primary { display: flex; align-items: center; gap: 5px; padding: 0.45rem 0.9rem; background: #2D5A27; color: white; border: none; border-radius: 999px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: 'Manrope', sans-serif; box-shadow: 0 4px 16px rgba(15,82,56,0.25); }
 .ra-btn-primary:hover { background: #2D5A27; transform: translateY(-1px); }
 
-/* ── Main Grid ── */
-.ra-main-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 1.25rem; }
-.ra-left-col, .ra-right-col { display: flex; flex-direction: column; gap: 1.25rem; }
-
-/* ── Card Base ── */
-.ra-card {
-  background: #ffffff;
-  box-shadow: 0 2px 8px rgba(15, 82, 56, 0.06);
-  border: 1px solid rgba(255,255,255,0.25);
-  border-radius: 2rem;
-  padding: 1.25rem;
-  transition: all 0.3s ease;
-}
-.ra-card:hover { box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08); transform: translateY(-2px); }
-.ra-card-header { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1rem; flex-wrap: wrap; }
-.ra-card-icon { color: #2D5A27; }
-.ra-card-title { font-family: 'Manrope', sans-serif; font-size: 0.9rem; font-weight: 700; color: #2D5A27; flex: 1; }
-.ra-calibration { font-size: 0.65rem; color: #94a3b8; font-family: 'Manrope', sans-serif; }
-.ra-legend { display: flex; align-items: center; gap: 0.8rem; margin-left: auto; }
-.ra-legend span { font-size: 0.68rem; font-weight: 600; color: #707973; }
-.ra-legend-dot { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
-.ra-legend-actual { background: rgba(15,82,56,0.7); }
-.ra-legend-objetivo { background: rgba(232,184,75,0.6); }
-
 /* ── Radar ── */
-.ra-radar-card { min-height: 280px; }
 .ra-radar-wrap { width: 100%; max-width: 220px; margin: 0 auto; aspect-ratio: 1; }
 .radar-grid { fill: none; stroke: rgba(255,255,255,0.3); stroke-width: 0.7; }
 .radar-axis { stroke: rgba(255,255,255,0.3); stroke-width: 0.5; }
@@ -167,7 +142,6 @@
 .ra-sim-proj-sub { font-size: 0.62rem; color: rgba(255,255,255,0.4); margin-top: 4px; }
 
 @media (max-width: 1100px) {
-  .ra-main-grid { grid-template-columns: 1fr; }
   .ra-recs-grid { grid-template-columns: 1fr; }
   .ra-sim-body { grid-template-columns: 1fr; }
 }

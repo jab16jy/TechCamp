@@ -7,6 +7,8 @@ import SimulationEngine from '@features/analysis/components/SimulationEngine/Sim
 import RadarChart from '@features/analysis/components/RadarChart/RadarChart';
 import HeatMap from '@features/analysis/components/HeatMap/HeatMap';
 import useResultadoAvanzado from '@features/analysis/hooks/useResultadoAvanzado';
+import { BentoGrid, BentoCard } from '@shared/ui/BentoGrid';
+import { Radar, BrainCircuit } from 'lucide-react';
 import './ResultadoAvanzado.css';
 
 // ── Data ──
@@ -62,56 +64,39 @@ const ResultadoAvanzado = () => {
           onExportPDF={() => {}}
         />
 
-        <div className="ra-main-grid">
+        <BentoGrid>
 
-          <div className="ra-left-col">
-
-            <div className="ra-card ra-radar-card">
-              <div className="ra-card-header">
-                <span className="material-symbols-outlined ra-card-icon">radar</span>
-                <h2 className="ra-card-title">Radar Nutricional</h2>
-                <div className="ra-legend">
-                  <span className="ra-legend-dot ra-legend-actual"></span><span>Actual</span>
-                  <span className="ra-legend-dot ra-legend-objetivo"></span><span>Objetivo Maíz</span>
-                </div>
-              </div>
-              <div className="ra-radar-wrap">
-                <RadarChart data={RADAR_DATA} />
-              </div>
+          <BentoCard span={{ col: 5, row: 1 }} title="Radar Nutricional" icon={Radar}>
+            <div className="ra-radar-wrap">
+              <RadarChart data={RADAR_DATA} />
             </div>
+          </BentoCard>
 
+          <BentoCard span={{ col: 7, row: 1 }}>
             <SoilParameters params={PARAMS} gauges={GAUGES} />
+          </BentoCard>
 
-          </div>
-
-          <div className="ra-right-col">
-
-            <div className="ra-card ra-heatmap-card">
-              <div className="ra-heatmap-overlay-header">
-                <div>
-                  <span className="ra-glass-badge">CAPA TÉCNICA: ISOLÍNEAS N-TOTAL</span>
-                  <h2 className="ra-heatmap-title">Mapa de Calor de Nutrientes</h2>
-                  <p className="ra-heatmap-sub">Distribución espacial · Parcela Lote Norte · Turbaco</p>
-                </div>
-                <button className="ra-btn-glass">
-                  <span className="material-symbols-outlined text-sm">open_in_full</span> Interactivo
-                </button>
+          <BentoCard span={{ col: 7, row: 1 }}>
+            <div className="ra-heatmap-overlay-header">
+              <div>
+                <span className="ra-glass-badge">CAPA TÉCNICA: ISOLÍNEAS N-TOTAL</span>
+                <h2 className="ra-heatmap-title">Mapa de Calor de Nutrientes</h2>
+                <p className="ra-heatmap-sub">Distribución espacial · Parcela Lote Norte · Turbaco</p>
               </div>
-              <div className="ra-heatmap-body">
-                <HeatMap />
-              </div>
+              <button className="ra-btn-glass">
+                <span className="material-symbols-outlined text-sm">open_in_full</span> Interactivo
+              </button>
             </div>
-
-            <div className="ra-card">
-              <div className="ra-card-header">
-                <span className="material-symbols-outlined ra-card-icon">psychology</span>
-                <h2 className="ra-card-title">Recomendaciones Especializadas del Laboratorio</h2>
-              </div>
-              <RecommendationsList recommendations={RECS} />
+            <div className="ra-heatmap-body">
+              <HeatMap />
             </div>
+          </BentoCard>
 
-          </div>
-        </div>
+          <BentoCard span={{ col: 5, row: 1 }} title="Recomendaciones Especializadas del Laboratorio" icon={BrainCircuit}>
+            <RecommendationsList recommendations={RECS} />
+          </BentoCard>
+
+        </BentoGrid>
 
         <SimulationEngine
           rain={rain}

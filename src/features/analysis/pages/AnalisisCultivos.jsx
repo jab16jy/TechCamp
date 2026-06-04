@@ -23,6 +23,7 @@ import {
   Sprout,
   Beaker,
 } from "lucide-react";
+import { BentoGrid, BentoCard } from "@shared/ui/BentoGrid";
 import "./AnalisisCultivos.css";
 
 const AnalisisCultivos = () => {
@@ -140,151 +141,212 @@ const AnalisisCultivos = () => {
 
         {/* ── HUB: Módulo Selector ── */}
         {!modulo && activeTab === "analisis" && !isProductor && (
-          <div className="ac-hub-grid">
-            <button
-              className="ac-hub-card"
-              onClick={() => setModulo("cultivo")}
-            >
-              <div className="ac-hub-card-icon ac-hub-card-icon--cultivo">
-                <Sprout size={36} />
+          <BentoGrid>
+            <BentoCard span={{ col: 6, row: 1 }}>
+              <div
+                onClick={() => setModulo("cultivo")}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) =>
+                  e.key === "Enter" && setModulo("cultivo")
+                }
+                className="flex flex-col items-start gap-4 h-full cursor-pointer group"
+              >
+                <div
+                  className="flex items-center justify-center w-[72px] h-[72px] rounded-[1.25rem] shrink-0 transition-transform duration-300 group-hover:scale-110"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, rgba(45,106,79,0.12), rgba(45,106,79,0.06))",
+                    color: "#2d6a4f",
+                  }}
+                >
+                  <Sprout size={36} />
+                </div>
+                <h2 className="text-[1.25rem] font-extrabold text-[#191c1d] tracking-tight m-0">
+                  Análisis de Cultivo
+                </h2>
+                <p className="text-[0.85rem] text-[#707973] leading-relaxed flex-1 m-0">
+                  Evalúa el rendimiento de tus cultivos con datos satelitales,
+                  parámetros climáticos y análisis de suelo. Obtén
+                  recomendaciones personalizadas para maximizar la
+                  productividad de tu parcela.
+                </p>
+                <span
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-[0.8rem] font-bold mt-1 transition-all duration-300 group-hover:bg-[#2D5A27] group-hover:text-white group-hover:shadow-lg"
+                  style={{
+                    background: "rgba(45,106,79,0.08)",
+                    color: "#2d6a4f",
+                  }}
+                >
+                  <SlidersHorizontal size={16} />
+                  Comenzar Análisis
+                </span>
               </div>
-              <h2 className="ac-hub-card-title">Análisis de Cultivo</h2>
-              <p className="ac-hub-card-desc">
-                Evalúa el rendimiento de tus cultivos con datos satelitales,
-                parámetros climáticos y análisis de suelo. Obtén recomendaciones
-                personalizadas para maximizar la productividad de tu parcela.
-              </p>
-              <span className="ac-hub-card-cta">
-                <SlidersHorizontal size={16} />
-                Comenzar Análisis
-              </span>
-            </button>
+            </BentoCard>
 
-            <button
-              className="ac-hub-card"
-              onClick={() => setModulo("suelo")}
-            >
-              <div className="ac-hub-card-icon ac-hub-card-icon--suelo">
-                <Beaker size={36} />
+            <BentoCard span={{ col: 6, row: 1 }}>
+              <div
+                onClick={() => setModulo("suelo")}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) =>
+                  e.key === "Enter" && setModulo("suelo")
+                }
+                className="flex flex-col items-start gap-4 h-full cursor-pointer group"
+              >
+                <div
+                  className="flex items-center justify-center w-[72px] h-[72px] rounded-[1.25rem] shrink-0 transition-transform duration-300 group-hover:scale-110"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, rgba(117,88,77,0.12), rgba(117,88,77,0.06))",
+                    color: "#75584d",
+                  }}
+                >
+                  <Beaker size={36} />
+                </div>
+                <h2 className="text-[1.25rem] font-extrabold text-[#191c1d] tracking-tight m-0">
+                  Calidad del Suelo
+                </h2>
+                <p className="text-[0.85rem] text-[#707973] leading-relaxed flex-1 m-0">
+                  Analiza los parámetros fisicoquímicos del suelo: pH,
+                  nitrógeno, fósforo, potasio y humedad. Carga datos
+                  históricos o ingresa mediciones directas de laboratorio
+                  para un diagnóstico preciso.
+                </p>
+                <span
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-[0.8rem] font-bold mt-1 transition-all duration-300 group-hover:bg-[#2D5A27] group-hover:text-white group-hover:shadow-lg"
+                  style={{
+                    background: "rgba(45,106,79,0.08)",
+                    color: "#2d6a4f",
+                  }}
+                >
+                  <FlaskConical size={16} />
+                  Comenzar Diagnóstico
+                </span>
               </div>
-              <h2 className="ac-hub-card-title">Calidad del Suelo</h2>
-              <p className="ac-hub-card-desc">
-                Analiza los parámetros fisicoquímicos del suelo: pH, nitrógeno,
-                fósforo, potasio y humedad. Carga datos históricos o ingresa
-                mediciones directas de laboratorio para un diagnóstico preciso.
-              </p>
-              <span className="ac-hub-card-cta">
-                <FlaskConical size={16} />
-                Comenzar Diagnóstico
-              </span>
-            </button>
-          </div>
+            </BentoCard>
+          </BentoGrid>
         )}
 
         {/* ── MÓDULO: Análisis de Cultivo ── */}
         {activeTab === "analisis" && modulo === "cultivo" && (
-          <form
-            className="grid grid-cols-1 lg:grid-cols-12 gap-6 relative"
-            onSubmit={handleSubmit}
-          >
-            {/* Columna Izquierda (8 cols) */}
-            <div className="lg:col-span-8 flex flex-col gap-6">
-              <div className="ac-map-card ac-glass p-6 h-[400px] flex flex-col relative overflow-hidden group">
-                <div className="flex justify-between items-center mb-4 z-10 relative">
-                  <div>
-                    <h2 className="text-xl text-[#191c1d] font-bold">
-                      Resumen de Parcela
-                    </h2>
-                    <p className="text-sm text-[#707973]">
-                      Sector seleccionado
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button type="button" className="ac-map-tool-btn">
-                      <Map size={20} />
-                    </button>
-                    <button type="button" className="ac-map-tool-btn">
-                      <MapPin size={20} />
-                    </button>
-                  </div>
-                </div>
-                <div className="absolute inset-0 top-20 rounded-b-[2rem] overflow-hidden">
-                  <MapSelector
-                    position={{ lat: formulario.lat, lng: formulario.lng }}
-                    onPositionChange={handleMapChange}
-                    onGeoDetected={handleGeoDetected}
-                    height={400}
-                  />
-                </div>
-              </div>
-
-              <MetricCardsGrid metrics={metricCardsData} />
-            </div>
-
-            {/* Columna Derecha (4 cols) */}
-            <div className="lg:col-span-4 flex flex-col gap-6">
-              <div className="ac-glass p-8 flex-1 flex flex-col">
-                <div className="mb-6 border-b border-[#e1e3e4] pb-4">
-                  <h2 className="text-xl text-[#191c1d] font-bold flex items-center gap-2">
-                    <SlidersHorizontal className="text-[#2d6a4f]" size={24} />
-                    Recolección de Datos
-                  </h2>
-                  <p className="text-sm text-[#707973] mt-2">
-                    Ingrese los parámetros para el análisis.
-                  </p>
-                </div>
-
-                <div className="flex flex-col gap-6 flex-1">
-                  <AnalysisForm
-                    data={formulario}
-                    onChange={handleFormChange}
-                    municipalities={municipiosLista}
-                    mode="simple"
-                  />
-
-                  <div className="mt-auto pt-6 flex gap-4">
-                    <button
-                      type="button"
-                      className="ac-btn-ghost flex-1 justify-center"
-                    >
-                      Borrador
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={cargandoAnalisis}
-                      className="ac-btn-execute flex-1"
-                    >
-                      {cargandoAnalisis ? (
-                        <>
-                          <Loader2 size={16} className="ac-spin" />
-                          Procesando...
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles size={16} />
-                          Generar Reporte
-                        </>
-                      )}
-                    </button>
-                  </div>
-
-                  <div className="ac-model-status">
-                    <div className="flex items-center gap-3">
-                      <Zap className="text-[#2c694e]" size={20} />
+          <form className="relative" onSubmit={handleSubmit}>
+            <BentoGrid>
+              <BentoCard
+                span={{ col: 8, row: 1 }}
+                className="relative"
+              >
+                <div className="flex flex-col gap-6">
+                  {/* Map */}
+                  <div className="h-[400px] flex flex-col relative overflow-hidden group">
+                    <div className="flex justify-between items-center mb-4 z-10 relative">
                       <div>
-                        <p className="text-sm text-[#191c1d] font-semibold">
-                          Modelo Agro-IA
-                        </p>
-                        <p className="text-[10px] text-[#707973]">
-                          Precisión actual: 94.2%
+                        <h2 className="text-xl text-[#191c1d] font-bold">
+                          Resumen de Parcela
+                        </h2>
+                        <p className="text-sm text-[#707973]">
+                          Sector seleccionado
                         </p>
                       </div>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          className="ac-map-tool-btn"
+                        >
+                          <Map size={20} />
+                        </button>
+                        <button
+                          type="button"
+                          className="ac-map-tool-btn"
+                        >
+                          <MapPin size={20} />
+                        </button>
+                      </div>
                     </div>
-                    <span className="ac-status-pill">ACTIVO</span>
+                    <div className="absolute inset-0 top-16 rounded-b-[2rem] overflow-hidden">
+                      <MapSelector
+                        position={{
+                          lat: formulario.lat,
+                          lng: formulario.lng,
+                        }}
+                        onPositionChange={handleMapChange}
+                        onGeoDetected={handleGeoDetected}
+                        height={400}
+                      />
+                    </div>
+                  </div>
+
+                  <MetricCardsGrid metrics={metricCardsData} />
+                </div>
+              </BentoCard>
+
+              <BentoCard span={{ col: 4, row: 1 }}>
+                <div className="flex flex-col h-full">
+                  <div className="mb-6 border-b border-[#e1e3e4] pb-4">
+                    <h2 className="text-xl text-[#191c1d] font-bold flex items-center gap-2">
+                      <SlidersHorizontal
+                        className="text-[#2d6a4f]"
+                        size={24}
+                      />
+                      Recolección de Datos
+                    </h2>
+                    <p className="text-sm text-[#707973] mt-2">
+                      Ingrese los parámetros para el análisis.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col gap-6 flex-1">
+                    <AnalysisForm
+                      data={formulario}
+                      onChange={handleFormChange}
+                      municipalities={municipiosLista}
+                      mode="simple"
+                    />
+
+                    <div className="mt-auto pt-6 flex gap-4">
+                      <button
+                        type="button"
+                        className="ac-btn-ghost flex-1 justify-center"
+                      >
+                        Borrador
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={cargandoAnalisis}
+                        className="ac-btn-execute flex-1"
+                      >
+                        {cargandoAnalisis ? (
+                          <>
+                            <Loader2 size={16} className="ac-spin" />
+                            Procesando...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles size={16} />
+                            Generar Reporte
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    <div className="ac-model-status">
+                      <div className="flex items-center gap-3">
+                        <Zap className="text-[#2c694e]" size={20} />
+                        <div>
+                          <p className="text-sm text-[#191c1d] font-semibold">
+                            Modelo Agro-IA
+                          </p>
+                          <p className="text-[10px] text-[#707973]">
+                            Precisión actual: 94.2%
+                          </p>
+                        </div>
+                      </div>
+                      <span className="ac-status-pill">ACTIVO</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
+              </BentoCard>
+            </BentoGrid>
           </form>
         )}
 

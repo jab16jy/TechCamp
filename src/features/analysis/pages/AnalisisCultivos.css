@@ -174,20 +174,6 @@
   font-weight: 600;
 }
 
-/* ── Bento Grid ── */
-.ac-grid {
-  display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  gap: 1.5rem;
-}
-
-.ac-col--map { grid-column: span 5; }
-.ac-col--form { grid-column: span 7; }
-.ac-col--cta { grid-column: span 8; }
-.ac-col--status { grid-column: span 4; }
-.ac-col--wide { grid-column: span 7; }
-.ac-col--narrow { grid-column: span 5; }
-
 /* ── Glass Card ── */
 .ac-glass {
   background: rgba(255,255,255,0.94);
@@ -1237,18 +1223,6 @@
     grid-template-columns: 1fr;
   }
 
-  .ac-col--map,
-  .ac-col--form,
-  .ac-col--cta,
-  .ac-col--status,
-  .ac-col--wide,
-  .ac-col--narrow {
-    grid-column: span 12;
-  }
-
-  .ac-grid {
-    grid-template-columns: 1fr;
-  }
 }
 
 @media (max-width: 768px) {
@@ -1263,132 +1237,4 @@
   .ac-cta { flex-direction: column; align-items: flex-start; gap: 1rem; }
 }
 
-/* ============================================================
-   Hub — Module Selector Cards
-   ============================================================ */
 
-.ac-hub-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1.5rem;
-  margin-top: 0.5rem;
-  animation: ac-hub-enter 0.5s ease both;
-}
-
-@keyframes ac-hub-enter {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.ac-hub-card {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 1rem;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 2rem;
-  padding: 2rem 2rem 1.75rem;
-  box-shadow: 0 2px 12px rgba(15, 82, 56, 0.06);
-  cursor: pointer;
-  text-align: left;
-  font-family: 'Manrope', sans-serif;
-  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: hidden;
-}
-
-.ac-hub-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 2rem;
-  background: radial-gradient(circle at 50% 0%, rgba(45, 90, 39, 0.03), transparent 70%);
-  opacity: 0;
-  transition: opacity 0.35s ease;
-}
-
-.ac-hub-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 24px 48px rgba(15, 82, 56, 0.12), 0 2px 8px rgba(15, 82, 56, 0.04);
-  border-color: rgba(45, 106, 79, 0.2);
-}
-
-.ac-hub-card:hover::before {
-  opacity: 1;
-}
-
-.ac-hub-card:active {
-  transform: translateY(-2px);
-}
-
-.ac-hub-card-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 72px;
-  height: 72px;
-  border-radius: 1.25rem;
-  flex-shrink: 0;
-  transition: transform 0.3s ease;
-}
-
-.ac-hub-card:hover .ac-hub-card-icon {
-  transform: scale(1.1);
-}
-
-.ac-hub-card-icon--cultivo {
-  background: linear-gradient(135deg, rgba(45, 106, 79, 0.12), rgba(45, 106, 79, 0.06));
-  color: #2d6a4f;
-}
-
-.ac-hub-card-icon--suelo {
-  background: linear-gradient(135deg, rgba(117, 88, 77, 0.12), rgba(117, 88, 77, 0.06));
-  color: #75584d;
-}
-
-.ac-hub-card-title {
-  margin: 0;
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: #191c1d;
-  letter-spacing: -0.02em;
-  font-family: 'Manrope', sans-serif;
-}
-
-.ac-hub-card-desc {
-  margin: 0;
-  font-size: 0.85rem;
-  color: #707973;
-  line-height: 1.6;
-  flex: 1;
-}
-
-.ac-hub-card-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0.65rem 1.25rem;
-  border-radius: 999px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  font-family: 'Manrope', sans-serif;
-  transition: all 0.25s ease;
-  background: rgba(45, 106, 79, 0.08);
-  color: #2d6a4f;
-  margin-top: 0.25rem;
-}
-
-.ac-hub-card:hover .ac-hub-card-cta {
-  background: #2D5A27;
-  color: white;
-  box-shadow: 0 4px 16px rgba(15, 82, 56, 0.3);
-}
-
-@media (max-width: 768px) {
-  .ac-hub-grid {
-    grid-template-columns: 1fr;
-  }
-}
