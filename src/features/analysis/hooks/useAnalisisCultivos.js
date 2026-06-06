@@ -4,11 +4,9 @@ import useAppStore from "@shared/store";
 import AnalysisService from "@shared/services/analysisService";
 import {
   getSoilData,
+  getClima,
   getHistorial as fetchHistorial,
   MUNICIPIOS_COORD_MAP,
-  MUNICIPIOS_CLIMA_MAP,
-  MUNICIPIOS_SUELO_MAP,
-  getClosestMunicipality,
 } from "@shared/services/api";
 import { Leaf, Droplets, FlaskConical } from "lucide-react";
 
@@ -122,11 +120,13 @@ export function useAnalisisCultivos() {
     [selectedParcelaRecord],
   );
 
+  const [climaData, setClimaData] = useState(DEFAULT_CLIMA);
+
   const activeMunicipio = useMemo(() => {
     if (selectedParcelaRecord?.municipio)
       return selectedParcelaRecord.municipio;
     if (formulario.municipio) return formulario.municipio;
-    return getClosestMunicipality(formulario.lat, formulario.lng);
+    return null;
   }, [
     formulario.lat,
     formulario.lng,
@@ -134,21 +134,25 @@ export function useAnalisisCultivos() {
     selectedParcelaRecord,
   ]);
 
-  const clima = useMemo(() => {
-    const climaMunicipio = MUNICIPIOS_CLIMA_MAP[activeMunicipio];
-    if (!climaMunicipio) return DEFAULT_CLIMA;
-    return {
-      temperatura: climaMunicipio.temperatura,
-      humedad: climaMunicipio.humedad,
-      precipitacion: climaMunicipio.precipitacion,
-    };
-  }, [activeMunicipio]);
+  const clima = climaData;
+
+  // Fetch climate data when position changes
+  useEffect(() => {
+    if (formulario.lat == null || formulario.lng == null) return;
+    getClima(formulario.lat, formulario.lng).then((data) => {
+      if (data) {
+        setClimaData({
+          temperatura: data.temperatura ?? DEFAULT_CLIMA.temperatura,
+          humedad: data.humedad ?? DEFAULT_CLIMA.humedad,
+          precipitacion: data.precipitacion ?? DEFAULT_CLIMA.precipitacion,
+        });
+      }
+    }).catch(() => {});
+  }, [formulario.lat, formulario.lng]);
 
   const preloadSoilForLocation = async (lat, lng, municipio) => {
     try {
-      const soilFromApi = await getSoilData(lat, lng);
-      const soil = soilFromApi || MUNICIPIOS_SUELO_MAP[municipio];
-
+      const soil = await getSoilData(lat, lng);
       if (soil?.ph !== null && soil?.ph !== undefined) {
         actualizarFormulario({
           ph_suelo: String(soil.ph),
@@ -158,24 +162,12 @@ export function useAnalisisCultivos() {
           tipo_suelo: soil.textura_suelo || formulario.tipo_suelo,
         });
         agregarToast(
-          "Datos de suelo precargados para la ubicación seleccionada",
+          "Datos de suelo precargados desde ISRIC SoilGrids (pH, MO, textura)",
           "info",
         );
       }
     } catch {
-      const fallbackSoil = MUNICIPIOS_SUELO_MAP[municipio];
-      if (fallbackSoil) {
-        actualizarFormulario({
-          ph_suelo: String(fallbackSoil.ph),
-          materia_organica: String(fallbackSoil.materia_organica),
-          textura_suelo: fallbackSoil.textura_suelo,
-          tipo_suelo: fallbackSoil.textura_suelo,
-        });
-        agregarToast(
-          "Datos de suelo simulados precargados para el municipio seleccionado",
-          "info",
-        );
-      }
+      // SoilGrids es opcional
     }
   };
 
@@ -205,24 +197,8 @@ export function useAnalisisCultivos() {
       lat: latlng.lat,
       lng: latlng.lng,
     });
-    try {
-      const soil = await getSoilData(latlng.lat, latlng.lng);
-      if (soil?.ph !== null && soil?.ph !== undefined) {
-        actualizarFormulario({
-          ph_suelo: String(soil.ph),
-          materia_organica:
-            soil.materia_organica != null ? String(soil.materia_organica) : "",
-          textura_suelo: soil.textura_suelo || "",
-          tipo_suelo: soil.textura_suelo || formulario.tipo_suelo,
-        });
-        agregarToast(
-          "Datos de suelo precargados desde ISRIC SoilGrids (pH, MO, textura)",
-          "info",
-        );
-      }
-    } catch {
-      // Silencioso: SoilGrids es opcional
-    }
+    // Climate is fetched by the useEffect depending on formulario.lat/lng
+    // Soil is fetched by handleGeoDetected after geoDecode resolves
   };
 
   const handleGeoDetected = (geo) => {
@@ -232,12 +208,14 @@ export function useAnalisisCultivos() {
     };
     if (geo.departamento) updates.departamento = geo.departamento;
     if (geo.municipio) updates.municipio = geo.municipio;
-    if (geo.area_hectareas) updates.area_hectareas = String(geo.area_hectareas);
+    if (geo.area_hectareas > 0) updates.area_hectareas = String(geo.area_hectareas);
     actualizarFormulario(updates);
     agregarToast(
       `Ubicacion detectada: ${geo.municipio || ""}, ${geo.departamento || ""}`,
       "info",
     );
+    // Trigger soil load for this location
+    preloadSoilForLocation(geo.lat, geo.lng, geo.municipio);
   };
 
   // Called when user draws an area on the map (auto-fills hectares + lat/lng in form)
@@ -325,15 +303,12 @@ export function useAnalisisCultivos() {
     const record = historialRegistros.find((item) => item.id === id);
     if (!record) return;
 
-    const coords = getRecordCoords(record) ||
-      MUNICIPIOS_COORD_MAP[record.municipio] || {
-        lat: formulario.lat,
-        lng: formulario.lng,
-      };
+    const coords = getRecordCoords(record) || {
+      lat: formulario.lat,
+      lng: formulario.lng,
+    };
     const municipio =
-      record.municipio || getClosestMunicipality(coords.lat, coords.lng);
-    const soilFromMunicipio = MUNICIPIOS_SUELO_MAP[municipio] || {};
-    const climaMunicipio = MUNICIPIOS_CLIMA_MAP[municipio] || {};
+      record.municipio || (activeMunicipio || "");
 
     let soilFromApi = null;
     try {
@@ -342,7 +317,7 @@ export function useAnalisisCultivos() {
       soilFromApi = null;
     }
 
-    const soil = { ...soilFromMunicipio, ...(soilFromApi || {}) };
+    const soil = soilFromApi || {};
 
     actualizarFormulario({
       lat: coords.lat,
@@ -381,9 +356,7 @@ export function useAnalisisCultivos() {
       humedad_suelo:
         record.humedad_suelo != null
           ? String(record.humedad_suelo)
-          : climaMunicipio.humedad != null
-            ? String(climaMunicipio.humedad)
-            : formulario.humedad_suelo || "",
+          : formulario.humedad_suelo || "",
       fosforo:
         record.fosforo != null
           ? String(record.fosforo)

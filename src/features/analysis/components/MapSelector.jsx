@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { MapContainer, TileLayer, CircleMarker, useMap, Tooltip } from 'react-leaflet';
+import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-draw/dist/leaflet.draw.css';
 import L from '@shared/utils/leafletDrawPatch';
@@ -15,17 +15,6 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-// Caribbean Colombian cities as static visual references
-const CARIBBEAN_CITIES = [
-  { name: 'Barranquilla', lat: 10.98, lng: -74.78 },
-  { name: 'Cartagena', lat: 10.39, lng: -75.51 },
-  { name: 'Santa Marta', lat: 11.24, lng: -74.21 },
-  { name: 'Valledupar', lat: 10.46, lng: -73.25 },
-  { name: 'Sincelejo', lat: 9.30, lng: -75.39 },
-  { name: 'Montería', lat: 8.75, lng: -75.88 },
-  { name: 'Riohacha', lat: 11.54, lng: -72.91 },
-];
-
 // Caribbean Colombia bounds: SW [6.5, -78.0] to NE [12.8, -70.5]
 const CARIBBEAN_BOUNDS = [
   [6.5, -78.0],
@@ -36,37 +25,6 @@ const DEFAULT_CENTER = [10.2, -74.5];
 const DEFAULT_ZOOM = 8;
 const MIN_ZOOM = 7;
 const MAX_ZOOM = 18;
-
-// ── City Markers ──
-const CityMarkers = () => {
-  return (
-    <>
-      {CARIBBEAN_CITIES.map((city) => (
-        <CircleMarker
-          key={city.name}
-          center={[city.lat, city.lng]}
-          radius={6}
-          pathOptions={{
-            color: 'rgba(255, 255, 255, 0.7)',
-            fillColor: 'rgba(255, 255, 255, 0.15)',
-            fillOpacity: 0.3,
-            weight: 1.5,
-          }}
-          interactive={false}
-        >
-          <Tooltip
-            permanent
-            direction="right"
-            offset={[8, 0]}
-            className={styles.cityTooltip}
-          >
-            {city.name}
-          </Tooltip>
-        </CircleMarker>
-      ))}
-    </>
-  );
-};
 
 // ── Map Setup (bounds + zoom control) ──
 const MapSetup = ({ position, onMapReady }) => {
@@ -104,12 +62,14 @@ const MapSetup = ({ position, onMapReady }) => {
 };
 
 // ── Draw Tool ──
-const DrawTool = ({ onZoneCreated, onZoneCleared }) => {
+const DrawTool = ({ onZoneCreated, onZoneCleared, onMapClick }) => {
   const map = useMap();
   const drawnGroupRef = useRef(null);
   const drawHandlerRef = useRef(null);
   const [activeTool, setActiveTool] = useState(null);
   const [hasShape, setHasShape] = useState(false);
+  const onMapClickRef = useRef(onMapClick);
+  onMapClickRef.current = onMapClick;
 
   // Initialize drawnGroup
   useEffect(() => {
@@ -125,6 +85,27 @@ const DrawTool = ({ onZoneCreated, onZoneCleared }) => {
     };
   }, [map]);
 
+  // ── Click handler: select a point on the map without drawing ──
+  useEffect(() => {
+    const handleClick = (e) => {
+      // Only handle plain clicks (not drawing events)
+      if (activeTool) return;
+      // Ignore clicks on drawn shapes
+      if (drawnGroupRef.current && drawnGroupRef.current.getLayers().length > 0) {
+        // Check if click is on a drawn layer
+        const clickedLayer = drawnGroupRef.current.getLayers().find(
+          (layer) => layer.getBounds && layer.getBounds().contains(e.latlng)
+        );
+        if (clickedLayer) return;
+      }
+      if (onMapClickRef.current) {
+        onMapClickRef.current({ lat: e.latlng.lat, lng: e.latlng.lng });
+      }
+    };
+    map.on('click', handleClick);
+    return () => { map.off('click', handleClick); };
+  }, [map, activeTool]);
+
   const handleCreated = useCallback((e) => {
     const { layer } = e;
     if (!drawnGroupRef.current) return;
@@ -138,13 +119,8 @@ const DrawTool = ({ onZoneCreated, onZoneCleared }) => {
       center = layer.getLatLng();
       const radius = layer.getRadius();
       area = Math.PI * radius * radius / 10000;
-    } else if (layer instanceof L.Polyline && !(layer instanceof L.Polygon)) {
-      // Polyline — no area, just center
-      const latlngs = layer.getLatLngs();
-      if (latlngs?.[0]) {
-        center = layer.getBounds().getCenter();
-      }
     } else {
+      // Rectangle
       const latlngs = layer.getLatLngs?.();
       if (latlngs?.[0]) {
         center = layer.getBounds().getCenter();
@@ -215,13 +191,6 @@ const DrawTool = ({ onZoneCreated, onZoneCleared }) => {
     let handler;
 
     switch (tool) {
-      case 'polygon':
-        handler = new L.Draw.Polygon(map, {
-          allowIntersection: false,
-          showArea: true,
-          shapeOptions: shapeOpts,
-        });
-        break;
       case 'rectangle':
         handler = new L.Draw.Rectangle(map, {
           shapeOptions: shapeOpts,
@@ -230,11 +199,6 @@ const DrawTool = ({ onZoneCreated, onZoneCleared }) => {
       case 'circle':
         handler = new L.Draw.Circle(map, {
           shapeOptions: shapeOpts,
-        });
-        break;
-      case 'polyline':
-        handler = new L.Draw.Polyline(map, {
-          shapeOptions: { color: '#2D5A27', weight: 2.5 },
         });
         break;
     }
@@ -268,10 +232,14 @@ const DrawTool = ({ onZoneCreated, onZoneCleared }) => {
 };
 
 // ── Coordinates overlay (small, bottom-right) ──
-const CoordsOverlay = ({ position, drawnArea }) => {
+const CoordsOverlay = ({ position, drawnArea, detectedGeo }) => {
   if (!position?.lat && !position?.lng) return null;
 
   const parts = [];
+  // Show city name first when detected
+  if (detectedGeo?.municipio) {
+    parts.push(`${detectedGeo.municipio}, ${detectedGeo.departamento}`);
+  }
   if (position.lat != null && position.lng != null) {
     parts.push(`${position.lat.toFixed(4)}° N, ${position.lng.toFixed(4)}° W`);
   }
@@ -342,6 +310,12 @@ const MapSelector = ({ position, onPositionChange, onGeoDetected, onDrawnArea })
     }
   }, [onPositionChange, onGeoDetected, onDrawnArea]);
 
+  // Handle simple click on the map (no drawing tool active)
+  const handleMapClick = useCallback((latlng) => {
+    // Treat as a 0-hectare point selection
+    handleZoneCreated({ center: latlng, area: 0 });
+  }, [handleZoneCreated]);
+
   const handleZoneCleared = useCallback(() => {
     setDrawnArea(null);
     setDetectedGeo(null);
@@ -364,16 +338,16 @@ const MapSelector = ({ position, onPositionChange, onGeoDetected, onDrawnArea })
           attribution='&copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EBP, and the GIS User Community'
           url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
         />
-        <CityMarkers />
         <MapSetup position={position} onMapReady={handleMapReady} />
         <DrawTool
           onZoneCreated={handleZoneCreated}
           onZoneCleared={handleZoneCleared}
+          onMapClick={handleMapClick}
         />
       </MapContainer>
 
       {/* Tiny coordinates overlay at bottom-right */}
-      <CoordsOverlay position={position} drawnArea={drawnArea} />
+      <CoordsOverlay position={position} drawnArea={drawnArea} detectedGeo={detectedGeo} />
     </div>
   );
 };

@@ -100,11 +100,20 @@ const buildTechnicalNote = (ndvi) => {
 
 const AnalysisService = {
   async performAnalysis(formData) {
+    // Ensure all required fields have defaults before calling the API
     const payload = {
-      ...formData,
+      departamento: formData.departamento || 'Atlántico',
+      municipio: formData.municipio || 'Barranquilla',
+      lat: Number(formData.lat) || 10.9685,
+      lng: Number(formData.lng) || -74.7813,
+      tipo_suelo: formData.tipo_suelo || 'Franco',
+      textura_suelo: formData.textura_suelo || formData.tipo_suelo || 'Franco',
       area_hectareas: Number(formData.area_hectareas) || 0,
       ph_suelo: formData.ph_suelo ? Number(formData.ph_suelo) : 6.5,
       materia_organica: formData.materia_organica ? Number(formData.materia_organica) : 3.0,
+      mes_siembra: formData.mes_siembra || 'Junio',
+      humedad: Number(formData.humedad) || 74,
+      acceso_riego: Boolean(formData.acceso_riego),
     };
 
     try {

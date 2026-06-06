@@ -1,10 +1,8 @@
-import { Hexagon, Square, Circle, Trash2, Minus } from 'lucide-react';
+import { Square, Circle, Trash2 } from 'lucide-react';
 
 const TOOLS = [
-  { key: 'polygon', icon: Hexagon, label: 'Polígono' },
   { key: 'rectangle', icon: Square, label: 'Rectángulo' },
   { key: 'circle', icon: Circle, label: 'Círculo' },
-  { key: 'polyline', icon: Minus, label: 'Líneas' },
 ];
 
 export default function MapDrawingToolbar({
