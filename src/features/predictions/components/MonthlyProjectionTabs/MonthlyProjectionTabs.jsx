@@ -17,7 +17,6 @@ const TAB_ICONS = {
   temp: Thermometer,
   precip: CloudRain,
   hum: Droplets,
-  ndvi: Target,
 };
 
 export default function MonthlyProjectionTabs({ proyeccion, mejorMes, mejorCultivo, loading }) {
@@ -54,7 +53,6 @@ export default function MonthlyProjectionTabs({ proyeccion, mejorMes, mejorCulti
     { key: 'temp', label: 'Temperatura' },
     { key: 'precip', label: 'Precipitacion' },
     { key: 'hum', label: 'Humedad' },
-    { key: 'crop', label: 'Cultivos' },
   ];
 
   return (
@@ -220,40 +218,7 @@ export default function MonthlyProjectionTabs({ proyeccion, mejorMes, mejorCulti
         </div>
       )}
 
-      {activeTab === 'crop' && (
-        <div className="space-y-2 flex-1 overflow-y-auto">
-          {meses.map((mes, i) => (
-            <div key={i} className="p-2.5 rounded-xl" style={{ background: i % 2 === 0 ? 'rgba(255,255,255,0.4)' : 'transparent' }}>
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs font-semibold text-[#1A1C1A]">{mes.month}</span>
-                {mes.month === mejorMes && (
-                  <span className="text-[10px] px-1.5 py-0.5 rounded-full font-semibold" style={{ background: 'rgba(15,82,56,0.1)', color: '#0f5238' }}>
-                    Optimo
-                  </span>
-                )}
-              </div>
-              {mes.cultivos_recomendados?.length > 0 ? (
-                <div className="flex flex-wrap gap-1.5">
-                  {mes.cultivos_recomendados.slice(0, 3).map((c, j) => (
-                    <span
-                      key={j}
-                      className="text-[10px] px-2 py-0.5 rounded-full font-medium"
-                      style={{
-                        background: c.riesgo === 'bajo' ? 'rgba(15,82,56,0.08)' : c.riesgo === 'medio' ? 'rgba(184,134,11,0.08)' : 'rgba(186,26,26,0.08)',
-                        color: c.riesgo === 'bajo' ? '#0f5238' : c.riesgo === 'medio' ? '#b8860b' : '#ba1a1a',
-                      }}
-                    >
-                      {c.emoji} {c.cultivo} {c.score}%
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                <span className="text-[10px] text-[#9ca3af]">Sin datos</span>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+
     </div>
   );
 }

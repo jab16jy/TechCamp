@@ -7,9 +7,9 @@ import styles from "./AnalysisForm.module.css";
  * @param {Object} data - Current form data.
  * @param {Function} onChange - Callback when a field changes.
  * @param {Array} municipalities - List of available municipalities.
- * @param {string} mode - "simple" (default) or "advanced".
+ * @param {Object|null} drawnArea - Drawn area data from map { area, lat, lng } or null.
  */
-const AnalysisForm = ({ data, onChange, municipalities = [] }) => {
+const AnalysisForm = ({ data, onChange, municipalities = [], drawnArea = null }) => {
   const [departamentos, setDepartamentos] = useState([]);
   const [municipiosFiltrados, setMunicipiosFiltrados] = useState([]);
 
@@ -39,6 +39,8 @@ const AnalysisForm = ({ data, onChange, municipalities = [] }) => {
       [name]: type === "checkbox" ? checked : value,
     });
   };
+
+  const hasDrawnArea = drawnArea && drawnArea.area > 0;
 
   return (
     <div className={styles.formContainer}>
@@ -82,7 +84,10 @@ const AnalysisForm = ({ data, onChange, municipalities = [] }) => {
           </div>
 
           <div className={styles.field}>
-            <label>Área (hectáreas)</label>
+            <label>
+              Área (hectáreas)
+              {hasDrawnArea && <span className={styles.autoFilled}>auto</span>}
+            </label>
             <input
               type="number"
               name="area_hectareas"
@@ -91,8 +96,22 @@ const AnalysisForm = ({ data, onChange, municipalities = [] }) => {
               placeholder="Ej: 15.5"
               required
               step="0.1"
+              readOnly={hasDrawnArea}
+              className={hasDrawnArea ? styles.readOnly : ""}
             />
           </div>
+
+          {hasDrawnArea && (
+            <div className={styles.field}>
+              <label>Coordenadas <span className={styles.autoFilled}>auto</span></label>
+              <input
+                type="text"
+                value={`${drawnArea.lat.toFixed(4)}° N, ${drawnArea.lng.toFixed(4)}° W`}
+                readOnly
+                className={styles.readOnly}
+              />
+            </div>
+          )}
 
           <div className={styles.field}>
             <label>

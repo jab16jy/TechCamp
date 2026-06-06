@@ -67,6 +67,9 @@ export function useAnalisisCultivos() {
   const [activeTab, setActiveTab] = useState("analisis");
   const [selectedParcela, setSelectedParcela] = useState("");
 
+  // Drawn area data from map (auto-fills hectares and coords in the form)
+  const [drawnAreaData, setDrawnAreaData] = useState(null);
+
   useEffect(() => {
     AnalysisService.getAvailableLocations().then(setMunicipiosLista);
   }, []);
@@ -235,6 +238,21 @@ export function useAnalisisCultivos() {
       `Ubicacion detectada: ${geo.municipio || ""}, ${geo.departamento || ""}`,
       "info",
     );
+  };
+
+  // Called when user draws an area on the map (auto-fills hectares + lat/lng in form)
+  const handleDrawnArea = (areaData) => {
+    if (!areaData) {
+      setDrawnAreaData(null);
+      return;
+    }
+    const { area, lat, lng } = areaData;
+    setDrawnAreaData({ area, lat, lng });
+    actualizarFormulario({
+      area_hectareas: String(area),
+      lat,
+      lng,
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -435,6 +453,7 @@ export function useAnalisisCultivos() {
     selectedParcelaLabel,
     historialRegistros,
     historialRegistrosEstandar,
+    drawnAreaData,
     // Datos derivados
     isProductor,
     clima,
@@ -447,6 +466,7 @@ export function useAnalisisCultivos() {
     handleFormChange,
     handleMapChange,
     handleGeoDetected,
+    handleDrawnArea,
     handleSubmit,
     handleParcelaChange,
     // Navegación
