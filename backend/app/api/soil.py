@@ -14,6 +14,6 @@ async def soil_data(
     if data is None:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="No se pudieron obtener datos de suelo desde ISRIC SoilGrids. Intente mas tarde.",
+            detail="No se pudieron obtener datos de suelo para estas coordenadas.",
         )
     return data

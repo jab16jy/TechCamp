@@ -161,13 +161,16 @@ export function useAnalisisCultivos() {
           textura_suelo: soil.textura_suelo || "",
           tipo_suelo: soil.textura_suelo || formulario.tipo_suelo,
         });
+        const isFallback = soil._fallback;
         agregarToast(
-          "Datos de suelo precargados desde ISRIC SoilGrids (pH, MO, textura)",
+          isFallback
+            ? `Datos de suelo estimados para zona Caribe (Agrosavia/IGAC)`
+            : `Datos de suelo precargados desde ${soil.fuente || "ISRIC SoilGrids"}`,
           "info",
         );
       }
     } catch {
-      // SoilGrids es opcional
+      // SoilGrids es opcional — el usuario puede ingresar datos manualmente
     }
   };
 
