@@ -336,6 +336,7 @@ export function useAnalisisCultivos() {
 
       const topRec = resultado.recomendaciones?.[0];
       agregarAlHistorial({
+        id: resultado.id,
         tipo: "analisis",
         municipio: formulario.municipio,
         departamento: formulario.departamento,

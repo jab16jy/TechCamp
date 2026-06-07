@@ -34,7 +34,6 @@ export const createHistorySlice = (set) => ({
 
   agregarAlHistorial: (registro) => {
     const nuevo = {
-      id: generateId(registro.tipo),
       fecha: new Date().toISOString(),
       municipio: registro.municipio || '',
       departamento: registro.departamento || '',
@@ -42,6 +41,8 @@ export const createHistorySlice = (set) => ({
       tipo: registro.tipo,
       estado: 'Exitosa',
       ...registro,
+      // Use real ID if provided, otherwise generate synthetic one
+      id: registro.id || generateId(registro.tipo),
     };
     set((state) => {
       const updated = [nuevo, ...state.historial];

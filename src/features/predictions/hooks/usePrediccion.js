@@ -122,14 +122,26 @@ export default function usePrediccion() {
   }, [npkSim, riegoSim, _runPrediccion, _resolveFenologia, agregarToast]);
 
   // ── selectAnalysis: fetch analysis by ID → project ──
-  const selectAnalysis = useCallback(async (analysisId) => {
+  const selectAnalysis = useCallback(async (analysisId, fallbackRecord = null) => {
     if (!analysisId) {
       setSelectedAnalysisData(null); setProyeccion6M(null); setEstado(ESTADOS.IDLE);
       return null;
     }
     setEstado(ESTADOS.LOADING); setLoadingProyeccion(true);
     try {
-      const data = await getAnalysis(analysisId);
+      let data = await getAnalysis(analysisId);
+
+      // If backend fails but we have localStorage data, use that
+      if (!data && fallbackRecord) {
+        data = {
+          lat: Number(fallbackRecord.coordenadas?.lat ?? fallbackRecord.lat),
+          lng: Number(fallbackRecord.coordenadas?.lng ?? fallbackRecord.lng),
+          cultivo: fallbackRecord.cultivo || fallbackRecord.cultivo_top || 'Maiz',
+          fecha: fallbackRecord.fecha,
+          _localFallback: true,
+        };
+      }
+
       if (!data) { agregarToast('Análisis no encontrado', 'advertencia'); setEstado(ESTADOS.IDLE); setLoadingProyeccion(false); return null; }
       const lat = Number(data.lat), lng = Number(data.lng);
       const cultivo = data.cultivo || data.cultivo_recomendado || 'Maiz';

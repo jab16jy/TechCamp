@@ -106,15 +106,13 @@ const IAPredictiva = () => {
 
   const handleSelectAnalysis = useCallback((id) => {
     setSelectedAnalysisId(id);
-    selectAnalysis(id).then((result) => {
-      if (result) {
-        const analysis = analisisConCoordenadas.find((a) => a.id === id);
-        if (analysis) {
-          const lat = analysis.coordenadas?.lat ?? analysis.lat;
-          const lng = analysis.coordenadas?.lng ?? analysis.lng;
-          if (Number.isFinite(Number(lat)) && Number.isFinite(Number(lng))) {
-            setQueryCoords({ lat: Number(lat), lng: Number(lng) });
-          }
+    const localRecord = analisisConCoordenadas.find((a) => a.id === id) || null;
+    selectAnalysis(id, localRecord).then((result) => {
+      if (result && localRecord) {
+        const lat = localRecord.coordenadas?.lat ?? localRecord.lat;
+        const lng = localRecord.coordenadas?.lng ?? localRecord.lng;
+        if (Number.isFinite(Number(lat)) && Number.isFinite(Number(lng))) {
+          setQueryCoords({ lat: Number(lat), lng: Number(lng) });
         }
       }
     });
