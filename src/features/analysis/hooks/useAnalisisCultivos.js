@@ -136,17 +136,21 @@ export function useAnalisisCultivos() {
     const seen = new Set();
     const all = [];
 
-    for (const item of serverHistory) {
-      if (item?.id && !seen.has(item.id)) {
-        seen.add(item.id);
-        all.push(item);
+    // serverHistory is the single source of truth when available
+    if (serverHistory.length > 0) {
+      for (const item of serverHistory) {
+        if (item?.id && !seen.has(item.id)) {
+          seen.add(item.id);
+          all.push(item);
+        }
       }
-    }
-
-    for (const item of historial) {
-      if (item?.id && !seen.has(item.id)) {
-        seen.add(item.id);
-        all.push(item);
+    } else {
+      // Fallback to localStorage (historial) when server has no data
+      for (const item of historial) {
+        if (item?.id && !seen.has(item.id)) {
+          seen.add(item.id);
+          all.push(item);
+        }
       }
     }
 
