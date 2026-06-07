@@ -6,6 +6,7 @@ import AnalysisForm from "@features/analysis/components/AnalysisForm";
 import MetricCardsGrid from "@features/analysis/components/MetricCardsGrid/MetricCardsGrid";
 import HistorialTab from "@features/analysis/components/HistorialTab/HistorialTab";
 import SkeletonCard from "@features/analysis/components/SkeletonCard/SkeletonCard";
+import ErrorBoundary from "@shared/components/ErrorBoundary/ErrorBoundary";
 import { useAnalisisCultivos } from "@features/analysis/hooks/useAnalisisCultivos";
 import {
   Sparkles,
@@ -144,23 +145,27 @@ const AnalisisCultivos = () => {
               </div>
 
               {/* Bottom metrics strip */}
-              <div className="ac-map-metrics">
-                {cargandoAnalisis ? (
-                  <SkeletonCard />
-                ) : (
-                  <MetricCardsGrid metrics={metricCardsData} />
-                )}
-              </div>
+              <ErrorBoundary label="Métricas en vivo" onRetry={() => window.location.reload()}>
+                <div className="ac-map-metrics">
+                  {cargandoAnalisis ? (
+                    <SkeletonCard />
+                  ) : (
+                    <MetricCardsGrid metrics={metricCardsData} />
+                  )}
+                </div>
+              </ErrorBoundary>
             </div>
           </form>
         )}
 
         {/* Historial Tab */}
         {activeTab === "historial" && (
-          <HistorialTab
-            registros={historialRegistros}
-            loading={cargandoAnalisis}
-          />
+          <ErrorBoundary label="Historial de análisis" onRetry={() => window.location.reload()}>
+            <HistorialTab
+              registros={historialRegistros}
+              loading={cargandoAnalisis}
+            />
+          </ErrorBoundary>
         )}
       </div>
     </Layout>
