@@ -39,6 +39,7 @@ class AnalyzeResponse(BaseModel):
     anomalia: AnomaliaClimatica | None = None
     ubicacion: dict
     es_mock: bool = True
+    id: str = ""
 
 
 class HistorialEntry(BaseModel):

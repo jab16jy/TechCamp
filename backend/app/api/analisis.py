@@ -53,6 +53,8 @@ async def analyze_location(
         logger.exception("Error en motor de recomendacion")
         recommendations = []
 
+    analysis_id = ""
+    ana = None
     try:
         ana = Analisis(
             municipio_id=None,
@@ -70,6 +72,7 @@ async def analyze_location(
         )
         db.add(ana)
         await db.flush()
+        analysis_id = str(ana.id)[:8].upper()
     except Exception:
         logger.exception("Error guardando analisis")
         pass
@@ -81,6 +84,7 @@ async def analyze_location(
         anomalia=anomaly,
         ubicacion={"lat": body.lat, "lng": body.lng},
         es_mock=es_mock,
+        id=analysis_id,
     )
 
 
