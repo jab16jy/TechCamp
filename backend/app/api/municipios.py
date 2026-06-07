@@ -8,16 +8,19 @@ from app.schemas.analisis import MunicipioResponse
 
 router = APIRouter(prefix="/municipalities", tags=["municipios"])
 
-MOCK_MUNICIPIOS = [
+MUNICIPIOS_REFERENCIA = [
     {"id": 1, "nombre": "Barranquilla", "departamento": "Atlántico", "lat": 10.9685, "lng": -74.7813},
-    {"id": 2, "nombre": "Soledad", "departamento": "Atlántico", "lat": 10.9174, "lng": -74.7647},
-    {"id": 3, "nombre": "Cartagena", "departamento": "Bolívar", "lat": 10.3997, "lng": -75.5144},
+    {"id": 2, "nombre": "Soledad", "departamento": "Atlántico", "lat": 10.9186, "lng": -74.7646},
+    {"id": 3, "nombre": "Cartagena", "departamento": "Bolívar", "lat": 10.3910, "lng": -75.5144},
     {"id": 4, "nombre": "Santa Marta", "departamento": "Magdalena", "lat": 11.2408, "lng": -74.1990},
     {"id": 5, "nombre": "Montería", "departamento": "Córdoba", "lat": 8.7578, "lng": -75.8814},
     {"id": 6, "nombre": "Valledupar", "departamento": "Cesar", "lat": 10.4631, "lng": -73.2532},
     {"id": 7, "nombre": "Sincelejo", "departamento": "Sucre", "lat": 9.3047, "lng": -75.3978},
     {"id": 8, "nombre": "Riohacha", "departamento": "La Guajira", "lat": 11.5444, "lng": -72.9072},
 ]
+
+_COORDS_BY_NAME = {m["nombre"]: {"lat": m["lat"], "lng": m["lng"]} for m in MUNICIPIOS_REFERENCIA}
+
 
 
 @router.get("", response_model=list[MunicipioResponse])
@@ -31,10 +34,12 @@ async def get_municipios(db: AsyncSession = Depends(get_db)):
                     id=m.id,
                     nombre=m.nombre,
                     departamento=m.departamento,
+                    lat=_COORDS_BY_NAME.get(m.nombre, {}).get("lat"),
+                    lng=_COORDS_BY_NAME.get(m.nombre, {}).get("lng"),
                 )
                 for m in municipios
             ]
     except Exception:
         pass
 
-    return [MunicipioResponse(**m) for m in MOCK_MUNICIPIOS]
+    return [MunicipioResponse(**m) for m in MUNICIPIOS_REFERENCIA]

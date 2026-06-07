@@ -13,6 +13,50 @@ import { Leaf, Droplets, FlaskConical } from "lucide-react";
 
 const DEFAULT_CLIMA = { temperatura: 26.4, humedad: 72, precipitacion: 1180 };
 
+const SOIL_CLASS_OPTIONS = new Set([
+  "Franco",
+  "Franco-Arcilloso",
+  "Franco-Arenoso",
+  "Franco-Limoso",
+  "Arenoso",
+  "Limoso",
+  "Arcilloso",
+]);
+
+const SOIL_CLASS_ALIASES = {
+  franca: "Franco",
+  franco: "Franco",
+  "franco arcillosa": "Franco-Arcilloso",
+  "franco arcilloso": "Franco-Arcilloso",
+  "franco-arcillosa": "Franco-Arcilloso",
+  "franco-arcilloso": "Franco-Arcilloso",
+  "franco arenosa": "Franco-Arenoso",
+  "franco arenoso": "Franco-Arenoso",
+  "franco-arenosa": "Franco-Arenoso",
+  "franco-arenoso": "Franco-Arenoso",
+  "franco limosa": "Franco-Limoso",
+  "franco limoso": "Franco-Limoso",
+  "franco-limosa": "Franco-Limoso",
+  "franco-limoso": "Franco-Limoso",
+  arenosa: "Arenoso",
+  arenoso: "Arenoso",
+  limosa: "Limoso",
+  limoso: "Limoso",
+  arcillosa: "Arcilloso",
+  arcilloso: "Arcilloso",
+};
+
+const normalizeSoilClass = (value) => {
+  if (!value) return "";
+  if (SOIL_CLASS_OPTIONS.has(value)) return value;
+  const key = String(value)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+  return SOIL_CLASS_ALIASES[key] || "";
+};
+
 const getRecordCoords = (record) => {
   if (!record) return null;
   if (record.coordenadas?.lat != null && record.coordenadas?.lng != null) {
@@ -143,6 +187,14 @@ export function useAnalisisCultivos() {
 
   const clima = climaData;
 
+  const getCoordsForMunicipio = (nombre) => {
+    const fromApi = municipiosLista.find((m) => m.nombre === nombre);
+    if (fromApi?.lat != null && fromApi?.lng != null) {
+      return { lat: Number(fromApi.lat), lng: Number(fromApi.lng) };
+    }
+    return MUNICIPIOS_COORD_MAP[nombre] || null;
+  };
+
   // Fetch climate data when position changes
   useEffect(() => {
     if (formulario.lat == null || formulario.lng == null) return;
@@ -161,12 +213,17 @@ export function useAnalisisCultivos() {
     try {
       const soil = await getSoilData(lat, lng);
       if (soil?.ph !== null && soil?.ph !== undefined) {
+        const soilClass =
+          normalizeSoilClass(soil.tipo_suelo) ||
+          normalizeSoilClass(soil.textura_suelo) ||
+          formulario.tipo_suelo;
+
         actualizarFormulario({
           ph_suelo: String(soil.ph),
           materia_organica:
             soil.materia_organica != null ? String(soil.materia_organica) : "",
-          textura_suelo: soil.textura_suelo || "",
-          tipo_suelo: soil.textura_suelo || formulario.tipo_suelo,
+          textura_suelo: soilClass || soil.textura_suelo || "",
+          tipo_suelo: soilClass,
         });
         const isFallback = soil._fallback;
         agregarToast(
@@ -185,7 +242,7 @@ export function useAnalisisCultivos() {
     const updates = { ...newFields };
 
     if (newFields.municipio) {
-      const coords = MUNICIPIOS_COORD_MAP[newFields.municipio];
+      const coords = getCoordsForMunicipio(newFields.municipio);
       if (coords) {
         updates.lat = coords.lat;
         updates.lng = coords.lng;
@@ -195,7 +252,7 @@ export function useAnalisisCultivos() {
     actualizarFormulario(updates);
 
     if (newFields.municipio) {
-      const coords = MUNICIPIOS_COORD_MAP[newFields.municipio];
+      const coords = getCoordsForMunicipio(newFields.municipio);
       if (coords) {
         preloadSoilForLocation(coords.lat, coords.lng, newFields.municipio);
       }
@@ -339,9 +396,10 @@ export function useAnalisisCultivos() {
           ? String(record.area_hectareas)
           : formulario.area_hectareas,
       tipo_suelo:
-        record.tipo_suelo ||
-        record.textura_suelo ||
-        soil.textura_suelo ||
+        normalizeSoilClass(record.tipo_suelo) ||
+        normalizeSoilClass(record.textura_suelo) ||
+        normalizeSoilClass(soil.tipo_suelo) ||
+        normalizeSoilClass(soil.textura_suelo) ||
         formulario.tipo_suelo,
       ph_suelo:
         record.ph != null
@@ -358,7 +416,9 @@ export function useAnalisisCultivos() {
             ? String(soil.materia_organica)
             : formulario.materia_organica,
       textura_suelo:
-        record.textura_suelo || soil.textura_suelo || formulario.textura_suelo,
+        normalizeSoilClass(record.textura_suelo) ||
+        normalizeSoilClass(soil.textura_suelo) ||
+        formulario.textura_suelo,
       nitrogeno:
         record.nitrogeno != null
           ? String(record.nitrogeno)

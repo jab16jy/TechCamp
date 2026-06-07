@@ -350,6 +350,16 @@
   text-transform: uppercase;
 }
 
+.ac-status-pill--optimo {
+  background: #2D5A27;
+  color: #fff;
+}
+
+.ac-status-pill--mejorable {
+  background: #e8b84b;
+  color: #191c1d;
+}
+
 /* ── Tabs ── */
 .ac-tabs {
   display: flex;

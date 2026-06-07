@@ -3,16 +3,25 @@ import CropIcon from '../CropIcon/CropIcon';
 
 const glassPanel = 'bg-white shadow-sm border border-white/40 rounded-2xl transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md';
 
-const ModelMetricsTable = ({ metrics }) => (
+const ModelMetricsTable = ({ metrics = [], modelMetrics = null }) => {
+  const hasMetrics = metrics.length > 0;
+  const isAvailable = modelMetrics?.model_available !== false && hasMetrics;
+  const statusLabel = isAvailable
+    ? modelMetrics?.metrics_reconstructed
+      ? 'Métricas reconstruidas'
+      : 'Modelos Estables'
+    : 'Entrenamiento pendiente';
+
+  return (
   <div className={`${glassPanel} p-6 overflow-hidden relative`}>
     <div className="flex items-center justify-between mb-6">
       <div>
         <h3 className="text-xl font-bold text-[#2D5A27] mb-1">Métricas de Modelo Predictivo</h3>
         <p className="text-sm text-slate-600">Rendimiento de los algoritmos por tipo de cultivo</p>
       </div>
-      <div className="bg-[#2d6a4f]/10 text-[#2D5A27] px-4 py-1.5 rounded-full flex items-center gap-2">
+      <div className={`${isAvailable ? 'bg-[#2d6a4f]/10 text-[#2D5A27]' : 'bg-amber-100 text-amber-800'} px-4 py-1.5 rounded-full flex items-center gap-2`}>
         <CheckCircle2 size={16} />
-        <span className="text-sm font-bold">Modelos Estables</span>
+        <span className="text-sm font-bold">{statusLabel}</span>
       </div>
     </div>
     <div className="overflow-x-auto">
@@ -27,7 +36,7 @@ const ModelMetricsTable = ({ metrics }) => (
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100">
-          {metrics.map((item, idx) => (
+          {hasMetrics ? metrics.map((item, idx) => (
             <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
               <td className="py-4 flex items-center gap-3">
                 <CropIcon type={item.icon} size={28} />
@@ -50,11 +59,18 @@ const ModelMetricsTable = ({ metrics }) => (
                 </span>
               </td>
             </tr>
-          ))}
+          )) : (
+            <tr>
+              <td colSpan={5} className="py-8 text-center text-sm text-slate-500">
+                No hay métricas por cultivo disponibles todavía. Reentrena el modelo o revisa <code>/model/metrics</code>.
+              </td>
+            </tr>
+          )}
         </tbody>
       </table>
     </div>
   </div>
-);
+  );
+};
 
 export default ModelMetricsTable;

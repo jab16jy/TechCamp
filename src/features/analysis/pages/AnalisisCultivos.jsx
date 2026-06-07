@@ -112,11 +112,13 @@ const AnalisisCultivos = () => {
                   </div>
                 </div>
                 <span className={
-                  modelMetrics?.accuracy != null && modelMetrics.accuracy >= 0.8
-                    ? 'ac-status-pill'
-                    : modelMetrics?.accuracy != null
-                      ? 'ac-status-pill'
-                      : 'ac-status-pill'
+                  `ac-status-pill ${
+                    modelMetrics?.accuracy != null
+                      ? modelMetrics.accuracy >= 0.8
+                        ? 'ac-status-pill--optimo'
+                        : 'ac-status-pill--mejorable'
+                      : ''
+                  }`
                 }>
                   {modelMetrics?.accuracy != null
                     ? (modelMetrics.accuracy >= 0.8 ? 'OPTIMO' : 'MEJORABLE')

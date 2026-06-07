@@ -6,6 +6,7 @@ to reach ~85% accuracy without field data.
 import asyncio
 import json
 import logging
+import os
 from pathlib import Path
 from typing import Optional
 
@@ -25,11 +26,14 @@ from joblib import dump, load
 
 logger = logging.getLogger(__name__)
 
-MODEL_DIR = Path(__file__).parent
-MODEL_PATH = MODEL_DIR / "crop_model_rf.joblib"
-SCALER_PATH = MODEL_DIR / "crop_scaler.joblib"
-METRICS_PATH = MODEL_DIR / "model_metrics.json"
-CSV_PATH = MODEL_DIR / "crops_requirements.csv"
+CODE_MODEL_DIR = Path(__file__).parent
+ARTIFACT_DIR = Path(os.getenv("MODEL_ARTIFACT_DIR", CODE_MODEL_DIR))
+MODEL_PATH = ARTIFACT_DIR / "crop_model_rf.joblib"
+SCALER_PATH = ARTIFACT_DIR / "crop_scaler.joblib"
+METRICS_PATH = ARTIFACT_DIR / "model_metrics.json"
+CSV_PATH = CODE_MODEL_DIR / "crops_requirements.csv"
+BUNDLED_MODEL_PATH = CODE_MODEL_DIR / "crop_model_rf.joblib"
+BUNDLED_SCALER_PATH = CODE_MODEL_DIR / "crop_scaler.joblib"
 
 NASA_POWER_URL = "https://power.larc.nasa.gov/api/temporal/climatology/point"
 
@@ -454,8 +458,10 @@ def train_model(
     metrics["data_source"] = "NASA POWER climatology + synthetic (overlapped ranges)"
 
     # Save model + scaler + metrics
+    _ensure_artifact_dir()
     dump(model, MODEL_PATH)
     dump(scaler, SCALER_PATH)
+    metrics["model_available"] = True
     METRICS_PATH.write_text(json.dumps(metrics, indent=2, default=str))
     logger.info("Modelo guardado en %s", MODEL_PATH)
     logger.info(
@@ -471,20 +477,113 @@ def train_model(
 # ── Load / Predict / Metrics ───────────────────────────────────────────
 
 
+def _ensure_artifact_dir() -> None:
+    """Ensure writable model artifact storage exists.
+
+    Docker must NOT mount over app/ml because that masks Python code after image
+    rebuilds. MODEL_ARTIFACT_DIR points to a separate writable volume that only
+    stores generated model/scaler/metrics artifacts.
+    """
+    ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def _bootstrap_bundled_artifacts() -> None:
+    """Copy image-bundled model artifacts into the writable artifact dir once."""
+    _ensure_artifact_dir()
+    pairs = [
+        (BUNDLED_MODEL_PATH, MODEL_PATH),
+        (BUNDLED_SCALER_PATH, SCALER_PATH),
+    ]
+    for source, target in pairs:
+        if source.resolve() == target.resolve() or target.exists() or not source.exists():
+            continue
+        try:
+            target.write_bytes(source.read_bytes())
+            logger.info("Artefacto ML inicial copiado a %s", target)
+        except OSError as e:
+            logger.warning("No se pudo copiar artefacto ML %s -> %s: %s", source, target, e)
+
+
 def load_model() -> tuple[Optional[CalibratedClassifierCV], Optional[StandardScaler]]:
+    _bootstrap_bundled_artifacts()
     if not MODEL_PATH.exists() or not SCALER_PATH.exists():
         logger.warning("Modelo no encontrado en %s", MODEL_PATH)
         return None, None
     return load(MODEL_PATH), load(SCALER_PATH)
 
 
+def _rebuild_metrics_from_saved_model() -> dict | None:
+    """Reconstruct honest metrics when model_metrics.json was lost.
+
+    This happens in Docker if generated files lived in a container writable layer
+    or a stale volume. We do NOT invent numbers: we load the persisted model and
+    evaluate it against the same deterministic synthetic validation generator.
+    """
+    try:
+        model, scaler = load_model()
+        if model is None or scaler is None:
+            return None
+
+        df = generate_synthetic_dataset(
+            n_samples_per_crop=120,
+            climate_zones=[{
+                "name": "Caribe",
+                "lat": 10.0,
+                "lng": -75.0,
+                "monthly": dict(REGIONAL_CLIMATOLOGY),
+            }],
+        )
+        X = scaler.transform(df[ALL_FEATURE_COLS].values)
+        y = df["cultivo"].values
+        y_pred = model.predict(X)
+
+        metrics = {
+            "model_available": True,
+            "accuracy": round(float(accuracy_score(y, y_pred)), 4),
+            "precision_macro": round(float(precision_score(y, y_pred, average="macro", zero_division=0)), 4),
+            "recall_macro": round(float(recall_score(y, y_pred, average="macro", zero_division=0)), 4),
+            "f1_macro": round(float(f1_score(y, y_pred, average="macro", zero_division=0)), 4),
+            "cv_accuracy_mean": None,
+            "cv_accuracy_std": None,
+            "cv_method": "reconstructed holdout from persisted model artifact",
+            "n_samples": len(df),
+            "n_features": len(ALL_FEATURE_COLS),
+            "n_climate_zones": 1,
+            "model_type": type(model).__name__,
+            "data_source": "regional synthetic validation rebuilt from persisted model",
+            "metrics_reconstructed": True,
+        }
+
+        per_crop = {}
+        for crop_name in np.unique(y):
+            mask = y == crop_name
+            per_crop[str(crop_name)] = round(float(accuracy_score(y[mask], y_pred[mask])), 4)
+        metrics["per_crop_accuracy"] = per_crop
+
+        _ensure_artifact_dir()
+        METRICS_PATH.write_text(json.dumps(metrics, indent=2, default=str))
+        logger.info("Metricas reconstruidas y guardadas en %s", METRICS_PATH)
+        return metrics
+    except Exception as e:
+        logger.warning("No se pudieron reconstruir metricas del modelo: %s", e)
+        return None
+
+
 def get_saved_metrics() -> dict:
-    """Read persisted metrics from last training run."""
+    """Read persisted metrics from last training run, rebuilding if safe."""
+    _bootstrap_bundled_artifacts()
     if METRICS_PATH.exists():
         try:
-            return json.loads(METRICS_PATH.read_text())
+            metrics = json.loads(METRICS_PATH.read_text())
+            metrics.setdefault("model_available", metrics.get("accuracy") is not None)
+            return metrics
         except (json.JSONDecodeError, OSError) as e:
             logger.warning("Error leyendo metricas guardadas: %s", e)
+
+    rebuilt = _rebuild_metrics_from_saved_model()
+    if rebuilt is not None:
+        return rebuilt
+
     return {"model_available": False, "accuracy": None}
 
 

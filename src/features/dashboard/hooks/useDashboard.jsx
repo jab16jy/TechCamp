@@ -106,14 +106,16 @@ export default function useDashboard() {
   ];
 
   const modelMetricsPerCrop = modelMetrics?.per_crop_accuracy
-    ? Object.entries(modelMetrics.per_crop_accuracy).map(([crop, acc]) => ({
-        cultivo: crop.replace('_', ' '),
-        accuracy: `${(acc * 100).toFixed(1)}%`,
-        f1: modelMetrics.f1_macro?.toFixed(2) || '—',
-        mae: '—',
-        confianza: acc >= 0.85 ? 'Alta' : acc >= 0.7 ? 'Moderada' : 'En desarrollo',
-        icon: crop.toLowerCase().slice(0, 4),
-      }))
+    ? Object.entries(modelMetrics.per_crop_accuracy)
+        .sort(([a], [b]) => a.localeCompare(b, 'es-CO'))
+        .map(([crop, acc]) => ({
+          cultivo: crop.replaceAll('_', ' '),
+          accuracy: `${(acc * 100).toFixed(1)}%`,
+          f1: modelMetrics.f1_macro != null ? modelMetrics.f1_macro.toFixed(2) : '—',
+          mae: '—',
+          confianza: acc >= 0.85 ? 'Alta' : acc >= 0.7 ? 'Moderada' : 'En desarrollo',
+          icon: crop.toLowerCase().slice(0, 4),
+        }))
     : [];
 
   return {

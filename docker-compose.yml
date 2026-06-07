@@ -57,6 +57,7 @@ services:
       OPENMETEO_BASE_URL: https://api.open-meteo.com/v1
       OLLAMA_BASE_URL: http://ollama:11434
       OLLAMA_MODEL: gemma2:2b
+      MODEL_ARTIFACT_DIR: /app/model_artifacts
       CORS_ORIGINS: http://localhost:5173,http://localhost:5173,http://localhost
     depends_on:
       db:
@@ -64,7 +65,7 @@ services:
       ollama:
         condition: service_started
     volumes:
-      - ml-data:/app/app/ml/
+      - ml-data:/app/model_artifacts/
     restart: unless-stopped
     networks:
       - backend_net

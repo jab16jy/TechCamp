@@ -11,7 +11,7 @@ export const createUISlice = (set) => ({
       set((state) => ({
         toasts: state.toasts.filter((t) => t.id !== id),
       }));
-    }, 4000);
+    }, 2500);
   },
 
   eliminarToast: (id) =>

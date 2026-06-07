@@ -28,6 +28,7 @@ const DashboardInvestigador = () => {
     WEATHER,
     MODEL_METRICS,
     SPARK_DATA,
+    modelMetrics,
     navigate,
   } = useDashboard();
 
@@ -47,7 +48,7 @@ const DashboardInvestigador = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.05, ease: 'easeOut' }} className="lg:col-span-2 space-y-6">
-              <ModelMetricsTable metrics={MODEL_METRICS} />
+              <ModelMetricsTable metrics={MODEL_METRICS} modelMetrics={modelMetrics} />
               <WeatherWidget weather={WEATHER} />
             </motion.div>
             <FieldUpdatesFeed updates={FIELD_UPDATES} onViewAll={moduleShortcuts.find(m => m.path === '/investigador/sensores')?.onClick} />
