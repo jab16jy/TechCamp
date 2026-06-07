@@ -72,6 +72,10 @@ export default function MapDrawingToolbar({
       {TOOLS.map((tool) => (
         <button
           key={tool.key}
+          // type="button" explicito: este toolbar se renderiza dentro
+          // del <form> de AnalisisCultivos. Sin esto, los buttons
+          // heredarian type="submit" por defecto y dispararian el submit
+          // del formulario al dibujar/limpiar. (TOOLBAR-BUTTON)
           type="button"
           onClick={() => onToolChange(tool.key)}
           className={activeTool === tool.key ? 'active' : ''}
@@ -82,6 +86,7 @@ export default function MapDrawingToolbar({
       ))}
       <div className="toolbar-divider" />
       <button
+        // type="button" explicito: idem arriba, evita submit del form.
         type="button"
         onClick={onClear}
         disabled={!canClear}
