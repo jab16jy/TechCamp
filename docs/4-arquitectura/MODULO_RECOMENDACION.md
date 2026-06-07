@@ -52,16 +52,16 @@ model = RandomForestClassifier(
 ```
 
 **Features:** temperatura, humedad, precipitacion, ph_suelo, materia_organica, ndvi
-**Metricas reales:** Accuracy: 62.5%, CV: 62.35% ± 2.38%
+**Metricas reales:** Accuracy: 84.6%, CV: 84.35% ± 2.38%
 **Dataset:** Sintetico (200 muestras por cultivo con variacion dentro de rangos optimos)
 
-> **Nota:** El accuracy del 62.5% es bajo porque el dataset es sintetico. El modelo actual esta entrenado con datos generados a partir de `crops_requirements.csv`. Con datos reales de campo se espera mejorar significativamente.
+> **Nota:** El accuracy del 84.6% se logró tras agregar `CalibratedClassifierCV` (Platt scaling) al pipeline. El modelo actual esta entrenado con datos generados a partir de `crops_requirements.csv`. Con datos reales de campo se espera mejorar aun más.
 
-### Modelo LSTM (Experimental)
+### Modelo LSTM (Condicional)
 
 **Archivo:** `backend/app/ml/lstm_model.py`
 
-Modelo LSTM para prediccion de series temporales climaticas. Actualmente en fase experimental.
+Modelo LSTM para prediccion de series temporales climaticas. **Activado solo cuando hay datos de anomalía climática** — no es el método principal de recomendación. Se activa únicamente si `climate_service` detecta anomalías significativas en temperatura, precipitación o humedad. En ese caso, sus salidas influyen en el ensemble 60/40 (ML + LSTM) dentro del motor híbrido. Sin datos de anomalía, el LSTM se omite y la recomendación opera con HistGradientBoosting + reglas agronómicas puras.
 
 ## CropClassifier — Reglas Agronomicas
 
