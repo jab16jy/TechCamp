@@ -114,3 +114,16 @@
   cursor: pointer;
   accent-color: #2D5A27;
 }
+
+/* ── Inline validation errors ── */
+
+.inputError {
+  border-color: var(--m3-error) !important;
+}
+
+.errorText {
+  color: var(--m3-error);
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  margin-left: 0.5rem;
+}

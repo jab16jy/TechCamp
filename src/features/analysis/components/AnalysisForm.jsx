@@ -3,6 +3,46 @@ import React, { useState, useEffect } from "react";
 import styles from "./AnalysisForm.module.css";
 
 /**
+ * Validates a single form field.
+ * Shared between inline onBlur and handleSubmit validation.
+ * @param {string} name - Field name.
+ * @param {*} value - Field value.
+ * @param {Object} [options] - Additional context.
+ * @param {Object|null} [options.drawnArea] - Drawn area data.
+ * @returns {string} Error message or empty string.
+ */
+export const validateField = (name, value, { drawnArea } = {}) => {
+  switch (name) {
+    case "area_hectareas":
+      if (drawnArea?.area > 0) return "";
+      if (value === "" || value === null || value === undefined || Number(value) <= 0) {
+        return "El área debe ser mayor a 0";
+      }
+      return "";
+    case "tipo_suelo":
+      if (!value || value.trim() === "") {
+        return "Selecciona un tipo de suelo";
+      }
+      return "";
+    case "municipio":
+      if (!value || value.trim() === "") {
+        return "Selecciona un municipio";
+      }
+      return "";
+    case "ph_suelo": {
+      if (value === "" || value === null || value === undefined) return "";
+      const ph = Number(value);
+      if (isNaN(ph) || ph < 0 || ph > 14) {
+        return "El pH debe estar entre 0 y 14";
+      }
+      return "";
+    }
+    default:
+      return "";
+  }
+};
+
+/**
  * AnalysisForm — Reusable form for crop analysis.
  * @param {Object} data - Current form data.
  * @param {Function} onChange - Callback when a field changes.
@@ -12,6 +52,7 @@ import styles from "./AnalysisForm.module.css";
 const AnalysisForm = ({ data, onChange, municipalities = [], drawnArea = null }) => {
   const [departamentos, setDepartamentos] = useState([]);
   const [municipiosFiltrados, setMunicipiosFiltrados] = useState([]);
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (municipalities.length > 0) {
@@ -35,9 +76,23 @@ const AnalysisForm = ({ data, onChange, municipalities = [], drawnArea = null })
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
+    // Clear inline error for this field as user types
+    setErrors((prev) => ({
+      ...prev,
+      [name]: "",
+    }));
     onChange({
       [name]: type === "checkbox" ? checked : value,
     });
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    const error = validateField(name, value, { drawnArea });
+    setErrors((prev) => ({
+      ...prev,
+      [name]: error,
+    }));
   };
 
   const hasDrawnArea = drawnArea && drawnArea.area > 0;
@@ -70,7 +125,9 @@ const AnalysisForm = ({ data, onChange, municipalities = [], drawnArea = null })
               name="tipo_suelo"
               value={data.tipo_suelo || ""}
               onChange={handleInputChange}
+              onBlur={handleBlur}
               required
+              className={errors.tipo_suelo ? styles.inputError : ""}
             >
               <option value="">Selecciona tipo...</option>
               <option value="Franco">Franco</option>
@@ -81,6 +138,9 @@ const AnalysisForm = ({ data, onChange, municipalities = [], drawnArea = null })
               <option value="Limoso">Limoso</option>
               <option value="Arcilloso">Arcilloso</option>
             </select>
+            {errors.tipo_suelo && (
+              <span className={styles.errorText}>{errors.tipo_suelo}</span>
+            )}
           </div>
 
           <div className={styles.field}>
@@ -93,12 +153,16 @@ const AnalysisForm = ({ data, onChange, municipalities = [], drawnArea = null })
               name="area_hectareas"
               value={data.area_hectareas || ""}
               onChange={handleInputChange}
+              onBlur={handleBlur}
               placeholder="Ej: 15.5"
               required
               step="0.1"
               readOnly={hasDrawnArea}
-              className={hasDrawnArea ? styles.readOnly : ""}
+              className={`${hasDrawnArea ? styles.readOnly : ""} ${errors.area_hectareas ? styles.inputError : ""}`}
             />
+            {errors.area_hectareas && (
+              <span className={styles.errorText}>{errors.area_hectareas}</span>
+            )}
           </div>
 
           {hasDrawnArea && (
@@ -122,11 +186,16 @@ const AnalysisForm = ({ data, onChange, municipalities = [], drawnArea = null })
               name="ph_suelo"
               value={data.ph_suelo || ""}
               onChange={handleInputChange}
+              onBlur={handleBlur}
               placeholder="Ej: 6.5"
               step="0.1"
               min="0"
               max="14"
+              className={errors.ph_suelo ? styles.inputError : ""}
             />
+            {errors.ph_suelo && (
+              <span className={styles.errorText}>{errors.ph_suelo}</span>
+            )}
           </div>
 
           <div className={styles.field}>
@@ -153,8 +222,10 @@ const AnalysisForm = ({ data, onChange, municipalities = [], drawnArea = null })
               name="municipio"
               value={data.municipio || ""}
               onChange={handleInputChange}
+              onBlur={handleBlur}
               required
               disabled={!data.departamento}
+              className={errors.municipio ? styles.inputError : ""}
             >
               <option value="">Selecciona municipio...</option>
               {municipiosFiltrados.map((m) => (
@@ -163,6 +234,9 @@ const AnalysisForm = ({ data, onChange, municipalities = [], drawnArea = null })
                 </option>
               ))}
             </select>
+            {errors.municipio && (
+              <span className={styles.errorText}>{errors.municipio}</span>
+            )}
           </div>
 
           <div className={styles.field}>
