@@ -12,6 +12,7 @@ from typing import Optional
 import httpx
 import numpy as np
 import pandas as pd
+from sklearn.calibration import CalibratedClassifierCV
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.model_selection import (
     train_test_split,
@@ -181,6 +182,12 @@ def _add_gaussian_noise(value: float, range_span: float, noise_pct: float = 0.05
     return value + np.random.normal(0, range_span * noise_pct)
 
 
+def _expand_min_max(lo: float, hi: float, margin: float = 0.20) -> tuple[float, float]:
+    """Expand a [lo, hi] range by margin on each side for realistic overlap."""
+    span = hi - lo
+    return lo - span * margin, hi + span * margin
+
+
 def _get_climate_value(
     monthly: dict, param: str, month: int, fallback_param: str
 ) -> float:
@@ -239,15 +246,18 @@ def generate_synthetic_dataset(
                 prec_mean = _get_climate_value(monthly, "PRECTOTCORR", month, "PRECTOTCORR")
                 hum_mean = _get_climate_value(monthly, "RH2M", month, "RH2M")
 
-                temp = _gaussian_sample(temp_mean, PARAM_STD["T2M"],
-                                        crop["temp_min"], crop["temp_max"])
-                hum = _gaussian_sample(hum_mean, PARAM_STD["RH2M"],
-                                       crop["humedad_min"], crop["humedad_max"])
-                prec = _gaussian_sample(prec_mean, PARAM_STD["PRECTOTCORR"],
-                                        crop["precipitacion_min"], crop["precipitacion_max"])
+                # Expand ranges for realistic overlap between crops
+                temp_lo, temp_hi = _expand_min_max(crop["temp_min"], crop["temp_max"])
+                hum_lo, hum_hi = _expand_min_max(crop["humedad_min"], crop["humedad_max"])
+                prec_lo, prec_hi = _expand_min_max(crop["precipitacion_min"], crop["precipitacion_max"])
+                ph_lo, ph_hi = _expand_min_max(crop["ph_min"], crop["ph_max"], margin=0.15)
 
-                # Soil features (triangular around optimal)
-                ph = _triangular_sample(crop["ph_min"], crop["ph_max"], 0.5)
+                temp = _gaussian_sample(temp_mean, PARAM_STD["T2M"], temp_lo, temp_hi)
+                hum = _gaussian_sample(hum_mean, PARAM_STD["RH2M"], hum_lo, hum_hi)
+                prec = _gaussian_sample(prec_mean, PARAM_STD["PRECTOTCORR"], prec_lo, prec_hi)
+
+                # Soil features (triangular around optimal, with expanded range for ph)
+                ph = _triangular_sample(ph_lo, ph_hi, 0.5)
 
                 mo_center = max(crop["materia_organica_min"], 1.5)
                 mo = _triangular_sample(max(0.5, mo_center - 1.5), mo_center + 2.0, 0.45)
@@ -257,14 +267,14 @@ def generate_synthetic_dataset(
                 # Textura centered on optimum with noise
                 textura_encoded = max(1.0, min(12.0, tex_opt + np.random.normal(0, 1.8)))
 
-                # Small noise for robustness
-                temp = _add_gaussian_noise(temp, crop["temp_max"] - crop["temp_min"], 0.03)
-                hum = _add_gaussian_noise(hum, crop["humedad_max"] - crop["humedad_min"], 0.03)
-                prec = _add_gaussian_noise(prec, crop["precipitacion_max"] - crop["precipitacion_min"], 0.03)
-                ph = _add_gaussian_noise(ph, crop["ph_max"] - crop["ph_min"], 0.03)
-                mo = _add_gaussian_noise(mo, 2.5, 0.04)
-                ndvi = _add_gaussian_noise(ndvi, 0.7, 0.03)
-                textura_encoded = _add_gaussian_noise(textura_encoded, 5.0, 0.05)
+                # Increased noise for robust probabilistic boundaries
+                temp = _add_gaussian_noise(temp, temp_hi - temp_lo, 0.08)
+                hum = _add_gaussian_noise(hum, hum_hi - hum_lo, 0.08)
+                prec = _add_gaussian_noise(prec, prec_hi - prec_lo, 0.08)
+                ph = _add_gaussian_noise(ph, ph_hi - ph_lo, 0.08)
+                mo = _add_gaussian_noise(mo, 2.5, 0.06)
+                ndvi = _add_gaussian_noise(ndvi, 0.7, 0.06)
+                textura_encoded = _add_gaussian_noise(textura_encoded, 5.0, 0.08)
 
                 # Engineered features
                 temp_hum = temp * hum / 1000.0
@@ -351,14 +361,23 @@ def train_model(
     X_train_scaled = scaler.fit_transform(X_train)
     X_test_scaled = scaler.transform(X_test)
 
-    # Step 4: Train model (tuned parameters for better generalization)
-    model = HistGradientBoostingClassifier(
+    # Step 4: Train base model (tuned parameters for better generalization)
+    base_model = HistGradientBoostingClassifier(
         max_iter=500,
         max_depth=6,
         learning_rate=0.1,
         min_samples_leaf=20,
         l2_regularization=0.1,
         random_state=random_state,
+    )
+
+    # Step 4b: Wrap with probability calibration
+    logger.info("=== Fase 3b: Calibrando probabilidades (CalibratedClassifierCV) ===")
+    model = CalibratedClassifierCV(
+        estimator=base_model,
+        method="sigmoid",
+        cv=5,
+        n_jobs=-1,
     )
     model.fit(X_train_scaled, y_train)
 
@@ -378,7 +397,7 @@ def train_model(
     }
 
     # Step 6: Stratified cross-validation by textural class
-    logger.info("=== Fase 4: Validacion cruzada estratificada ===")
+    logger.info("=== Fase 4: Validacion cruzada estratificada (calibrado) ===")
     try:
         texture_bins = pd.cut(df["textura_encoded"], bins=6, labels=False)
         skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=random_state)
@@ -388,7 +407,7 @@ def train_model(
         metrics["cv_accuracy_mean"] = round(float(cv_scores.mean()), 4)
         metrics["cv_accuracy_std"] = round(float(cv_scores.std()), 4)
         metrics["cv_scores"] = [round(float(s), 4) for s in cv_scores]
-        metrics["cv_method"] = "StratifiedKFold (5-fold)"
+        metrics["cv_method"] = "StratifiedKFold (5-fold) on calibrated model"
     except Exception as e:
         logger.warning("CV estratificado fallo: %s", e)
         skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=random_state)
@@ -396,7 +415,7 @@ def train_model(
         metrics["cv_accuracy_mean"] = round(float(cv_scores.mean()), 4)
         metrics["cv_accuracy_std"] = round(float(cv_scores.std()), 4)
         metrics["cv_scores"] = [round(float(s), 4) for s in cv_scores]
-        metrics["cv_method"] = "StratifiedKFold (default)"
+        metrics["cv_method"] = "StratifiedKFold (default) on calibrated model"
 
     # Step 7: Per-crop accuracy
     per_crop = {}
@@ -408,24 +427,31 @@ def train_model(
             )
     metrics["per_crop_accuracy"] = per_crop
 
-    # Feature importance
-    if hasattr(model, "feature_importances_"):
-        importances = model.feature_importances_
-        metrics["feature_importance"] = sorted(
-            [
-                {"feature": name, "importance": round(float(imp), 4)}
-                for name, imp in zip(ALL_FEATURE_COLS, importances)
-            ],
-            key=lambda x: x["importance"],
-            reverse=True,
-        )
+    # Feature importance (from the base estimator via the calibrated wrapper)
+    # CalibratedClassifierCV stores fitted estimators in calibrated_classifiers_
+    if hasattr(model, "calibrated_classifiers_") and model.calibrated_classifiers_:
+        # Use the first fold's base estimator for feature importance approximation
+        cc = model.calibrated_classifiers_[0]
+        base_est = getattr(cc, 'estimator',
+                   getattr(cc, 'estimator_',
+                   getattr(cc, 'base_estimator_', None)))
+        if hasattr(base_est, "feature_importances_"):
+            importances = base_est.feature_importances_
+            metrics["feature_importance"] = sorted(
+                [
+                    {"feature": name, "importance": round(float(imp), 4)}
+                    for name, imp in zip(ALL_FEATURE_COLS, importances)
+                ],
+                key=lambda x: x["importance"],
+                reverse=True,
+            )
 
     # Metadata
     metrics["n_samples"] = len(df)
     metrics["n_features"] = len(ALL_FEATURE_COLS)
     metrics["n_climate_zones"] = len(climate_zones)
-    metrics["model_type"] = "HistGradientBoosting"
-    metrics["data_source"] = "NASA POWER climatology + synthetic"
+    metrics["model_type"] = "HistGradientBoosting + CalibratedClassifierCV(sigmoid)"
+    metrics["data_source"] = "NASA POWER climatology + synthetic (overlapped ranges)"
 
     # Save model + scaler + metrics
     dump(model, MODEL_PATH)
@@ -445,7 +471,7 @@ def train_model(
 # ── Load / Predict / Metrics ───────────────────────────────────────────
 
 
-def load_model() -> tuple[Optional[HistGradientBoostingClassifier], Optional[StandardScaler]]:
+def load_model() -> tuple[Optional[CalibratedClassifierCV], Optional[StandardScaler]]:
     if not MODEL_PATH.exists() or not SCALER_PATH.exists():
         logger.warning("Modelo no encontrado en %s", MODEL_PATH)
         return None, None

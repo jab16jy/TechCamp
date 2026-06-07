@@ -72,6 +72,7 @@ export default function MapDrawingToolbar({
       {TOOLS.map((tool) => (
         <button
           key={tool.key}
+          type="button"
           onClick={() => onToolChange(tool.key)}
           className={activeTool === tool.key ? 'active' : ''}
           title={tool.label}
@@ -81,6 +82,7 @@ export default function MapDrawingToolbar({
       ))}
       <div className="toolbar-divider" />
       <button
+        type="button"
         onClick={onClear}
         disabled={!canClear}
         title="Limpiar todo"

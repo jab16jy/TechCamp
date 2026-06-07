@@ -41,6 +41,121 @@ _ZONA_CARIBE_TRANSICION = {
 }
 
 
+# ── Datos de suelo por municipio del Caribe colombiano ──
+# Coordenadas: centroide aproximado del casco urbano
+# Valores basados en estudios de IGAC, Agrosavia y reportes departamentales
+
+_MUNICIPIOS_SUELO_MAP: dict[str, dict] = {
+    "Riohacha": {
+        "lat": 11.5444,
+        "lng": -72.9072,
+        "ph": 7.8,
+        "materia_organica": 1.2,
+        "textura_suelo": "Arenosa",
+        "tipo_suelo": "Aridisol",
+    },
+    "Santa Marta": {
+        "lat": 11.2408,
+        "lng": -74.1990,
+        "ph": 7.2,
+        "materia_organica": 2.1,
+        "textura_suelo": "Franca",
+        "tipo_suelo": "Inceptisol",
+    },
+    "Barranquilla": {
+        "lat": 10.9685,
+        "lng": -74.7813,
+        "ph": 7.5,
+        "materia_organica": 1.8,
+        "textura_suelo": "Franco-arenosa",
+        "tipo_suelo": "Entisol",
+    },
+    "Cartagena": {
+        "lat": 10.3910,
+        "lng": -75.5144,
+        "ph": 7.6,
+        "materia_organica": 1.5,
+        "textura_suelo": "Arcillosa",
+        "tipo_suelo": "Vertisol",
+    },
+    "Sincelejo": {
+        "lat": 9.3047,
+        "lng": -75.3978,
+        "ph": 6.8,
+        "materia_organica": 2.8,
+        "textura_suelo": "Franca",
+        "tipo_suelo": "Mollisol",
+    },
+    "Montería": {
+        "lat": 8.7579,
+        "lng": -75.8900,
+        "ph": 6.2,
+        "materia_organica": 3.5,
+        "textura_suelo": "Franco-arcillosa",
+        "tipo_suelo": "Alfisol",
+    },
+    "Valledupar": {
+        "lat": 10.4631,
+        "lng": -73.2532,
+        "ph": 7.3,
+        "materia_organica": 2.0,
+        "textura_suelo": "Franca",
+        "tipo_suelo": "Inceptisol",
+    },
+    "Maicao": {
+        "lat": 11.3824,
+        "lng": -72.2396,
+        "ph": 7.9,
+        "materia_organica": 0.9,
+        "textura_suelo": "Arenosa",
+        "tipo_suelo": "Aridisol",
+    },
+}
+
+
+def _haversine(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
+    """Distancia en km entre dos puntos geográficos (fórmula de Haversine)."""
+    R = 6371.0
+    dlat = math.radians(lat2 - lat1)
+    dlng = math.radians(lng2 - lng1)
+    a = (math.sin(dlat / 2) ** 2
+         + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2))
+         * math.sin(dlng / 2) ** 2)
+    return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+
+def _municipio_fallback(lat: float, lng: float) -> dict | None:
+    """Busca coincidencia con un municipio conocido por distancia Haversine.
+
+    Retorna datos específicos del municipio si las coordenadas están
+    dentro del radio de tolerancia (~20 km del centroide urbano).
+    """
+    best_dist = float("inf")
+    best_name: str | None = None
+
+    for name, info in _MUNICIPIOS_SUELO_MAP.items():
+        dist = _haversine(lat, lng, info["lat"], info["lng"])
+        if dist < best_dist:
+            best_dist = dist
+            best_name = name
+
+    RADIO_KM = 20
+    if best_name is not None and best_dist <= RADIO_KM:
+        data = _MUNICIPIOS_SUELO_MAP[best_name]
+        return {
+            "ph": data["ph"],
+            "materia_organica": data["materia_organica"],
+            "textura_suelo": data["textura_suelo"],
+            "tipo_suelo": data["tipo_suelo"],
+            "municipio": best_name,
+            "fuente": f"Datos de referencia — {best_name}, Caribe colombiana",
+            "cached_at": datetime.now(timezone.utc).isoformat(),
+            "_fallback": True,
+        }
+
+    return None
+
+
 def _caribbean_zone_fallback(lat: float, lng: float) -> dict | None:
     """Estima valores de suelo según la zona agroecológica del Caribe colombiano
     cuando SoilGrids no tiene datos para esas coordenadas.
@@ -68,6 +183,35 @@ def _caribbean_zone_fallback(lat: float, lng: float) -> dict | None:
         "materia_organica": zone["materia_organica"],
         "textura_suelo": zone["textura_suelo"],
         "fuente": f"Estimación para zona agroecológica ({zone['zona']}) — Agrosavia/IGAC",
+        "cached_at": datetime.now(timezone.utc).isoformat(),
+        "_fallback": True,
+    }
+
+
+def _caribbean_fallback(lat: float, lng: float) -> dict:
+    """Cadena de respaldo para datos de suelo en el Caribe colombiano.
+
+    Prioridad:
+    1. Coincidencia exacta por municipio (centroide + radio 20 km)
+    2. Zona agroecológica (Agrosavia/IGAC)
+    3. Valores genéricos por defecto
+    """
+    # 1. Municipio
+    match = _municipio_fallback(lat, lng)
+    if match is not None:
+        return match
+
+    # 2. Zona agroecológica
+    zone = _caribbean_zone_fallback(lat, lng)
+    if zone is not None:
+        return zone
+
+    # 3. Valores por defecto (siempre retorna algo)
+    return {
+        "ph": 6.5,
+        "materia_organica": 2.0,
+        "textura_suelo": "Franco",
+        "fuente": "Valores genéricos por defecto",
         "cached_at": datetime.now(timezone.utc).isoformat(),
         "_fallback": True,
     }
@@ -140,8 +284,10 @@ async def get_soil_data(lat: float, lng: float) -> dict | None:
     La API cambió a GET (antes era POST). También maneja el d_factor
     que ISRIC usa para codificar ciertos valores (ej: pH*10).
 
-    Cuando SoilGrids no tiene datos para la región Caribe colombiana,
-    usa valores de referencia por zona agroecológica (Agrosavia/IGAC).
+    Cadena de respaldo para el Caribe colombiano (cuando SoilGrids no tiene datos):
+    1. Coincidencia exacta por municipio (centroide + radio 20 km)
+    2. Zona agroecológica (Agrosavia/IGAC)
+    3. Valores genéricos por defecto
     """
     key = _cache_key(lat, lng)
     cached = _soil_cache.get(key)
@@ -165,18 +311,16 @@ async def get_soil_data(lat: float, lng: float) -> dict | None:
             data = resp.json()
         except Exception as e:
             logger.warning(f"SoilGrids API no disponible: {e}")
-            # Fallback a zona Caribe
-            fallback = _caribbean_zone_fallback(lat, lng)
-            if fallback:
-                _soil_cache[key] = fallback
+            # Fallback: municipio → zona → valores por defecto
+            fallback = _caribbean_fallback(lat, lng)
+            _soil_cache[key] = fallback
             return fallback
 
     layers = data.get("properties", {}).get("layers", [])
     if not layers:
-        zone_fallback = _caribbean_zone_fallback(lat, lng)
-        if zone_fallback:
-            _soil_cache[key] = zone_fallback
-        return zone_fallback
+        fallback = _caribbean_fallback(lat, lng)
+        _soil_cache[key] = fallback
+        return fallback
 
     values = {}
     for layer in layers:
@@ -194,10 +338,9 @@ async def get_soil_data(lat: float, lng: float) -> dict | None:
 
     # Si no hay datos de SoilGrids, probar fallback Caribe
     if ph is None and soc is None and sand is None:
-        zone_fallback = _caribbean_zone_fallback(lat, lng)
-        if zone_fallback:
-            _soil_cache[key] = zone_fallback
-        return zone_fallback
+        fallback = _caribbean_fallback(lat, lng)
+        _soil_cache[key] = fallback
+        return fallback
 
     ph = round(ph, 1) if ph is not None else None
     materia_organica = round(soc * 1.724 / 10, 2) if soc is not None else None

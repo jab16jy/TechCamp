@@ -63,6 +63,8 @@ services:
         condition: service_healthy
       ollama:
         condition: service_started
+    volumes:
+      - ml-data:/app/app/ml/
     restart: unless-stopped
     networks:
       - backend_net
@@ -85,6 +87,8 @@ volumes:
   pgdata:
     driver: local
   ollama_data:
+    driver: local
+  ml-data:
     driver: local
 
 networks:
