@@ -31,17 +31,17 @@ class ErrorBoundary extends Component {
         : "";
 
       return (
-        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl shadow-xl p-6">
+        <div className="bg-white/90 backdrop-blur-md border border-[#DCE0DC] rounded-2xl shadow-lg p-6">
           <div className="flex flex-col items-center justify-center gap-4 text-center">
             <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-red-500/10">
-              <AlertTriangle size={28} className="text-red-400" />
+              <AlertTriangle size={28} className="text-red-500" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-white/80">
-                Error en: <span className="text-white">{this.props.label || "componente"}</span>
+              <p className="text-sm font-semibold text-[#3A3D3A]">
+                Error en: <span className="text-[#1A1C1A]">{this.props.label || "componente"}</span>
               </p>
               {errMsg && (
-                <p className="text-xs text-white/50 mt-1 max-w-sm break-all">
+                <p className="text-xs text-[#707973] mt-1 max-w-sm break-all">
                   {errMsg}
                 </p>
               )}
