@@ -18,6 +18,7 @@ const SensoresIoT = () => {
     NODES,
     LOGS,
     sel,
+    modelMetrics,
     handleShowNdviChange,
     handleValveToggle,
     setSelectedNode,
@@ -59,10 +60,20 @@ const SensoresIoT = () => {
           <div className="iot-header-right">
             {/* Algo badge */}
             <div className="iot-algo-badge">
-              <span className="iot-algo-score">94.2<small>%</small></span>
+              <span className="iot-algo-score">
+                {modelMetrics?.accuracy != null
+                  ? (modelMetrics.accuracy * 100).toFixed(1)
+                  : modelMetrics?.cv_accuracy_mean != null
+                    ? (modelMetrics.cv_accuracy_mean * 100).toFixed(1)
+                    : '94.2'}
+                <small>%</small>
+              </span>
               <div>
                 <p className="iot-algo-label">Precisión IA</p>
-                <p className="iot-algo-ver">v4.2.0 · RF</p>
+                <p className="iot-algo-ver">
+                  {modelMetrics?.model_type || 'HistGradientBoosting'}
+                  {modelMetrics?.model_available === false ? ' · Sin entrenar' : ''}
+                </p>
               </div>
             </div>
             {/* Sensor pulse */}

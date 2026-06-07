@@ -17,6 +17,9 @@ erDiagram
     SENSOR ||--o{ LECTURA_SENSOR : genera
     CONVERSACION ||--o{ MENSAJE : contiene
 
+    PLAN_RIEGO ||--o{ TAREA : contiene
+    USUARIO ||--o{ PLAN_RIEGO : genera
+
     ANALISIS {
         uuid id PK
         uuid usuario_id FK
@@ -100,6 +103,26 @@ erDiagram
         varchar rol "investigador | productor"
         timestamp created_at
     }
+
+    PLAN_RIEGO {
+        uuid id PK
+        uuid usuario_id FK
+        varchar cultivo
+        float area_hectareas
+        jsonb programacion_riego
+        varchar metodo_riego
+        timestamp created_at
+    }
+
+    TAREA {
+        uuid id PK
+        uuid plan_riego_id FK
+        varchar descripcion
+        varchar prioridad "alta | media | baja"
+        boolean completada
+        timestamp fecha_programada
+        timestamp created_at
+    }
 ```
 
 ## PostGIS
@@ -140,7 +163,7 @@ Las tablas `analisis.datos_formulario` y `analisis.resultado_completo` usan JSON
 ## Seed Data Inicial
 
 ### Municipios
-Los 8 municipios del Caribe colombiano se insertan via seed SQL automatico en Docker (`backend/data/seeds/01_municipios.sql`).
+Los municipios del Caribe colombiano se insertan via seed SQL automatico en Docker (`backend/data/seeds/01_municipios.sql`).
 
 ### Sensores IoT (6 nodos)
 
@@ -183,21 +206,11 @@ docker compose exec backend alembic upgrade head
 
 > **Nota:** La BD local no tiene RLS activado. Las politicas existen solo en Supabase.
 
-Actualmente todas las politicas RLS permiten SELECT sin restricciones (`USING (true)`) para que el backend pueda leer datos sin autenticacion. Esto es para desarrollo/demo. En produccion, las politicas originales deben restaurarse:
+Actualmente todas las politicas RLS permiten SELECT sin restricciones (`USING (true)`) para que el backend pueda leer datos sin autenticacion. Esto es para desarrollo/demo. En produccion, las politicas originales deben restaurarse.
 
-```sql
--- Originales (guardadas en supabase/migrations/)
-analisis: FOR SELECT USING (usuario_id = auth.uid())
-usuarios: FOR SELECT USING (id = auth.uid())
-municipios: FOR SELECT USING (true)
-indices_satelitales: FOR SELECT USING (true)
-sensores: FOR SELECT USING (true)
-lecturas_sensores: FOR SELECT USING (true)
-conversaciones: FOR SELECT USING (usuario_id = auth.uid())
-mensajes: via conversacion_id IN (SELECT id FROM conversaciones WHERE usuario_id = auth.uid())
-```
+## Conexion
 
-## Conexion (Local Docker)
+### Local Docker (desarrollo)
 
 | Propiedad | Valor |
 |-----------|-------|
@@ -208,6 +221,15 @@ mensajes: via conversacion_id IN (SELECT id FROM conversaciones WHERE usuario_id
 | Password | agrocaribe_secret |
 | Volumen | `pgdata` (Docker volume persistente) |
 
+### Supabase (solo Auth)
+
+| Propiedad | Valor |
+|-----------|-------|
+| URL | `https://hpmjbgqjwopxlgurczna.supabase.co` |
+| Pooler | `aws-1-us-west-1.pooler.supabase.com:6543` |
+
+> **Nota:** La BD local reemplazo a Supabase para datos. Supabase solo se usa para Auth.
+
 ---
 
 ## Referencias
@@ -216,5 +238,3 @@ mensajes: via conversacion_id IN (SELECT id FROM conversaciones WHERE usuario_id
 - [[4-arquitectura/VISION_SISTEMA]] — Flujo de datos en el sistema
 - [[4-arquitectura/FLUJO_DATOS]] — Mapeo de endpoints a tablas
 - [[4-arquitectura/DESPLIEGUE]] — Conexion Docker-Supabase y pooler
-- [[5-implementacion/CHAT_2025-05-19]] — Contexto de migracion a DB local
-

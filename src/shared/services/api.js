@@ -442,6 +442,26 @@ export const exportarPlanATareas = async (plan) => {
   }
 };
 
+/** Obtener metricas reales del modelo ML (accuracy, precision, etc.) */
+export const getModelMetrics = async () => {
+  try {
+    const { data } = await apiClient.get("/model/metrics");
+    return data;
+  } catch {
+    return { model_available: false, accuracy: null };
+  }
+};
+
+/** Enviar feedback (exito/fracaso y rendimiento real) para un analisis */
+export const setAnalysisFeedback = async (id, { exito, rendimiento_real }) => {
+  try {
+    const { data } = await apiClient.put(`/analysis/${id}/feedback`, { exito, rendimiento_real });
+    return data;
+  } catch {
+    return { success: false, message: "Error enviando feedback" };
+  }
+};
+
 /** Obtener umbrales de estres hidrico por cultivo */
 export const getUmbralesCultivos = async () => {
   try {

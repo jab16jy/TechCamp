@@ -1,27 +1,51 @@
 ---
-titulo: "Troubleshooting y Roadmap"
+titulo: "Troubleshooting y Notas"
 proyecto: AgroCaribe IA
-tags: [troubleshooting, errores, soluciones, roadmap]
+tags: [troubleshooting, errores, soluciones, notas]
 ---
 
-# Troubleshooting y Roadmap
+> **📌 NOTA HISTORICA:** Este documento original cubria problemas del prototipo con MOCK_DATA.
+> Se ha actualizado para reflejar problemas actuales del sistema con APIs reales.
+
+# Troubleshooting y Notas
 
 ## Problemas Comunes
 
-### IA Predictiva: dropdown vacio o no deja seleccionar
-- **Causa 1:** Backend devuelve `[]` y no se mergea con MOCK_DATA
-- **Solucion:** Verificar que `getHistorial()` en `api.js` tenga el merge con `MOCK_DATA.historial`
-- **Causa 2:** Popover tapado por el `<div class="ia-empty">`
-- **Solucion:** Verificar que `.ia-input-card` tenga `position: relative; z-index: 10;` en CSS
+### MapSelector: No carga el mapa o las herramientas de dibujo
+- **Causa:** Leaflet CSS no importado o conflictos con versiones
+- **Solucion:** Verificar que `leaflet/dist/leaflet.css` y `leaflet-draw/dist/leaflet.draw.css` esten en el HTML
+- **Alternativa:** `npm install leaflet@1.9.4 leaflet-draw@1.0.4`
+
+### AnalisisCultivos: No aparecen los nombres de ciudades en el mapa
+- **Causa:** Los municipios ahora se cargan desde el backend via `GET /municipalities`
+- **Solucion:** Verificar que el backend este corriendo en `localhost:8000`
+- **Nota:** Los marcadores de ciudades se agregaron esta vez en el mapa para orientacion
+
+### AnalisisCultivos: Datos de suelo (SoilGrids) no se autorellenan
+- **Causa 1:** `GET /soil/data` falla porque ISRIC SoilGrids no tiene datos para la region Caribe
+- **Causa 2:** Timeout de 15s en la llamada HTTP
+- **Solucion:** Si SoilGrids devuelve 502, los campos quedan editables manualmente
+- **Nota:** SoilGrids tiene cobertura limitada para la region. Los datos se pueden ingresar manualmente
+
+### AnalisisCultivos: Error al delimitar zonas automaticamente
+- **Causa:** `POST /geo/decode` usa PostGIS `ST_Contains` y puede fallar si el poligono esta fuera del area de municipios cargados
+- **Solucion:** Asegurarse de dibujar dentro del area del Caribe colombiano
+- **Nota:** La geo-deteccion funciona mejor con clic directo en el mapa (click-to-select) que con dibujo
 
 ### IA Predictiva: "Generar Proyeccion" deshabilitado
-- **Causa:** `analysisId` es null (no se ha seleccionado ningun analisis)
-- **Solucion:** Seleccionar un item del dropdown historial primero
-- **Nota:** El boton requiere `analysisId` para habilitarse
+- **Causa:** No se han ingresado coordenadas o no se ha seleccionado un analisis del historial
+- **Solucion:** Seleccionar un item del dropdown historial o ingresar coordenadas manualmente
+- **Nota:** El boton requiere coordenadas validas + al menos un slider ajustado
 
-### IA Predictiva: loading infinito al seleccionar historial
-- **Causa:** `getAnalysis(id)` falla para IDs no-UUID (ej. "C-0421")
-- **Solucion:** `handleSelectAnalysis` debe tener fallback local al historial combinado
+### IA Predictiva: Proyeccion no muestra datos climaticos
+- **Causa:** `POST /predict` falla o el backend no tiene conexion a NASA POWER/OpenMeteo
+- **Solucion:** Verificar que el backend tenga acceso a internet y que las APIs externas respondan
+- **Nota:** La proyeccion de 6 meses requiere NASA POWER (climatologia historica) + OpenMeteo (datos actuales)
+
+### AgroAsesor (Chat): No responde o respuestas genericas
+- **Causa:** El backend RAG no encuentra documentos relevantes o el LLM no esta configurado
+- **Solucion:** Revisar `backend/app/data/rag/` para confirmar que haya documentos .md
+- **Nota:** El RAG funciona con keyword-matching + TF-IDF sobre ~20 documentos. Para LLM real se necesita `OPENAI_API_KEY`
 
 ### Docker: BD no tiene tablas o columnas faltantes
 - **Causa:** Migraciones de Alembic no ejecutadas o volumen corrupto
@@ -33,64 +57,28 @@ tags: [troubleshooting, errores, soluciones, roadmap]
 - **Solucion:** Eliminar esa linea de la migracion generada, es parte de la extension
 
 ### Docker: backend no arranca por modulo faltante
-- **Causa:** `requirements.txt` no tiene todas las dependencias (ej. `cachetools`)
+- **Causa:** `requirements.txt` no tiene todas las dependencias
 - **Solucion:** Agregar modulo faltante a `requirements.txt` y reconstruir
 
-### Backend: columna `municipios.geometry` no existe
-- **Causa:** Seed SQL creo la tabla sin la columna PostGIS
-- **Solucion:** `ALTER TABLE municipios ADD COLUMN IF NOT EXISTS geometry geometry(MultiPolygon, 4326);`
-
-### Tailwind CSS no aplica
-- **Causa:** Servidor de desarrollo no detecto cambios o PostCSS fallo
-- **Solucion:** Reiniciar `npm run dev`, verificar `content` en `tailwind.config.js`, confirmar directivas `@tailwind` en `index.css`
+### Backend: columna no existe
+- **Causa:** Seed SQL creo la tabla sin todas las columnas
+- **Solucion:** Ejecutar migraciones de Alembic o agregar columna manualmente
 
 ### Pagina en blanco al navegar
 - **Causa:** Error en definicion de ruta en `App.jsx` o componente sin `export default`
 - **Solucion:** Revisar consola del navegador y verificar paths en `<Routes>`
 
-### 404 en despliegue
-- **Causa:** Servidor no configurado para SPA
-- **Solucion:** Configurar SPA fallback en el servidor (referir todo a `/index.html`)
-
-### Siempre muestra datos Mock
-- **Causa:** Backend inaccesible o `VITE_API_URL` incorrecta
-- **Solucion:** Verificar backend en el puerto indicado (`localhost:8000`), revisar `.env` y pestana Network del navegador
-
 ### Error CORS
 - **Causa:** Backend no permite el origen del frontend
-- **Solucion:** Verificar `CORS_ORIGINS` en `backend/.env` o variables del contenedor Docker
+- **Solucion:** Verificar `CORS_ORIGINS` en `.env` del backend
 
 ### Modulo no encontrado
 - **Solucion:** `npm install` o borrar `node_modules` y reinstalar. Para backend: `pip install -r requirements.txt`
 
-### Docker no conecta a Supabase
-- **Causa:** DNS del contenedor no resuelve `*.pooler.supabase.com`
-- **Solucion:** Verificar red Docker Desktop, agregar DNS `8.8.8.8` en `docker-compose.yml` o usar `network_mode: "host"`
-
-### Error "Tenant or user not found" en Supabase
-- **Causa:** Region del pooler incorrecta o password erronea
-- **Solucion:** Verificar region en dashboard de Supabase (tu proyecto: `us-west-1`), el host correcto es `aws-1-us-west-1.pooler.supabase.com`
-
-## Futuras Mejoras
-
-### Rendimiento Frontend
-- Code Splitting con `React.lazy` y `Suspense`
-- WebP + lazy loading para assets
-- Memoizacion en graficos complejos
-
-### UX
-- Service Workers para modo offline en zonas rurales
-- Vista mobile simplificada para dashboards
-- Auditoria de accesibilidad (a11y)
-
-### Testing
-- Vitest + React Testing Library para servicios y store
-- Playwright para E2E (mapa → analisis → resultado)
-
-### Datos
-- Persistencia del store en `localStorage` (ya implementada para historial)
-- Exportacion PDF con `jspdf`
-- Transicion completa de Mock a API real (backend ya implementado, frontend parcial)
+### Siempre muestra datos de respaldo (analysisService)
+- **Causa:** Backend inaccesible o `VITE_API_URL` incorrecta
+- **Solucion:** Verificar backend en el puerto indicado (`localhost:8000`), revisar `.env` y pestana Network del navegador
+- **Nota:** El unico fallback que queda son 3 recomendaciones estaticas en `analysisService.js`
 
 ---
 
@@ -98,4 +86,5 @@ tags: [troubleshooting, errores, soluciones, roadmap]
 
 - [[1-inicial/SETUP]] — Instalacion y configuracion
 - [[4-arquitectura/DESPLIEGUE]] — Docker y produccion
-- [[4-arquitectura/ARQUITECTURA_DB]] — Conexion a Supabase y errores de pooler
+- [[4-arquitectura/MODULO_SUELO_SOILGRIDS]] — Datos de suelo automaticos
+- [[3-frontend/ARQUITECTURA_FRONTEND]] — Pagina de Ajustes

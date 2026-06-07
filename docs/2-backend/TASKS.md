@@ -1,13 +1,13 @@
 ---
-tags: [backend, tracking, mvp, fase1, fase2, fase3, fase4]
-updated: 2026-05-17
+tags: [backend, tracking, mvp, fase1, fase2, fase3, fase4, fase5, fase6, fase7, fase8, fase9, fase10, fase11, fase12, fase13, fase14]
+updated: 2026-06-06
 ---
 
 # Backend — Seguimiento de Tareas
 
 Progreso del backend comparando la documentacion de `ARQUITECTURA_BACKEND.md` contra el codigo implementado.
 
-Ultima actualizacion: 2026-05-17
+Ultima actualizacion: 2026-06-06
 
 ## ✅ Completado — Infraestructura base
 
@@ -237,6 +237,49 @@ El productor pregunta "como controlo el gusano cogollero en maiz" → RAG busca 
       ARQUITECTURA_DB, FLUJO_DATOS, DESPLIEGUE, GUIAS_QGIS
 - [x] `docs/README.md` reescrito como indice central con estructura, contenidos y stack
 
+## ✅ Completado — FASE 10: AnalisisCultivos redesign (layout Copernicus)
+
+- [x] `AnalisisCultivos.jsx` — Rediseno panel blanco izquierdo + mapa full-height
+- [x] `MapSelector.jsx` — Upgrade con dibujo de poligono/rectangulo/circulo + click-to-select
+- [x] `MetricCardsGrid/MetricCardsGrid.jsx` — Grilla de metricas debajo del mapa
+- [x] `POST /geo/decode` — Geo-deteccion via endpoint existente
+- [x] SoilGrids auto-complete al hacer click en el mapa
+- [x] `MapDrawingToolbar.jsx` — Simplificado a circulo + cuadrado
+
+## ✅ Completado — FASE 11: IAPredictiva — Refactor enfoque en riesgos
+
+- [x] Componentes eliminados: SensorDashboard, NinoPanel, NinaPanel, OptimalWindowCard, FenologiaTimeline, PlanVisualizationCard
+- [x] `SimulationSection/SimulationSection.jsx` — Nueva seccion de simulacion con visualizacion de riesgos (inundacion, sequia, rayo, Nino)
+- [x] `ClimateRiskPanel/ClimateRiskPanel.jsx` — Panel de riesgo climatico
+- [x] `MitigationActions/MitigationActions.jsx` — Componente de acciones de mitigacion
+- [x] `usePrediccion.js` — Nuevo hook con simulacion de escenarios
+- [x] `POST /predict/scenario` — Endpoint de escenarios what-if (El Nino, La Nina, normal, o parametros custom)
+- [x] `POST /predict/optimal-day` — Endpoint de ventana optima de siembra
+- [x] `CropScore` schema — Ahora incluye `metodo` + `probabilidad` en respuesta de `POST /predict`
+
+## ✅ Completado — FASE 12: Planificacion de riego
+
+- [x] `models/plan_riego.py` — Modelo PlanRiego: sensor, parcela, cultivo, humedad, umbral, prob lluvia, volumen agua, frecuencia, horario, ventana, justificacion XAI, textura, ETo, temperatura
+- [x] `models/tarea.py` — Modelo Tarea: usuario, plan_riego, titulo, descripcion, tipo, prioridad, estado, litros, fechas
+- [x] `api/irrigation.py` — `POST /irrigation-plans` (crear), `GET /irrigation-plans/{plan_id}` (obtener), `GET /irrigation-plans/thresholds` (umbrales por cultivo)
+- [x] `services/irrigation_service.py` — Logica completa: calculo ETo, factor textura, factor raiz, prob lluvia, eventos riego, justificacion XAI, trigger automatico
+- [x] `api.js` frontend — `generarPlanRiego()`, `exportarPlanATareas()`, `getUmbralesCultivos()`
+
+## ✅ Completado — FASE 13: Integracion LLM (Ollama)
+
+- [x] `services/llm_service.py` — Servicio LLM con soporte Ollama (modelo local via `OLLAMA_BASE_URL`), construccion de prompt con historial, timeout 600s
+- [x] Chat con integracion LLM real cuando `OLLAMA_BASE_URL` esta configurado
+- [x] Fallback a RAG cuando no hay LLM disponible
+
+## ✅ Completado — FASE 14: Pagina de configuracion (Ajustes)
+
+- [x] `features/settings/` — Nueva feature con hook + page + CSS
+- [x] `Ajustes.jsx` — 4 secciones: Mi Finca (coordenadas default), Servidor API (URL configurable + test de conexion), Datos (export/import JSON backup), Sistema (limpiar cache, version)
+- [x] `useSettings.js` — `getSetting()`, `setSetting()` para localStorage. `exportData()` descarga JSON. `importData()` restaura backup. `clearCache()` resetea todo
+- [x] `App.jsx` — Ruta `/investigador/ajustes`
+- [x] `ResearcherLayout` — Item "Ajustes" en dropdown de perfil
+- [x] `api.js` — `BASE_URL` configurable desde localStorage (`agrocaribe_api_url`)
+
 ---
 
 ## Referencias
@@ -244,12 +287,3 @@ El productor pregunta "como controlo el gusano cogollero en maiz" → RAG busca 
 - [[2-backend/ARQUITECTURA_BACKEND]] — Arquitectura del backend y 19 endpoints
 - [[1-inicial/PLAN_DESARROLLO]] — Cronograma original del proyecto
 - [[4-arquitectura/VISION_SISTEMA]] — Vision general del sistema completo
-
-## ✅ Completado — AJUSTES: Pagina de configuracion
-
-- [x] `features/settings/` — Nueva feature con hook + page + CSS
-- [x] `Ajustes.jsx` — 4 secciones: Mi Finca (coordenadas default), Servidor API (URL configurable + test de conexion), Datos (export/import JSON backup), Sistema (limpiar cache, version).
-- [x] `useSettings.js` — `getSetting()`, `setSetting()` para localStorage. `exportData()` descarga JSON. `importData()` restaura backup. `clearCache()` resetea todo.
-- [x] `App.jsx` — Ruta `/investigador/ajustes`
-- [x] `ResearcherLayout` — Item "Ajustes" en dropdown de perfil
-- [x] `api.js` — `BASE_URL` ahora lee desde localStorage (`agrocaribe_api_url`), permite cambiar entre localhost/Docker/Supabase sin recompilar

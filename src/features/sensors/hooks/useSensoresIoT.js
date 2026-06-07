@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getSensores, getLecturasSensor } from '@shared/services/api';
+import { getSensores, getLecturasSensor, getModelMetrics } from '@shared/services/api';
 
 export function useSensoresIoT() {
   const navigate = useNavigate();
@@ -11,6 +11,11 @@ export function useSensoresIoT() {
   const [nodes, setNodes] = useState([]);
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [modelMetrics, setModelMetrics] = useState(null);
+
+  useEffect(() => {
+    getModelMetrics().then(setModelMetrics).catch(() => {});
+  }, []);
 
   useEffect(() => {
     const id = setInterval(() => setPulse((p) => !p), 900);
@@ -82,6 +87,7 @@ export function useSensoresIoT() {
     NODES: nodes,
     LOGS: logs,
     sel, loading,
+    modelMetrics,
     handleShowNdviChange, handleValveToggle,
     navigate,
   };

@@ -6,6 +6,7 @@ import {
   getSoilData,
   getClima,
   getHistorial as fetchHistorial,
+  getModelMetrics,
   MUNICIPIOS_COORD_MAP,
 } from "@shared/services/api";
 import { Leaf, Droplets, FlaskConical } from "lucide-react";
@@ -60,6 +61,7 @@ export function useAnalisisCultivos() {
 
   const [municipiosLista, setMunicipiosLista] = useState([]);
   const [serverHistory, setServerHistory] = useState([]);
+  const [modelMetrics, setModelMetrics] = useState(null);
   const rol = sessionStorage.getItem("rol");
   const isProductor = rol === "productor";
   const [activeTab, setActiveTab] = useState("analisis");
@@ -78,6 +80,11 @@ export function useAnalisisCultivos() {
         if (Array.isArray(data)) setServerHistory(data);
       })
       .catch(() => {});
+  }, []);
+
+  // Fetch real model metrics from backend
+  useEffect(() => {
+    getModelMetrics().then(setModelMetrics).catch(() => {});
   }, []);
 
   const historialRegistros = useMemo(() => {
@@ -438,6 +445,7 @@ export function useAnalisisCultivos() {
     // Store
     formulario,
     cargandoAnalisis,
+    modelMetrics,
     // Handlers
     handleFormChange,
     handleMapChange,

@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import Column, ForeignKey, String, Float, Integer, text
+from sqlalchemy import Column, ForeignKey, String, Float, Integer, Boolean, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
@@ -34,9 +34,11 @@ class Analisis(Base):
     lng: Mapped[float] = mapped_column(Float, nullable=True)
     cultivo_recomendado: Mapped[str] = mapped_column(String(100), nullable=True)
     score: Mapped[int] = mapped_column(Integer, nullable=True)
+    exito: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    rendimiento_real: Mapped[float | None] = mapped_column(Float, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         server_default=func.now(),
     )
 
     def __repr__(self):
-        return f"<Analisis(id={self.id}, tipo={self.tipo}, cultivo={self.cultivo_recomendado})>"
+        return f"<Analisis(id={self.id}, tipo={self.tipo}, cultivo={self.cultivo_recomendado}, score={self.score})>"

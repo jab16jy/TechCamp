@@ -4,12 +4,7 @@ import {
   BrainCircuit, Leaf, Zap, Thermometer, Droplets, Wind, Sun,
   AlertTriangle, Radio, FlaskConical, Activity,
 } from 'lucide-react';
-import { getDashboardSummary, getClima } from '@shared/services/api';
-
-export const AI_METRICS = [
-  { label: 'Precision del Modelo', value: '91.2%', delta: '+1.3%', up: true, icon: <BrainCircuit size={18} />, color: 'emerald' },
-  { label: 'Latencia de Inferencia', value: '128 ms', delta: '-12ms', up: true, icon: <Zap size={18} />, color: 'blue' },
-];
+import { getDashboardSummary, getClima, getModelMetrics } from '@shared/services/api';
 
 export const WEATHER_BASE = [
   { label: 'Temperatura', value: '—°C', key: 'temperatura', icon: <Thermometer size={15} className="text-amber-500" /> },
@@ -18,19 +13,13 @@ export const WEATHER_BASE = [
   { label: 'Radiacion', value: '—', key: 'radiacion_solar', icon: <Sun size={15} className="text-yellow-500" /> },
 ];
 
-export const MODEL_METRICS = [
-  { cultivo: 'Yuca', accuracy: '95.8%', f1: '0.94', mae: '2.1%', confianza: 'Alta (Ideal para suelos francos)', icon: 'yuca' },
-  { cultivo: 'Name', accuracy: '93.2%', f1: '0.91', mae: '3.5%', confianza: 'Alta (Sensible a humedad/NDWI)', icon: 'name' },
-  { cultivo: 'Maiz', accuracy: '94.5%', f1: '0.93', mae: '2.8%', confianza: 'Alta (Amplio rango climatico)', icon: 'maiz' },
-  { cultivo: 'Cacao', accuracy: '89.1%', f1: '0.87', mae: '5.8%', confianza: 'Moderada (Requiere mas datos)', icon: 'cacao' },
-];
-
 export default function useDashboard() {
   const navigate = useNavigate();
   const [timestamp, setTimestamp] = useState(new Date());
   const [summary, setSummary] = useState(null);
   const [weather, setWeather] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [modelMetrics, setModelMetrics] = useState(null);
 
   useEffect(() => {
     const id = setInterval(() => setTimestamp(new Date()), 60000);
@@ -42,9 +31,11 @@ export default function useDashboard() {
     Promise.all([
       getDashboardSummary(),
       getClima(10.5, -74.8),
-    ]).then(([summaryData, weatherData]) => {
+      getModelMetrics(),
+    ]).then(([summaryData, weatherData, metrics]) => {
       setSummary(summaryData);
       setWeather(weatherData);
+      setModelMetrics(metrics);
     }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
@@ -62,14 +53,35 @@ export default function useDashboard() {
       }))
     : [];
 
+  const realAccuracy = modelMetrics?.accuracy != null
+    ? modelMetrics.accuracy
+    : modelMetrics?.cv_accuracy_mean;
+
   const aiMetrics = summary
     ? [
-        { label: 'Precision del Modelo', value: '91.2%', delta: '+1.3%', up: true, icon: <BrainCircuit size={18} />, color: 'emerald' },
+        {
+          label: 'Precision del Modelo',
+          value: realAccuracy != null ? `${(realAccuracy * 100).toFixed(1)}%` : '—',
+          delta: realAccuracy != null ? 'Real' : null,
+          up: true,
+          icon: <BrainCircuit size={18} />,
+          color: 'emerald',
+        },
         { label: 'Analisis Totales', value: String(summary.total_analisis), delta: null, up: null, icon: <Activity size={18} />, color: 'blue' },
         { label: 'Sensores IoT', value: String(summary.total_sensores), delta: summary.sensores_criticos > 0 ? `${summary.sensores_criticos} criticos` : 'OK', up: summary.sensores_criticos === 0, icon: <Radio size={18} />, color: summary.sensores_criticos > 0 ? 'amber' : 'emerald' },
         { label: 'Alertas Activas', value: String(summary.sensores_criticos + summary.sensores_advertencias), delta: summary.sensores_criticos > 0 ? 'criticas' : 'OK', up: false, icon: <AlertTriangle size={18} />, color: summary.sensores_criticos > 0 ? 'amber' : 'emerald' },
       ]
-    : AI_METRICS;
+    : [
+        {
+          label: 'Precision del Modelo',
+          value: realAccuracy != null ? `${(realAccuracy * 100).toFixed(1)}%` : '—',
+          delta: null,
+          up: null,
+          icon: <BrainCircuit size={18} />,
+          color: 'emerald',
+        },
+        { label: 'Latencia de Inferencia', value: '128 ms', delta: '-12ms', up: true, icon: <Zap size={18} />, color: 'blue' },
+      ];
 
   const weatherData = weather
     ? [
@@ -93,14 +105,26 @@ export default function useDashboard() {
     { label: 'Sensores activos', val: String(summary?.total_sensores || '—'), color: 'text-blue-600' },
   ];
 
+  const modelMetricsPerCrop = modelMetrics?.per_crop_accuracy
+    ? Object.entries(modelMetrics.per_crop_accuracy).map(([crop, acc]) => ({
+        cultivo: crop.replace('_', ' '),
+        accuracy: `${(acc * 100).toFixed(1)}%`,
+        f1: modelMetrics.f1_macro?.toFixed(2) || '—',
+        mae: '—',
+        confianza: acc >= 0.85 ? 'Alta' : acc >= 0.7 ? 'Moderada' : 'En desarrollo',
+        icon: crop.toLowerCase().slice(0, 4),
+      }))
+    : [];
+
   return {
     timestamp, refreshTimestamp, loading,
     moduleShortcuts, weeklyStats,
     FIELD_UPDATES: fieldUpdates,
     AI_METRICS: aiMetrics,
     WEATHER: weatherData,
-    MODEL_METRICS,
+    MODEL_METRICS: modelMetricsPerCrop,
     SPARK_DATA: { acc: [], lat: [], proc: [] },
+    modelMetrics,
     summary,
     navigate,
   };

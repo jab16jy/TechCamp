@@ -4,6 +4,9 @@ proyecto: AgroCaribe IA
 tags: [setup, instalacion, configuracion, desarrollo]
 ---
 
+> **📌 NOTA:** Este documento ha sido actualizado para reflejar el estado actual del proyecto.
+> La URL del backend se puede cambiar desde la pagina de Ajustes (`/investigador/ajustes`) sin recompilar.
+
 # Instalacion y Configuracion
 
 ## Requisitos Previos
@@ -11,27 +14,27 @@ tags: [setup, instalacion, configuracion, desarrollo]
 - Node.js 18+
 - npm 9+
 - Python 3.12+
-- Docker Desktop (opcional, para backend containerizado)
+- Docker + Docker Compose (para BD PostgreSQL/PostGIS)
 
 ## Instalacion Frontend
 
-```powershell
+```bash
 npm install
 ```
 
 ## Instalacion Backend
 
-```powershell
+```bash
 cd backend
 pip install -r requirements.txt
 ```
 
-## Docker Compose (Recomendado)
+## Docker Compose
 
-El proyecto usa Docker Compose para la BD PostgreSQL/PostGIS y el backend FastAPI.
+El proyecto usa Docker Compose para la BD PostgreSQL/PostGIS local.
 
 ```bash
-# Iniciar todo (BD + Backend)
+# Iniciar BD + Backend
 docker compose up -d
 
 # Solo la BD
@@ -80,12 +83,13 @@ Crear `.env` en la raiz del proyecto:
 | Variable | Descripcion | Default |
 |----------|-------------|---------|
 | `DATABASE_URL` | Conexion PostgreSQL (Docker: `postgresql+asyncpg://agrocaribe:agrocaribe_secret@db:5432/agrocaribe`) | — |
-| `SUPABASE_URL` | URL del proyecto Supabase | — |
+| `SUPABASE_URL` | URL del proyecto Supabase (solo para Auth) | — |
 | `SUPABASE_ANON_KEY` | Anon key de Supabase | — |
 | `VITE_API_URL` | URL del backend para el frontend | `http://localhost:8000` |
 | `OPENMETEO_BASE_URL` | API de clima | `https://api.open-meteo.com/v1` |
+| `CORS_ORIGINS` | Origenes permitidos para CORS | `http://localhost:5173,http://localhost:5173,http://localhost` |
 
-Si la API no esta disponible, el sistema activa automaticamente el modo Mock.
+> La URL del backend tambien se puede configurar desde la UI en `/investigador/ajustes` (persiste en localStorage).
 
 ## Scripts
 
@@ -103,12 +107,12 @@ Si la API no esta disponible, el sistema activa automaticamente el modo Mock.
 | Comando | Accion |
 |---------|--------|
 | `cd backend && uvicorn app.main:app --reload` | Servidor de desarrollo en `localhost:8000` |
-| `cd backend && python -m pytest tests/ -v` | Ejecutar 16 tests |
+| `cd backend && python -m pytest tests/ -v` | Ejecutar tests |
 | `docker compose up -d` | Backend containerizado en `:8000` |
 
 ## Desarrollo Local (2 terminales)
 
-```powershell
+```bash
 # Terminal 1: Backend
 cd backend
 uvicorn app.main:app --reload
@@ -128,11 +132,11 @@ La sesion se guarda en `sessionStorage` y se limpia al cerrar la pestana.
 
 ## Notas
 
-- 16 tests backend (pytest + httpx.AsyncClient)
+- Backend con 16+ tests (pytest + httpx.AsyncClient)
 - No hay test suite frontend configurada
-- No hay typecheck step
 - ESLint como unico linter frontend
-- Backend usa Ruff/Pylint (no configurado automaticamente)
+- **No hay MOCK_DATA** — Los datos vienen de APIs reales (OpenMeteo, SoilGrids, NASA POWER, PostgreSQL)
+- La URL del backend se puede cambiar desde Ajustes → Servidor API
 
 ---
 
@@ -141,4 +145,4 @@ La sesion se guarda en `sessionStorage` y se limpia al cerrar la pestana.
 - [[4-arquitectura/DESPLIEGUE]] — Despliegue con Docker + Vercel
 - [[2-backend/ARQUITECTURA_BACKEND]] — Arquitectura del backend y endpoints
 - [[4-arquitectura/VISION_SISTEMA]] — Stack tecnologico completo y versiones
-
+- [[3-frontend/ARQUITECTURA_FRONTEND]] — Pagina de Ajustes y configuracion

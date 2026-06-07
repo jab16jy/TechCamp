@@ -1,4 +1,4 @@
-const AlgorithmHealthCard = ({ precision = '94.2%', version = 'v4.2.0-stable', status = 'OPTIMO' }) => {
+const AlgorithmHealthCard = ({ precision = '—%', version = 'HistGradientBoosting', status = 'PENDIENTE' }) => {
   return (
     <div className="ac-glass ac-glass--auto">
       <div className="ac-status-header" style={{ marginBottom: '1rem' }}>

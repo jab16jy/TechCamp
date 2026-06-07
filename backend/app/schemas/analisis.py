@@ -81,6 +81,11 @@ class AnalysisDetailResponse(BaseModel):
         from_attributes = True
 
 
+class FeedbackRequest(BaseModel):
+    exito: bool
+    rendimiento_real: Optional[float] = None
+
+
 class MunicipioResponse(BaseModel):
     id: int
     nombre: str

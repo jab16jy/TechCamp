@@ -1,3 +1,20 @@
+---
+titulo: "Documentacion Inicial — Diseno Original"
+proyecto: AgroCaribe IA
+tags: [original, diseno, historico, referencia]
+---
+
+> **📌 NOTA: DOCUMENTACION HISTORICA**
+> Este documento describe el diseno original del sistema (fase de prototipado).
+> La implementacion actual ha evolucionado significativamente:
+> - **Mock data eliminado** — Todas las API consumen datos reales (OpenMeteo, NASA POWER, SoilGrids, Sentinel-2)
+> - **Analisis de suelo unificado** — El modulo "Calidad del Suelo" se fusiono con Analisis de Cultivos
+> - **IA Predictiva refactorizada** — Ahora es un simulador de riesgo climatico enfocado, sin bloat de sensores/DSS
+> - **AgroAsesor real** — Chatbot con RAG + LangChain sobre 20+ documentos agronomicos
+> - **25+ endpoints** implementados (vs 4 del diseno original)
+>
+> Ver `docs/4-arquitectura/` para la documentacion actualizada.
+
 # AgroCaribe IA: Sistema Inteligente de Recomendación de Cultivos
 
 ## 1. Introducción

@@ -14,7 +14,7 @@ tags: [despliegue, docker, vercel, produccion]
                     ┌──────┴──────┐
                     │  Vercel     │  ← Frontend (estatico)
                     │ Cloudflare  │     dist/ → npm run build
-                    │ Pages       │     https://agrocaribe.vercel.app
+                    │ Pages       │
                     └──────┬──────┘
                            │ https
                            ▼
@@ -24,22 +24,23 @@ tags: [despliegue, docker, vercel, produccion]
 │  ┌────────────────────────────────┐  │
 │  │ Backend FastAPI :8000           │  │
 │  │ app/main.py                     │  │
-│  │ ↓ DATABASE_URL pooler           │  │
+│  │ ↓ DATABASE_URL (local Supabase) │  │
 │  └────────────────────────────────┘  │
 └──────────────────┬───────────────────┘
                    │ asyncpg
                    ▼
 ┌──────────────────────────────┐
-│ Supabase Cloud               │
-│ PostgreSQL + PostGIS + Auth  │
+│ PostgreSQL + PostGIS (Docker)│  ← BD local reemplazo a Supabase
 └──────────────────────────────┘
+
+Supabase solo se usa para Auth (no para datos).
 ```
 
 ## Paso a paso
 
 ### 1. Backend con Docker
 
-```powershell
+```bash
 # Construir imagen
 docker compose build backend
 
@@ -54,7 +55,7 @@ docker push tu-usuario/agrocaribe-backend:latest
 
 ### 2. Frontend en Vercel
 
-```powershell
+```bash
 # Instalar Vercel CLI
 npm i -g vercel
 
@@ -65,9 +66,9 @@ npm run build
 vercel --prod
 ```
 
-O con Cloudflare Pages (ya configurado en `wrangler.toml`):
+O con Cloudflare Pages:
 
-```powershell
+```bash
 npm run build
 npx wrangler pages deploy dist
 ```
@@ -78,7 +79,7 @@ El backend necesita:
 ```env
 DATABASE_URL=postgresql+asyncpg://postgres.hpmjbgqjwopxlgurczna:[PASSWORD]@aws-1-us-west-1.pooler.supabase.com:6543/postgres
 SUPABASE_URL=https://hpmjbgqjwopxlgurczna.supabase.co
-SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIs...
+SUPABASE_ANON_KEY=eyJ...
 ENVIRONMENT=production
 LOG_LEVEL=INFO
 OPENMETEO_BASE_URL=https://api.open-meteo.com/v1
@@ -92,17 +93,21 @@ VITE_API_URL=https://tu-backend.com
 
 ## Archivos de configuracion
 
-### `docker-compose.yml` (produccion)
+### `docker-compose.yml` (desarrollo)
 
 ```yaml
 services:
+  db:
+    image: postgis/postgis:16-3.4
+    # PostgreSQL + PostGIS local
+    # Reemplazo de Supabase para datos
+
   backend:
     build: ./backend
     ports: ["8000:8000"]
-    environment:
-      DATABASE_URL: ${DATABASE_URL}
-      CORS_ORIGINS: ${CORS_ORIGINS}
-    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
 ```
 
 ### `wrangler.toml` (Cloudflare Pages)
@@ -115,7 +120,7 @@ compatibility_date = "2024-05-10"
 
 ## Desarrollo local
 
-```powershell
+```bash
 # Terminal 1: Backend
 cd backend
 uvicorn app.main:app --reload
@@ -124,18 +129,19 @@ uvicorn app.main:app --reload
 npm run dev
 ```
 
-## Arquitectura final del proyecto
+## Arquitectura del proyecto
 
 ```
-D:\PROYECTOS\TechCamp
+/home/user/TechCamp
 ├── src/               → Frontend React
-├── backend/           → FastAPI Docker
-├── supabase/          → Migraciones DB
+├── backend/           → FastAPI + ML + RAG
+├── supabase/          → Migraciones DB (legacy)
 ├── docs/              → Documentacion
-├── docker-compose.yml → Solo backend
-├── nginx.conf         → Para proxy inverso (opcional)
+├── docker-compose.yml → Backend + DB local
+├── nginx.conf         → Proxy inverso (opcional)
 ├── wrangler.toml      → Cloudflare Pages config
-└── .env               → Credenciales locales (no se sube a git)
+└── .env               → Credenciales (no se sube a git)
+```
 
 ---
 
@@ -144,4 +150,3 @@ D:\PROYECTOS\TechCamp
 - [[1-inicial/SETUP]] — Instalacion y configuracion local
 - [[2-backend/ARQUITECTURA_BACKEND]] — Dockerfile y dependencias del backend
 - [[4-arquitectura/GUIAS_QGIS]] — Guia QGIS para datos satelitales
-```

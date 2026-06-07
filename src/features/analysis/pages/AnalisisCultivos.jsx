@@ -30,6 +30,7 @@ const AnalisisCultivos = () => {
     handleDrawnArea,
     handleSubmit,
     metricCardsData,
+    modelMetrics,
     navigate,
   } = useAnalisisCultivos();
 
@@ -101,11 +102,26 @@ const AnalisisCultivos = () => {
                   <div>
                     <p className="ac-model-status-title">Modelo Agro-IA</p>
                     <p className="ac-model-status-desc">
-                      Precisión actual: 94.2%
+                      Precisión:{' '}
+                      {modelMetrics?.accuracy != null
+                        ? `${(modelMetrics.accuracy * 100).toFixed(1)}%`
+                        : modelMetrics?.cv_accuracy_mean != null
+                          ? `${(modelMetrics.cv_accuracy_mean * 100).toFixed(1)}%`
+                          : 'Cargando...'}
                     </p>
                   </div>
                 </div>
-                <span className="ac-status-pill">ACTIVO</span>
+                <span className={
+                  modelMetrics?.accuracy != null && modelMetrics.accuracy >= 0.8
+                    ? 'ac-status-pill'
+                    : modelMetrics?.accuracy != null
+                      ? 'ac-status-pill'
+                      : 'ac-status-pill'
+                }>
+                  {modelMetrics?.accuracy != null
+                    ? (modelMetrics.accuracy >= 0.8 ? 'OPTIMO' : 'MEJORABLE')
+                    : 'ACTIVO'}
+                </span>
               </div>
             </aside>
 

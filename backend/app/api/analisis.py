@@ -11,6 +11,7 @@ from app.schemas.analisis import (
     AnalyzeRequest,
     AnalyzeResponse,
     RecomendacionCultivo,
+    FeedbackRequest,
 )
 from app.services.climate_service import get_climate_data, get_mock_climate, get_climate_anomaly
 from app.services.satellite_service import get_satellite_data
@@ -121,5 +122,41 @@ async def get_analysis_by_id(id: str, db: AsyncSession = Depends(get_db)):
         "score": ana.score,
         "tipo": ana.tipo,
         "fecha": ana.created_at.isoformat() if ana.created_at else "",
+    }
+
+
+@analysis_router.put("/{id}/feedback")
+async def set_analysis_feedback(
+    id: str,
+    body: FeedbackRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """Record feedback (success/failure and real yield) for an analysis."""
+    query = select(Analisis)
+    if len(id) == 8:
+        query = query.where(cast(Analisis.id, String).like(f"{id.lower()}%"))
+    else:
+        try:
+            uid = uuid.UUID(id)
+            query = query.where(Analisis.id == uid)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="ID de analisis invalido")
+
+    result = await db.execute(query)
+    ana = result.scalars().first()
+    if not ana:
+        raise HTTPException(status_code=404, detail="Analisis no encontrado")
+
+    ana.exito = body.exito
+    if body.rendimiento_real is not None:
+        ana.rendimiento_real = body.rendimiento_real
+
+    await db.flush()
+    return {
+        "success": True,
+        "message": "Feedback registrado correctamente",
+        "id": str(ana.id)[:8].upper(),
+        "exito": ana.exito,
+        "rendimiento_real": ana.rendimiento_real,
     }
 

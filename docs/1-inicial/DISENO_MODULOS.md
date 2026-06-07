@@ -4,8 +4,18 @@ proyecto: AgroCaribe IA
 tags: [diseno, modulos, original, referencia-historica]
 ---
 
-> **Nota:** Este documento describe el diseno original de los modulos (fase de prototipado). 
-> La implementacion actual difiere en varios aspectos. Ver `docs/4-arquitectura/` para la documentacion actualizada del sistema.
+> **📌 NOTA: DOCUMENTACION HISTORICA**
+> Este documento describe el diseno original de los modulos (fase de prototipado).
+> La implementacion actual difiere EN CASI TODOS LOS ASPECTOS. Cambios principales:
+> - **AnalisisCultivos**: Redisenado completamente (layout Copernicus: panel izquierdo + mapa completo)
+> - **ResultadoAvanzado**: Eliminado — el analisis de suelo se unifico con el analisis de cultivo principal
+> - **IAPredictiva**: Refactorizada de 500+ lineas ("DSS Integral") a ~290 lineas (enfoque riesgo climatico)
+> - **SensoresIoT**: Datos reales desde PostgreSQL, no mock
+> - **Dashboard**: Metricas reales desde backend, no mock
+> - **GestionReportes**: Alertas reales, comparativa, exportacion funcional
+> - **AgroAsesor**: Chatbot real con RAG + LangChain (no mock)
+>
+> Ver `docs/4-arquitectura/` para la documentacion actualizada del sistema.
 
 # Módulos de Desarrollo
 
