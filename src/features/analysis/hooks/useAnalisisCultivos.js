@@ -7,6 +7,7 @@ import {
   getClima,
   getHistorial as fetchHistorial,
   getModelMetrics,
+  setAnalysisFeedback,
   MUNICIPIOS_COORD_MAP,
 } from "@shared/services/api";
 import { Leaf, Droplets, FlaskConical } from "lucide-react";
@@ -440,6 +441,25 @@ export function useAnalisisCultivos() {
     agregarToast(`Registro ${record.id} cargado en Calidad del Suelo`, "info");
   };
 
+  /** Enviar feedback (éxito/fallo) para un análisis */
+  const handleFeedback = async (id, exito, rendimiento_real) => {
+    const result = await setAnalysisFeedback(id, { exito, rendimiento_real });
+    if (result?.success === false) {
+      agregarToast(result.message || "Error al enviar feedback", "error");
+      return;
+    }
+    agregarToast(
+      exito
+        ? "¡Gracias! Reportaste este análisis como exitoso."
+        : "Gracias por tu reporte. Ayudará a mejorar nuestras predicciones.",
+      "exito",
+    );
+    const current = useAppStore.getState().resultado;
+    if (current) {
+      setResultado({ ...current, feedback: { enviado: true, exito, rendimiento_real } });
+    }
+  };
+
   const structuredPreview = useMemo(
     () =>
       AnalysisService.createStructuredAnalysisPayload(
@@ -513,6 +533,7 @@ export function useAnalisisCultivos() {
     handleDrawnArea,
     handleSubmit,
     handleParcelaChange,
+    handleFeedback,
     // Navegación
     navigate,
   };
