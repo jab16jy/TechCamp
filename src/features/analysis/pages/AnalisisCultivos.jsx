@@ -5,6 +5,7 @@ import MapSelector from "@features/analysis/components/MapSelector";
 import AnalysisForm from "@features/analysis/components/AnalysisForm";
 import MetricCardsGrid from "@features/analysis/components/MetricCardsGrid/MetricCardsGrid";
 import HistorialTab from "@features/analysis/components/HistorialTab/HistorialTab";
+import SkeletonCard from "@features/analysis/components/SkeletonCard/SkeletonCard";
 import { useAnalisisCultivos } from "@features/analysis/hooks/useAnalisisCultivos";
 import {
   Sparkles,
@@ -144,7 +145,11 @@ const AnalisisCultivos = () => {
 
               {/* Bottom metrics strip */}
               <div className="ac-map-metrics">
-                <MetricCardsGrid metrics={metricCardsData} />
+                {cargandoAnalisis ? (
+                  <SkeletonCard />
+                ) : (
+                  <MetricCardsGrid metrics={metricCardsData} />
+                )}
               </div>
             </div>
           </form>
