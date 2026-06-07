@@ -543,6 +543,34 @@
 
 .ac-view-btn:hover { text-decoration: underline; }
 
+.ac-historial-empty {
+  padding: 3rem 1.5rem;
+  text-align: center;
+  color: #707973;
+  font-family: 'Manrope', sans-serif;
+  font-size: 0.95rem;
+}
+
+.ac-historial-loading {
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  color: #707973;
+  font-family: 'Manrope', sans-serif;
+  font-size: 0.9rem;
+}
+
+.ac-historial-error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.5rem;
+  background: rgba(186, 26, 26, 0.08);
+  color: #ba1a1a;
+  font-family: 'Manrope', sans-serif;
+  font-size: 0.85rem;
+  border-bottom: 1px solid rgba(186, 26, 26, 0.2);
+}
+
 .ac-txt-center { text-align: center; }
 .ac-txt-right { text-align: right; }
 

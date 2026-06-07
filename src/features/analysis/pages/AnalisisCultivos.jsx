@@ -32,6 +32,7 @@ const AnalisisCultivos = () => {
     metricCardsData,
     modelMetrics,
     navigate,
+    historialRegistros,
   } = useAnalisisCultivos();
 
   const Layout = isProductor ? ProductorLayout : ResearcherLayout;
@@ -150,7 +151,12 @@ const AnalisisCultivos = () => {
         )}
 
         {/* Historial Tab */}
-        {activeTab === "historial" && <HistorialTab />}
+        {activeTab === "historial" && (
+          <HistorialTab
+            registros={historialRegistros}
+            loading={cargandoAnalisis}
+          />
+        )}
       </div>
     </Layout>
   );
