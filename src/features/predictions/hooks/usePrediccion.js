@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import useAppStore from '@shared/store';
-import { getPrediccion, getAnalysis, postScenario } from '@shared/services/api';
+import { getPrediccion, getAnalysis, postScenario, getCompareScenarios } from '@shared/services/api';
 
 const CICLOS_DIAS = {
   Maiz: 90, Yuca: 270, Arroz: 120, Frijol: 75,
@@ -38,6 +38,8 @@ export default function usePrediccion() {
   const [fechaSiembra, setFechaSiembra] = useState(null);
   const [etapaFenologica, setEtapaFenologica] = useState(null);
   const [selectedAnalysisData, setSelectedAnalysisData] = useState(null);
+  const [compareData, setCompareData] = useState(null);
+  const [loadingCompare, setLoadingCompare] = useState(false);
 
   // ── Fenologia ──
   const fenologia = useMemo(() => {
@@ -169,9 +171,37 @@ export default function usePrediccion() {
   const setNpkSim = useCallback((v) => { setNpkSimState(v); setStale(true); }, []);
   const setRiegoSim = useCallback((v) => { setRiegoSimState(v); setStale(true); }, []);
   const marcarPlanListo = useCallback(() => setEstado(ESTADOS.PLAN_READY), []);
+  // ── compararEscenarios: POST /reports/compare-scenario ──
+  const compararEscenarios = useCallback(async (lat, lng, months = 6) => {
+    if (!Number.isFinite(Number(lat)) || !Number.isFinite(Number(lng))) {
+      agregarToast('Coordenadas no disponibles para comparar escenarios', 'advertencia');
+      return null;
+    }
+    setLoadingCompare(true);
+    try {
+      const result = await getCompareScenarios(Number(lat), Number(lng), months);
+      if (result) {
+        setCompareData(result);
+        agregarToast('Comparación Niño vs Normal lista', 'exito');
+        return result;
+      }
+      agregarToast('No se pudo obtener la comparación', 'error');
+    } catch {
+      agregarToast('Error al comparar escenarios', 'error');
+    } finally {
+      setLoadingCompare(false);
+    }
+    return null;
+  }, [agregarToast]);
+
+  const clearCompare = useCallback(() => {
+    setCompareData(null);
+  }, []);
+
   const clearProyeccion = useCallback(() => {
     setProyeccion6M(null); setFechaSiembra(null); setEtapaFenologica(null);
-    setSelectedAnalysisData(null); setEstado(ESTADOS.IDLE); setStale(false);
+    setSelectedAnalysisData(null); setCompareData(null);
+    setEstado(ESTADOS.IDLE); setStale(false);
   }, []);
 
   return {
@@ -179,5 +209,6 @@ export default function usePrediccion() {
     fenologia, etapaFenologica, fechaSiembra, selectedAnalysisData,
     setNpkSim, setRiegoSim,
     fetchProyeccion, simularEscenario, selectAnalysis, handleManualQuery, clearProyeccion, marcarPlanListo,
+    compareData, loadingCompare, compararEscenarios, clearCompare,
   };
 }

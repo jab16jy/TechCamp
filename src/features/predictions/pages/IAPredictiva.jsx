@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback, Component } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, Settings2, Search, Sun, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Loader2, Settings2, Search, Sun, AlertTriangle, GitCompare } from 'lucide-react';
 import ResearcherLayout from '@shared/layout/ResearcherLayout/ResearcherLayout';
 import useAuthGuard from '@shared/hooks/useAuthGuard';
 import useAppStore from '@shared/store';
@@ -65,6 +65,7 @@ const IAPredictiva = () => {
     fechaSiembra, selectedAnalysisData,
     setNpkSim, setRiegoSim,
     simularEscenario, selectAnalysis, handleManualQuery, clearProyeccion,
+    compareData, loadingCompare, compararEscenarios, clearCompare,
   } = predHook;
 
   // ── Local state ──
@@ -306,7 +307,77 @@ const IAPredictiva = () => {
                 </BentoCard>
               </ResultsErrorBoundary>
 
-              {/* ROW 4: GrowthStressChart + FeatureChart */}
+              {/* ROW 4.5: Comparar Escenarios Niño vs Normal */}
+              {queryCoords && (
+                <ResultsErrorBoundary label="Comparar Escenarios">
+                  <BentoCard span={{ col: 12, row: 1 }} variant="default" title="Comparar Escenarios Niño vs Normal" icon={GitCompare}>
+                    <div className="flex flex-col gap-3">
+                      {!compareData ? (
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="text-xs text-[#6b7280]">
+                            Compara la proyección actual con un escenario de El Niño (sequía extendida + altas temperaturas).
+                          </p>
+                          <button
+                            className="ia-generate-btn"
+                            onClick={() => compararEscenarios(queryCoords.lat, queryCoords.lng, 6)}
+                            disabled={loadingCompare}
+                            style={{ whiteSpace: 'nowrap' }}
+                          >
+                            {loadingCompare ? (
+                              <><Loader2 size={14} className="animate-spin" /> Cargando...</>
+                            ) : (
+                              <><GitCompare size={14} /> Comparar Escenarios</>
+                            )}
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-3">
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs text-[#6b7280]">
+                              Comparación generada. Revisa las diferencias entre escenarios.
+                            </p>
+                            <div className="flex gap-2">
+                              <button
+                                className="ia-generate-btn"
+                                onClick={() => compararEscenarios(queryCoords.lat, queryCoords.lng, 6)}
+                                disabled={loadingCompare}
+                                style={{ whiteSpace: 'nowrap' }}
+                              >
+                                {loadingCompare ? (
+                                  <><Loader2 size={14} className="animate-spin" /> Recargando...</>
+                                ) : (
+                                  <><GitCompare size={14} /> Recalcular</>
+                                )}
+                              </button>
+                              <button
+                                className="text-xs text-[#6b7280] hover:text-[#4a4a4a] transition-colors"
+                                onClick={clearCompare}
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Manrope, sans-serif' }}
+                              >
+                                Cerrar
+                              </button>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Normal column */}
+                            <div className="rounded-xl p-3" style={{ background: 'rgba(15,82,56,0.04)', border: '1px solid rgba(15,82,56,0.1)' }}>
+                              <h4 className="text-xs font-bold text-[#0f5238] mb-2">🌤 Normal</h4>
+                              <GrowthStressChart proyeccion={{ meses: compareData.normal?.meses || [] }} />
+                            </div>
+                            {/* Niño column */}
+                            <div className="rounded-xl p-3" style={{ background: 'rgba(186,26,26,0.04)', border: '1px solid rgba(186,26,26,0.1)' }}>
+                              <h4 className="text-xs font-bold text-[#ba1a1a] mb-2">🔥 El Niño</h4>
+                              <GrowthStressChart proyeccion={{ meses: compareData.nino?.meses || [] }} />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </BentoCard>
+                </ResultsErrorBoundary>
+              )}
+
+              {/* ROW 5: GrowthStressChart + FeatureChart */}
               <ResultsErrorBoundary label="Gráficas de Crecimiento">
                 <BentoCard span={{ col: 6, row: 1 }} variant="default">
                   <GrowthStressChart proyeccion={proyeccion6M} />

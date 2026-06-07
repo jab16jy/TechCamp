@@ -118,12 +118,20 @@ async def predict_crops(
             textura_suelo = soil.get("textura_suelo", "Franco") or "Franco"
             tipo_suelo = textura_suelo
             soil_source = soil.get("fuente", "ISRIC SoilGrids v2.0")
+            sand = soil.get("sand")
+            silt = soil.get("silt")
+            clay = soil.get("clay")
+            awc = soil.get("awc")
         else:
             ph_suelo = 6.5
             materia_organica = 3.0
             textura_suelo = "Franco"
             tipo_suelo = "Franco-Arcilloso"
             soil_source = "Default (sin datos ISRIC)"
+            sand = None
+            silt = None
+            clay = None
+            awc = None
 
         start_month = None
         inherited = None
@@ -132,12 +140,15 @@ async def predict_crops(
 
     # Obtener NDVI real desde la base de datos
     base_ndvi = 0.42  # fallback
+    base_ndwi = 0.18  # fallback
     ndvi_source = "Sintetico (fallback)"
     try:
         satellite = await get_satellite_data(db, lat, lng)
         if satellite and satellite.ndvi is not None:
             base_ndvi = satellite.ndvi
             ndvi_source = "Sentinel-2 BD"
+        if satellite and satellite.ndwi is not None:
+            base_ndwi = satellite.ndwi
     except Exception:
         logger.warning("No se pudo obtener NDVI real desde la BD, usando sintetico")
 
@@ -172,6 +183,11 @@ async def predict_crops(
             ciclo_dias=ciclo_dias,
             base_ndvi=base_ndvi,
             cultivo=cultivo,
+            base_ndwi=base_ndwi,
+            sand=sand,
+            silt=silt,
+            clay=clay,
+            awc=awc,
         )
 
         # Enriquecer fuente con datos reales usados
@@ -196,6 +212,7 @@ async def predict_crops(
             alertas_patrones=[Alert(**a) for a in result.get("alertas_patrones", [])],
             best_window=OptimalDayResponse(**result["best_window"]) if result.get("best_window") else None,
             analysis_inherited=inherited,
+            acciones_mitigacion=result.get("acciones_mitigacion", []),
         )
     except Exception as e:
         logger.exception("Prediction error")
