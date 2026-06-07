@@ -186,7 +186,7 @@ def _add_gaussian_noise(value: float, range_span: float, noise_pct: float = 0.05
     return value + np.random.normal(0, range_span * noise_pct)
 
 
-def _expand_min_max(lo: float, hi: float, margin: float = 0.20) -> tuple[float, float]:
+def _expand_min_max(lo: float, hi: float, margin: float = 0.10) -> tuple[float, float]:
     """Expand a [lo, hi] range by margin on each side for realistic overlap."""
     span = hi - lo
     return lo - span * margin, hi + span * margin
@@ -271,14 +271,14 @@ def generate_synthetic_dataset(
                 # Textura centered on optimum with noise
                 textura_encoded = max(1.0, min(12.0, tex_opt + np.random.normal(0, 1.8)))
 
-                # Increased noise for robust probabilistic boundaries
-                temp = _add_gaussian_noise(temp, temp_hi - temp_lo, 0.08)
-                hum = _add_gaussian_noise(hum, hum_hi - hum_lo, 0.08)
-                prec = _add_gaussian_noise(prec, prec_hi - prec_lo, 0.08)
-                ph = _add_gaussian_noise(ph, ph_hi - ph_lo, 0.08)
-                mo = _add_gaussian_noise(mo, 2.5, 0.06)
-                ndvi = _add_gaussian_noise(ndvi, 0.7, 0.06)
-                textura_encoded = _add_gaussian_noise(textura_encoded, 5.0, 0.08)
+                # Moderate noise for robust probabilistic boundaries
+                temp = _add_gaussian_noise(temp, temp_hi - temp_lo, 0.05)
+                hum = _add_gaussian_noise(hum, hum_hi - hum_lo, 0.05)
+                prec = _add_gaussian_noise(prec, prec_hi - prec_lo, 0.05)
+                ph = _add_gaussian_noise(ph, ph_hi - ph_lo, 0.05)
+                mo = _add_gaussian_noise(mo, 2.5, 0.04)
+                ndvi = _add_gaussian_noise(ndvi, 0.7, 0.04)
+                textura_encoded = _add_gaussian_noise(textura_encoded, 5.0, 0.05)
 
                 # Engineered features
                 temp_hum = temp * hum / 1000.0
