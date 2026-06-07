@@ -290,6 +290,195 @@ def _detect_climate_patterns(months_projected: list[dict], temp_anomaly: float, 
     return patterns
 
 
+# ── Risk scoring, XAI, and mitigation helpers ──
+
+
+def _estimate_drainage_time(textura_suelo: str, awc: float) -> float:
+    """Estima tiempo de drenaje en horas desde textura y AWC."""
+    drainage_map = {
+        "Arenoso": 2, "Areno-Francoso": 4, "Franco-Arenoso": 6,
+        "Franco": 8, "Franco-Limoso": 10, "Franco-Arcilloso": 14,
+        "Franco-Arcillo-Arenoso": 12, "Franco-Arcillo-Limoso": 16,
+        "Arcillo-Arenoso": 18, "Arcillo-Limoso": 22, "Arcilloso": 24,
+        "Limoso": 10,
+    }
+    base = drainage_map.get(textura_suelo, 12)
+    awc_factor = max(0.5, min(1.5, awc / 0.10))
+    return round(base / awc_factor, 1)
+
+
+def _compute_flood_risk(textura_suelo: str, awc: float, precipitacion: float) -> dict:
+    """Calcula riesgo de inundacion 0-100."""
+    clay_types = ["Arcilloso", "Arcillo-Arenoso", "Arcillo-Limoso",
+                  "Franco-Arcilloso", "Franco-Arcillo-Arenoso", "Franco-Arcillo-Limoso"]
+
+    is_clayey = any(t in textura_suelo for t in clay_types)
+    drainage = _estimate_drainage_time(textura_suelo, awc)
+
+    if precipitacion > 200:
+        prec_score = 80
+    elif precipitacion > 150:
+        prec_score = 60
+    elif precipitacion > 100:
+        prec_score = 35
+    elif precipitacion > 70:
+        prec_score = 15
+    else:
+        prec_score = 5
+
+    texture_factor = 1.4 if is_clayey else 0.7
+    awc_factor = max(0.5, min(1.5, 0.10 / max(awc, 0.02)))
+
+    score = min(100, round(prec_score * texture_factor * awc_factor))
+
+    severity = "bajo"
+    if score > 80:
+        severity = "critico"
+    elif score > 60:
+        severity = "alto"
+    elif score > 30:
+        severity = "medio"
+
+    return {
+        "score": score,
+        "severidad": severity,
+        "drenaje_estimado_horas": drainage,
+        "factor_principal": "suelo arcilloso con drenaje lento" if is_clayey else "exceso de precipitacion",
+    }
+
+
+def _compute_drought_risk(textura_suelo: str, awc: float, precipitacion: float, temperatura: float) -> dict:
+    """Calcula riesgo de sequia 0-100."""
+    sandy_types = ["Arenoso", "Areno-Francoso", "Franco-Arenoso"]
+    is_sandy = any(t in textura_suelo for t in sandy_types)
+
+    deficit = max(0, 80 - precipitacion)
+    if deficit > 60:
+        prec_score = 80
+    elif deficit > 40:
+        prec_score = 55
+    elif deficit > 20:
+        prec_score = 30
+    elif deficit > 10:
+        prec_score = 15
+    else:
+        prec_score = 5
+
+    texture_factor = 1.5 if is_sandy else 0.8
+    awc_factor = max(0.5, min(2.0, 0.12 / max(awc, 0.02)))
+    temp_factor = 1.0 + max(0, (temperatura - 30) * 0.1)
+
+    score = min(100, round(prec_score * texture_factor * awc_factor * temp_factor))
+
+    severity = "bajo"
+    if score > 80:
+        severity = "critico"
+    elif score > 60:
+        severity = "alto"
+    elif score > 30:
+        severity = "medio"
+
+    return {
+        "score": score,
+        "severidad": severity,
+        "factor_principal": "suelo arenoso con baja retencion de agua" if is_sandy else "deficit de precipitacion",
+    }
+
+
+def _xai_risk_justification(
+    textura_suelo: str, awc: float, precipitacion: float,
+    temperatura: float, ndwi: float | None, flood_risk: dict,
+    drought_risk: dict,
+) -> str:
+    """Genera justificacion tecnica de riesgo con templates."""
+    parts = []
+
+    if drought_risk["score"] > 60:
+        if "arenoso" in textura_suelo.lower():
+            parts.append(
+                f"Riesgo de estres hidrico alto: suelo {textura_suelo} con baja retencion "
+                f"(AWC={awc:.3f} cm³/cm³) y precipitacion proyectada de {precipitacion:.0f}mm, "
+                f"insuficiente para el ciclo del cultivo"
+            )
+        else:
+            parts.append(
+                f"Riesgo de estres hidrico: precipitacion proyectada de {precipitacion:.0f}mm "
+                f"esta por debajo del optimo para la region Caribe"
+            )
+        if temperatura > 32:
+            parts.append(f"temperatura elevada ({temperatura:.0f}°C) incrementa la evapotranspiracion")
+
+    if flood_risk["score"] > 60:
+        if "arcill" in textura_suelo.lower():
+            parts.append(
+                f"Riesgo de anegamiento: suelo {textura_suelo} con alta retencion "
+                f"(AWC={awc:.3f}) y drenaje lento ({flood_risk['drenaje_estimado_horas']}h). "
+                f"Lluvias proyectadas de {precipitacion:.0f}mm superan la capacidad de infiltracion"
+            )
+        else:
+            parts.append(
+                f"Riesgo de anegamiento: exceso de precipitacion ({precipitacion:.0f}mm) "
+                f"en suelo con drenaje estimado de {flood_risk['drenaje_estimado_horas']}h"
+            )
+
+    if ndwi is not None and ndwi < 0.15:
+        parts.append(f"NDWI bajo ({ndwi:.2f}) indica deficit de agua en la vegetacion")
+
+    if not parts:
+        return "Condiciones dentro de parametros normales para la region Caribe colombiana"
+
+    return ". ".join(parts) + "."
+
+
+def _derive_mitigation_actions(months: list[dict]) -> list[dict]:
+    """Deriva acciones de mitigacion con ventanas de tiempo desde los riesgos mensuales."""
+    actions = []
+
+    for i, m in enumerate(months):
+        semana_inicio = i * 4 + 1
+        semana_fin = min((i + 1) * 4, 24)
+
+        flood = m.get("riesgo_inundacion", {})
+        drought = m.get("riesgo_sequia", {})
+        hum = m.get("humedad", 0)
+        prec = m.get("precipitacion", 0)
+
+        if flood.get("score", 0) > 60:
+            actions.append({
+                "tipo": "drenaje",
+                "severidad": flood["severidad"],
+                "titulo": "Activar sistemas de drenaje",
+                "descripcion": f"Semanas {semana_inicio}-{semana_fin}: Implementar drenajes y monitorear nivel freatico",
+                "semana_inicio": semana_inicio,
+                "semana_fin": semana_fin,
+                "mes": m.get("month_num"),
+            })
+
+        if drought.get("score", 0) > 60:
+            actions.append({
+                "tipo": "riego",
+                "severidad": drought["severidad"],
+                "titulo": "Activar riego suplementario",
+                "descripcion": f"Semanas {semana_inicio}-{semana_fin}: Implementar riego de emergencia. Priorizar horas de menor radiacion",
+                "semana_inicio": semana_inicio,
+                "semana_fin": semana_fin,
+                "mes": m.get("month_num"),
+            })
+
+        if hum > 85 and prec > 100:
+            actions.append({
+                "tipo": "fungicida",
+                "severidad": "critico" if (hum > 90 and prec > 150) else "alto",
+                "titulo": "Aplicar fungicida preventivo",
+                "descripcion": f"Semanas {semana_inicio}-{semana_fin}: Condiciones de humedad >85% y lluvias constantes favorecen hongos. Aplicar fungicida a base de cobre",
+                "semana_inicio": semana_inicio,
+                "semana_fin": semana_fin,
+                "mes": m.get("month_num"),
+            })
+
+    return actions
+
+
 async def project_window(
     lat: float,
     lng: float,
@@ -306,6 +495,11 @@ async def project_window(
     ciclo_dias: int | None = None,
     base_ndvi: float | None = None,
     cultivo: str | None = None,
+    base_ndwi: float | None = None,
+    sand: float | None = None,
+    silt: float | None = None,
+    clay: float | None = None,
+    awc: float | None = None,
 ) -> dict:
     from app.ml.inference import predict_crop_recommendations
 
@@ -343,6 +537,11 @@ async def project_window(
     best_month = None
     best_crop = None
     metodo_usado = "heuristico"
+
+    # Compute AWC if not provided
+    if awc is None and sand is not None and silt is not None and clay is not None:
+        from app.services.soil_service import _available_water_capacity as _compute_awc
+        awc = _compute_awc(sand, silt, clay, textura_suelo)
 
     for i in range(n_months):
         future = now + relativedelta(months=i + 1)
@@ -382,6 +581,25 @@ async def project_window(
         )
         metodo_usado = metodo
 
+        # ── Risk scoring ──
+        awc_month = awc if awc is not None else 0.12
+        flood_risk = _compute_flood_risk(textura_suelo, awc_month, proj_prec)
+        drought_risk = _compute_drought_risk(textura_suelo, awc_month, proj_prec, proj_temp)
+
+        # ── NDWI real from satellite  ──
+        ndwi_real = base_ndwi if base_ndwi is not None else None
+
+        # ── XAI justification ──
+        xai = _xai_risk_justification(
+            textura_suelo=textura_suelo,
+            awc=awc_month,
+            precipitacion=proj_prec,
+            temperatura=proj_temp,
+            ndwi=ndwi_real,
+            flood_risk=flood_risk,
+            drought_risk=drought_risk,
+        )
+
         month_entry = {
             "month": MES_NOMBRES.get(effective_month, "Desconocido"),
             "year": y,
@@ -390,6 +608,7 @@ async def project_window(
             "precipitacion": round(proj_prec, 1),
             "humedad": round(proj_hum, 1),
             "ndvi_estimado": ndvi,
+            "ndwi_real": ndwi_real,
             "radiacion_solar": round(proj_rad, 1) if proj_rad else None,
             "etapa_fenologica": _etapa_fenologica(
                 (dias_desde_siembra or 0) + i * 30, ciclo_dias or 90
@@ -406,6 +625,9 @@ async def project_window(
                 }
                 for s in scores
             ],
+            "riesgo_inundacion": flood_risk,
+            "riesgo_sequia": drought_risk,
+            "xai_justificacion": xai,
         }
         months.append(month_entry)
 
@@ -423,6 +645,9 @@ async def project_window(
         prec_anomaly=prec_anomaly, hum_anomaly=hum_anomaly,
     )
 
+    # ── Mitigation actions ──
+    acciones = _derive_mitigation_actions(months)
+
     fuente = (
         f"NASA POWER + OpenMeteo ({metodo_usado})"
         if nasa_data
@@ -438,6 +663,7 @@ async def project_window(
         "alertas_globales": alertas,
         "alertas_patrones": alertas_patrones,
         "best_window": best_window,
+        "acciones_mitigacion": acciones,
     }
 
 
@@ -454,6 +680,11 @@ async def project_window_with_scenario(
     textura_suelo: str = "Franco",
     tipo_suelo: str = "Franco-Arcilloso",
     cultivo: str | None = None,
+    base_ndwi: float | None = None,
+    sand: float | None = None,
+    silt: float | None = None,
+    clay: float | None = None,
+    awc: float | None = None,
 ) -> dict:
     """Proyecta ventana de siembra con escenario climatico alterado.
 
@@ -509,6 +740,11 @@ async def project_window_with_scenario(
     best_crop = None
     metodo_usado = "heuristico"
 
+    # Compute AWC if not provided
+    if awc is None and sand is not None and silt is not None and clay is not None:
+        from app.services.soil_service import _available_water_capacity as _compute_awc
+        awc = _compute_awc(sand, silt, clay, textura_suelo)
+
     for i in range(n_months):
         future = now + relativedelta(months=i + 1)
         effective_month = ((start_month - 1 + i) % 12) + 1
@@ -548,6 +784,25 @@ async def project_window_with_scenario(
         )
         metodo_usado = metodo
 
+        # ── Risk scoring ──
+        awc_month = awc if awc is not None else 0.12
+        flood_risk = _compute_flood_risk(textura_suelo, awc_month, proj_prec)
+        drought_risk = _compute_drought_risk(textura_suelo, awc_month, proj_prec, proj_temp)
+
+        # ── NDWI real from satellite  ──
+        ndwi_real = base_ndwi if base_ndwi is not None else None
+
+        # ── XAI justification ──
+        xai = _xai_risk_justification(
+            textura_suelo=textura_suelo,
+            awc=awc_month,
+            precipitacion=proj_prec,
+            temperatura=proj_temp,
+            ndwi=ndwi_real,
+            flood_risk=flood_risk,
+            drought_risk=drought_risk,
+        )
+
         month_entry = {
             "month": MES_NOMBRES.get(effective_month, "Desconocido"),
             "year": y,
@@ -556,6 +811,7 @@ async def project_window_with_scenario(
             "precipitacion": round(proj_prec, 1),
             "humedad": round(proj_hum, 1),
             "ndvi_estimado": ndvi,
+            "ndwi_real": ndwi_real,
             "radiacion_solar": round(proj_rad, 1) if proj_rad else None,
             "etapa_fenologica": None,
             "cultivos_recomendados": [
@@ -570,6 +826,9 @@ async def project_window_with_scenario(
                 }
                 for s in scores
             ],
+            "riesgo_inundacion": flood_risk,
+            "riesgo_sequia": drought_risk,
+            "xai_justificacion": xai,
         }
         months.append(month_entry)
 
@@ -587,6 +846,9 @@ async def project_window_with_scenario(
         prec_anomaly=prec_anomaly, hum_anomaly=hum_anomaly,
     )
 
+    # ── Mitigation actions ──
+    acciones = _derive_mitigation_actions(months)
+
     fuente = (
         f"NASA POWER + OpenMeteo ({metodo_usado}) [Escenario: "
         f"precip {precip_delta_pct:+.0f}%, temp {temp_delta_c:+.1f}°C]"
@@ -603,6 +865,7 @@ async def project_window_with_scenario(
         "alertas_globales": alertas,
         "alertas_patrones": alertas_patrones,
         "best_window": best_window,
+        "acciones_mitigacion": acciones,
         "scenario_applied": {
             "precip_delta_pct": precip_delta_pct,
             "temp_delta_c": temp_delta_c,

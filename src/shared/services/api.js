@@ -396,6 +396,19 @@ export const exportarReporte = async (analysisId) => {
   }
 };
 
+/** Comparar escenarios Niño vs Normal (POST /reports/compare-scenario) */
+export const getCompareScenarios = async (lat, lng, months = 6, cultivo = null) => {
+  try {
+    const payload = { lat, lng, meses: months };
+    if (cultivo) payload.cultivo = cultivo;
+    const { data } = await apiClient.post("/reports/compare-scenario", payload);
+    return data;
+  } catch {
+    console.warn("API de comparación de escenarios no disponible");
+    return null;
+  }
+};
+
 /** Obtener resumen del dashboard */
 export const getDashboardSummary = async () => {
   try {

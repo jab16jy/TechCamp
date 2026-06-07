@@ -13,6 +13,7 @@ from app.models.lectura_sensor import LecturaSensor
 from app.schemas.reports import (
     AlertItem, AlertsResponse, CompareRequest, CompareItem,
     CompareResponse, ExportRequest, ExportResponse,
+    CompareScenarioRequest, CompareScenarioResponse,
 )
 
 logger = logging.getLogger(__name__)
@@ -108,6 +109,28 @@ async def compare_analyses(body: CompareRequest, db: AsyncSession = Depends(get_
             recomendaciones=resultado.get("recomendaciones", []),
         ))
     return CompareResponse(items=items)
+
+
+@router.post("/compare-scenario")
+async def compare_scenario(body: CompareScenarioRequest):
+    """Compara escenarios Niño vs Normal para una ubicación.
+
+    Retorna dos proyecciones completas (nino y normal) para
+    visualización side-by-side en el frontend.
+    """
+    from app.services.prediction_service import project_window_with_scenario
+
+    nino = await project_window_with_scenario(
+        lat=body.lat, lng=body.lng, n_months=body.meses,
+        precip_delta_pct=-30.0, temp_delta_c=3.0,
+        npk_override=140.0, riego_override=90.0,
+    )
+    normal = await project_window_with_scenario(
+        lat=body.lat, lng=body.lng, n_months=body.meses,
+        precip_delta_pct=0.0, temp_delta_c=0.0,
+        npk_override=120.0, riego_override=75.0,
+    )
+    return {"nino": nino, "normal": normal}
 
 
 @router.post("/export", response_model=ExportResponse)

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { TrendingUp, AlertTriangle } from 'lucide-react';
+import { TrendingUp, AlertTriangle, Info } from 'lucide-react';
 
 const CHART_W = 500;
 const CHART_H = 220;
@@ -30,11 +30,18 @@ export default function GrowthStressChart({ proyeccion }) {
       const stressTermico = Math.min(100, Math.round(tempAnomaly * 15));
       const stressHidrico = Math.min(100, Math.round(precipAnomaly * 1.2));
 
+      // NDWI real from satellite (optional, scale 0-1 → mapped to 0-100 for chart)
+      const ndwiRaw = m.ndwi_real;
+      const ndwiChart = ndwiRaw != null
+        ? Math.max(0, Math.min(100, Math.round(ndwiRaw * 100)))
+        : null;
+
       return {
         month: m.month_num || i + 1,
         growth: Math.max(0, Math.min(100, growth)),
         stressTermico: Math.max(0, stressTermico),
         stressHidrico: Math.max(0, Math.min(100, stressHidrico)),
+        ndwiChart,
       };
     });
   }, [meses]);
@@ -123,6 +130,18 @@ export default function GrowthStressChart({ proyeccion }) {
             strokeDasharray="3 3"
           />
 
+          {/* NDWI line (blue, dashed) — only if data present */}
+          {points.some(p => p.ndwiChart != null) && (() => {
+            const ndwiPath = points
+              .filter(p => p.ndwiChart != null)
+              .map((p, i, arr) => {
+                const idx = points.indexOf(p);
+                return `${i === 0 ? 'M' : 'L'} ${xScale(idx).toFixed(1)} ${stressScale(p.ndwiChart).toFixed(1)}`;
+              })
+              .join(' ');
+            return <path d={ndwiPath} fill="none" stroke="#2563eb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="6 4" />;
+          })()}
+
           {/* Data point dots */}
           {points.map((p, i) => (
             <g key={i}>
@@ -132,6 +151,8 @@ export default function GrowthStressChart({ proyeccion }) {
               <circle cx={xScale(i)} cy={stressScale(p.stressTermico)} r="2.5" fill="#ba1a1a" />
               {/* Hydric stress dot */}
               <circle cx={xScale(i)} cy={stressScale(p.stressHidrico)} r="2.5" fill="#b8860b" />
+              {/* NDWI dot */}
+              {p.ndwiChart != null && <circle cx={xScale(i)} cy={stressScale(p.ndwiChart)} r="2.5" fill="#2563eb" />}
             </g>
           ))}
 
@@ -180,6 +201,12 @@ export default function GrowthStressChart({ proyeccion }) {
           <div className="w-3 h-0.5 rounded-full" style={{ background: '#b8860b', borderStyle: 'dashed' }} />
           <span className="text-[10px] text-[#6b7280]">Estrés Hídrico</span>
         </div>
+        {points.some(p => p.ndwiChart != null) && (
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-0.5 rounded-full" style={{ background: '#2563eb', borderStyle: 'dashed' }} />
+            <span className="text-[10px] text-[#6b7280]">NDWI (agua en vegetación)</span>
+          </div>
+        )}
       </div>
 
       {/* Stress summary */}
@@ -191,9 +218,38 @@ export default function GrowthStressChart({ proyeccion }) {
             <span className="font-semibold text-[#1A1C1A]">
               {Math.round(points.reduce((a, p) => a + (p.stressTermico + p.stressHidrico) / 2, 0) / points.length)}%
             </span>
+            {points.some(p => p.ndwiChart != null) && (
+              <> · NDWI prom.: <span className="font-semibold text-[#1A1C1A]">
+                {Math.round(points.filter(p => p.ndwiChart != null).reduce((a, p) => a + p.ndwiChart, 0) / points.filter(p => p.ndwiChart != null).length)}%
+              </span></>
+            )}
           </span>
         </div>
       )}
+
+      {/* XAI justification for the most at-risk month */}
+      {(() => {
+        const xaiMonths = meses.filter(m => m.xai_justificacion);
+        if (!xaiMonths.length) return null;
+
+        // Find month with highest combined risk
+        const worst = xaiMonths.reduce((a, b) => {
+          const aFlood = a.riesgo_inundacion?.score || 0;
+          const aDrought = a.riesgo_sequia?.score || 0;
+          const bFlood = b.riesgo_inundacion?.score || 0;
+          const bDrought = b.riesgo_sequia?.score || 0;
+          return (aFlood + aDrought) >= (bFlood + bDrought) ? a : b;
+        }, xaiMonths[0]);
+
+        return (
+          <div className="flex items-start gap-2 mt-3 px-3 py-2 rounded-xl text-xs" style={{ background: 'rgba(15,82,56,0.03)', border: '1px solid rgba(15,82,56,0.08)' }}>
+            <Info size={12} color="#0f5238" className="mt-0.5 shrink-0" />
+            <span className="text-[#4a4a4a] leading-relaxed">
+              <strong className="text-[#1A1C1A]">{worst.month}:</strong> {worst.xai_justificacion}
+            </span>
+          </div>
+        );
+      })()}
     </div>
   );
 }

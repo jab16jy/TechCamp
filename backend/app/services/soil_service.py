@@ -150,14 +150,21 @@ def _municipio_fallback(lat: float, lng: float) -> dict | None:
     RADIO_KM = 20
     if best_name is not None and best_dist <= RADIO_KM:
         data = _MUNICIPIOS_SUELO_MAP[best_name]
+        textura = data["textura_suelo"]
+        awc = _available_water_capacity(None, None, None, textura)
         return {
             "ph": data["ph"],
             "materia_organica": data["materia_organica"],
-            "textura_suelo": data["textura_suelo"],
-            "tipo_suelo": data["textura_suelo"],
+            "textura_suelo": textura,
+            "tipo_suelo": data.get("tipo_suelo", data.get("textura_suelo")),
             "orden_suelo": data.get("orden_suelo"),
             "municipio": best_name,
-            "fuente": f"Datos de referencia — {best_name}, Caribe colombiano",
+            "sand": None,
+            "silt": None,
+            "clay": None,
+            "awc": awc,
+            "textura_clasificacion_usda": textura,
+            "fuente": f"Datos de referencia — {best_name}, Caribe colombiana",
             "cached_at": datetime.now(timezone.utc).isoformat(),
             "_fallback": True,
         }
@@ -187,11 +194,18 @@ def _caribbean_zone_fallback(lat: float, lng: float) -> dict | None:
     else:
         zone = _ZONA_CARIBE_TRANSICION
 
+    textura = zone["textura_suelo"]
+    awc = _available_water_capacity(None, None, None, textura)
     return {
         "ph": zone["ph"],
         "materia_organica": zone["materia_organica"],
-        "textura_suelo": zone["textura_suelo"],
-        "tipo_suelo": zone["textura_suelo"],
+        "textura_suelo": textura,
+        "tipo_suelo": zone.get("textura_suelo", textura),
+        "sand": None,
+        "silt": None,
+        "clay": None,
+        "awc": awc,
+        "textura_clasificacion_usda": textura,
         "fuente": f"Estimación para zona agroecológica ({zone['zona']}) — Agrosavia/IGAC",
         "cached_at": datetime.now(timezone.utc).isoformat(),
         "_fallback": True,
@@ -217,15 +231,48 @@ def _caribbean_fallback(lat: float, lng: float) -> dict:
         return zone
 
     # 3. Valores por defecto (siempre retorna algo)
+    textura = "Franco"
+    awc = _available_water_capacity(None, None, None, textura)
     return {
         "ph": 6.5,
         "materia_organica": 2.0,
-        "textura_suelo": "Franco",
-        "tipo_suelo": "Franco",
+        "textura_suelo": textura,
+        "tipo_suelo": textura,
+        "sand": None,
+        "silt": None,
+        "clay": None,
+        "awc": awc,
+        "textura_clasificacion_usda": textura,
         "fuente": "Valores genéricos por defecto",
         "cached_at": datetime.now(timezone.utc).isoformat(),
         "_fallback": True,
     }
+
+
+def _available_water_capacity(sand: float | None, silt: float | None, clay: float | None, textura_suelo: str | None = None) -> float | None:
+    """Rawls et al. 1982 — AWC en cm³/cm³ desde textura USDA.
+
+    Si sand/silt/clay son None, usa valores por defecto según textura.
+    """
+    if sand is not None and silt is not None and clay is not None:
+        # Punto de marchitez permanente (PMP) θ a -1.5 MPa
+        wp = -0.024 * sand + 0.048 * silt + 0.09 * clay + 0.015
+        # Capacidad de campo (CC) θ a -0.033 MPa
+        fc = -0.003 * sand + 0.058 * silt + 0.078 * clay + 0.074
+        awc = fc - wp
+        return round(max(0.02, min(0.25, awc)), 3)
+
+    # Fallback por textura
+    texture_awc = {
+        "Arenoso": 0.05, "Areno-Francoso": 0.06, "Franco-Arenoso": 0.08,
+        "Franco": 0.12, "Franco-Limoso": 0.14, "Franco-Arcilloso": 0.16,
+        "Franco-Arcillo-Arenoso": 0.15, "Franco-Arcillo-Limoso": 0.18,
+        "Arcillo-Arenoso": 0.17, "Arcillo-Limoso": 0.20, "Arcilloso": 0.20,
+        "Limoso": 0.15,
+    }
+    if textura_suelo and textura_suelo in texture_awc:
+        return texture_awc[textura_suelo]
+    return 0.12
 
 
 def _usda_texture_class(sand: float, silt: float, clay: float) -> str:
@@ -362,11 +409,21 @@ async def get_soil_data(lat: float, lng: float) -> dict | None:
         float(clay) if clay is not None else 0,
     )
 
+    sand_val = float(sand) if sand is not None else None
+    silt_val = float(silt) if silt is not None else None
+    clay_val = float(clay) if clay is not None else None
+    awc = _available_water_capacity(sand_val, silt_val, clay_val, textura)
+
     result = {
         "ph": ph,
         "materia_organica": materia_organica,
         "textura_suelo": textura,
         "tipo_suelo": textura,
+        "sand": sand_val,
+        "silt": silt_val,
+        "clay": clay_val,
+        "awc": awc,
+        "textura_clasificacion_usda": textura,
         "fuente": "ISRIC SoilGrids v2.0",
         "cached_at": datetime.now(timezone.utc).isoformat(),
     }

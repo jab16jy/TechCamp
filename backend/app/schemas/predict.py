@@ -109,10 +109,14 @@ class MonthProjection(BaseModel):
     precipitacion: float
     humedad: float
     ndvi_estimado: float
+    ndwi_real: Optional[float] = None
     radiacion_solar: Optional[float] = None
     etapa_fenologica: Optional[str] = None
     cultivos_recomendados: list[CropScore] = []
     alertas: list[Alert] = []
+    riesgo_inundacion: Optional[dict] = None
+    riesgo_sequia: Optional[dict] = None
+    xai_justificacion: Optional[str] = None
 
 
 class PredictResponse(BaseModel):
@@ -125,3 +129,4 @@ class PredictResponse(BaseModel):
     alertas_patrones: list[Alert] = []
     best_window: Optional[OptimalDayResponse] = None
     analysis_inherited: Optional[dict] = None
+    acciones_mitigacion: list = Field(default_factory=list)
