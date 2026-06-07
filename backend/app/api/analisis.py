@@ -47,6 +47,7 @@ async def analyze_location(
             textura_suelo=body.textura_suelo,
             tipo_suelo=body.tipo_suelo,
             mes_siembra=body.mes_siembra,
+            anomaly=anomaly.model_dump() if anomaly is not None else None,
         )
     except Exception:
         logger.exception("Error en motor de recomendacion")
