@@ -2,7 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 
-const API_TARGET = 'http://localhost:8000'
+const API_TARGET = 'http://localhost:80'
 
 export default defineConfig({
   plugins: [react()],
@@ -18,25 +18,25 @@ export default defineConfig({
     open: true,
     proxy: {
       // ── Core paths ──
-      '/municipalities':       API_TARGET,
-      '/analyze-location':     API_TARGET,
-      '/climate':              API_TARGET,
-      '/satellite-indicators': API_TARGET,
-      '/chat':                 API_TARGET,
-      '/predict':              API_TARGET,
-      '/health':               API_TARGET,
-      '/tasks':                API_TARGET,
+      '/municipalities':       { target: API_TARGET, changeOrigin: true },
+      '/analyze-location':     { target: API_TARGET, changeOrigin: true },
+      '/climate':              { target: API_TARGET, changeOrigin: true },
+      '/satellite-indicators': { target: API_TARGET, changeOrigin: true },
+      '/chat':                 { target: API_TARGET, changeOrigin: true },
+      '/predict':              { target: API_TARGET, changeOrigin: true },
+      '/health':               { target: API_TARGET, changeOrigin: true },
+      '/tasks':                { target: API_TARGET, changeOrigin: true },
 
       // ── Grouped prefixes ──
-      '/history':         API_TARGET,
-      '/analysis':        API_TARGET,
-      '/auth':            API_TARGET,
-      '/sensors':         API_TARGET,
-      '/geo':             API_TARGET,
-      '/reports':         API_TARGET,
-      '/dashboard':       API_TARGET,
-      '/soil':            API_TARGET,
-      '/irrigation-plans': API_TARGET,
+      '/history':         { target: API_TARGET, changeOrigin: true },
+      '/analysis':        { target: API_TARGET, changeOrigin: true },
+      '/auth':            { target: API_TARGET, changeOrigin: true },
+      '/sensors':         { target: API_TARGET, changeOrigin: true },
+      '/geo':             { target: API_TARGET, changeOrigin: true },
+      '/reports':         { target: API_TARGET, changeOrigin: true },
+      '/dashboard':       { target: API_TARGET, changeOrigin: true },
+      '/soil':            { target: API_TARGET, changeOrigin: true },
+      '/irrigation-plans': { target: API_TARGET, changeOrigin: true },
     },
   },
 })

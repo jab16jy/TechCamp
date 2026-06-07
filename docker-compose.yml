@@ -45,6 +45,9 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    # Solo para desarrollo local — en producción nginx proxea sin exponer esto
+    ports:
+      - "8000:8000"
     environment:
       DATABASE_URL: postgresql+asyncpg://agrocaribe:agrocaribe_secret@db:5432/agrocaribe
       SUPABASE_URL: ${SUPABASE_URL}
