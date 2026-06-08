@@ -34,6 +34,7 @@ export default defineConfig({
       '/sensors':         { target: API_TARGET, changeOrigin: true },
       '/geo':             { target: API_TARGET, changeOrigin: true },
       '/reports':         { target: API_TARGET, changeOrigin: true },
+      '/model':           { target: API_TARGET, changeOrigin: true },
       '/dashboard':       { target: API_TARGET, changeOrigin: true },
       '/soil':            { target: API_TARGET, changeOrigin: true },
       '/irrigation-plans': { target: API_TARGET, changeOrigin: true },

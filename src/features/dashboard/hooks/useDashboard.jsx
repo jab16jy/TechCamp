@@ -20,6 +20,7 @@ export default function useDashboard() {
   const [weather, setWeather] = useState(null);
   const [loading, setLoading] = useState(true);
   const [modelMetrics, setModelMetrics] = useState(null);
+  const [modelMetricsStatus, setModelMetricsStatus] = useState('loading');
 
   useEffect(() => {
     const id = setInterval(() => setTimestamp(new Date()), 60000);
@@ -36,7 +37,10 @@ export default function useDashboard() {
       setSummary(summaryData);
       setWeather(weatherData);
       setModelMetrics(metrics);
-    }).catch(() => {}).finally(() => setLoading(false));
+      setModelMetricsStatus('loaded');
+    }).catch(() => {
+      setModelMetricsStatus('error');
+    }).finally(() => setLoading(false));
   }, []);
 
   const refreshTimestamp = useCallback(() => setTimestamp(new Date()), []);
@@ -108,14 +112,18 @@ export default function useDashboard() {
   const modelMetricsPerCrop = modelMetrics?.per_crop_accuracy
     ? Object.entries(modelMetrics.per_crop_accuracy)
         .sort(([a], [b]) => a.localeCompare(b, 'es-CO'))
-        .map(([crop, acc]) => ({
-          cultivo: crop.replaceAll('_', ' '),
-          accuracy: `${(acc * 100).toFixed(1)}%`,
-          f1: modelMetrics.f1_macro != null ? modelMetrics.f1_macro.toFixed(2) : '—',
-          mae: '—',
-          confianza: acc >= 0.85 ? 'Alta' : acc >= 0.7 ? 'Moderada' : 'En desarrollo',
-          icon: crop.toLowerCase().slice(0, 4),
-        }))
+        .map(([crop, acc]) => {
+          const f1 = modelMetrics.per_crop_f1?.[crop];
+          const errorRate = (1 - acc) * 100;
+          return {
+            cultivo: crop.replaceAll('_', ' '),
+            accuracy: `${(acc * 100).toFixed(1)}%`,
+            f1: f1 != null ? f1.toFixed(4) : '—',
+            errorRate: `${errorRate.toFixed(1)}%`,
+            confianza: acc >= 0.85 ? 'Alta' : acc >= 0.7 ? 'Moderada' : 'En desarrollo',
+            icon: crop.toLowerCase().slice(0, 4),
+          };
+        })
     : [];
 
   return {
@@ -127,6 +135,7 @@ export default function useDashboard() {
     MODEL_METRICS: modelMetricsPerCrop,
     SPARK_DATA: { acc: [], lat: [], proc: [] },
     modelMetrics,
+    modelMetricsStatus,
     summary,
     navigate,
   };

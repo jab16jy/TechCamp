@@ -123,6 +123,19 @@ const AnalysisService = {
       return {
         ...results,
         structuredRecommendation,
+        // Enrich ubicacion with form data so the results page can display
+        // soil params (pH, materia_organica, textura) and location details
+        ubicacion: {
+          ...(results.ubicacion || {}),
+          ph_suelo: payload.ph_suelo,
+          materia_organica: payload.materia_organica,
+          textura_suelo: payload.textura_suelo,
+          tipo_suelo: payload.tipo_suelo,
+          mes_siembra: payload.mes_siembra,
+          area_hectareas: payload.area_hectareas,
+          municipio: payload.municipio,
+          departamento: payload.departamento,
+        },
       };
     } catch (error) {
       console.error('Error in AnalysisService.performAnalysis:', error);

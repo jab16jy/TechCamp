@@ -553,6 +553,16 @@ def train_model(
             )
     metrics["per_crop_accuracy"] = per_crop
 
+    # Per-crop F1
+    per_crop_f1 = {}
+    for crop_name in np.unique(y_test):
+        mask = y_test == crop_name
+        if mask.sum() > 0:
+            per_crop_f1[str(crop_name)] = round(
+                float(f1_score(y_test[mask], y_pred[mask], zero_division=0)), 4
+            )
+    metrics["per_crop_f1"] = per_crop_f1
+
     # Feature importance (from the base estimator via the calibrated wrapper)
     # CalibratedClassifierCV stores fitted estimators in calibrated_classifiers_
     if hasattr(model, "calibrated_classifiers_") and model.calibrated_classifiers_:
