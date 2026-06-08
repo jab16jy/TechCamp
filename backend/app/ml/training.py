@@ -232,18 +232,45 @@ def _sample_real_ndvi(ndvi_values: list[float] | None, n: int = 1) -> float | np
 
 # Async bridge for DB access
 async def _fetch_ndvi_distribution_async() -> list[float] | None:
-    """Async helper to fetch NDVI distribution from database."""
-    from app.services.satellite_service import get_ndvi_distribution
-    from app.core.database import AsyncSessionLocal
-    async with AsyncSessionLocal() as session:
-        return await get_ndvi_distribution(session)
+    """Fetch NDVI distribution using its own engine to avoid event loop conflicts.
+    
+    Creates a fresh engine inside the async context so it works with any
+    event loop, avoiding the "attached to a different loop" error that
+    occurs when using a module-level AsyncSessionLocal across asyncio.run() calls.
+    """
+    from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+    from sqlalchemy import select
+    from app.core.config import get_settings
+    from app.models.indice_satelital import IndiceSatelital
+    
+    settings = get_settings()
+    engine = create_async_engine(settings.DATABASE_URL, echo=False)
+    try:
+        async with AsyncSession(engine) as session:
+            result = await session.execute(
+                select(IndiceSatelital.ndvi).where(IndiceSatelital.ndvi.isnot(None))
+            )
+            values = [float(row[0]) for row in result.all()]
+            if values:
+                import numpy as np
+                logger.info(
+                    "Distribucion NDVI cargada: %d muestras, media=%.4f, std=%.4f",
+                    len(values), float(np.mean(values)), float(np.std(values)),
+                )
+            return values
+    except Exception as e:
+        logger.warning("No se pudo cargar distribucion NDVI: %s", e)
+        return None
+    finally:
+        await engine.dispose()
 
 
 def _fetch_ndvi_distribution() -> list[float] | None:
     """Fetch NDVI distribution synchronously via asyncio bridge.
     
     Returns list of NDVI values or None if DB is unavailable.
-    Uses the same asyncio.run() pattern as the NASA POWER fetch.
+    Uses the same asyncio.run() pattern as the NASA POWER fetch,
+    but with its own per-call engine to avoid event loop conflicts.
     """
     try:
         return asyncio.run(_fetch_ndvi_distribution_async())
