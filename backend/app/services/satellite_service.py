@@ -50,6 +50,28 @@ async def get_satellite_data(
     return get_mock_satellite()
 
 
+async def get_ndvi_distribution(db: AsyncSession) -> list[float] | None:
+    """Query all NDVI values from indices_satelitales for empirical distribution.
+    
+    Returns flat list of floats for training, or None if query fails.
+    The caller uses this to sample from the real distribution instead of synthetic.
+    """
+    import numpy as np
+    try:
+        result = await db.execute(
+            select(IndiceSatelital.ndvi).where(IndiceSatelital.ndvi.isnot(None))
+        )
+        values = [float(row[0]) for row in result.all()]
+        logger.info(
+            "Distribucion NDVI cargada: %d muestras, media=%.4f, std=%.4f",
+            len(values), float(np.mean(values)), float(np.std(values)),
+        )
+        return values
+    except Exception as e:
+        logger.warning("No se pudo cargar distribucion NDVI: %s", e)
+        return None
+
+
 def get_mock_satellite() -> SatelliteData:
     return SatelliteData(
         ndvi=0.42,
