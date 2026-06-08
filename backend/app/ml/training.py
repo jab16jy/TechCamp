@@ -20,8 +20,17 @@ from sklearn.model_selection import (
     cross_val_score,
     StratifiedKFold,
 )
-from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from sklearn.preprocessing import StandardScaler, label_binarize
+from sklearn.metrics import (
+    accuracy_score,
+    precision_score,
+    recall_score,
+    f1_score,
+    confusion_matrix,
+    log_loss,
+    brier_score_loss,
+    roc_auc_score,
+)
 from joblib import dump, load
 
 logger = logging.getLogger(__name__)
@@ -201,9 +210,52 @@ def _get_climate_value(
     )
 
 
+def _sample_real_ndvi(ndvi_values: list[float] | None, n: int = 1) -> float | np.ndarray:
+    """Sample NDVI from empirical distribution.
+    
+    Uses np.random.choice() when real data is available.
+    Falls back to triangular(0.2, 0.9, 0.48) when ndvi_values is None.
+    
+    Args:
+        ndvi_values: List of real NDVI values from DB, or None for fallback.
+        n: Number of samples (default 1).
+    
+    Returns:
+        Single float when n=1, numpy array when n>1.
+    """
+    import numpy as np
+    if ndvi_values is not None and len(ndvi_values) > 0:
+        return float(np.random.choice(ndvi_values, size=n)[0]) if n == 1 else np.random.choice(ndvi_values, size=n).astype(float)
+    # Fallback to original triangular distribution
+    return _triangular_sample(0.2, 0.9, 0.48) if n == 1 else np.array([_triangular_sample(0.2, 0.9, 0.48) for _ in range(n)])
+
+
+# Async bridge for DB access
+async def _fetch_ndvi_distribution_async() -> list[float] | None:
+    """Async helper to fetch NDVI distribution from database."""
+    from app.services.satellite_service import get_ndvi_distribution
+    from app.core.database import AsyncSessionLocal
+    async with AsyncSessionLocal() as session:
+        return await get_ndvi_distribution(session)
+
+
+def _fetch_ndvi_distribution() -> list[float] | None:
+    """Fetch NDVI distribution synchronously via asyncio bridge.
+    
+    Returns list of NDVI values or None if DB is unavailable.
+    Uses the same asyncio.run() pattern as the NASA POWER fetch.
+    """
+    try:
+        return asyncio.run(_fetch_ndvi_distribution_async())
+    except Exception as e:
+        logger.warning("Fallo fetch distribucion NDVI: %s. Usando fallback sintetico.", e)
+        return None
+
+
 def generate_synthetic_dataset(
     n_samples_per_crop: int = 800,
     climate_zones: list[dict] | None = None,
+    ndvi_values: list[float] | None = None,
 ) -> pd.DataFrame:
     """Generate synthetic dataset using NASA POWER climatology distributions.
 
@@ -266,7 +318,7 @@ def generate_synthetic_dataset(
                 mo_center = max(crop["materia_organica_min"], 1.5)
                 mo = _triangular_sample(max(0.5, mo_center - 1.5), mo_center + 2.0, 0.45)
 
-                ndvi = _triangular_sample(0.2, 0.9, 0.48)
+                ndvi = _sample_real_ndvi(ndvi_values)
 
                 # Textura centered on optimum with noise
                 textura_encoded = max(1.0, min(12.0, tex_opt + np.random.normal(0, 1.8)))
@@ -349,9 +401,17 @@ def train_model(
                 "monthly": dict(REGIONAL_CLIMATOLOGY),
             }]
 
+    # Step 1b: Fetch real NDVI distribution from database
+    logger.info("=== Fase 1b: Cargando distribucion NDVI real desde indices_satelitales ===")
+    ndvi_values = None
+    try:
+        ndvi_values = _fetch_ndvi_distribution()
+    except Exception as e:
+        logger.warning("No se pudo obtener NDVI real: %s", e)
+
     # Step 2: Generate dataset
     logger.info("=== Fase 2: Generando dataset con distribuciones reales ===")
-    df = generate_synthetic_dataset(n_samples_per_crop, climate_zones)
+    df = generate_synthetic_dataset(n_samples_per_crop, climate_zones, ndvi_values=ndvi_values)
     X = df[ALL_FEATURE_COLS].values
     y = df["cultivo"].values
 
@@ -398,7 +458,42 @@ def train_model(
         "f1_macro": round(
             f1_score(y_test, y_pred, average="macro", zero_division=0), 4
         ),
+        "ndvi_source": "empirical" if ndvi_values is not None else "synthetic",
     }
+
+    # ── New metrics: Confusion Matrix ─────────────────────────────
+    cm = confusion_matrix(y_test, y_pred)
+    metrics["confusion_matrix"] = [list(row) for row in cm.tolist()]
+
+    # Log Loss
+    if hasattr(model, "predict_proba"):
+        metrics["log_loss"] = round(float(log_loss(y_test, model.predict_proba(X_test_scaled))), 4)
+    else:
+        metrics["log_loss"] = None
+
+    # Brier Score (multiclass, one-vs-rest averaged)
+    classes = model.classes_
+    y_proba = model.predict_proba(X_test_scaled)
+    y_test_binarized = label_binarize(y_test, classes=classes)
+    brier_scores = []
+    for i, cls in enumerate(classes):
+        bs = brier_score_loss(y_test_binarized[:, i], y_proba[:, i])
+        brier_scores.append(round(float(bs), 4))
+    metrics["brier_score_per_crop"] = {str(cls): bs for cls, bs in zip(classes, brier_scores)}
+    metrics["brier_score"] = round(float(np.mean(brier_scores)), 4)
+
+    # Top-3 Accuracy
+    top3_indices = np.argsort(y_proba, axis=1)[:, -3:]
+    class_to_idx = {c: i for i, c in enumerate(classes)}
+    top3_correct = sum(1 for i in range(len(y_test)) if class_to_idx[y_test[i]] in top3_indices[i])
+    metrics["top3_accuracy"] = round(float(top3_correct / len(y_test)), 4)
+
+    # ROC AUC (one-vs-rest, macro-averaged)
+    try:
+        roc_auc = roc_auc_score(y_test_binarized, y_proba, average="macro", multi_class="ovr")
+        metrics["roc_auc_ovr"] = round(float(roc_auc), 4)
+    except Exception:
+        metrics["roc_auc_ovr"] = None
 
     # Step 6: Stratified cross-validation by textural class
     logger.info("=== Fase 4: Validacion cruzada estratificada (calibrado) ===")
@@ -455,7 +550,8 @@ def train_model(
     metrics["n_features"] = len(ALL_FEATURE_COLS)
     metrics["n_climate_zones"] = len(climate_zones)
     metrics["model_type"] = "HistGradientBoosting + CalibratedClassifierCV(sigmoid)"
-    metrics["data_source"] = "NASA POWER climatology + synthetic (overlapped ranges)"
+    ndvi_desc = "empirical NDVI from indices_satelitales" if ndvi_values is not None else "synthetic triangular NDVI"
+    metrics["data_source"] = f"NASA POWER climatology + {ndvi_desc} (overlapped ranges)"
 
     # Save model + scaler + metrics
     _ensure_artifact_dir()
