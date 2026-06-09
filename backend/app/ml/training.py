@@ -44,6 +44,7 @@ METRICS_PATH = ARTIFACT_DIR / "model_metrics.json"
 CSV_PATH = CODE_MODEL_DIR / "crops_requirements.csv"
 BUNDLED_MODEL_PATH = CODE_MODEL_DIR / "crop_model_rf.joblib"
 BUNDLED_SCALER_PATH = CODE_MODEL_DIR / "crop_scaler.joblib"
+BUNDLED_METRICS_PATH = CODE_MODEL_DIR / "model_metrics.json"
 
 NASA_POWER_URL = "https://power.larc.nasa.gov/api/temporal/climatology/point"
 ELEVATION_API_URL = "https://api.open-meteo.com/v1/elevation"
@@ -809,6 +810,7 @@ def _bootstrap_bundled_artifacts() -> None:
     pairs = [
         (BUNDLED_MODEL_PATH, MODEL_PATH),
         (BUNDLED_SCALER_PATH, SCALER_PATH),
+        (BUNDLED_METRICS_PATH, METRICS_PATH),
     ]
     for source, target in pairs:
         if source.resolve() == target.resolve() or target.exists() or not source.exists():
