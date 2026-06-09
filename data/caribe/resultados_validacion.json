@@ -1,0 +1,378 @@
+{
+  "model": "CalibratedClassifierCV(HistGradientBoostingClassifier, sigmoid)",
+  "n_records_total": 15407,
+  "n_records_filtered_10_crops": 14266,
+  "n_records_excluded_rend_zero": 1141,
+  "n_records_valid": 13125,
+  "n_features": 12,
+  "feature_names": [
+    "temperatura",
+    "humedad",
+    "precipitacion",
+    "ph_suelo",
+    "materia_organica",
+    "ndvi",
+    "textura_encoded",
+    "altitud",
+    "temp_hum_interaction",
+    "ph_mo_interaction",
+    "precip_hum_ratio",
+    "precip_temp_ratio"
+  ],
+  "synthetic_accuracy": 0.8701,
+  "synthetic_accuracy_pct": 87.01,
+  "top1_accuracy": 0.0708,
+  "top1_accuracy_pct": 7.08,
+  "top3_accuracy": 0.2152,
+  "top3_accuracy_pct": 21.52,
+  "per_crop": {
+    "Algodón": {
+      "n_records": 105,
+      "top1_accuracy": 0.0,
+      "top1_pct": 0.0,
+      "top3_count": 20,
+      "top3_pct": 19.05,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    "Arroz": {
+      "n_records": 1622,
+      "top1_accuracy": 0.2287,
+      "top1_pct": 22.87,
+      "top3_count": 397,
+      "top3_pct": 24.48,
+      "precision": 0.7332,
+      "recall": 0.2287,
+      "f1": 0.3487
+    },
+    "Cacao": {
+      "n_records": 489,
+      "top1_accuracy": 0.5112,
+      "top1_pct": 51.12,
+      "top3_count": 250,
+      "top3_pct": 51.12,
+      "precision": 0.0334,
+      "recall": 0.5112,
+      "f1": 0.0627
+    },
+    "Frijol": {
+      "n_records": 1498,
+      "top1_accuracy": 0.0,
+      "top1_pct": 0.0,
+      "top3_count": 0,
+      "top3_pct": 0.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    "Maíz": {
+      "n_records": 4405,
+      "top1_accuracy": 0.0,
+      "top1_pct": 0.0,
+      "top3_count": 0,
+      "top3_pct": 0.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    "Palma_Aceitera": {
+      "n_records": 519,
+      "top1_accuracy": 0.0,
+      "top1_pct": 0.0,
+      "top3_count": 46,
+      "top3_pct": 8.86,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    "Plátano": {
+      "n_records": 1018,
+      "top1_accuracy": 0.1709,
+      "top1_pct": 17.09,
+      "top3_count": 870,
+      "top3_pct": 85.46,
+      "precision": 0.0919,
+      "recall": 0.1709,
+      "f1": 0.1195
+    },
+    "Sorgo": {
+      "n_records": 89,
+      "top1_accuracy": 0.0,
+      "top1_pct": 0.0,
+      "top3_count": 52,
+      "top3_pct": 58.43,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    "Yuca": {
+      "n_records": 2378,
+      "top1_accuracy": 0.0,
+      "top1_pct": 0.0,
+      "top3_count": 454,
+      "top3_pct": 19.09,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    "Ñame": {
+      "n_records": 1002,
+      "top1_accuracy": 0.1337,
+      "top1_pct": 13.37,
+      "top3_count": 735,
+      "top3_pct": 73.35,
+      "precision": 0.0413,
+      "recall": 0.1337,
+      "f1": 0.0631
+    }
+  },
+  "confusion_matrix": {
+    "labels": [
+      "Algodón",
+      "Arroz",
+      "Cacao",
+      "Frijol",
+      "Maíz",
+      "Palma_Aceitera",
+      "Plátano",
+      "Sorgo",
+      "Yuca",
+      "Ñame"
+    ],
+    "matrix": [
+      [
+        0,
+        0,
+        56,
+        0,
+        0,
+        0,
+        29,
+        0,
+        0,
+        20
+      ],
+      [
+        0,
+        371,
+        1225,
+        0,
+        0,
+        0,
+        26,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        135,
+        250,
+        0,
+        0,
+        0,
+        62,
+        0,
+        0,
+        42
+      ],
+      [
+        0,
+        0,
+        555,
+        0,
+        0,
+        0,
+        358,
+        0,
+        0,
+        585
+      ],
+      [
+        0,
+        0,
+        2446,
+        0,
+        0,
+        0,
+        667,
+        0,
+        0,
+        1292
+      ],
+      [
+        0,
+        0,
+        217,
+        0,
+        0,
+        0,
+        56,
+        0,
+        0,
+        246
+      ],
+      [
+        0,
+        0,
+        624,
+        0,
+        0,
+        0,
+        174,
+        0,
+        0,
+        220
+      ],
+      [
+        0,
+        0,
+        13,
+        0,
+        0,
+        0,
+        53,
+        0,
+        0,
+        23
+      ],
+      [
+        0,
+        0,
+        1298,
+        0,
+        0,
+        0,
+        397,
+        0,
+        0,
+        683
+      ],
+      [
+        0,
+        0,
+        796,
+        0,
+        0,
+        0,
+        72,
+        0,
+        0,
+        134
+      ]
+    ]
+  },
+  "department_accuracy": {
+    "ATLANTICO": {
+      "n_records": 1008,
+      "top1_accuracy": 0.0923,
+      "top1_pct": 9.23,
+      "top3_pct": 20.83
+    },
+    "BOLIVAR": {
+      "n_records": 3027,
+      "top1_accuracy": 0.0423,
+      "top1_pct": 4.23,
+      "top3_pct": 20.48
+    },
+    "CESAR": {
+      "n_records": 2008,
+      "top1_accuracy": 0.1375,
+      "top1_pct": 13.75,
+      "top3_pct": 29.23
+    },
+    "CORDOBA": {
+      "n_records": 2372,
+      "top1_accuracy": 0.0282,
+      "top1_pct": 2.82,
+      "top3_pct": 23.74
+    },
+    "LA GUAJIRA": {
+      "n_records": 940,
+      "top1_accuracy": 0.1436,
+      "top1_pct": 14.36,
+      "top3_pct": 35.21
+    },
+    "MAGDALENA": {
+      "n_records": 1689,
+      "top1_accuracy": 0.1036,
+      "top1_pct": 10.36,
+      "top3_pct": 14.62
+    },
+    "SUCRE": {
+      "n_records": 2081,
+      "top1_accuracy": 0.0264,
+      "top1_pct": 2.64,
+      "top3_pct": 12.78
+    }
+  },
+  "gap_analysis": {
+    "Algodón": {
+      "synthetic_accuracy_pct": 96.26,
+      "real_accuracy_pct": 0.0,
+      "gap_pct": -96.26
+    },
+    "Arroz": {
+      "synthetic_accuracy_pct": 84.1,
+      "real_accuracy_pct": 22.87,
+      "gap_pct": -61.23
+    },
+    "Cacao": {
+      "synthetic_accuracy_pct": 98.18,
+      "real_accuracy_pct": 51.12,
+      "gap_pct": -47.06
+    },
+    "Frijol": {
+      "synthetic_accuracy_pct": 87.83,
+      "real_accuracy_pct": 0.0,
+      "gap_pct": -87.83
+    },
+    "Maíz": {
+      "synthetic_accuracy_pct": 69.36,
+      "real_accuracy_pct": 0.0,
+      "gap_pct": -69.36
+    },
+    "Palma_Aceitera": {
+      "synthetic_accuracy_pct": 99.92,
+      "real_accuracy_pct": 0.0,
+      "gap_pct": -99.92
+    },
+    "Plátano": {
+      "synthetic_accuracy_pct": 99.15,
+      "real_accuracy_pct": 17.09,
+      "gap_pct": -82.06
+    },
+    "Sorgo": {
+      "synthetic_accuracy_pct": 77.99,
+      "real_accuracy_pct": 0.0,
+      "gap_pct": -77.99
+    },
+    "Yuca": {
+      "synthetic_accuracy_pct": 78.06,
+      "real_accuracy_pct": 0.0,
+      "gap_pct": -78.06
+    },
+    "Ñame": {
+      "synthetic_accuracy_pct": 91.55,
+      "real_accuracy_pct": 13.37,
+      "gap_pct": -78.18
+    }
+  },
+  "precision_macro": 0.09,
+  "recall_macro": 0.1045,
+  "f1_macro": 0.0594,
+  "skipped_no_dept": 0,
+  "skipped_no_climate": 0,
+  "skipped_no_soil": 0,
+  "skipped_no_texture": 0,
+  "data_source": "EVA Caribe + NASA POWER annual climatology + perfiles reales por cultivo",
+  "limitations": [
+    "pH/MO assigned as per-crop averages from aggregated real profiles (partial circularity)",
+    "NDVI fixed at 0.5 (no spectral data in EVA)",
+    "Climate assigned by department, not by municipality",
+    "Texture from synthetic optimal profile (crops_requirements.csv), not real texture data",
+    "Altitude as department point elevation, not per-record topography",
+    "Annual total precipitation, not intra-annual distribution"
+  ]
+}
