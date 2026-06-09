@@ -472,7 +472,27 @@ def generate_synthetic_dataset(
                 mo_center = max(crop["materia_organica_min"], 1.5)
                 mo = _triangular_sample(max(0.5, mo_center - 1.5), mo_center + 2.0, 0.45)
 
-                ndvi = ndvi_sampler.sample(precipitacion)
+                ndvi = ndvi_sampler.sample(prec)
+
+                # ── Agronomic features (crop-specific constants, not training features) ──
+                drought_tolerance = float(crop["drought_tolerance"]) + np.random.normal(0, 0.05)
+                drought_tolerance = np.clip(drought_tolerance, 0, 1)
+
+                photoperiod_hours = float(crop["photoperiod_hours"])
+                if photoperiod_hours > 0:
+                    photoperiod_hours += np.random.normal(0, 0.5)
+                photoperiod_hours = max(0, photoperiod_hours)
+
+                soil_depth_cm = float(crop["soil_depth_cm"]) + np.random.normal(0, 3.0)
+                soil_depth_cm = max(15, soil_depth_cm)
+
+                kc_value = float(crop["kc_value"]) + np.random.normal(0, 0.03)
+                kc_value = max(0.7, min(1.4, kc_value))
+
+                salinity_ds_per_m = float(crop["salinity_ds_per_m"]) + np.random.normal(0, 0.2)
+                salinity_ds_per_m = max(0, salinity_ds_per_m)
+
+                is_c4 = int(float(crop["is_c4"]))
 
                 # Textura centered on optimum with noise
                 textura_encoded = max(1.0, min(12.0, tex_opt + np.random.normal(0, 1.8)))
@@ -508,6 +528,13 @@ def generate_synthetic_dataset(
                     "altitud": round(altitud, 1),
                     "precip_hum_ratio": round(precip_hum, 3),
                     "precip_temp_ratio": round(precip_temp, 3),
+                    # Agronomic features (metadata only, not in ALL_FEATURE_COLS)
+                    "drought_tolerance": round(drought_tolerance, 3),
+                    "photoperiod_hours": round(photoperiod_hours, 2),
+                    "soil_depth_cm": round(soil_depth_cm, 1),
+                    "kc_value": round(kc_value, 3),
+                    "salinity_ds_per_m": round(salinity_ds_per_m, 2),
+                    "is_c4": is_c4,
                     "cultivo": crop_name,
                     "zona": zone["name"],
                     "mes": month,
