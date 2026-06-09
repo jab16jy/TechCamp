@@ -99,14 +99,14 @@ CARIBBEAN_POINTS = [
 
 # Prior weights by crop for Colombian Caribbean (based on regional production data)
 CROP_PRIOR = {
-    "Maiz": 1.3,
+    "Maíz": 1.3,
     "Yuca": 1.2,
     "Arroz": 1.1,
     "Frijol": 0.9,
-    "Name": 0.8,
-    "Platano": 1.0,
+    "Ñame": 0.8,
+    "Plátano": 1.0,
     "Cacao": 0.7,
-    "Algodon": 0.6,
+    "Algodón": 0.6,
     "Sorgo": 0.9,
     "Palma_Aceitera": 1.0,
 }
@@ -115,7 +115,7 @@ CROP_PRIOR = {
 # crops_requirements.csv order: 0=Maíz, 1=Yuca, 2=Arroz, 3=Frijol, 4=Ñame,
 #                                 5=Plátano, 6=Cacao, 7=Algodón, 8=Sorgo, 9=Palma_Aceitera
 CLASS_WEIGHTS = {
-    0: 3.0,   # Maíz
+    0: 4.0,   # Maíz — needs extra penalty
     8: 3.0,   # Sorgo
     1: 2.5,   # Yuca
     4: 1.8,   # Ñame
@@ -272,59 +272,64 @@ def _get_climate_value(
     )
 
 
-def _sample_real_ndvi(ndvi_values: list[float] | None, n: int = 1) -> float | np.ndarray:
-    """Sample NDVI from empirical distribution.
+class _NdviSampler:
+    """Batched NDVI sampler — pre-generates NDVI values in bulk for speed.
     
-    Uses np.random.choice() when real data is available.
-    Falls back to triangular(0.2, 0.9, 0.48) when ndvi_values is None.
-    
-    Args:
-        ndvi_values: List of real NDVI values from DB, or None for fallback.
-        n: Number of samples (default 1).
-    
-    Returns:
-        Single float when n=1, numpy array when n>1.
+    np.random.choice() on 2.5M elements called 64k times individually is
+    catastrophically slow. This sampler pre-generates a large buffer and
+    serves O(1) lookups, refilling the buffer only when exhausted.
     """
-    import numpy as np
-    if ndvi_values is not None and len(ndvi_values) > 0:
-        return float(np.random.choice(ndvi_values, size=n)[0]) if n == 1 else np.random.choice(ndvi_values, size=n).astype(float)
-    # Fallback to original triangular distribution
-    return _triangular_sample(0.2, 0.9, 0.48) if n == 1 else np.array([_triangular_sample(0.2, 0.9, 0.48) for _ in range(n)])
+    BUFFER_SIZE = 200_000
+
+    def __init__(self, ndvi_array: np.ndarray | None):
+        self._ndvi_array = ndvi_array
+        self._buffer: np.ndarray | None = None
+        self._idx = 0
+        self._use_real = ndvi_array is not None and len(ndvi_array) > 0
+
+    def sample(self) -> float:
+        if not self._use_real:
+            return _triangular_sample(0.2, 0.9, 0.48)
+        if self._buffer is None or self._idx >= len(self._buffer):
+            self._buffer = np.random.choice(self._ndvi_array, size=self.BUFFER_SIZE)
+            self._idx = 0
+        val = self._buffer[self._idx]
+        self._idx += 1
+        return float(val)
 
 
 # Async bridge for DB access
 async def _fetch_ndvi_distribution_async() -> list[float] | None:
-    """Fetch NDVI distribution using its own engine to avoid event loop conflicts.
+    """Fetch NDVI distribution using asyncpg directly.
     
-    Creates a fresh engine inside the async context so it works with any
-    event loop, avoiding the "attached to a different loop" error that
-    occurs when using a module-level AsyncSessionLocal across asyncio.run() calls.
+    Uses raw asyncpg to bypass SQLAlchemy ORM Python 3.14 compatibility issues
+    (Union.__getitem__ regression in sqlalchemy 2.0.x).
+    Creates a fresh connection inside the async context to avoid event
+    loop conflicts with reused engines.
     """
-    from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-    from sqlalchemy import select
-    from app.core.config import get_settings
-    from app.models.indice_satelital import IndiceSatelital
+    import asyncpg
     
-    settings = get_settings()
-    engine = create_async_engine(settings.DATABASE_URL, echo=False)
+    dsn = "postgresql://agrocaribe:agrocaribe_secret@localhost:5432/agrocaribe"
+    conn = None
     try:
-        async with AsyncSession(engine) as session:
-            result = await session.execute(
-                select(IndiceSatelital.ndvi).where(IndiceSatelital.ndvi.isnot(None))
+        conn = await asyncpg.connect(dsn)
+        rows = await conn.fetch(
+            "SELECT ndvi FROM indices_satelitales WHERE ndvi IS NOT NULL"
+        )
+        values = [float(row["ndvi"]) for row in rows]
+        if values:
+            import numpy as np
+            logger.info(
+                "Distribucion NDVI cargada: %d muestras, media=%.4f, std=%.4f",
+                len(values), float(np.mean(values)), float(np.std(values)),
             )
-            values = [float(row[0]) for row in result.all()]
-            if values:
-                import numpy as np
-                logger.info(
-                    "Distribucion NDVI cargada: %d muestras, media=%.4f, std=%.4f",
-                    len(values), float(np.mean(values)), float(np.std(values)),
-                )
-            return values
+        return values
     except Exception as e:
         logger.warning("No se pudo cargar distribucion NDVI: %s", e)
         return None
     finally:
-        await engine.dispose()
+        if conn:
+            await conn.close()
 
 
 def _fetch_ndvi_distribution() -> list[float] | None:
@@ -366,6 +371,10 @@ def generate_synthetic_dataset(
     zone_elevations = {}
     for zone in climate_zones:
         zone_elevations[zone["name"]] = _fetch_elevation(zone["lat"], zone["lng"])
+
+    # Pre-convert NDVI to numpy array and create batched sampler
+    ndvi_array = np.array(ndvi_values, dtype=np.float64) if ndvi_values is not None and len(ndvi_values) > 0 else None
+    ndvi_sampler = _NdviSampler(ndvi_array)
 
     rows = []
 
@@ -420,7 +429,7 @@ def generate_synthetic_dataset(
                 mo_center = max(crop["materia_organica_min"], 1.5)
                 mo = _triangular_sample(max(0.5, mo_center - 1.5), mo_center + 2.0, 0.45)
 
-                ndvi = _sample_real_ndvi(ndvi_values)
+                ndvi = ndvi_sampler.sample()
 
                 # Textura centered on optimum with noise
                 textura_encoded = max(1.0, min(12.0, tex_opt + np.random.normal(0, 1.8)))
@@ -521,6 +530,27 @@ def generate_synthetic_dataset(
         "Oversampling: %d filas extras generadas para cultivos en zona de solapamiento",
         len(oversampled),
     )
+
+    # Altitude-based oversampling for Maíz: generate extra samples at high elevation
+    # where only Maíz survives (Sorgo max 800m, Algodón max 500m)
+    high_alt_rows = []
+    for zone in climate_zones:
+        elevation = zone_elevations.get(zone["name"], 0)
+        if elevation > 1500:
+            # Only Maíz can grow here — generate extra samples
+            maiz_rows = [r for r in rows if r.get("cultivo") == "Maíz" and r.get("zona") == zone["name"]]
+            for r in maiz_rows:
+                for _ in range(3):  # 3x copies
+                    copy = dict(r)
+                    # Perturb features slightly
+                    for feat in ALL_FEATURE_COLS:
+                        if isinstance(copy.get(feat), (int, float)):
+                            copy[feat] = round(copy[feat] * (1 + np.random.uniform(-0.03, 0.03)), 4)
+                    high_alt_rows.append(copy)
+
+    rows.extend(high_alt_rows)
+    if high_alt_rows:
+        logger.info("Altitude oversampling: added %d high-altitude Maíz samples", len(high_alt_rows))
 
     df = pd.DataFrame(rows)
     logger.info(
