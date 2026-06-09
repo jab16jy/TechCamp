@@ -31,6 +31,7 @@ from sklearn.metrics import (
     log_loss,
     brier_score_loss,
     roc_auc_score,
+    precision_recall_fscore_support,
 )
 from joblib import dump, load
 
@@ -64,8 +65,6 @@ FEATURE_COLS = [
 ]
 
 ENGINEERED_COLS = [
-    "temp_hum_interaction",
-    "ph_mo_interaction",
     "precip_hum_ratio",
     "precip_temp_ratio",
 ]
@@ -274,29 +273,26 @@ def _get_climate_value(
 
 
 class _NdviSampler:
-    """Batched NDVI sampler — pre-generates NDVI values in bulk for speed.
-    
-    np.random.choice() on 2.5M elements called 64k times individually is
-    catastrophically slow. This sampler pre-generates a large buffer and
-    serves O(1) lookups, refilling the buffer only when exhausted.
-    """
-    BUFFER_SIZE = 200_000
+    """NDVI sampler with precipitation-decile conditioning."""
 
-    def __init__(self, ndvi_array: np.ndarray | None):
-        self._ndvi_array = ndvi_array
-        self._buffer: np.ndarray | None = None
-        self._idx = 0
-        self._use_real = ndvi_array is not None and len(ndvi_array) > 0
+    def __init__(self, ndvi_by_decile: dict | None):
+        self._decile_stats = ndvi_by_decile
+        self._use_conditional = ndvi_by_decile is not None and len(ndvi_by_decile) > 0
+        if self._use_conditional:
+            logger.info("NDVI sampler: conditional mode (%d deciles)", len(ndvi_by_decile))
+        else:
+            logger.info("NDVI sampler: fallback mode (precip-dependent triangular)")
 
-    def sample(self) -> float:
-        if not self._use_real:
-            return _triangular_sample(0.2, 0.9, 0.48)
-        if self._buffer is None or self._idx >= len(self._buffer):
-            self._buffer = np.random.choice(self._ndvi_array, size=self.BUFFER_SIZE)
-            self._idx = 0
-        val = self._buffer[self._idx]
-        self._idx += 1
-        return float(val)
+    def sample(self, precipitacion: float) -> float:
+        if self._use_conditional:
+            decile = min(10, max(1, int(precipitacion / 40) + 1))
+            stats = self._decile_stats.get(decile)
+            if stats and stats["count"] > 0:
+                val = np.random.normal(stats["mean"], max(stats["std"], 0.05))
+                return float(np.clip(val, 0.0, 1.0))
+        # Fallback: triangular with mode dependent on precipitation
+        mode = 0.3 + (min(precipitacion, 400) / 400) * 0.4  # 0.3 at dry, 0.7 at wet
+        return float(np.random.triangular(0.1, mode, 0.95))
 
 
 # Async bridge for DB access
@@ -347,10 +343,57 @@ def _fetch_ndvi_distribution() -> list[float] | None:
         return None
 
 
+async def _fetch_ndvi_by_precip_decile() -> dict | None:
+    """Fetch NDVI distribution per precipitation decile from indices_satelitales.
+    
+    Returns dict mapping decile (0-10) to {mean, std, count} or None if DB unavailable.
+    """
+    import asyncpg
+    dsn = "postgresql://agrocaribe:agrocaribe_secret@localhost:5432/agrocaribe"
+    conn = None
+    try:
+        conn = await asyncpg.connect(dsn)
+        rows = await conn.fetch("""
+            SELECT 
+                width_bucket(precipitacion, 0, 400, 10) as decile,
+                AVG(ndvi) as mean_ndvi,
+                STDDEV(ndvi) as std_ndvi,
+                COUNT(*) as n
+            FROM indices_satelitales 
+            WHERE ndvi IS NOT NULL AND precipitacion IS NOT NULL
+            GROUP BY decile
+            ORDER BY decile
+        """)
+        result = {}
+        for row in rows:
+            result[int(row["decile"])] = {
+                "mean": float(row["mean_ndvi"]),
+                "std": float(row["std_ndvi"]) if row["std_ndvi"] else 0.1,
+                "count": int(row["n"]),
+            }
+        logger.info("NDVI por decil de precipitacion: %d deciles cargados", len(result))
+        return result
+    except Exception as e:
+        logger.warning("No se pudo cargar NDVI por decil: %s", e)
+        return None
+    finally:
+        if conn:
+            await conn.close()
+
+
+def _fetch_ndvi_by_precip_decile_sync() -> dict | None:
+    """Fetch NDVI decile stats synchronously via asyncio bridge."""
+    try:
+        return asyncio.run(_fetch_ndvi_by_precip_decile())
+    except Exception as e:
+        logger.warning("Fallo fetch NDVI por decil: %s. Usando fallback sintetico.", e)
+        return None
+
+
 def generate_synthetic_dataset(
     n_samples_per_crop: int = 800,
     climate_zones: list[dict] | None = None,
-    ndvi_values: list[float] | None = None,
+    ndvi_decile_stats: dict | None = None,
 ) -> pd.DataFrame:
     """Generate synthetic dataset using NASA POWER climatology distributions.
 
@@ -373,9 +416,8 @@ def generate_synthetic_dataset(
     for zone in climate_zones:
         zone_elevations[zone["name"]] = _fetch_elevation(zone["lat"], zone["lng"])
 
-    # Pre-convert NDVI to numpy array and create batched sampler
-    ndvi_array = np.array(ndvi_values, dtype=np.float64) if ndvi_values is not None and len(ndvi_values) > 0 else None
-    ndvi_sampler = _NdviSampler(ndvi_array)
+    # Create NDVI sampler with precipitation-decile conditioning
+    ndvi_sampler = _NdviSampler(ndvi_decile_stats)
 
     rows = []
 
@@ -430,7 +472,7 @@ def generate_synthetic_dataset(
                 mo_center = max(crop["materia_organica_min"], 1.5)
                 mo = _triangular_sample(max(0.5, mo_center - 1.5), mo_center + 2.0, 0.45)
 
-                ndvi = ndvi_sampler.sample()
+                ndvi = ndvi_sampler.sample(precipitacion)
 
                 # Textura centered on optimum with noise
                 textura_encoded = max(1.0, min(12.0, tex_opt + np.random.normal(0, 1.8)))
@@ -452,8 +494,6 @@ def generate_synthetic_dataset(
                 textura_encoded = _add_gaussian_noise(textura_encoded, 5.0, 0.05)
 
                 # Engineered features
-                temp_hum = temp * hum / 1000.0
-                ph_mo = ph * mo
                 precip_hum = prec / max(hum, 1.0)
                 precip_temp = prec / max(temp, 0.1)
 
@@ -466,8 +506,6 @@ def generate_synthetic_dataset(
                     "ndvi": round(ndvi, 3),
                     "textura_encoded": round(textura_encoded, 2),
                     "altitud": round(altitud, 1),
-                    "temp_hum_interaction": round(temp_hum, 3),
-                    "ph_mo_interaction": round(ph_mo, 3),
                     "precip_hum_ratio": round(precip_hum, 3),
                     "precip_temp_ratio": round(precip_temp, 3),
                     "cultivo": crop_name,
@@ -515,13 +553,9 @@ def generate_synthetic_dataset(
                 _add_gaussian_noise(row["altitud"], 1.0, 0.5), 1,
             )
             # Recompute engineered features from perturbed values
-            t, h, p, ph_s, mo = (
-                perturbed["temperatura"], perturbed["humedad"],
-                perturbed["precipitacion"], perturbed["ph_suelo"],
-                perturbed["materia_organica"],
-            )
-            perturbed["temp_hum_interaction"] = round(t * h / 1000.0, 3)
-            perturbed["ph_mo_interaction"] = round(ph_s * mo, 3)
+            t = perturbed["temperatura"]
+            h = perturbed["humedad"]
+            p = perturbed["precipitacion"]
             perturbed["precip_hum_ratio"] = round(p / max(h, 1.0), 3)
             perturbed["precip_temp_ratio"] = round(p / max(t, 0.1), 3)
             oversampled.append(perturbed)
@@ -532,26 +566,7 @@ def generate_synthetic_dataset(
         len(oversampled),
     )
 
-    # Altitude-based oversampling for Maíz: generate extra samples at high elevation
-    # where only Maíz survives (Sorgo max 800m, Algodón max 500m)
-    high_alt_rows = []
-    for zone in climate_zones:
-        elevation = zone_elevations.get(zone["name"], 0)
-        if elevation > 1500:
-            # Only Maíz can grow here — generate extra samples
-            maiz_rows = [r for r in rows if r.get("cultivo") == "Maíz" and r.get("zona") == zone["name"]]
-            for r in maiz_rows:
-                for _ in range(3):  # 3x copies
-                    copy = dict(r)
-                    # Perturb features slightly
-                    for feat in ALL_FEATURE_COLS:
-                        if isinstance(copy.get(feat), (int, float)):
-                            copy[feat] = round(copy[feat] * (1 + np.random.uniform(-0.03, 0.03)), 4)
-                    high_alt_rows.append(copy)
-
-    rows.extend(high_alt_rows)
-    if high_alt_rows:
-        logger.info("Altitude oversampling: added %d high-altitude Maíz samples", len(high_alt_rows))
+    # altitude oversampling block removed — max zone elevation is 213m, code never executes
 
     df = pd.DataFrame(rows)
     logger.info(
@@ -601,17 +616,17 @@ def train_model(
                 "monthly": dict(REGIONAL_CLIMATOLOGY),
             }]
 
-    # Step 1b: Fetch real NDVI distribution from database
-    logger.info("=== Fase 1b: Cargando distribucion NDVI real desde indices_satelitales ===")
-    ndvi_values = None
+    # Step 1b: Fetch NDVI distribution per precipitation decile from database
+    logger.info("=== Fase 1b: Cargando NDVI por decil de precipitacion desde indices_satelitales ===")
+    ndvi_decile_stats = None
     try:
-        ndvi_values = _fetch_ndvi_distribution()
+        ndvi_decile_stats = _fetch_ndvi_by_precip_decile_sync()
     except Exception as e:
-        logger.warning("No se pudo obtener NDVI real: %s", e)
+        logger.warning("No se pudo obtener NDVI por decil: %s", e)
 
     # Step 2: Generate dataset
     logger.info("=== Fase 2: Generando dataset con distribuciones reales ===")
-    df = generate_synthetic_dataset(n_samples_per_crop, climate_zones, ndvi_values=ndvi_values)
+    df = generate_synthetic_dataset(n_samples_per_crop, climate_zones, ndvi_decile_stats=ndvi_decile_stats)
     X = df[ALL_FEATURE_COLS].values
     y = df["cultivo"].values
 
@@ -660,7 +675,7 @@ def train_model(
         "f1_macro": round(
             f1_score(y_test, y_pred, average="macro", zero_division=0), 4
         ),
-        "ndvi_source": "empirical" if ndvi_values is not None else "synthetic",
+        "ndvi_source": "empirical" if ndvi_decile_stats is not None else "synthetic",
     }
 
     # ── New metrics: Confusion Matrix ─────────────────────────────
@@ -728,14 +743,15 @@ def train_model(
             )
     metrics["per_crop_accuracy"] = per_crop
 
-    # Per-crop F1
+    # Correct per-class metrics using precision_recall_fscore_support
+    per_class_precision, per_class_recall, per_class_f1, _ = precision_recall_fscore_support(
+        y_test, y_pred, labels=model.classes_, zero_division=0
+    )
+
+    # per_crop_accuracy is already correct (accuracy_score on each class subset)
     per_crop_f1 = {}
-    for crop_name in np.unique(y_test):
-        mask = y_test == crop_name
-        if mask.sum() > 0:
-            per_crop_f1[str(crop_name)] = round(
-                float(f1_score(y_test[mask], y_pred[mask], average='macro', zero_division=0)), 4
-            )
+    for idx, crop_name in enumerate(model.classes_):
+        per_crop_f1[str(crop_name)] = round(float(per_class_f1[idx]), 4)
     metrics["per_crop_f1"] = per_crop_f1
 
     # Feature importance (permutation-based, works with any sklearn estimator)
@@ -760,7 +776,7 @@ def train_model(
     metrics["n_features"] = len(ALL_FEATURE_COLS)
     metrics["n_climate_zones"] = len(climate_zones)
     metrics["model_type"] = "HistGradientBoosting + CalibratedClassifierCV(sigmoid)"
-    ndvi_desc = "empirical NDVI from indices_satelitales" if ndvi_values is not None else "synthetic triangular NDVI"
+    ndvi_desc = "empirical NDVI from indices_satelitales" if ndvi_decile_stats is not None else "synthetic triangular NDVI"
     metrics["data_source"] = f"NASA POWER climatology + {ndvi_desc} (overlapped ranges)"
 
     # Load previous metrics for comparison (before overwriting)
@@ -913,12 +929,8 @@ def predict(model, scaler, features: dict) -> tuple[str, dict]:
     t = features.get("temperatura", 0)
     h = features.get("humedad", 0)
     p = features.get("precipitacion", 0)
-    ph = features.get("ph_suelo", 0)
-    mo = features.get("materia_organica", 0)
 
     feat.extend([
-        t * h / 1000.0,
-        ph * mo,
         p / max(h, 1.0),
         p / max(t, 0.1),
     ])

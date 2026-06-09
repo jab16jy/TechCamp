@@ -128,8 +128,6 @@ def predict_crop_recommendations(
                 "altitud": altitud,
             }
 
-            features["temp_hum_interaction"] = temperatura * humedad / 1000.0
-            features["ph_mo_interaction"] = ph_suelo * materia_organica
             features["precip_hum_ratio"] = precipitacion / max(humedad, 1.0)
             features["precip_temp_ratio"] = precipitacion / max(temperatura, 0.1)
 
