@@ -46,6 +46,7 @@ async def generate_recommendations(
     tipo_suelo: str,
     mes_siembra: str,
     anomaly: dict | None = None,
+    altitud: float = 0.0,
 ) -> list[RecomendacionCultivo]:
     lstm_anomalies = _anomaly_to_lstm_format(anomaly)
     scores, metodo = predict_crop_recommendations(
@@ -59,6 +60,7 @@ async def generate_recommendations(
         tipo_suelo=tipo_suelo,
         mes_siembra=mes_siembra,
         lstm_anomalies=lstm_anomalies,
+        altitud=altitud,
     )
     logger.info(f"Recomendaciones generadas via {metodo}")
 

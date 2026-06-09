@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
     LOG_LEVEL: str = "DEBUG"
     OPENMETEO_BASE_URL: str = "https://api.open-meteo.com/v1"
+    ELEVATION_API_URL: str = "https://api.open-meteo.com/v1/elevation"
     CORS_ORIGINS: str = "http://localhost:5173,http://localhost"
 
     model_config = {

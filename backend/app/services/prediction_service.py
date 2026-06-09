@@ -45,6 +45,25 @@ async def fetch_current_climate(lat: float, lng: float) -> dict:
             return {"temperatura": 28.0, "humedad": 75.0, "precipitacion": 80.0, "radiacion_solar": 18.0}
 
 
+ELEVATION_API_URL = "https://api.open-meteo.com/v1/elevation"
+
+
+async def _fetch_elevation(lat: float, lng: float) -> float:
+    """Fetch elevation in meters from Open-Meteo Elevation API.
+
+    Falls back to 0.0 if API is unreachable.
+    """
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.get(ELEVATION_API_URL, params={"latitude": lat, "longitude": lng})
+            resp.raise_for_status()
+            data = resp.json()
+            return float(data.get("elevation", [0.0])[0])
+    except Exception as e:
+        logger.warning("Elevation API fallo para (%.4f, %.4f): %s. Usando 0.0", lat, lng, e)
+        return 0.0
+
+
 def _ndvi_estimate(month: int, base_ndvi: float = 0.42, precipitacion: float = 80) -> float:
     """Estima NDVI mensual usando base real o sintetico con variacion estacional.
 
@@ -506,6 +525,7 @@ async def project_window(
     nasa_data = await fetch_nasa_climatology(lat, lng)
     climatology = _monthly_climatology_from_nasa(nasa_data)
     current = await fetch_current_climate(lat, lng)
+    altitud = await _fetch_elevation(lat, lng)
 
     now = datetime.now(timezone.utc)
     if fecha_inicio:
@@ -578,6 +598,7 @@ async def project_window(
             ndvi=ndvi,
             textura_suelo=textura_suelo,
             tipo_suelo=tipo_suelo,
+            altitud=altitud,
         )
         metodo_usado = metodo
 
@@ -607,6 +628,7 @@ async def project_window(
             "temperatura": round(proj_temp, 1),
             "precipitacion": round(proj_prec, 1),
             "humedad": round(proj_hum, 1),
+            "altitud": round(altitud, 1),
             "ndvi_estimado": ndvi,
             "ndwi_real": ndwi_real,
             "radiacion_solar": round(proj_rad, 1) if proj_rad else None,
@@ -714,6 +736,7 @@ async def project_window_with_scenario(
     nasa_data = await fetch_nasa_climatology(lat, lng)
     climatology = _monthly_climatology_from_nasa(nasa_data)
     current = await fetch_current_climate(lat, lng)
+    altitud = await _fetch_elevation(lat, lng)
 
     now = datetime.now(timezone.utc)
     current_month = now.month
@@ -781,6 +804,7 @@ async def project_window_with_scenario(
             ndvi=ndvi,
             textura_suelo=textura_suelo,
             tipo_suelo=tipo_suelo,
+            altitud=altitud,
         )
         metodo_usado = metodo
 
@@ -810,6 +834,7 @@ async def project_window_with_scenario(
             "temperatura": round(proj_temp, 1),
             "precipitacion": round(proj_prec, 1),
             "humedad": round(proj_hum, 1),
+            "altitud": round(altitud, 1),
             "ndvi_estimado": ndvi,
             "ndwi_real": ndwi_real,
             "radiacion_solar": round(proj_rad, 1) if proj_rad else None,

@@ -5,6 +5,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+import httpx
+
 from app.core.dependencies import get_db
 from app.models.analisis import Analisis
 from app.schemas.analisis import (
@@ -18,6 +20,27 @@ from app.services.satellite_service import get_satellite_data
 from app.services.recommendation import generate_recommendations
 
 logger = logging.getLogger(__name__)
+
+ELEVATION_API_URL = "https://api.open-meteo.com/v1/elevation"
+
+
+async def _fetch_elevation(lat: float, lng: float) -> float:
+    """Fetch elevation in meters from Open-Meteo Elevation API.
+    Falls back to 0.0 if API is unreachable.
+    """
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.get(
+                ELEVATION_API_URL,
+                params={"latitude": lat, "longitude": lng},
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            return float(data.get("elevation", [0.0])[0])
+    except Exception as e:
+        logger.warning("Elevation API fallo para (%.4f, %.4f): %s. Usando 0.0", lat, lng, e)
+        return 0.0
+
 
 router = APIRouter(prefix="/analyze-location", tags=["analisis"])
 
@@ -38,6 +61,8 @@ async def analyze_location(
 
     anomaly = await get_climate_anomaly(body.lat, body.lng)
 
+    elevation = await _fetch_elevation(body.lat, body.lng)
+
     try:
         recommendations = await generate_recommendations(
             climate=climate,
@@ -48,6 +73,7 @@ async def analyze_location(
             tipo_suelo=body.tipo_suelo,
             mes_siembra=body.mes_siembra,
             anomaly=anomaly.model_dump() if anomaly is not None else None,
+            altitud=elevation,
         )
     except Exception:
         logger.exception("Error en motor de recomendacion")

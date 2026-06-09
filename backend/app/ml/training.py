@@ -21,6 +21,7 @@ from sklearn.model_selection import (
     StratifiedKFold,
 )
 from sklearn.preprocessing import StandardScaler, label_binarize
+from sklearn.inspection import permutation_importance
 from sklearn.metrics import (
     accuracy_score,
     precision_score,
@@ -45,6 +46,10 @@ BUNDLED_MODEL_PATH = CODE_MODEL_DIR / "crop_model_rf.joblib"
 BUNDLED_SCALER_PATH = CODE_MODEL_DIR / "crop_scaler.joblib"
 
 NASA_POWER_URL = "https://power.larc.nasa.gov/api/temporal/climatology/point"
+ELEVATION_API_URL = "https://api.open-meteo.com/v1/elevation"
+
+# Cache for elevation lookups: key = (round(lat, 4), round(lng, 4))
+_elevation_cache: dict[tuple[float, float], float] = {}
 
 FEATURE_COLS = [
     "temperatura",
@@ -54,12 +59,14 @@ FEATURE_COLS = [
     "materia_organica",
     "ndvi",
     "textura_encoded",
+    "altitud",
 ]
 
 ENGINEERED_COLS = [
     "temp_hum_interaction",
     "ph_mo_interaction",
     "precip_hum_ratio",
+    "precip_temp_ratio",
 ]
 
 ALL_FEATURE_COLS = FEATURE_COLS + ENGINEERED_COLS
@@ -104,6 +111,27 @@ CROP_PRIOR = {
     "Palma_Aceitera": 1.0,
 }
 
+# Class weights for confused crops — keys are integer class indices matching CSV row order.
+# crops_requirements.csv order: 0=Maíz, 1=Yuca, 2=Arroz, 3=Frijol, 4=Ñame,
+#                                 5=Plátano, 6=Cacao, 7=Algodón, 8=Sorgo, 9=Palma_Aceitera
+CLASS_WEIGHTS = {
+    0: 3.0,   # Maíz
+    8: 3.0,   # Sorgo
+    1: 2.5,   # Yuca
+    4: 1.8,   # Ñame
+    7: 1.6,   # Algodón
+}
+
+# Overlap region where Maíz, Sorgo, Yuca, Ñame, Algodón share ecological ranges
+OVERLAP_REGION = {
+    "confused_crops": {"Maíz", "Sorgo", "Yuca", "Ñame", "Algodón"},
+    "temp_range": (24, 30),
+    "precip_range": (400, 1000),
+    "ph_range": (5.5, 7.5),
+}
+
+OVER_SAMPLE_FACTOR = 1
+
 MONTH_ABBR = {
     "JAN": 1, "FEB": 2, "MAR": 3, "APR": 4,
     "MAY": 5, "JUN": 6, "JUL": 7, "AUG": 8,
@@ -122,6 +150,40 @@ REGIONAL_CLIMATOLOGY = {
 
 # Natural inter-month variability for Caribbean climate
 PARAM_STD = {"T2M": 1.8, "PRECTOTCORR": 35.0, "RH2M": 5.0}
+
+
+# ── Elevation helper ────────────────────────────────────────────────────
+
+
+def _fetch_elevation(lat: float, lng: float) -> float:
+    """Fetch elevation in meters from Open-Meteo Elevation API.
+
+    Caches results by (lat, lng) to avoid redundant API calls.
+    Falls back to 0.0 if API is unreachable (coastal plains default).
+    """
+    key = (round(lat, 4), round(lng, 4))
+    if key in _elevation_cache:
+        return _elevation_cache[key]
+
+    try:
+        resp = httpx.get(
+            ELEVATION_API_URL,
+            params={"latitude": lat, "longitude": lng},
+            timeout=10.0,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        elevation = data.get("elevation", [0.0])[0]
+        elevation = float(elevation)
+        _elevation_cache[key] = elevation
+        return elevation
+    except Exception as e:
+        logger.warning(
+            "Elevation API falló para (%.4f, %.4f): %s. Usando 0.0",
+            lat, lng, e,
+        )
+        _elevation_cache[key] = 0.0
+        return 0.0
 
 
 # ── NASA POWER helpers ──────────────────────────────────────────────────
@@ -288,6 +350,9 @@ def generate_synthetic_dataset(
 
     Uses real climate distributions from NASA POWER as the basis for
     synthetic samples, weighted by Caribbean production priors.
+
+    Includes altitude (via Open-Meteo Elevation API), precip_temp_ratio
+    engineered feature, and boundary oversampling for confused crops.
     """
     crops_df = pd.read_csv(CSV_PATH)
 
@@ -296,6 +361,11 @@ def generate_synthetic_dataset(
             "name": "Caribe", "lat": 10.0, "lng": -75.0,
             "monthly": dict(REGIONAL_CLIMATOLOGY),
         }]
+
+    # Pre-fetch elevation for each unique zone (cached by _fetch_elevation)
+    zone_elevations = {}
+    for zone in climate_zones:
+        zone_elevations[zone["name"]] = _fetch_elevation(zone["lat"], zone["lng"])
 
     rows = []
 
@@ -318,8 +388,13 @@ def generate_synthetic_dataset(
         per_zone = max(1, crop_target // len(climate_zones))
         tex_opt = TEXTURE_MAP.get(crop["textura_optima"], 7)
 
+        # Altitude bounds for this crop
+        alt_min = float(crop["altitud_min"])
+        alt_max = float(crop["altitud_max"])
+
         for zone in climate_zones:
             monthly = zone["monthly"]
+            zone_elevation = zone_elevations[zone["name"]]
 
             for _ in range(per_zone):
                 month = np.random.randint(1, 13)
@@ -350,6 +425,13 @@ def generate_synthetic_dataset(
                 # Textura centered on optimum with noise
                 textura_encoded = max(1.0, min(12.0, tex_opt + np.random.normal(0, 1.8)))
 
+                # Altitude: triangular sample within crop bounds centered on zone elevation
+                altitud = _triangular_sample(
+                    alt_min, alt_max,
+                    max(0.0, min(1.0, (zone_elevation - alt_min) / max(alt_max - alt_min, 1.0))),
+                )
+                altitud = _add_gaussian_noise(altitud, alt_max - alt_min, 0.05)
+
                 # Moderate noise for robust probabilistic boundaries
                 temp = _add_gaussian_noise(temp, temp_hi - temp_lo, 0.05)
                 hum = _add_gaussian_noise(hum, hum_hi - hum_lo, 0.05)
@@ -363,6 +445,7 @@ def generate_synthetic_dataset(
                 temp_hum = temp * hum / 1000.0
                 ph_mo = ph * mo
                 precip_hum = prec / max(hum, 1.0)
+                precip_temp = prec / max(temp, 0.1)
 
                 rows.append({
                     "temperatura": round(temp, 2),
@@ -372,13 +455,72 @@ def generate_synthetic_dataset(
                     "materia_organica": round(mo, 2),
                     "ndvi": round(ndvi, 3),
                     "textura_encoded": round(textura_encoded, 2),
+                    "altitud": round(altitud, 1),
                     "temp_hum_interaction": round(temp_hum, 3),
                     "ph_mo_interaction": round(ph_mo, 3),
                     "precip_hum_ratio": round(precip_hum, 3),
+                    "precip_temp_ratio": round(precip_temp, 3),
                     "cultivo": crop_name,
                     "zona": zone["name"],
                     "mes": month,
                 })
+
+    # ── Boundary oversampling: 2x extra copies for confused crops in overlap zone ──
+    confused_crops = OVERLAP_REGION["confused_crops"]
+    t_lo, t_hi = OVERLAP_REGION["temp_range"]
+    p_lo, p_hi = OVERLAP_REGION["precip_range"]
+    ph_lo, ph_hi = OVERLAP_REGION["ph_range"]
+    oversampled = []
+    for row in rows:
+        if row["cultivo"] not in confused_crops:
+            continue
+        if not (t_lo <= row["temperatura"] <= t_hi
+                and p_lo <= row["precipitacion"] <= p_hi
+                and ph_lo <= row["ph_suelo"] <= ph_hi):
+            continue
+        for _ in range(OVER_SAMPLE_FACTOR):
+            perturbed = dict(row)
+            perturbed["temperatura"] = round(
+                _add_gaussian_noise(row["temperatura"], 1.0, 0.5), 2,
+            )
+            perturbed["humedad"] = round(
+                row["humedad"] * np.random.uniform(0.98, 1.02), 2,
+            )
+            perturbed["precipitacion"] = round(
+                row["precipitacion"] * np.random.uniform(0.97, 1.03), 1,
+            )
+            perturbed["ph_suelo"] = round(
+                row["ph_suelo"] * np.random.uniform(0.98, 1.02), 2,
+            )
+            perturbed["materia_organica"] = round(
+                row["materia_organica"] * np.random.uniform(0.98, 1.02), 2,
+            )
+            perturbed["ndvi"] = round(
+                row["ndvi"] * np.random.uniform(0.98, 1.02), 3,
+            )
+            perturbed["textura_encoded"] = round(
+                _add_gaussian_noise(row["textura_encoded"], 5.0, 0.02), 2,
+            )
+            perturbed["altitud"] = round(
+                _add_gaussian_noise(row["altitud"], 1.0, 0.5), 1,
+            )
+            # Recompute engineered features from perturbed values
+            t, h, p, ph_s, mo = (
+                perturbed["temperatura"], perturbed["humedad"],
+                perturbed["precipitacion"], perturbed["ph_suelo"],
+                perturbed["materia_organica"],
+            )
+            perturbed["temp_hum_interaction"] = round(t * h / 1000.0, 3)
+            perturbed["ph_mo_interaction"] = round(ph_s * mo, 3)
+            perturbed["precip_hum_ratio"] = round(p / max(h, 1.0), 3)
+            perturbed["precip_temp_ratio"] = round(p / max(t, 0.1), 3)
+            oversampled.append(perturbed)
+
+    rows.extend(oversampled)
+    logger.info(
+        "Oversampling: %d filas extras generadas para cultivos en zona de solapamiento",
+        len(oversampled),
+    )
 
     df = pd.DataFrame(rows)
     logger.info(
@@ -453,6 +595,7 @@ def train_model(
     X_test_scaled = scaler.transform(X_test)
 
     # Step 4: Train base model (tuned parameters for better generalization)
+    # Class weights penalize misclassifications on confused crops (Maíz, Sorgo, etc.)
     base_model = HistGradientBoostingClassifier(
         max_iter=500,
         max_depth=6,
@@ -460,6 +603,7 @@ def train_model(
         min_samples_leaf=20,
         l2_regularization=0.1,
         random_state=random_state,
+        class_weight=CLASS_WEIGHTS,
     )
 
     # Step 4b: Wrap with probability calibration
@@ -559,28 +703,26 @@ def train_model(
         mask = y_test == crop_name
         if mask.sum() > 0:
             per_crop_f1[str(crop_name)] = round(
-                float(f1_score(y_test[mask], y_pred[mask], zero_division=0)), 4
+                float(f1_score(y_test[mask], y_pred[mask], average='macro', zero_division=0)), 4
             )
     metrics["per_crop_f1"] = per_crop_f1
 
-    # Feature importance (from the base estimator via the calibrated wrapper)
-    # CalibratedClassifierCV stores fitted estimators in calibrated_classifiers_
-    if hasattr(model, "calibrated_classifiers_") and model.calibrated_classifiers_:
-        # Use the first fold's base estimator for feature importance approximation
-        cc = model.calibrated_classifiers_[0]
-        base_est = getattr(cc, 'estimator',
-                   getattr(cc, 'estimator_',
-                   getattr(cc, 'base_estimator_', None)))
-        if hasattr(base_est, "feature_importances_"):
-            importances = base_est.feature_importances_
-            metrics["feature_importance"] = sorted(
-                [
-                    {"feature": name, "importance": round(float(imp), 4)}
-                    for name, imp in zip(ALL_FEATURE_COLS, importances)
-                ],
-                key=lambda x: x["importance"],
-                reverse=True,
-            )
+    # Feature importance (permutation-based, works with any sklearn estimator)
+    # HistGradientBoostingClassifier does not expose feature_importances_ as a
+    # regular attribute, and CalibratedClassifierCV wraps the estimator chain.
+    # Permutation importance is estimator-agnostic and gives reliable rankings.
+    perm_importance = permutation_importance(
+        model, X_test_scaled, y_test, n_repeats=10,
+        random_state=random_state, n_jobs=-1,
+    )
+    metrics["feature_importance"] = sorted(
+        [
+            {"feature": name, "importance": round(float(imp), 4)}
+            for name, imp in zip(ALL_FEATURE_COLS, perm_importance.importances_mean)
+        ],
+        key=lambda x: x["importance"],
+        reverse=True,
+    )
 
     # Metadata
     metrics["n_samples"] = len(df)
@@ -589,6 +731,17 @@ def train_model(
     metrics["model_type"] = "HistGradientBoosting + CalibratedClassifierCV(sigmoid)"
     ndvi_desc = "empirical NDVI from indices_satelitales" if ndvi_values is not None else "synthetic triangular NDVI"
     metrics["data_source"] = f"NASA POWER climatology + {ndvi_desc} (overlapped ranges)"
+
+    # Load previous metrics for comparison (before overwriting)
+    previous_metrics = None
+    if METRICS_PATH.exists():
+        try:
+            prev_data = json.loads(METRICS_PATH.read_text())
+            previous_metrics = prev_data.get("per_crop_accuracy")
+            logger.info("Metricas previas cargadas para comparacion")
+        except (json.JSONDecodeError, OSError) as e:
+            logger.warning("No se pudieron cargar metricas previas: %s", e)
+    metrics["per_crop_accuracy_previous"] = previous_metrics
 
     # Save model + scaler + metrics
     _ensure_artifact_dir()
@@ -731,7 +884,12 @@ def predict(model, scaler, features: dict) -> tuple[str, dict]:
     ph = features.get("ph_suelo", 0)
     mo = features.get("materia_organica", 0)
 
-    feat.extend([t * h / 1000.0, ph * mo, p / max(h, 1.0)])
+    feat.extend([
+        t * h / 1000.0,
+        ph * mo,
+        p / max(h, 1.0),
+        p / max(t, 0.1),
+    ])
 
     X = scaler.transform(np.array([feat]))
     probas = model.predict_proba(X)[0]
