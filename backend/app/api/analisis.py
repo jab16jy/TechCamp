@@ -97,11 +97,10 @@ async def analyze_location(
             score=recommendations[0].score if recommendations else None,
         )
         db.add(ana)
-        await db.flush()
+        await db.commit()
         analysis_id = str(ana.id)[:8].upper()
     except Exception:
         logger.exception("Error guardando analisis")
-        pass
 
     return AnalyzeResponse(
         clima=climate,
