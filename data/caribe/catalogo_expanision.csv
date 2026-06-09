@@ -1,0 +1,38 @@
+cultivo,n_eva_caribe,n_suelos_caribe,n_foliar_caribe,n_municipios,n_departamentos,rendimiento_promedio,prioridad
+Mango,823,610,354,115,7,10.62,ALTA
+Café,265,116,10,41,6,0.88,ALTA
+Batata,205,53,162,31,7,7.78,ALTA
+Banano,98,207,93,16,4,24.57,ALTA
+Marañón,51,37,100,9,4,4.91,ALTA
+Patilla,1238,66,0,122,7,11.94,MEDIA
+Ahuyama,1076,26,0,105,7,8.96,MEDIA
+Ají,960,119,0,93,7,6.35,MEDIA
+Melón,878,119,0,85,7,13.35,MEDIA
+Limón,689,50,0,83,7,8.25,MEDIA
+Naranja,456,30,0,71,7,9.96,MEDIA
+Tomate,449,65,0,47,7,17.85,MEDIA
+Ajonjolí,392,63,0,54,7,0.98,MEDIA
+Aguacate,362,729,0,50,7,7.28,MEDIA
+Berenjena,358,29,0,37,6,9.84,MEDIA
+Papaya,276,50,0,48,7,17.49,MEDIA
+Maracuyá,190,31,0,40,7,9.55,MEDIA
+Piña,161,60,0,29,6,27.38,MEDIA
+Lulo,97,35,0,14,3,7.64,MEDIA
+Coco,286,0,0,49,6,6.93,BAJA
+"Malanga, achín, yota, papa china, bore",256,0,0,23,3,8.41,BAJA
+Guayaba,243,3,0,41,6,9.88,BAJA
+Caña,237,2,0,37,7,42.07,BAJA
+Cilantro,205,9,0,19,6,5.15,BAJA
+Habichuela,193,0,0,20,5,4.75,BAJA
+Guandul,162,1,0,19,3,2.17,BAJA
+Tabaco,122,9,0,11,2,2.15,BAJA
+Pomelo,114,1,0,22,4,12.75,BAJA
+Guanábana,110,3,0,20,6,5.79,BAJA
+Otras hortalizas,102,0,0,16,5,6.34,BAJA
+Cebolla de rama,99,4,0,12,4,13.72,BAJA
+Pimentón,95,3,0,9,3,12.38,BAJA
+Pepino Cohombro,93,0,0,9,5,13.73,BAJA
+Tomate de árbol,88,0,0,13,3,8.34,BAJA
+Ciruela,74,2,0,14,3,9.81,BAJA
+Col,66,0,0,7,3,7.21,BAJA
+Cebolla de bulbo,63,9,0,7,3,14.48,BAJA
