@@ -1,0 +1,1022 @@
+{
+  "metadata": {
+    "fecha": "2026-06-09",
+    "region": "Caribe Colombiano (7 departamentos)",
+    "n_cultivos": 10,
+    "fuente_sintetica": "/home/jabyn/TechCamp/backend/app/ml/crops_requirements.csv",
+    "fuente_real": "/home/jabyn/TechCamp/data/caribe/perfiles_cultivo_reales.csv"
+  },
+  "resumen_global": {
+    "n_cultivos": 10,
+    "n_total_compatible": 0,
+    "n_con_incompatibles": 5,
+    "n_con_revisar": 10,
+    "compatibilidad_pH": "10/10 compatibles",
+    "compatibilidad_MO": "4/10 realistas (mín sintético ≤ mediana real)",
+    "rendimiento_sobreestimado": "10/10 sintéticos > real",
+    "drenaje_no_incluido": "0/10 perfiles incluyen drenaje",
+    "topografia_no_incluida": "0/10 perfiles incluyen topografía",
+    "foliar_no_incluido": "0/10 perfiles sintéticos incluyen N-P-K foliar",
+    "cultivos_prioritarios_ajuste": [
+      "Plátano",
+      "Cacao",
+      "Palma",
+      "Maíz",
+      "Arroz"
+    ]
+  },
+  "cultivos": {
+    "Maíz": {
+      "comparaciones": {
+        "pH": {
+          "sintetico_rango": [
+            5.5,
+            7.5
+          ],
+          "real_mediana": 6.95,
+          "real_p10": 5.5,
+          "real_p90": 8.27,
+          "sintetico_medio": 6.5,
+          "diferencia_absoluta": 0.45,
+          "diferencia_porcentual": null,
+          "status": "COMPATIBLE",
+          "severidad": "alta",
+          "explicacion": "Rango sintético [5.5, 7.5] contiene la mediana real (6.95)"
+        },
+        "Materia Orgánica": {
+          "sintetico_min": 2.0,
+          "real_mediana": 1.66,
+          "real_p10": 0.74,
+          "diferencia_absoluta": 0.34,
+          "diferencia_porcentual": 20.5,
+          "status": "REVISAR",
+          "severidad": "media",
+          "explicacion": "MO mínima sintética (2.0%) EXCEDE en 0.34pp la mediana real (1.66%)"
+        },
+        "Rendimiento": {
+          "sintetico": 4.2,
+          "real": 2.29,
+          "diferencia_absoluta": 1.91,
+          "diferencia_porcentual": 83.4,
+          "status": "INCOMPATIBLE",
+          "severidad": "alta",
+          "direccion": "MAYOR",
+          "explicacion": "Rendimiento sintético (4.2 t/ha) es MAYOR al real (2.29 t/ha) — +83.4%"
+        },
+        "Textura/Drenaje": {
+          "sintetico_textura_optima": "Franco",
+          "sintetico_tipo_suelo": "Franco;Franco-Arcilloso",
+          "real_drenaje": null,
+          "real_topografia": null,
+          "drenaje_incluido_en_sintetico": false,
+          "topografia_incluida_en_sintetico": false,
+          "textura_consistente_con_drenaje": true,
+          "status": "REVISAR",
+          "severidad": "media",
+          "explicacion": "Perfil sintético no incluye drenaje ni topografía. Real: drenaje=N/A, topografía=N/A. Se recomienda agregar estas variables."
+        },
+        "Perfil Foliar": {
+          "sintetico_incluye_foliar": false,
+          "real_n_promedio": 2.78,
+          "real_p_promedio": 0.34,
+          "real_k_promedio": 2.46,
+          "status": "REVISAR",
+          "severidad": "media",
+          "explicacion": "Perfil sintético no incluye N-P-K foliar. Datos reales disponibles: N=2.78%, P=0.34%, K=2.46%"
+        }
+      },
+      "resumen_status": {
+        "COMPATIBLE": 1,
+        "REVISAR": 3,
+        "INCOMPATIBLE": 1,
+        "prioridad": "ALTA"
+      },
+      "datos_sinteticos": {
+        "ph_min": 5.5,
+        "ph_max": 7.5,
+        "mo_min": 2.0,
+        "rendimiento": 4.2,
+        "textura_optima": "Franco",
+        "tipo_suelo": "Franco;Franco-Arcilloso"
+      },
+      "datos_reales": {
+        "ph_promedio": 7.0,
+        "ph_p10": 5.5,
+        "ph_p50": 6.95,
+        "ph_p90": 8.27,
+        "mo_promedio": 1.93,
+        "mo_p10": 0.74,
+        "mo_p50": 1.66,
+        "mo_p90": 3.31,
+        "rendimiento": 2.29,
+        "n_registros_eva": 4770,
+        "n_registros_suelos": 964,
+        "n_registros_foliar": 24,
+        "drenaje": "Buen drenaje",
+        "topografia": "Plano",
+        "n_foliar": 2.78,
+        "p_foliar": 0.34,
+        "k_foliar": 2.46
+      }
+    },
+    "Yuca": {
+      "comparaciones": {
+        "pH": {
+          "sintetico_rango": [
+            4.5,
+            8.0
+          ],
+          "real_mediana": 6.18,
+          "real_p10": 5.25,
+          "real_p90": 7.81,
+          "sintetico_medio": 6.25,
+          "diferencia_absoluta": 0.07,
+          "diferencia_porcentual": null,
+          "status": "COMPATIBLE",
+          "severidad": "alta",
+          "explicacion": "Rango sintético [4.5, 8.0] contiene la mediana real (6.18)"
+        },
+        "Materia Orgánica": {
+          "sintetico_min": 1.0,
+          "real_mediana": 1.55,
+          "real_p10": 0.56,
+          "diferencia_absoluta": -0.55,
+          "diferencia_porcentual": -35.5,
+          "status": "COMPATIBLE",
+          "severidad": "baja",
+          "explicacion": "MO mínima sintética (1.0%) ≤ la mediana real (1.55%)"
+        },
+        "Rendimiento": {
+          "sintetico": 12.5,
+          "real": 11.12,
+          "diferencia_absoluta": 1.38,
+          "diferencia_porcentual": 12.4,
+          "status": "COMPATIBLE",
+          "severidad": "baja",
+          "direccion": "MAYOR",
+          "explicacion": "Rendimiento sintético (12.5 t/ha) es MAYOR al real (11.12 t/ha) — +12.4%"
+        },
+        "Textura/Drenaje": {
+          "sintetico_textura_optima": "Franco-Arenoso",
+          "sintetico_tipo_suelo": "Franco-Arenoso;Franco",
+          "real_drenaje": null,
+          "real_topografia": null,
+          "drenaje_incluido_en_sintetico": false,
+          "topografia_incluida_en_sintetico": false,
+          "textura_consistente_con_drenaje": true,
+          "status": "REVISAR",
+          "severidad": "media",
+          "explicacion": "Perfil sintético no incluye drenaje ni topografía. Real: drenaje=N/A, topografía=N/A. Se recomienda agregar estas variables."
+        },
+        "Perfil Foliar": {
+          "sintetico_incluye_foliar": false,
+          "real_n_promedio": 4.0,
+          "real_p_promedio": 0.33,
+          "real_k_promedio": 1.33,
+          "status": "REVISAR",
+          "severidad": "media",
+          "explicacion": "Perfil sintético no incluye N-P-K foliar. Datos reales disponibles: N=4.0%, P=0.33%, K=1.33%"
+        }
+      },
+      "resumen_status": {
+        "COMPATIBLE": 3,
+        "REVISAR": 2,
+        "INCOMPATIBLE": 0,
+        "prioridad": "MEDIA"
+      },
+      "datos_sinteticos": {
+        "ph_min": 4.5,
+        "ph_max": 8.0,
+        "mo_min": 1.0,
+        "rendimiento": 12.5,
+        "textura_optima": "Franco-Arenoso",
+        "tipo_suelo": "Franco-Arenoso;Franco"
+      },
+      "datos_reales": {
+        "ph_promedio": 6.36,
+        "ph_p10": 5.25,
+        "ph_p50": 6.18,
+        "ph_p90": 7.81,
+        "mo_promedio": 1.89,
+        "mo_p10": 0.56,
+        "mo_p50": 1.55,
+        "mo_p90": 3.5,
+        "rendimiento": 11.12,
+        "n_registros_eva": 2605,
+        "n_registros_suelos": 358,
+        "n_registros_foliar": 104,
+        "drenaje": "Buen drenaje",
+        "topografia": "Plano",
+        "n_foliar": 4.0,
+        "p_foliar": 0.33,
+        "k_foliar": 1.33
+      }
+    },
+    "Arroz": {
+      "comparaciones": {
+        "pH": {
+          "sintetico_rango": [
+            5.0,
+            7.0
+          ],
+          "real_mediana": 6.42,
+          "real_p10": 5.16,
+          "real_p90": 7.38,
+          "sintetico_medio": 6.0,
+          "diferencia_absoluta": 0.42,
+          "diferencia_porcentual": null,
+          "status": "COMPATIBLE",
+          "severidad": "alta",
+          "explicacion": "Rango sintético [5.0, 7.0] contiene la mediana real (6.42)"
+        },
+        "Materia Orgánica": {
+          "sintetico_min": 2.5,
+          "real_mediana": 1.45,
+          "real_p10": 0.74,
+          "diferencia_absoluta": 1.05,
+          "diferencia_porcentual": 72.4,
+          "status": "INCOMPATIBLE",
+          "severidad": "alta",
+          "explicacion": "MO mínima sintética (2.5%) EXCEDE en 1.05pp la mediana real (1.45%)"
+        },
+        "Rendimiento": {
+          "sintetico": 5.8,
+          "real": 4.13,
+          "diferencia_absoluta": 1.67,
+          "diferencia_porcentual": 40.4,
+          "status": "REVISAR",
+          "severidad": "media",
+          "direccion": "MAYOR",
+          "explicacion": "Rendimiento sintético (5.8 t/ha) es MAYOR al real (4.13 t/ha) — +40.4%"
+        },
+        "Textura/Drenaje": {
+          "sintetico_textura_optima": "Arcilloso",
+          "sintetico_tipo_suelo": "Arcilloso;Franco-Arcilloso",
+          "real_drenaje": null,
+          "real_topografia": null,
+          "drenaje_incluido_en_sintetico": false,
+          "topografia_incluida_en_sintetico": false,
+          "textura_consistente_con_drenaje": true,
+          "status": "REVISAR",
+          "severidad": "media",
+          "explicacion": "Perfil sintético no incluye drenaje ni topografía. Real: drenaje=N/A, topografía=N/A. Se recomienda agregar estas variables."
+        },
+        "Perfil Foliar": {
+          "sintetico_incluye_foliar": false,
+          "real_n_promedio": 1.4,
+          "real_p_promedio": 0.21,
+          "real_k_promedio": 1.76,
+          "status": "REVISAR",
+          "severidad": "media",
+          "explicacion": "Perfil sintético no incluye N-P-K foliar. Datos reales disponibles: N=1.4%, P=0.21%, K=1.76%"
+        }
+      },
+      "resumen_status": {
+        "COMPATIBLE": 1,
+        "REVISAR": 3,
+        "INCOMPATIBLE": 1,
+        "prioridad": "ALTA"
+      },
+      "datos_sinteticos": {
+        "ph_min": 5.0,
+        "ph_max": 7.0,
+        "mo_min": 2.5,
+        "rendimiento": 5.8,
+        "textura_optima": "Arcilloso",
+        "tipo_suelo": "Arcilloso;Franco-Arcilloso"
+      },
+      "datos_reales": {
+        "ph_promedio": 6.39,
+        "ph_p10": 5.16,
+        "ph_p50": 6.42,
+        "ph_p90": 7.38,
+        "mo_promedio": 1.56,
+        "mo_p10": 0.74,
+        "mo_p50": 1.45,
+        "mo_p90": 2.49,
+        "rendimiento": 4.13,
+        "n_registros_eva": 1819,
+        "n_registros_suelos": 292,
+        "n_registros_foliar": 183,
+        "drenaje": "Buen drenaje",
+        "topografia": "Plano",
+        "n_foliar": 1.4,
+        "p_foliar": 0.21,
+        "k_foliar": 1.76
+      }
+    },
+    "Frijol": {
+      "comparaciones": {
+        "pH": {
+          "sintetico_rango": [
+            5.5,
+            7.0
+          ],
+          "real_mediana": 6.12,
+          "real_p10": 5.05,
+          "real_p90": 7.44,
+          "sintetico_medio": 6.25,
+          "diferencia_absoluta": 0.13,
+          "diferencia_porcentual": null,
+          "status": "COMPATIBLE",
+          "severidad": "alta",
+          "explicacion": "Rango sintético [5.5, 7.0] contiene la mediana real (6.12)"
+        },
+        "Materia Orgánica": {
+          "sintetico_min": 1.5,
+          "real_mediana": 2.19,
+          "real_p10": 1.02,
+          "diferencia_absoluta": -0.69,
+          "diferencia_porcentual": -31.5,
+          "status": "COMPATIBLE",
+          "severidad": "baja",
+          "explicacion": "MO mínima sintética (1.5%) ≤ la mediana real (2.19%)"
+        },
+        "Rendimiento": {
+          "sintetico": 1.8,
+          "real": 1.29,
+          "diferencia_absoluta": 0.51,
+          "diferencia_porcentual": 39.5,
+          "status": "REVISAR",
+          "severidad": "media",
+          "direccion": "MAYOR",
+          "explicacion": "Rendimiento sintético (1.8 t/ha) es MAYOR al real (1.29 t/ha) — +39.5%"
+        },
+        "Textura/Drenaje": {
+          "sintetico_textura_optima": "Franco",
+          "sintetico_tipo_suelo": "Franco;Franco-Arenoso",
+          "real_drenaje": null,
+          "real_topografia": null,
+          "drenaje_incluido_en_sintetico": false,
+          "topografia_incluida_en_sintetico": false,
+          "textura_consistente_con_drenaje": true,
+          "status": "REVISAR",
+          "severidad": "media",
+          "explicacion": "Perfil sintético no incluye drenaje ni topografía. Real: drenaje=N/A, topografía=N/A. Se recomienda agregar estas variables."
+        },
+        "Perfil Foliar": {
+          "sintetico_incluye_foliar": false,
+          "real_n_promedio": 4.65,
+          "real_p_promedio": 0.39,
+          "real_k_promedio": 1.9,
+          "status": "REVISAR",
+          "severidad": "media",
+          "explicacion": "Perfil sintético no incluye N-P-K foliar. Datos reales disponibles: N=4.65%, P=0.39%, K=1.9%"
+        }
+      },
+      "resumen_status": {
+        "COMPATIBLE": 2,
+        "REVISAR": 3,
+        "INCOMPATIBLE": 0,
+        "prioridad": "MEDIA"
+      },
+      "datos_sinteticos": {
+        "ph_min": 5.5,
+        "ph_max": 7.0,
+        "mo_min": 1.5,
+        "rendimiento": 1.8,
+        "textura_optima": "Franco",
+        "tipo_suelo": "Franco;Franco-Arenoso"
+      },
+      "datos_reales": {
+        "ph_promedio": 6.22,
+        "ph_p10": 5.05,
+        "ph_p50": 6.12,
+        "ph_p90": 7.44,
+        "mo_promedio": 2.26,
+        "mo_p10": 1.02,
+        "mo_p50": 2.19,
+        "mo_p90": 3.06,
+        "rendimiento": 1.29,
+        "n_registros_eva": 1616,
+        "n_registros_suelos": 32,
+        "n_registros_foliar": 297,
+        "drenaje": "Buen drenaje",
+        "topografia": "Plano",
+        "n_foliar": 4.65,
+        "p_foliar": 0.39,
+        "k_foliar": 1.9
+      }
+    },
+    "Ñame": {
+      "comparaciones": {
+        "pH": {
+          "sintetico_rango": [
+            5.5,
+            7.0
+          ],
+          "real_mediana": 6.85,
+          "real_p10": 6.05,
+          "real_p90": 8.27,
+          "sintetico_medio": 6.25,
+          "diferencia_absoluta": 0.6,
+          "diferencia_porcentual": null,
+          "status": "COMPATIBLE",
+          "severidad": "media",
+          "explicacion": "Rango sintético [5.5, 7.0] contiene la mediana real (6.85)"
+        },
+        "Materia Orgánica": {
+          "sintetico_min": 2.5,
+          "real_mediana": 2.22,
+          "real_p10": 1.41,
+          "diferencia_absoluta": 0.28,
+          "diferencia_porcentual": 12.6,
+          "status": "REVISAR",
+          "severidad": "media",
+          "explicacion": "MO mínima sintética (2.5%) EXCEDE en 0.28pp la mediana real (2.22%)"
+        },
+        "Rendimiento": {
+          "sintetico": 12.0,
+          "real": 10.47,
+          "diferencia_absoluta": 1.53,
+          "diferencia_porcentual": 14.6,
+          "status": "COMPATIBLE",
+          "severidad": "baja",
+          "direccion": "MAYOR",
+          "explicacion": "Rendimiento sintético (12.0 t/ha) es MAYOR al real (10.47 t/ha) — +14.6%"
+        },
+        "Textura/Drenaje": {
+          "sintetico_textura_optima": "Franco-Arcilloso",
+          "sintetico_tipo_suelo": "Franco-Arcilloso;Franco",
+          "real_drenaje": null,
+          "real_topografia": null,
+          "drenaje_incluido_en_sintetico": false,
+          "topografia_incluida_en_sintetico": false,
+          "textura_consistente_con_drenaje": true,
+          "status": "REVISAR",
+          "severidad": "media",
+          "explicacion": "Perfil sintético no incluye drenaje ni topografía. Real: drenaje=N/A, topografía=N/A. Se recomienda agregar estas variables."
+        },
+        "Perfil Foliar": {
+          "sintetico_incluye_foliar": false,
+          "real_n_promedio": null,
+          "real_p_promedio": null,
+          "real_k_promedio": null,
+          "status": "REVISAR",
+          "severidad": "media",
+          "explicacion": "Perfil sintético no incluye N-P-K foliar. Sin datos foliares reales disponibles"
+        }
+      },
+      "resumen_status": {
+        "COMPATIBLE": 2,
+        "REVISAR": 3,
+        "INCOMPATIBLE": 0,
+        "prioridad": "MEDIA"
+      },
+      "datos_sinteticos": {
+        "ph_min": 5.5,
+        "ph_max": 7.0,
+        "mo_min": 2.5,
+        "rendimiento": 12.0,
+        "textura_optima": "Franco-Arcilloso",
+        "tipo_suelo": "Franco-Arcilloso;Franco"
+      },
+      "datos_reales": {
+        "ph_promedio": 6.98,
+        "ph_p10": 6.05,
+        "ph_p50": 6.85,
+        "ph_p90": 8.27,
+        "mo_promedio": 2.45,
+        "mo_p10": 1.41,
+        "mo_p50": 2.22,
+        "mo_p90": 3.53,
+        "rendimiento": 10.47,
+        "n_registros_eva": 1139,
+        "n_registros_suelos": 269,
+        "n_registros_foliar": 0,
+        "drenaje": "Buen drenaje",
+        "topografia": "Plano",
+        "n_foliar": null,
+        "p_foliar": null,
+        "k_foliar": null
+      }
+    },
+    "Plátano": {
+      "comparaciones": {
+        "pH": {
+          "sintetico_rango": [
+            5.5,
+            7.5
+          ],
+          "real_mediana": 6.22,
+          "real_p10": 4.6,
+          "real_p90": 7.64,
+          "sintetico_medio": 6.5,
+          "diferencia_absoluta": 0.28,
+          "diferencia_porcentual": null,
+          "status": "COMPATIBLE",
+          "severidad": "alta",
+          "explicacion": "Rango sintético [5.5, 7.5] contiene la mediana real (6.22)"
+        },
+        "Materia Orgánica": {
+          "sintetico_min": 3.0,
+          "real_mediana": 1.69,
+          "real_p10": 0.9,
+          "diferencia_absoluta": 1.31,
+          "diferencia_porcentual": 77.5,
+          "status": "INCOMPATIBLE",
+          "severidad": "alta",
+          "explicacion": "MO mínima sintética (3.0%) EXCEDE en 1.31pp la mediana real (1.69%)"
+        },
+        "Rendimiento": {
+          "sintetico": 15.0,
+          "real": 7.46,
+          "diferencia_absoluta": 7.54,
+          "diferencia_porcentual": 101.1,
+          "status": "INCOMPATIBLE",
+          "severidad": "alta",
+          "direccion": "MAYOR",
+          "explicacion": "Rendimiento sintético (15.0 t/ha) es MAYOR al real (7.46 t/ha) — +101.1%"
+        },
+        "Textura/Drenaje": {
+          "sintetico_textura_optima": "Franco",
+          "sintetico_tipo_suelo": "Franco;Franco-Arcilloso",
+          "real_drenaje": null,
+          "real_topografia": null,
+          "drenaje_incluido_en_sintetico": false,
+          "topografia_incluida_en_sintetico": false,
+          "textura_consistente_con_drenaje": true,
+          "status": "REVISAR",
+          "severidad": "media",
+          "explicacion": "Perfil sintético no incluye drenaje ni topografía. Real: drenaje=N/A, topografía=N/A. Se recomienda agregar estas variables."
+        },
+        "Perfil Foliar": {
+          "sintetico_incluye_foliar": false,
+          "real_n_promedio": 2.7,
+          "real_p_promedio": 0.26,
+          "real_k_promedio": 2.89,
+          "status": "REVISAR",
+          "severidad": "media",
+          "explicacion": "Perfil sintético no incluye N-P-K foliar. Datos reales disponibles: N=2.7%, P=0.26%, K=2.89%"
+        }
+      },
+      "resumen_status": {
+        "COMPATIBLE": 1,
+        "REVISAR": 2,
+        "INCOMPATIBLE": 2,
+        "prioridad": "ALTA"
+      },
+      "datos_sinteticos": {
+        "ph_min": 5.5,
+        "ph_max": 7.5,
+        "mo_min": 3.0,
+        "rendimiento": 15.0,
+        "textura_optima": "Franco",
+        "tipo_suelo": "Franco;Franco-Arcilloso"
+      },
+      "datos_reales": {
+        "ph_promedio": 6.12,
+        "ph_p10": 4.6,
+        "ph_p50": 6.22,
+        "ph_p90": 7.64,
+        "mo_promedio": 1.81,
+        "mo_p10": 0.9,
+        "mo_p50": 1.69,
+        "mo_p90": 2.79,
+        "rendimiento": 7.46,
+        "n_registros_eva": 1030,
+        "n_registros_suelos": 704,
+        "n_registros_foliar": 74,
+        "drenaje": "Regular drenaje",
+        "topografia": "Plano",
+        "n_foliar": 2.7,
+        "p_foliar": 0.26,
+        "k_foliar": 2.89
+      }
+    },
+    "Cacao": {
+      "comparaciones": {
+        "pH": {
+          "sintetico_rango": [
+            5.0,
+            7.0
+          ],
+          "real_mediana": 5.8,
+          "real_p10": 4.72,
+          "real_p90": 6.86,
+          "sintetico_medio": 6.0,
+          "diferencia_absoluta": 0.2,
+          "diferencia_porcentual": null,
+          "status": "COMPATIBLE",
+          "severidad": "alta",
+          "explicacion": "Rango sintético [5.0, 7.0] contiene la mediana real (5.8)"
+        },
+        "Materia Orgánica": {
+          "sintetico_min": 3.5,
+          "real_mediana": 1.9,
+          "real_p10": 1.1,
+          "diferencia_absoluta": 1.6,
+          "diferencia_porcentual": 84.2,
+          "status": "INCOMPATIBLE",
+          "severidad": "alta",
+          "explicacion": "MO mínima sintética (3.5%) EXCEDE en 1.6pp la mediana real (1.9%)"
+        },
+        "Rendimiento": {
+          "sintetico": 1.2,
+          "real": 0.57,
+          "diferencia_absoluta": 0.63,
+          "diferencia_porcentual": 110.5,
+          "status": "INCOMPATIBLE",
+          "severidad": "alta",
+          "direccion": "MAYOR",
+          "explicacion": "Rendimiento sintético (1.2 t/ha) es MAYOR al real (0.57 t/ha) — +110.5%"
+        },
+        "Textura/Drenaje": {
+          "sintetico_textura_optima": "Franco-Arcilloso",
+          "sintetico_tipo_suelo": "Franco-Arcilloso",
+          "real_drenaje": null,
+          "real_topografia": null,
+          "drenaje_incluido_en_sintetico": false,
+          "topografia_incluida_en_sintetico": false,
+          "textura_consistente_con_drenaje": true,
+          "status": "REVISAR",
+          "severidad": "media",
+          "explicacion": "Perfil sintético no incluye drenaje ni topografía. Real: drenaje=N/A, topografía=N/A. Se recomienda agregar estas variables."
+        },
+        "Perfil Foliar": {
+          "sintetico_incluye_foliar": false,
+          "real_n_promedio": 1.85,
+          "real_p_promedio": 0.19,
+          "real_k_promedio": 1.81,
+          "status": "REVISAR",
+          "severidad": "media",
+          "explicacion": "Perfil sintético no incluye N-P-K foliar. Datos reales disponibles: N=1.85%, P=0.19%, K=1.81%"
+        }
+      },
+      "resumen_status": {
+        "COMPATIBLE": 1,
+        "REVISAR": 2,
+        "INCOMPATIBLE": 2,
+        "prioridad": "ALTA"
+      },
+      "datos_sinteticos": {
+        "ph_min": 5.0,
+        "ph_max": 7.0,
+        "mo_min": 3.5,
+        "rendimiento": 1.2,
+        "textura_optima": "Franco-Arcilloso",
+        "tipo_suelo": "Franco-Arcilloso"
+      },
+      "datos_reales": {
+        "ph_promedio": 5.81,
+        "ph_p10": 4.72,
+        "ph_p50": 5.8,
+        "ph_p90": 6.86,
+        "mo_promedio": 2.13,
+        "mo_p10": 1.1,
+        "mo_p50": 1.9,
+        "mo_p90": 3.47,
+        "rendimiento": 0.57,
+        "n_registros_eva": 504,
+        "n_registros_suelos": 908,
+        "n_registros_foliar": 172,
+        "drenaje": "Buen drenaje",
+        "topografia": "Pendiente",
+        "n_foliar": 1.85,
+        "p_foliar": 0.19,
+        "k_foliar": 1.81
+      }
+    },
+    "Algodón": {
+      "comparaciones": {
+        "pH": {
+          "sintetico_rango": [
+            5.5,
+            7.5
+          ],
+          "real_mediana": 6.71,
+          "real_p10": 5.8,
+          "real_p90": 8.0,
+          "sintetico_medio": 6.5,
+          "diferencia_absoluta": 0.21,
+          "diferencia_porcentual": null,
+          "status": "COMPATIBLE",
+          "severidad": "alta",
+          "explicacion": "Rango sintético [5.5, 7.5] contiene la mediana real (6.71)"
+        },
+        "Materia Orgánica": {
+          "sintetico_min": 1.5,
+          "real_mediana": 2.08,
+          "real_p10": 1.26,
+          "diferencia_absoluta": -0.58,
+          "diferencia_porcentual": -27.9,
+          "status": "COMPATIBLE",
+          "severidad": "baja",
+          "explicacion": "MO mínima sintética (1.5%) ≤ la mediana real (2.08%)"
+        },
+        "Rendimiento": {
+          "sintetico": 2.5,
+          "real": 1.67,
+          "diferencia_absoluta": 0.83,
+          "diferencia_porcentual": 49.7,
+          "status": "REVISAR",
+          "severidad": "media",
+          "direccion": "MAYOR",
+          "explicacion": "Rendimiento sintético (2.5 t/ha) es MAYOR al real (1.67 t/ha) — +49.7%"
+        },
+        "Textura/Drenaje": {
+          "sintetico_textura_optima": "Franco",
+          "sintetico_tipo_suelo": "Franco;Franco-Arenoso",
+          "real_drenaje": null,
+          "real_topografia": null,
+          "drenaje_incluido_en_sintetico": false,
+          "topografia_incluida_en_sintetico": false,
+          "textura_consistente_con_drenaje": true,
+          "status": "REVISAR",
+          "severidad": "media",
+          "explicacion": "Perfil sintético no incluye drenaje ni topografía. Real: drenaje=N/A, topografía=N/A. Se recomienda agregar estas variables."
+        },
+        "Perfil Foliar": {
+          "sintetico_incluye_foliar": false,
+          "real_n_promedio": null,
+          "real_p_promedio": null,
+          "real_k_promedio": null,
+          "status": "REVISAR",
+          "severidad": "media",
+          "explicacion": "Perfil sintético no incluye N-P-K foliar. Sin datos foliares reales disponibles"
+        }
+      },
+      "resumen_status": {
+        "COMPATIBLE": 2,
+        "REVISAR": 3,
+        "INCOMPATIBLE": 0,
+        "prioridad": "MEDIA"
+      },
+      "datos_sinteticos": {
+        "ph_min": 5.5,
+        "ph_max": 7.5,
+        "mo_min": 1.5,
+        "rendimiento": 2.5,
+        "textura_optima": "Franco",
+        "tipo_suelo": "Franco;Franco-Arenoso"
+      },
+      "datos_reales": {
+        "ph_promedio": 6.8,
+        "ph_p10": 5.8,
+        "ph_p50": 6.71,
+        "ph_p90": 8.0,
+        "mo_promedio": 2.16,
+        "mo_p10": 1.26,
+        "mo_p50": 2.08,
+        "mo_p90": 3.02,
+        "rendimiento": 1.67,
+        "n_registros_eva": 152,
+        "n_registros_suelos": 18,
+        "n_registros_foliar": 0,
+        "drenaje": "Buen drenaje",
+        "topografia": "Plano",
+        "n_foliar": null,
+        "p_foliar": null,
+        "k_foliar": null
+      }
+    },
+    "Sorgo": {
+      "comparaciones": {
+        "pH": {
+          "sintetico_rango": [
+            5.5,
+            7.5
+          ],
+          "real_mediana": 6.39,
+          "real_p10": 5.49,
+          "real_p90": 7.78,
+          "sintetico_medio": 6.5,
+          "diferencia_absoluta": 0.11,
+          "diferencia_porcentual": null,
+          "status": "COMPATIBLE",
+          "severidad": "alta",
+          "explicacion": "Rango sintético [5.5, 7.5] contiene la mediana real (6.39)"
+        },
+        "Materia Orgánica": {
+          "sintetico_min": 1.5,
+          "real_mediana": 1.81,
+          "real_p10": 0.83,
+          "diferencia_absoluta": -0.31,
+          "diferencia_porcentual": -17.1,
+          "status": "COMPATIBLE",
+          "severidad": "baja",
+          "explicacion": "MO mínima sintética (1.5%) ≤ la mediana real (1.81%)"
+        },
+        "Rendimiento": {
+          "sintetico": 3.5,
+          "real": 1.98,
+          "diferencia_absoluta": 1.52,
+          "diferencia_porcentual": 76.8,
+          "status": "REVISAR",
+          "severidad": "media",
+          "direccion": "MAYOR",
+          "explicacion": "Rendimiento sintético (3.5 t/ha) es MAYOR al real (1.98 t/ha) — +76.8%"
+        },
+        "Textura/Drenaje": {
+          "sintetico_textura_optima": "Franco-Arenoso",
+          "sintetico_tipo_suelo": "Franco;Franco-Arenoso",
+          "real_drenaje": null,
+          "real_topografia": null,
+          "drenaje_incluido_en_sintetico": false,
+          "topografia_incluida_en_sintetico": false,
+          "textura_consistente_con_drenaje": true,
+          "status": "REVISAR",
+          "severidad": "media",
+          "explicacion": "Perfil sintético no incluye drenaje ni topografía. Real: drenaje=N/A, topografía=N/A. Se recomienda agregar estas variables."
+        },
+        "Perfil Foliar": {
+          "sintetico_incluye_foliar": false,
+          "real_n_promedio": null,
+          "real_p_promedio": null,
+          "real_k_promedio": null,
+          "status": "REVISAR",
+          "severidad": "media",
+          "explicacion": "Perfil sintético no incluye N-P-K foliar. Sin datos foliares reales disponibles"
+        }
+      },
+      "resumen_status": {
+        "COMPATIBLE": 2,
+        "REVISAR": 3,
+        "INCOMPATIBLE": 0,
+        "prioridad": "MEDIA"
+      },
+      "datos_sinteticos": {
+        "ph_min": 5.5,
+        "ph_max": 7.5,
+        "mo_min": 1.5,
+        "rendimiento": 3.5,
+        "textura_optima": "Franco-Arenoso",
+        "tipo_suelo": "Franco;Franco-Arenoso"
+      },
+      "datos_reales": {
+        "ph_promedio": 6.51,
+        "ph_p10": 5.49,
+        "ph_p50": 6.39,
+        "ph_p90": 7.78,
+        "mo_promedio": 2.04,
+        "mo_p10": 0.83,
+        "mo_p50": 1.81,
+        "mo_p90": 3.37,
+        "rendimiento": 1.98,
+        "n_registros_eva": 101,
+        "n_registros_suelos": 247,
+        "n_registros_foliar": 0,
+        "drenaje": "Buen drenaje",
+        "topografia": "Plano",
+        "n_foliar": null,
+        "p_foliar": null,
+        "k_foliar": null
+      }
+    },
+    "Palma": {
+      "comparaciones": {
+        "pH": {
+          "sintetico_rango": [
+            4.5,
+            7.0
+          ],
+          "real_mediana": 6.42,
+          "real_p10": 5.2,
+          "real_p90": 7.59,
+          "sintetico_medio": 5.75,
+          "diferencia_absoluta": 0.67,
+          "diferencia_porcentual": null,
+          "status": "COMPATIBLE",
+          "severidad": "media",
+          "explicacion": "Rango sintético [4.5, 7.0] contiene la mediana real (6.42)"
+        },
+        "Materia Orgánica": {
+          "sintetico_min": 3.0,
+          "real_mediana": 1.17,
+          "real_p10": 0.56,
+          "diferencia_absoluta": 1.83,
+          "diferencia_porcentual": 156.4,
+          "status": "INCOMPATIBLE",
+          "severidad": "alta",
+          "explicacion": "MO mínima sintética (3.0%) EXCEDE en 1.83pp la mediana real (1.17%)"
+        },
+        "Rendimiento": {
+          "sintetico": 20.0,
+          "real": 3.18,
+          "diferencia_absoluta": 16.82,
+          "diferencia_porcentual": 528.9,
+          "status": "INCOMPATIBLE",
+          "severidad": "alta",
+          "direccion": "MAYOR",
+          "explicacion": "Rendimiento sintético (20.0 t/ha) es MAYOR al real (3.18 t/ha) — +528.9%"
+        },
+        "Textura/Drenaje": {
+          "sintetico_textura_optima": "Franco-Arcilloso",
+          "sintetico_tipo_suelo": "Franco-Arcilloso;Arcilloso",
+          "real_drenaje": null,
+          "real_topografia": null,
+          "drenaje_incluido_en_sintetico": false,
+          "topografia_incluida_en_sintetico": false,
+          "textura_consistente_con_drenaje": true,
+          "status": "REVISAR",
+          "severidad": "media",
+          "explicacion": "Perfil sintético no incluye drenaje ni topografía. Real: drenaje=N/A, topografía=N/A. Se recomienda agregar estas variables."
+        },
+        "Perfil Foliar": {
+          "sintetico_incluye_foliar": false,
+          "real_n_promedio": 2.47,
+          "real_p_promedio": 0.17,
+          "real_k_promedio": 1.02,
+          "status": "REVISAR",
+          "severidad": "media",
+          "explicacion": "Perfil sintético no incluye N-P-K foliar. Datos reales disponibles: N=2.47%, P=0.17%, K=1.02%"
+        }
+      },
+      "resumen_status": {
+        "COMPATIBLE": 1,
+        "REVISAR": 2,
+        "INCOMPATIBLE": 2,
+        "prioridad": "ALTA"
+      },
+      "datos_sinteticos": {
+        "ph_min": 4.5,
+        "ph_max": 7.0,
+        "mo_min": 3.0,
+        "rendimiento": 20.0,
+        "textura_optima": "Franco-Arcilloso",
+        "tipo_suelo": "Franco-Arcilloso;Arcilloso"
+      },
+      "datos_reales": {
+        "ph_promedio": 6.37,
+        "ph_p10": 5.2,
+        "ph_p50": 6.42,
+        "ph_p90": 7.59,
+        "mo_promedio": 1.39,
+        "mo_p10": 0.56,
+        "mo_p50": 1.17,
+        "mo_p90": 2.33,
+        "rendimiento": 3.18,
+        "n_registros_eva": 530,
+        "n_registros_suelos": 131,
+        "n_registros_foliar": 100,
+        "drenaje": "Buen drenaje",
+        "topografia": "Plano",
+        "n_foliar": 2.47,
+        "p_foliar": 0.17,
+        "k_foliar": 1.02
+      }
+    }
+  },
+  "resumen_status": {
+    "Maíz": {
+      "COMPATIBLE": 1,
+      "REVISAR": 3,
+      "INCOMPATIBLE": 1,
+      "prioridad": "ALTA"
+    },
+    "Yuca": {
+      "COMPATIBLE": 3,
+      "REVISAR": 2,
+      "INCOMPATIBLE": 0,
+      "prioridad": "MEDIA"
+    },
+    "Arroz": {
+      "COMPATIBLE": 1,
+      "REVISAR": 3,
+      "INCOMPATIBLE": 1,
+      "prioridad": "ALTA"
+    },
+    "Frijol": {
+      "COMPATIBLE": 2,
+      "REVISAR": 3,
+      "INCOMPATIBLE": 0,
+      "prioridad": "MEDIA"
+    },
+    "Ñame": {
+      "COMPATIBLE": 2,
+      "REVISAR": 3,
+      "INCOMPATIBLE": 0,
+      "prioridad": "MEDIA"
+    },
+    "Plátano": {
+      "COMPATIBLE": 1,
+      "REVISAR": 2,
+      "INCOMPATIBLE": 2,
+      "prioridad": "ALTA"
+    },
+    "Cacao": {
+      "COMPATIBLE": 1,
+      "REVISAR": 2,
+      "INCOMPATIBLE": 2,
+      "prioridad": "ALTA"
+    },
+    "Algodón": {
+      "COMPATIBLE": 2,
+      "REVISAR": 3,
+      "INCOMPATIBLE": 0,
+      "prioridad": "MEDIA"
+    },
+    "Sorgo": {
+      "COMPATIBLE": 2,
+      "REVISAR": 3,
+      "INCOMPATIBLE": 0,
+      "prioridad": "MEDIA"
+    },
+    "Palma": {
+      "COMPATIBLE": 1,
+      "REVISAR": 2,
+      "INCOMPATIBLE": 2,
+      "prioridad": "ALTA"
+    }
+  }
+}
