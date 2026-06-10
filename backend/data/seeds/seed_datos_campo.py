@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 DATABASE_URL = "postgresql://agrocaribe:agrocaribe_secret@localhost:5432/agrocaribe"
 
-DATA_DIR = Path(__file__).resolve().parents[2] / "data" / "caribe"
+DATA_DIR = Path(__file__).resolve().parents[3] / "data" / "caribe"
 
 BATCH_SIZE = 2000
 
