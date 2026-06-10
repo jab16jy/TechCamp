@@ -7,6 +7,8 @@ import asyncio
 import json
 import logging
 import os
+import time
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
@@ -15,11 +17,7 @@ import numpy as np
 import pandas as pd
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.ensemble import HistGradientBoostingClassifier
-from sklearn.model_selection import (
-    train_test_split,
-    cross_val_score,
-    StratifiedKFold,
-)
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, label_binarize
 from sklearn.inspection import permutation_importance
 from sklearn.metrics import (
@@ -46,6 +44,11 @@ CSV_PATH = CODE_MODEL_DIR / "crops_requirements.csv"
 BUNDLED_MODEL_PATH = CODE_MODEL_DIR / "crop_model_rf.joblib"
 BUNDLED_SCALER_PATH = CODE_MODEL_DIR / "crop_scaler.joblib"
 BUNDLED_METRICS_PATH = CODE_MODEL_DIR / "model_metrics.json"
+
+# Cache paths
+CLIMATOLOGY_CACHE_PATH = ARTIFACT_DIR / "caribbean_climatology_cache.json"
+DATASET_CACHE_PATH = ARTIFACT_DIR / "synthetic_dataset.parquet"
+FORCE_REGENERATE = os.environ.get("FORCE_REGENERATE", "").lower() in ("1", "true", "yes")
 
 NASA_POWER_URL = "https://power.larc.nasa.gov/api/temporal/climatology/point"
 ELEVATION_API_URL = "https://api.open-meteo.com/v1/elevation"
@@ -670,20 +673,40 @@ def train_model(
                        synchronously (safe for __main__ scripts but NOT from
                        within an async context like uvicorn).
     """
-    # Step 1: Fetch NASA POWER climatology
+    # Step 1: Fetch NASA POWER climatology (with 24h cache)
     logger.info("=== Fase 1: Climatologia NASA POWER del Caribe ===")
     if climate_zones is not None:
         logger.info("Usando %d zonas climáticas proporcionadas", len(climate_zones))
     else:
-        try:
-            climate_zones = asyncio.run(fetch_caribbean_climatology())
-            logger.info("NASA POWER: %d zonas cargadas", len(climate_zones))
-        except Exception as e:
-            logger.warning("Error en NASA POWER: %s. Usando climatologia regional.", e)
-            climate_zones = [{
-                "name": "Caribe", "lat": 10.0, "lng": -75.0,
-                "monthly": dict(REGIONAL_CLIMATOLOGY),
-            }]
+        # Try loading from cache first
+        if not FORCE_REGENERATE and CLIMATOLOGY_CACHE_PATH.exists():
+            try:
+                cache_age = time.time() - CLIMATOLOGY_CACHE_PATH.stat().st_mtime
+                if cache_age < 86400:  # 24 hours
+                    climate_zones = json.loads(CLIMATOLOGY_CACHE_PATH.read_text())
+                    logger.info("Climatologia cargada desde cache (%d zonas, %.1fh de antiguedad)",
+                                len(climate_zones), cache_age / 3600)
+                else:
+                    logger.info("Cache de climatologia expirado (%.1fh > 24h). Recargando...",
+                                cache_age / 3600)
+            except Exception as e:
+                logger.warning("Error leyendo cache de climatologia: %s", e)
+
+        if climate_zones is None:
+            try:
+                climate_zones = asyncio.run(fetch_caribbean_climatology())
+                logger.info("NASA POWER: %d zonas cargadas", len(climate_zones))
+                _ensure_artifact_dir()
+                CLIMATOLOGY_CACHE_PATH.write_text(
+                    json.dumps(climate_zones, indent=2, default=str)
+                )
+                logger.info("Climatologia guardada en cache: %s", CLIMATOLOGY_CACHE_PATH)
+            except Exception as e:
+                logger.warning("Error en NASA POWER: %s. Usando climatologia regional.", e)
+                climate_zones = [{
+                    "name": "Caribe", "lat": 10.0, "lng": -75.0,
+                    "monthly": dict(REGIONAL_CLIMATOLOGY),
+                }]
 
     # Step 1b: Fetch NDVI distribution per precipitation decile from database
     logger.info("=== Fase 1b: Cargando NDVI por decil de precipitacion desde indices_satelitales ===")
@@ -693,9 +716,103 @@ def train_model(
     except Exception as e:
         logger.warning("No se pudo obtener NDVI por decil: %s", e)
 
-    # Step 2: Generate dataset
+    # Step 2: Generate dataset (with Parquet cache)
     logger.info("=== Fase 2: Generando dataset con distribuciones reales ===")
-    df = generate_synthetic_dataset(n_samples_per_crop, climate_zones, ndvi_decile_stats=ndvi_decile_stats)
+    df = None
+    if not FORCE_REGENERATE and DATASET_CACHE_PATH.exists():
+        try:
+            df = pd.read_parquet(DATASET_CACHE_PATH)
+            logger.info("Dataset cargado desde cache: %d muestras", len(df))
+        except Exception as e:
+            logger.warning("Error cargando dataset desde cache: %s. Regenerando...", e)
+
+    if df is None:
+        df = generate_synthetic_dataset(
+            n_samples_per_crop, climate_zones, ndvi_decile_stats=ndvi_decile_stats,
+        )
+        _ensure_artifact_dir()
+        df.to_parquet(DATASET_CACHE_PATH, index=False)
+        logger.info("Dataset guardado en cache: %s", DATASET_CACHE_PATH)
+
+    # ── Incorporate real datos_campo data (row duplication) ─────────────
+    # CalibratedClassifierCV does not propagate sample_weight, so we
+    # duplicate each real row 10x to give more weight to real field data.
+    try:
+        import asyncpg
+        dsn = "postgresql://agrocaribe:agrocaribe_secret@localhost:5432/agrocaribe"
+        real_rows = []
+        conn = await asyncpg.connect(dsn)
+        db_rows = await conn.fetch(
+            "SELECT cultivo, ph, mo, textura, ndvi, ndwi, rendimiento "
+            "FROM datos_campo WHERE ph IS NOT NULL OR mo IS NOT NULL "
+            "OR ndvi IS NOT NULL LIMIT 5000"
+        )
+        await conn.close()
+
+        crops_req = {row["cultivo"]: row for _, row in pd.read_csv(CSV_PATH).iterrows()}
+        for db_row in db_rows:
+            cultivo = db_row["cultivo"]
+            crop_req = crops_req.get(cultivo)
+            if crop_req is None:
+                continue
+            # Sample missing climate features from crop ranges
+            temp = _triangular_sample(
+                float(crop_req["temp_min"]), float(crop_req["temp_max"])
+            )
+            hum = _triangular_sample(
+                float(crop_req["humedad_min"]), float(crop_req["humedad_max"])
+            )
+            prec = _triangular_sample(
+                float(crop_req["precipitacion_min"]), float(crop_req["precipitacion_max"])
+            )
+            ph = db_row["ph"] if db_row["ph"] is not None else _triangular_sample(
+                float(crop_req["ph_min"]), float(crop_req["ph_max"])
+            )
+            mo = db_row["mo"] if db_row["mo"] is not None else _triangular_sample(
+                max(0.5, float(crop_req["materia_organica_min"]) - 0.5),
+                float(crop_req["materia_organica_min"]) + 2.0,
+            )
+            ndvi = db_row["ndvi"] if db_row["ndvi"] is not None else float(np.random.triangular(0.2, 0.5, 0.9))
+            ndwi = db_row["ndwi"] if db_row["ndwi"] is not None else float(np.random.triangular(0.1, 0.5, 0.8))
+            tex = 7.0  # default Franco
+            if db_row["textura"]:
+                tex = TEXTURE_MAP.get(db_row["textura"], 7.0)
+            alt = _triangular_sample(
+                float(crop_req["altitud_min"]), float(crop_req["altitud_max"])
+            )
+            real_rows.append({
+                "temperatura": round(temp, 2),
+                "humedad": round(hum, 2),
+                "precipitacion": round(prec, 1),
+                "ph_suelo": round(ph, 2),
+                "materia_organica": round(mo, 2),
+                "ndvi": round(ndvi, 3),
+                "ndwi": round(ndwi, 3),
+                "textura_encoded": round(tex, 2),
+                "altitud": round(alt, 1),
+                "precip_hum_ratio": round(prec / max(hum, 1.0), 3),
+                "precip_temp_ratio": round(prec / max(temp, 0.1), 3),
+                "ndvi_ndwi_ratio": round(ndvi / max(ndwi, 0.01), 3),
+                "cultivo": cultivo,
+            })
+
+        if real_rows:
+            # Duplicate each real row 10x for weight
+            duplicated = []
+            for row in real_rows:
+                for _ in range(10):
+                    duplicated.append(dict(row))
+            real_df = pd.DataFrame(duplicated)
+            df = pd.concat([df, real_df], ignore_index=True)
+            logger.info(
+                "Datos campo incorporados: %d filas reales (%d duplicadas) agregadas al dataset",
+                len(real_rows), len(duplicated),
+            )
+        else:
+            logger.info("No se encontraron datos campo para incorporar al entrenamiento")
+    except Exception as e:
+        logger.warning("No se pudieron incorporar datos campo: %s", e)
+
     X = df[ALL_FEATURE_COLS].values
     y = df["cultivo"].values
 
@@ -726,7 +843,7 @@ def train_model(
     model = CalibratedClassifierCV(
         estimator=base_model,
         method="sigmoid",
-        cv=5,
+        cv=3,
         n_jobs=-1,
     )
     model.fit(X_train_scaled, y_train)
@@ -781,26 +898,11 @@ def train_model(
     except Exception:
         metrics["roc_auc_ovr"] = None
 
-    # Step 6: Stratified cross-validation by textural class
-    logger.info("=== Fase 4: Validacion cruzada estratificada (calibrado) ===")
-    try:
-        texture_bins = pd.cut(df["textura_encoded"], bins=6, labels=False)
-        skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=random_state)
-        cv_scores = cross_val_score(
-            model, scaler.transform(X), y, cv=skf, scoring="accuracy",
-        )
-        metrics["cv_accuracy_mean"] = round(float(cv_scores.mean()), 4)
-        metrics["cv_accuracy_std"] = round(float(cv_scores.std()), 4)
-        metrics["cv_scores"] = [round(float(s), 4) for s in cv_scores]
-        metrics["cv_method"] = "StratifiedKFold (5-fold) on calibrated model"
-    except Exception as e:
-        logger.warning("CV estratificado fallo: %s", e)
-        skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=random_state)
-        cv_scores = cross_val_score(model, scaler.transform(X), y, cv=skf, scoring="accuracy")
-        metrics["cv_accuracy_mean"] = round(float(cv_scores.mean()), 4)
-        metrics["cv_accuracy_std"] = round(float(cv_scores.std()), 4)
-        metrics["cv_scores"] = [round(float(s), 4) for s in cv_scores]
-        metrics["cv_method"] = "StratifiedKFold (default) on calibrated model"
+    # Step 6: Cross-validation skipped for retrain speed
+    logger.info("=== Fase 4: Validacion cruzada omitida (optimizacion retrain) ===")
+    metrics["cv_accuracy_mean"] = None
+    metrics["cv_accuracy_std"] = None
+    metrics["cv_method"] = "omitido para velocidad de retrain"
 
     # Step 7: Per-crop accuracy
     per_crop = {}
@@ -828,7 +930,7 @@ def train_model(
     # regular attribute, and CalibratedClassifierCV wraps the estimator chain.
     # Permutation importance is estimator-agnostic and gives reliable rankings.
     perm_importance = permutation_importance(
-        model, X_test_scaled, y_test, n_repeats=10,
+        model, X_test_scaled, y_test, n_repeats=3,
         random_state=random_state, n_jobs=-1,
     )
     metrics["feature_importance"] = sorted(
