@@ -114,8 +114,8 @@ CROP_PRIOR = {
     "Algodón": 0.6,
     "Sorgo": 0.9,
     "Palma_Aceitera": 1.0,
-    "Mango": 0.9,
-    "Ají": 0.7,
+    "Mango": 0.85,
+    "Ají": 0.75,
 }
 
 # Class weights for confused crops — keys are integer class indices matching CSV row order.
@@ -128,6 +128,8 @@ CLASS_WEIGHTS = {
     1: 2.5,   # Yuca
     4: 1.8,   # Ñame
     7: 1.6,   # Algodón
+    10: 1.5,  # Mango
+    11: 1.0,  # Ají
 }
 
 # Overlap region where Maíz, Sorgo, Yuca, Ñame, Algodón share ecological ranges
