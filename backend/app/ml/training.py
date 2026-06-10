@@ -648,6 +648,85 @@ def generate_synthetic_dataset(
     return df
 
 
+# ── Bridge for sync datos_campo fetch ──────────────────────────────────
+
+
+async def _fetch_datos_campo_async() -> list[dict]:
+    """Fetch datos_campo rows with useful feature data from database."""
+    import asyncpg
+    dsn = "postgresql://agrocaribe:agrocaribe_secret@localhost:5432/agrocaribe"
+    conn = None
+    try:
+        conn = await asyncpg.connect(dsn)
+        db_rows = await conn.fetch(
+            "SELECT cultivo, ph, mo, textura, ndvi, ndwi "
+            "FROM datos_campo WHERE ph IS NOT NULL OR mo IS NOT NULL "
+            "OR ndvi IS NOT NULL LIMIT 5000"
+        )
+        crops_req = {row["cultivo"]: row for _, row in pd.read_csv(CSV_PATH).iterrows()}
+        rows = []
+        for db_row in db_rows:
+            cultivo = db_row["cultivo"]
+            crop_req = crops_req.get(cultivo)
+            if crop_req is None:
+                continue
+            temp = _triangular_sample(
+                float(crop_req["temp_min"]), float(crop_req["temp_max"])
+            )
+            hum = _triangular_sample(
+                float(crop_req["humedad_min"]), float(crop_req["humedad_max"])
+            )
+            prec = _triangular_sample(
+                float(crop_req["precipitacion_min"]), float(crop_req["precipitacion_max"])
+            )
+            ph = db_row["ph"] if db_row["ph"] is not None else _triangular_sample(
+                float(crop_req["ph_min"]), float(crop_req["ph_max"])
+            )
+            mo = db_row["mo"] if db_row["mo"] is not None else _triangular_sample(
+                max(0.5, float(crop_req["materia_organica_min"]) - 0.5),
+                float(crop_req["materia_organica_min"]) + 2.0,
+            )
+            ndvi = db_row["ndvi"] if db_row["ndvi"] is not None else float(np.random.triangular(0.2, 0.5, 0.9))
+            ndwi = db_row["ndwi"] if db_row["ndwi"] is not None else float(np.random.triangular(0.1, 0.5, 0.8))
+            tex = 7.0
+            if db_row["textura"]:
+                tex = TEXTURE_MAP.get(db_row["textura"], 7.0)
+            alt = _triangular_sample(
+                float(crop_req["altitud_min"]), float(crop_req["altitud_max"])
+            )
+            rows.append({
+                "temperatura": round(temp, 2),
+                "humedad": round(hum, 2),
+                "precipitacion": round(prec, 1),
+                "ph_suelo": round(ph, 2),
+                "materia_organica": round(mo, 2),
+                "ndvi": round(ndvi, 3),
+                "ndwi": round(ndwi, 3),
+                "textura_encoded": round(tex, 2),
+                "altitud": round(alt, 1),
+                "precip_hum_ratio": round(prec / max(hum, 1.0), 3),
+                "precip_temp_ratio": round(prec / max(temp, 0.1), 3),
+                "ndvi_ndwi_ratio": round(ndvi / max(ndwi, 0.01), 3),
+                "cultivo": cultivo,
+            })
+        return rows
+    except Exception as e:
+        logger.warning("Error fetching datos_campo: %s", e)
+        return []
+    finally:
+        if conn:
+            await conn.close()
+
+
+def _fetch_datos_campo_sync() -> list[dict]:
+    """Fetch datos_campo rows synchronously via asyncio bridge."""
+    try:
+        return asyncio.run(_fetch_datos_campo_async())
+    except Exception as e:
+        logger.warning("Fallo fetch datos_campo: %s", e)
+        return []
+
+
 # ── Training ────────────────────────────────────────────────────────────
 
 
@@ -738,64 +817,7 @@ def train_model(
     # CalibratedClassifierCV does not propagate sample_weight, so we
     # duplicate each real row 10x to give more weight to real field data.
     try:
-        import asyncpg
-        dsn = "postgresql://agrocaribe:agrocaribe_secret@localhost:5432/agrocaribe"
-        real_rows = []
-        conn = await asyncpg.connect(dsn)
-        db_rows = await conn.fetch(
-            "SELECT cultivo, ph, mo, textura, ndvi, ndwi, rendimiento "
-            "FROM datos_campo WHERE ph IS NOT NULL OR mo IS NOT NULL "
-            "OR ndvi IS NOT NULL LIMIT 5000"
-        )
-        await conn.close()
-
-        crops_req = {row["cultivo"]: row for _, row in pd.read_csv(CSV_PATH).iterrows()}
-        for db_row in db_rows:
-            cultivo = db_row["cultivo"]
-            crop_req = crops_req.get(cultivo)
-            if crop_req is None:
-                continue
-            # Sample missing climate features from crop ranges
-            temp = _triangular_sample(
-                float(crop_req["temp_min"]), float(crop_req["temp_max"])
-            )
-            hum = _triangular_sample(
-                float(crop_req["humedad_min"]), float(crop_req["humedad_max"])
-            )
-            prec = _triangular_sample(
-                float(crop_req["precipitacion_min"]), float(crop_req["precipitacion_max"])
-            )
-            ph = db_row["ph"] if db_row["ph"] is not None else _triangular_sample(
-                float(crop_req["ph_min"]), float(crop_req["ph_max"])
-            )
-            mo = db_row["mo"] if db_row["mo"] is not None else _triangular_sample(
-                max(0.5, float(crop_req["materia_organica_min"]) - 0.5),
-                float(crop_req["materia_organica_min"]) + 2.0,
-            )
-            ndvi = db_row["ndvi"] if db_row["ndvi"] is not None else float(np.random.triangular(0.2, 0.5, 0.9))
-            ndwi = db_row["ndwi"] if db_row["ndwi"] is not None else float(np.random.triangular(0.1, 0.5, 0.8))
-            tex = 7.0  # default Franco
-            if db_row["textura"]:
-                tex = TEXTURE_MAP.get(db_row["textura"], 7.0)
-            alt = _triangular_sample(
-                float(crop_req["altitud_min"]), float(crop_req["altitud_max"])
-            )
-            real_rows.append({
-                "temperatura": round(temp, 2),
-                "humedad": round(hum, 2),
-                "precipitacion": round(prec, 1),
-                "ph_suelo": round(ph, 2),
-                "materia_organica": round(mo, 2),
-                "ndvi": round(ndvi, 3),
-                "ndwi": round(ndwi, 3),
-                "textura_encoded": round(tex, 2),
-                "altitud": round(alt, 1),
-                "precip_hum_ratio": round(prec / max(hum, 1.0), 3),
-                "precip_temp_ratio": round(prec / max(temp, 0.1), 3),
-                "ndvi_ndwi_ratio": round(ndvi / max(ndwi, 0.01), 3),
-                "cultivo": cultivo,
-            })
-
+        real_rows = _fetch_datos_campo_sync()
         if real_rows:
             # Duplicate each real row 10x for weight
             duplicated = []
@@ -969,9 +991,9 @@ def train_model(
     METRICS_PATH.write_text(json.dumps(metrics, indent=2, default=str))
     logger.info("Modelo guardado en %s", MODEL_PATH)
     logger.info(
-        "Accuracy=%.4f | CV mean=%.4f | F1=%.4f",
+        "Accuracy=%.4f | CV mean=%s | F1=%.4f",
         metrics["accuracy"],
-        metrics.get("cv_accuracy_mean", 0),
+        metrics.get("cv_accuracy_mean", "N/A"),
         metrics["f1_macro"],
     )
 
@@ -1128,7 +1150,8 @@ if __name__ == "__main__":
     m = train_model()
     print("\n=== Resultados del entrenamiento ===")
     print(f"  Accuracy: {m['accuracy']:.2%}")
-    print(f"  CV mean:  {m.get('cv_accuracy_mean', 'N/A')}")
+    cv = m.get('cv_accuracy_mean')
+    print(f"  CV mean:  {cv:.4f}" if cv is not None else "  CV mean:  N/A")
     print(f"  F1 macro: {m['f1_macro']}")
     print("\n  Por cultivo:")
     for crop, acc in m.get("per_crop_accuracy", {}).items():
