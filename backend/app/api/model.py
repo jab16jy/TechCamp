@@ -3,7 +3,9 @@
 import logging
 
 from fastapi import APIRouter
+from fastapi.responses import JSONResponse
 
+from app.ml.model import get_crop_classifier
 from app.ml.training import (
     get_saved_metrics,
     train_model,
@@ -13,6 +15,30 @@ from app.ml.training import (
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/model", tags=["modelo"])
+
+
+@router.get("/crops")
+async def list_crops():
+    """Return all crop metadata from crops_requirements.csv.
+
+    Returns a JSON array of all crops with agronomic requirements,
+    emoji, ciclo_dias, rendimiento_promedio, and altitude ranges.
+    Falls back to 503 if crop data is unavailable.
+    """
+    try:
+        classifier = get_crop_classifier()
+        if not classifier.crops:
+            return JSONResponse(
+                status_code=503,
+                content={"available": False, "detail": "Crop data not available"},
+            )
+        return classifier.crops
+    except Exception:
+        logger.exception("Error fetching crop data")
+        return JSONResponse(
+            status_code=503,
+            content={"available": False, "detail": "Crop data not available"},
+        )
 
 
 @router.get("/metrics")
