@@ -1,294 +1,283 @@
 {
-  "accuracy": 0.906,
-  "precision_macro": 0.894,
-  "recall_macro": 0.9021,
-  "f1_macro": 0.8974,
+  "accuracy": 0.8923,
+  "precision_macro": 0.8645,
+  "recall_macro": 0.8696,
+  "f1_macro": 0.8664,
   "ndvi_source": "empirical",
   "confusion_matrix": [
     [
-      758,
-      32,
+      432,
+      78,
+      0,
+      0,
+      0,
+      105,
+      37,
+      0,
+      0,
+      27,
+      228,
+      0
+    ],
+    [
       10,
+      1100,
       0,
       0,
-      19,
-      0,
-      0,
-      0,
-      0,
-      28,
-      0
-    ],
-    [
-      16,
-      1065,
-      2,
-      0,
-      0,
-      0,
-      6,
-      0,
-      0,
-      35,
-      31,
-      0
-    ],
-    [
-      18,
-      1,
-      1657,
-      0,
-      0,
-      10,
-      0,
-      0,
-      0,
-      0,
-      0,
-      229
-    ],
-    [
-      0,
-      0,
-      0,
-      2650,
-      0,
-      0,
-      0,
-      6,
-      7,
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0,
-      0,
-      1144,
-      0,
-      7,
-      0,
-      0,
-      2,
-      0,
-      0
-    ],
-    [
-      66,
       0,
       14,
+      2,
       0,
       0,
-      832,
+      23,
+      14,
+      0
+    ],
+    [
+      1,
+      0,
+      1811,
+      0,
+      0,
+      17,
       0,
       0,
       1,
       0,
       0,
-      176
+      85
     ],
     [
       0,
-      33,
       0,
       0,
-      7,
-      0,
-      3234,
+      2657,
       0,
       0,
-      142,
-      144,
+      0,
+      2,
+      3,
+      0,
+      1,
       0
     ],
     [
       0,
       0,
       0,
+      0,
+      1142,
+      0,
+      11,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      118,
+      45,
+      9,
+      0,
+      0,
+      709,
       5,
       0,
       0,
-      0,
-      1467,
-      0,
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      1,
-      6,
-      0,
-      2,
-      0,
-      0,
-      2604,
-      0,
-      1,
+      3,
+      136,
       4
     ],
     [
-      0,
-      48,
-      0,
-      0,
-      3,
-      0,
-      75,
-      0,
-      0,
-      1342,
-      149,
-      0
-    ],
-    [
       87,
-      106,
-      1,
+      16,
       0,
       0,
-      1,
-      120,
+      4,
+      8,
+      3158,
       0,
       0,
-      152,
-      2058,
+      136,
+      150,
       0
     ],
     [
+      0,
+      0,
+      0,
+      4,
+      0,
+      0,
+      0,
+      1468,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      4,
+      0,
+      0,
       1,
       0,
-      184,
+      2613,
+      0,
+      0,
+      0
+    ],
+    [
+      34,
+      50,
+      0,
+      0,
+      0,
+      0,
+      91,
+      0,
+      0,
+      1304,
+      147,
+      0
+    ],
+    [
+      201,
+      90,
+      0,
+      0,
+      0,
+      124,
+      123,
       0,
       0,
       160,
+      1968,
+      0
+    ],
+    [
+      0,
+      0,
+      69,
+      0,
+      0,
+      4,
       0,
       0,
       2,
       0,
       0,
-      1916
+      2208
     ]
   ],
-  "log_loss": 0.274,
+  "log_loss": 0.3161,
   "brier_score_per_crop": {
-    "Aj\u00ed": 0.0092,
-    "Algod\u00f3n": 0.0101,
-    "Arroz": 0.0151,
-    "Cacao": 0.002,
-    "Frijol": 0.0018,
-    "Mango": 0.0147,
-    "Ma\u00edz": 0.0197,
-    "Palma_Aceitera": 0.0011,
-    "Pl\u00e1tano": 0.0012,
-    "Sorgo": 0.0204,
-    "Yuca": 0.0279,
-    "\u00d1ame": 0.0239
+    "Aj\u00ed": 0.0258,
+    "Algod\u00f3n": 0.011,
+    "Arroz": 0.0067,
+    "Cacao": 0.0014,
+    "Frijol": 0.0022,
+    "Mango": 0.0192,
+    "Ma\u00edz": 0.0237,
+    "Palma_Aceitera": 0.0009,
+    "Pl\u00e1tano": 0.0008,
+    "Sorgo": 0.0223,
+    "Yuca": 0.0432,
+    "\u00d1ame": 0.0062
   },
-  "brier_score": 0.0123,
-  "top3_accuracy": 0.997,
-  "roc_auc_ovr": 0.9947,
+  "brier_score": 0.0136,
+  "top3_accuracy": 0.9902,
+  "roc_auc_ovr": 0.9906,
   "cv_accuracy_mean": null,
   "cv_accuracy_std": null,
   "cv_method": "omitido para velocidad de retrain",
   "per_crop_accuracy": {
-    "Aj\u00ed": 0.8949,
-    "Algod\u00f3n": 0.9221,
-    "Arroz": 0.8653,
-    "Cacao": 0.9951,
-    "Frijol": 0.9922,
-    "Mango": 0.764,
-    "Ma\u00edz": 0.9084,
-    "Palma_Aceitera": 0.9966,
-    "Pl\u00e1tano": 0.9947,
-    "Sorgo": 0.8299,
-    "Yuca": 0.815,
-    "\u00d1ame": 0.8467
+    "Aj\u00ed": 0.4763,
+    "Algod\u00f3n": 0.9458,
+    "Arroz": 0.9457,
+    "Cacao": 0.9977,
+    "Frijol": 0.9905,
+    "Mango": 0.689,
+    "Ma\u00edz": 0.8873,
+    "Palma_Aceitera": 0.9973,
+    "Pl\u00e1tano": 0.9981,
+    "Sorgo": 0.802,
+    "Yuca": 0.7382,
+    "\u00d1ame": 0.9671
   },
   "per_crop_f1": {
-    "Aj\u00ed": 0.8455,
-    "Algod\u00f3n": 0.873,
-    "Arroz": 0.8758,
-    "Cacao": 0.9955,
-    "Frijol": 0.9918,
-    "Mango": 0.7875,
-    "Ma\u00edz": 0.9237,
-    "Palma_Aceitera": 0.9963,
-    "Pl\u00e1tano": 0.9954,
-    "Sorgo": 0.8158,
-    "Yuca": 0.8339,
-    "\u00d1ame": 0.8352
+    "Aj\u00ed": 0.4827,
+    "Algod\u00f3n": 0.8655,
+    "Arroz": 0.9522,
+    "Cacao": 0.9974,
+    "Frijol": 0.9935,
+    "Mango": 0.7055,
+    "Ma\u00edz": 0.904,
+    "Palma_Aceitera": 0.998,
+    "Pl\u00e1tano": 0.9979,
+    "Sorgo": 0.7954,
+    "Yuca": 0.7412,
+    "\u00d1ame": 0.9642
   },
   "feature_importance": [
     {
       "feature": "precipitacion",
-      "importance": 0.5419
+      "importance": 0.4963
     },
     {
       "feature": "ndvi",
-      "importance": 0.1477
+      "importance": 0.1475
     },
     {
       "feature": "altitud",
-      "importance": 0.1439
+      "importance": 0.1424
     },
     {
       "feature": "textura_encoded",
-      "importance": 0.1373
+      "importance": 0.1302
     },
     {
       "feature": "humedad",
-      "importance": 0.1347
-    },
-    {
-      "feature": "ph_suelo",
-      "importance": 0.0434
-    },
-    {
-      "feature": "temperatura",
-      "importance": 0.0376
-    },
-    {
-      "feature": "materia_organica",
-      "importance": 0.0369
+      "importance": 0.1247
     },
     {
       "feature": "precip_temp_ratio",
-      "importance": 0.0344
+      "importance": 0.0982
+    },
+    {
+      "feature": "materia_organica",
+      "importance": 0.0612
+    },
+    {
+      "feature": "ph_suelo",
+      "importance": 0.0495
     },
     {
       "feature": "precip_hum_ratio",
-      "importance": 0.0312
+      "importance": 0.0439
+    },
+    {
+      "feature": "temperatura",
+      "importance": 0.0429
     },
     {
       "feature": "ndvi_ndwi_ratio",
-      "importance": 0.0035
+      "importance": 0.0047
     },
     {
       "feature": "ndwi",
-      "importance": 0.003
+      "importance": 0.002
     }
   ],
-  "n_samples": 114384,
+  "n_samples": 115267,
   "n_features": 12,
   "n_climate_zones": 7,
   "model_type": "HistGradientBoosting + CalibratedClassifierCV(sigmoid)",
   "data_source": "NASA POWER climatology + empirical NDVI from indices_satelitales (overlapped ranges)",
-  "per_crop_accuracy_previous": {
-    "Algod\u00f3n": 0.9455,
-    "Arroz": 0.95,
-    "Cacao": 0.9973,
-    "Frijol": 0.992,
-    "Ma\u00edz": 0.8953,
-    "Palma_Aceitera": 0.9972,
-    "Pl\u00e1tano": 0.9969,
-    "Sorgo": 0.8088,
-    "Yuca": 0.8468,
-    "\u00d1ame": 0.9597
-  },
+  "per_crop_accuracy_previous": null,
   "model_available": true
 }
