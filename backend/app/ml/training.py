@@ -114,11 +114,14 @@ CROP_PRIOR = {
     "Algodón": 0.6,
     "Sorgo": 0.9,
     "Palma_Aceitera": 1.0,
+    "Mango": 0.9,
+    "Ají": 0.7,
 }
 
 # Class weights for confused crops — keys are integer class indices matching CSV row order.
 # crops_requirements.csv order: 0=Maíz, 1=Yuca, 2=Arroz, 3=Frijol, 4=Ñame,
-#                                 5=Plátano, 6=Cacao, 7=Algodón, 8=Sorgo, 9=Palma_Aceitera
+#                                 5=Plátano, 6=Cacao, 7=Algodón, 8=Sorgo, 9=Palma_Aceitera,
+#                                 10=Mango, 11=Ají
 CLASS_WEIGHTS = {
     0: 4.0,   # Maíz — needs extra penalty
     8: 3.0,   # Sorgo
