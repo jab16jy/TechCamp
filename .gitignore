@@ -27,6 +27,12 @@ Thumbs.db
 
 # Logs
 *.log
+
+# ML generated artifacts
+*.joblib
+*_cache.json
+*.parquet
+
 # Local AI runtime state
 .atl/
 .engram/
