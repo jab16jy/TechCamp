@@ -19,18 +19,21 @@ UMBRAL_ESTRES_HIDRICO = {
     "Maíz": 20, "Yuca": 18, "Plátano": 25, "Arroz": 30,
     "Frijol": 22, "Ñame": 20, "Cacao": 28, "Algodón": 18,
     "Sorgo": 18, "Palma Aceitera": 28,
+    "Mango": 25, "Ají": 22,
 }
 
 ET0_BASE = {
     "Maíz": 5.2, "Yuca": 4.1, "Plátano": 4.8, "Arroz": 6.0,
     "Frijol": 4.5, "Ñame": 4.3, "Cacao": 3.5, "Algodón": 5.8,
     "Sorgo": 5.5, "Palma Aceitera": 4.0,
+    "Mango": 4.5, "Ají": 4.5,
 }
 
 FACTOR_RAIZ = {
     "Maíz": 1.0, "Yuca": 1.2, "Plátano": 0.9, "Arroz": 0.7,
     "Frijol": 0.8, "Ñame": 1.1, "Cacao": 0.7, "Algodón": 1.0,
     "Sorgo": 1.1, "Palma Aceitera": 0.9,
+    "Mango": 1.2, "Ají": 0.7,
 }
 
 FACTOR_TEXTURA = {

@@ -23,6 +23,7 @@ from __future__ import annotations
 import argparse
 import logging
 import sys
+import unicodedata
 from pathlib import Path
 from typing import Any, Final
 
@@ -44,6 +45,8 @@ PRIORITY_CROPS: Final[list[str]] = [
     "Sorgo",
     "Yuca",
     "Ñame",
+    "Mango",
+    "Ají",
 ]
 
 SUELOS_STATS_COLS: Final[list[str]] = [
@@ -222,6 +225,22 @@ def _compute_foliar_stats(
 
 
 # ---------------------------------------------------------------------------
+# NFD normalization helper
+# ---------------------------------------------------------------------------
+
+
+def _norm_nfd(s: str) -> str:
+    """Remove accents using NFD normalization + ASCII encoding.
+
+    Ensures that accented (e.g. 'Ají') and unaccented (e.g. 'Aji')
+    crop names match across datasets.
+    """
+    if not isinstance(s, str):
+        return ""
+    return unicodedata.normalize("NFD", s).encode("ascii", "ignore").decode("ascii")
+
+
+# ---------------------------------------------------------------------------
 # EVA stats
 # ---------------------------------------------------------------------------
 
@@ -282,10 +301,11 @@ def construir_perfiles(
     for cultivo in PRIORITY_CROPS:
         logger.info("Procesando: %s", cultivo)
 
-        # Filter by normalized crop name
-        eva_crop = eva[eva["_cultivo_norm"] == cultivo]
-        suelos_crop = suelos[suelos["_cultivo_norm"] == cultivo]
-        foliar_crop = foliar[foliar["_cultivo_norm"] == cultivo]
+        # Filter by normalized crop name (NFD-normalized to handle accents)
+        cultivo_nfd = _norm_nfd(cultivo)
+        eva_crop = eva[eva["_cultivo_norm"].apply(_norm_nfd) == cultivo_nfd]
+        suelos_crop = suelos[suelos["_cultivo_norm"].apply(_norm_nfd) == cultivo_nfd]
+        foliar_crop = foliar[foliar["_cultivo_norm"].apply(_norm_nfd) == cultivo_nfd]
 
         # Compute stats from each dataset
         eva_stats = _compute_eva_stats(eva_crop, cultivo)

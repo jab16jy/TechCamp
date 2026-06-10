@@ -52,6 +52,8 @@ PRIORITY_CROPS: Final[list[str]] = [
     "Sorgo",
     "Yuca",
     "Ñame",
+    "Mango",
+    "Ají",
 ]
 
 # Default paths to original source files

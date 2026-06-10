@@ -514,6 +514,8 @@ export const getUmbralesCultivos = async () => {
         { cultivo: "Algodon", umbral_estres_hidrico_pct: 18, et0_mm_dia: 5.8, factor_raiz: 1.0 },
         { cultivo: "Sorgo", umbral_estres_hidrico_pct: 18, et0_mm_dia: 5.5, factor_raiz: 1.1 },
         { cultivo: "Palma Aceitera", umbral_estres_hidrico_pct: 28, et0_mm_dia: 4.0, factor_raiz: 0.9 },
+        { cultivo: "Mango", umbral_estres_hidrico_pct: 25, et0_mm_dia: 4.5, factor_raiz: 1.2 },
+        { cultivo: "Ají", umbral_estres_hidrico_pct: 22, et0_mm_dia: 4.5, factor_raiz: 0.7 },
       ],
     };
   }
