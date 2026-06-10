@@ -39,6 +39,12 @@ def _load_rf():
 
 
 def _enrich_with_metadata(results: list[dict]) -> list[dict]:
+    """Enrich RF results with metadata from crops_requirements.csv.
+
+    Always overwrites emoji/ciclo_dias/rendimiento_estimado with real data
+    because the inference loop pre-populates these keys with empty/None values
+    before calling this function — setdefault() would silently skip them.
+    """
     classifier = get_crop_classifier()
     for r in results:
         raw_name = r["cultivo"].replace(" ", "_")
@@ -46,16 +52,15 @@ def _enrich_with_metadata(results: list[dict]) -> list[dict]:
             (c for c in classifier.crops if c["cultivo"] == raw_name), None
         )
         if crop_data:
-            r.setdefault("emoji", crop_data.get("emoji", ""))
-            r.setdefault("ciclo_dias", crop_data.get("ciclo_dias"))
-            r.setdefault(
-                "rendimiento_estimado",
-                f"{crop_data.get('rendimiento_promedio', '')} t/ha",
-            )
+            # Direct assignment — never use setdefault here: the keys already
+            # exist with empty/None values set by the inference loop above.
+            r["emoji"] = crop_data.get("emoji", "")
+            r["ciclo_dias"] = crop_data.get("ciclo_dias")
+            r["rendimiento_estimado"] = f"{crop_data.get('rendimiento_promedio', '')} t/ha"
         else:
-            r.setdefault("emoji", "")
-            r.setdefault("ciclo_dias", None)
-            r.setdefault("rendimiento_estimado", None)
+            r["emoji"] = ""
+            r["ciclo_dias"] = None
+            r["rendimiento_estimado"] = None
     return results
 
 
