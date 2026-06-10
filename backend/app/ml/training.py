@@ -62,6 +62,15 @@ FEATURE_COLS = [
     "precipitacion",
     "ph_suelo",
     "materia_organica",
+    "calcio",
+    "magnesio",
+    "azufre",
+    "boro",
+    "sodio",
+    "p_bray",
+    "k_interc",
+    "cic",
+    "conductividad",
     "ndvi",
     "ndwi",
     "textura_encoded",
@@ -491,28 +500,104 @@ def generate_synthetic_dataset(
 
                 # Soil features — use real profiles when available
                 profile = real_profiles.get(crop_name) if real_profiles is not None else None
-                if profile is not None:
-                    ph = _triangular_sample(
-                        max(ph_lo, profile.ph_p10),
-                        min(ph_hi, profile.ph_p90),
-                        0.5,
-                    )
-                    mo_center = max(profile.mo_p50 or crop["materia_organica_min"], 1.5)
-                    mo = _triangular_sample(
-                        max(0.5, profile.mo_p10 or mo_center - 1.5),
-                        profile.mo_p90 or mo_center + 2.0,
-                        0.45,
-                    )
-                else:
-                    ph = _triangular_sample(ph_lo, ph_hi, 0.5)
-                    mo_center = max(crop["materia_organica_min"], 1.5)
-                    mo = _triangular_sample(max(0.5, mo_center - 1.5), mo_center + 2.0, 0.45)
+
+                def sample_soil(p_10, p_50, p_90, fallback_lo, fallback_hi, noise_scale=0.05):
+                    if p_50 is not None:
+                        val = _triangular_sample(
+                            p_10 if p_10 is not None else p_50 * 0.8,
+                            p_90 if p_90 is not None else p_50 * 1.2,
+                            0.5
+                        )
+                    else:
+                        val = _triangular_sample(fallback_lo, fallback_hi, 0.5)
+                    return _add_gaussian_noise(val, fallback_hi - fallback_lo, noise_scale)
+
+                ph = sample_soil(
+                    profile.ph_p10 if profile else None,
+                    profile.ph_p50 if profile else None,
+                    profile.ph_p90 if profile else None,
+                    ph_lo, ph_hi, 0.05
+                )
+
+                mo = sample_soil(
+                    profile.mo_p10 if profile else None,
+                    profile.mo_p50 if profile else None,
+                    profile.mo_p90 if profile else None,
+                    max(0.5, crop["materia_organica_min"] - 1.0),
+                    crop["materia_organica_min"] + 3.0,
+                    0.04
+                )
+
+                calcio = sample_soil(
+                    profile.calcio_p10 if profile else None,
+                    profile.calcio_p50 if profile else None,
+                    profile.calcio_p90 if profile else None,
+                    2.0, 12.0
+                )
+
+                magnesio = sample_soil(
+                    profile.magnesio_p10 if profile else None,
+                    profile.magnesio_p50 if profile else None,
+                    profile.magnesio_p90 if profile else None,
+                    0.5, 4.5
+                )
+
+                azufre = sample_soil(
+                    profile.azufre_p10 if profile else None,
+                    profile.azufre_p50 if profile else None,
+                    profile.azufre_p90 if profile else None,
+                    5.0, 40.0
+                )
+
+                boro = sample_soil(
+                    profile.boro_p10 if profile else None,
+                    profile.boro_p50 if profile else None,
+                    profile.boro_p90 if profile else None,
+                    0.1, 1.5
+                )
+
+                sodio = sample_soil(
+                    profile.sodio_p10 if profile else None,
+                    profile.sodio_p50 if profile else None,
+                    profile.sodio_p90 if profile else None,
+                    0.01, 0.8
+                )
+
+                p_bray = sample_soil(
+                    profile.p_bray_p10 if profile else None,
+                    profile.p_bray_p50 if profile else None,
+                    profile.p_bray_p90 if profile else None,
+                    5.0, 60.0
+                )
+
+                k_interc = sample_soil(
+                    profile.k_interc_p10 if profile else None,
+                    profile.k_interc_p50 if profile else None,
+                    profile.k_interc_p90 if profile else None,
+                    0.1, 1.2
+                )
+
+                cic = sample_soil(
+                    profile.cic_p10 if profile else None,
+                    profile.cic_p50 if profile else None,
+                    profile.cic_p90 if profile else None,
+                    10.0, 35.0
+                )
+
+                conductividad = sample_soil(
+                    profile.conductividad_p10 if profile else None,
+                    profile.conductividad_p50 if profile else None,
+                    profile.conductividad_p90 if profile else None,
+                    0.1, max(2.5, crop["salinity_ds_per_m"] + 1.0)
+                )
 
                 ndvi = ndvi_sampler.sample(prec)
+                ndvi = _add_gaussian_noise(ndvi, 0.7, 0.04)
 
                 # NDWI sampling (synthetic triangular with noise)
                 ndwi = float(np.random.triangular(0.1, 0.5, 0.8))
                 ndwi = float(np.clip(ndwi + np.random.normal(0, 0.05), 0.0, 1.0))
+                ndwi = _add_gaussian_noise(ndwi, 0.6, 0.04)
 
                 # ── Agronomic features (crop-specific constants, not training features) ──
                 drought_tolerance = float(crop["drought_tolerance"]) + np.random.normal(0, 0.05)
@@ -536,6 +621,7 @@ def generate_synthetic_dataset(
 
                 # Textura centered on optimum with noise
                 textura_encoded = max(1.0, min(12.0, tex_opt + np.random.normal(0, 1.8)))
+                textura_encoded = _add_gaussian_noise(textura_encoded, 5.0, 0.05)
 
                 # Altitude: triangular sample within crop bounds centered on zone elevation
                 altitud = _triangular_sample(
@@ -548,11 +634,6 @@ def generate_synthetic_dataset(
                 temp = _add_gaussian_noise(temp, temp_hi - temp_lo, 0.05)
                 hum = _add_gaussian_noise(hum, hum_hi - hum_lo, 0.05)
                 prec = _add_gaussian_noise(prec, prec_hi - prec_lo, 0.05)
-                ph = _add_gaussian_noise(ph, ph_hi - ph_lo, 0.05)
-                mo = _add_gaussian_noise(mo, 2.5, 0.04)
-                ndvi = _add_gaussian_noise(ndvi, 0.7, 0.04)
-                ndwi = _add_gaussian_noise(ndwi, 0.6, 0.04)
-                textura_encoded = _add_gaussian_noise(textura_encoded, 5.0, 0.05)
 
                 # Engineered features
                 precip_hum = prec / max(hum, 1.0)
@@ -565,6 +646,15 @@ def generate_synthetic_dataset(
                     "precipitacion": round(prec, 1),
                     "ph_suelo": round(ph, 2),
                     "materia_organica": round(mo, 2),
+                    "calcio": round(calcio, 2),
+                    "magnesio": round(magnesio, 2),
+                    "azufre": round(azufre, 2),
+                    "boro": round(boro, 2),
+                    "sodio": round(sodio, 3),
+                    "p_bray": round(p_bray, 2),
+                    "k_interc": round(k_interc, 3),
+                    "cic": round(cic, 2),
+                    "conductividad": round(conductividad, 3),
                     "ndvi": round(ndvi, 3),
                     "ndwi": round(ndwi, 3),
                     "textura_encoded": round(textura_encoded, 2),
@@ -613,6 +703,33 @@ def generate_synthetic_dataset(
             )
             perturbed["materia_organica"] = round(
                 row["materia_organica"] * np.random.uniform(0.98, 1.02), 2,
+            )
+            perturbed["calcio"] = round(
+                row["calcio"] * np.random.uniform(0.98, 1.02), 2,
+            )
+            perturbed["magnesio"] = round(
+                row["magnesio"] * np.random.uniform(0.98, 1.02), 2,
+            )
+            perturbed["azufre"] = round(
+                row["azufre"] * np.random.uniform(0.98, 1.02), 2,
+            )
+            perturbed["boro"] = round(
+                row["boro"] * np.random.uniform(0.98, 1.02), 2,
+            )
+            perturbed["sodio"] = round(
+                row["sodio"] * np.random.uniform(0.98, 1.02), 3,
+            )
+            perturbed["p_bray"] = round(
+                row["p_bray"] * np.random.uniform(0.98, 1.02), 2,
+            )
+            perturbed["k_interc"] = round(
+                row["k_interc"] * np.random.uniform(0.98, 1.02), 3,
+            )
+            perturbed["cic"] = round(
+                row["cic"] * np.random.uniform(0.98, 1.02), 2,
+            )
+            perturbed["conductividad"] = round(
+                row["conductividad"] * np.random.uniform(0.98, 1.02), 3,
             )
             perturbed["ndvi"] = round(
                 row["ndvi"] * np.random.uniform(0.98, 1.02), 3,
@@ -675,6 +792,23 @@ async def _fetch_datos_campo_async() -> list[dict]:
             crop_req = crops_req.get(cultivo)
             if crop_req is None:
                 continue
+            
+            # Use real profiles if available for missing fields
+            from app.ml.perfiles_reales import PerfilCultivoReal
+            profiles = PerfilCultivoReal.load_all()
+            profile = profiles.get(cultivo)
+
+            def get_val(db_val, p_50, p_10, p_90, fallback_lo, fallback_hi):
+                if db_val is not None:
+                    return float(db_val)
+                if p_50 is not None:
+                    return _triangular_sample(
+                        p_10 if p_10 is not None else p_50 * 0.8,
+                        p_90 if p_90 is not None else p_50 * 1.2,
+                        0.5
+                    )
+                return _triangular_sample(fallback_lo, fallback_hi, 0.5)
+
             temp = _triangular_sample(
                 float(crop_req["temp_min"]), float(crop_req["temp_max"])
             )
@@ -684,13 +818,45 @@ async def _fetch_datos_campo_async() -> list[dict]:
             prec = _triangular_sample(
                 float(crop_req["precipitacion_min"]), float(crop_req["precipitacion_max"])
             )
-            ph = db_row["ph"] if db_row["ph"] is not None else _triangular_sample(
-                float(crop_req["ph_min"]), float(crop_req["ph_max"])
-            )
-            mo = db_row["mo"] if db_row["mo"] is not None else _triangular_sample(
-                max(0.5, float(crop_req["materia_organica_min"]) - 0.5),
-                float(crop_req["materia_organica_min"]) + 2.0,
-            )
+            
+            ph = get_val(db_row["ph"], profile.ph_p50 if profile else None, 
+                         profile.ph_p10 if profile else None, profile.ph_p90 if profile else None,
+                         float(crop_req["ph_min"]), float(crop_req["ph_max"]))
+            
+            mo = get_val(db_row["mo"], profile.mo_p50 if profile else None,
+                         profile.mo_p10 if profile else None, profile.mo_p90 if profile else None,
+                         max(0.5, float(crop_req["materia_organica_min"]) - 0.5),
+                         float(crop_req["materia_organica_min"]) + 2.0)
+
+            # New soil features (all synthetic fallbacks for now as DB doesn't have them)
+            calcio = get_val(None, profile.calcio_p50 if profile else None,
+                            profile.calcio_p10 if profile else None, profile.calcio_p90 if profile else None,
+                            2.0, 12.0)
+            magnesio = get_val(None, profile.magnesio_p50 if profile else None,
+                              profile.magnesio_p10 if profile else None, profile.magnesio_p90 if profile else None,
+                              0.5, 4.5)
+            azufre = get_val(None, profile.azufre_p50 if profile else None,
+                            profile.azufre_p10 if profile else None, profile.azufre_p90 if profile else None,
+                            5.0, 40.0)
+            boro = get_val(None, profile.boro_p50 if profile else None,
+                          profile.boro_p10 if profile else None, profile.boro_p90 if profile else None,
+                          0.1, 1.5)
+            sodio = get_val(None, profile.sodio_p50 if profile else None,
+                           profile.sodio_p10 if profile else None, profile.sodio_p90 if profile else None,
+                           0.01, 0.8)
+            p_bray = get_val(None, profile.p_bray_p50 if profile else None,
+                            profile.p_bray_p10 if profile else None, profile.p_bray_p90 if profile else None,
+                            5.0, 60.0)
+            k_interc = get_val(None, profile.k_interc_p50 if profile else None,
+                              profile.k_interc_p10 if profile else None, profile.k_interc_p90 if profile else None,
+                              0.1, 1.2)
+            cic = get_val(None, profile.cic_p50 if profile else None,
+                         profile.cic_p10 if profile else None, profile.cic_p90 if profile else None,
+                         10.0, 35.0)
+            conductividad = get_val(None, profile.conductividad_p50 if profile else None,
+                                   profile.conductividad_p10 if profile else None, profile.conductividad_p90 if profile else None,
+                                   0.1, max(2.5, float(crop_req["salinity_ds_per_m"]) + 1.0))
+
             ndvi = db_row["ndvi"] if db_row["ndvi"] is not None else float(np.random.triangular(0.2, 0.5, 0.9))
             ndwi = db_row["ndwi"] if db_row["ndwi"] is not None else float(np.random.triangular(0.1, 0.5, 0.8))
             tex = 7.0
@@ -705,6 +871,15 @@ async def _fetch_datos_campo_async() -> list[dict]:
                 "precipitacion": round(prec, 1),
                 "ph_suelo": round(ph, 2),
                 "materia_organica": round(mo, 2),
+                "calcio": round(calcio, 2),
+                "magnesio": round(magnesio, 2),
+                "azufre": round(azufre, 2),
+                "boro": round(boro, 2),
+                "sodio": round(sodio, 3),
+                "p_bray": round(p_bray, 2),
+                "k_interc": round(k_interc, 3),
+                "cic": round(cic, 2),
+                "conductividad": round(conductividad, 3),
                 "ndvi": round(ndvi, 3),
                 "ndwi": round(ndwi, 3),
                 "textura_encoded": round(tex, 2),

@@ -77,6 +77,16 @@ def predict_crop_recommendations(
     lstm_anomalies: dict | None = None,
     altitud: float = 0.0,
     ndwi: float = 0.0,
+    # New soil features
+    calcio: float | None = None,
+    magnesio: float | None = None,
+    azufre: float | None = None,
+    boro: float | None = None,
+    sodio: float | None = None,
+    p_bray: float | None = None,
+    k_interc: float | None = None,
+    cic: float | None = None,
+    conductividad: float | None = None,
 ) -> tuple[list[dict], str]:
     """Predice recomendaciones de cultivo con ensemble RF+LSTM.
 
@@ -99,6 +109,15 @@ def predict_crop_recommendations(
             None para usar solo RF.
         altitud: Elevacion del terreno en metros. Default 0.0.
         ndwi: Indice de agua NDWI. Default 0.0.
+        calcio: Contenido de calcio.
+        magnesio: Contenido de magnesio.
+        azufre: Contenido de azufre.
+        boro: Contenido de boro.
+        sodio: Contenido de sodio.
+        p_bray: Fósforo Bray.
+        k_interc: Potasio intercambiable.
+        cic: Capacidad de intercambio catiónico.
+        conductividad: Conductividad eléctrica.
 
     Returns:
         Tupla (resultados, metodo) donde metodo indica el motor usado:
@@ -130,6 +149,16 @@ def predict_crop_recommendations(
                 "precipitacion": precipitacion,
                 "ph_suelo": ph_suelo,
                 "materia_organica": materia_organica,
+                # Use provided values or regional defaults (matching synthetic training averages)
+                "calcio": calcio if calcio is not None else 5.0,
+                "magnesio": magnesio if magnesio is not None else 1.5,
+                "azufre": azufre if azufre is not None else 15.0,
+                "boro": boro if boro is not None else 0.3,
+                "sodio": sodio if sodio is not None else 0.1,
+                "p_bray": p_bray if p_bray is not None else 15.0,
+                "k_interc": k_interc if k_interc is not None else 0.3,
+                "cic": cic if cic is not None else 15.0,
+                "conductividad": conductividad if conductividad is not None else 0.5,
                 "ndvi": ndvi,
                 "ndwi": ndwi,
                 "textura_encoded": textura_encoded,

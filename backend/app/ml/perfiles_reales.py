@@ -48,8 +48,44 @@ class PerfilCultivoReal:
     mo_p10: float
     mo_p50: float
     mo_p90: float
+    # New soil chemistry fields (percentiles p10, p50, p90)
+    calcio_promedio: Optional[float] = None
+    calcio_p10: Optional[float] = None
+    calcio_p50: Optional[float] = None
+    calcio_p90: Optional[float] = None
+    cic_promedio: Optional[float] = None
+    cic_p10: Optional[float] = None
+    cic_p50: Optional[float] = None
+    cic_p90: Optional[float] = None
+    conductividad_promedio: Optional[float] = None
+    conductividad_p10: Optional[float] = None
+    conductividad_p50: Optional[float] = None
+    conductividad_p90: Optional[float] = None
+    magnesio_promedio: Optional[float] = None
+    magnesio_p10: Optional[float] = None
+    magnesio_p50: Optional[float] = None
+    magnesio_p90: Optional[float] = None
+    azufre_promedio: Optional[float] = None
+    azufre_p10: Optional[float] = None
+    azufre_p50: Optional[float] = None
+    azufre_p90: Optional[float] = None
+    boro_promedio: Optional[float] = None
+    boro_p10: Optional[float] = None
+    boro_p50: Optional[float] = None
+    boro_p90: Optional[float] = None
+    sodio_promedio: Optional[float] = None
+    sodio_p10: Optional[float] = None
+    sodio_p50: Optional[float] = None
+    sodio_p90: Optional[float] = None
     p_bray_promedio: Optional[float] = None
+    p_bray_p10: Optional[float] = None
+    p_bray_p50: Optional[float] = None
+    p_bray_p90: Optional[float] = None
     k_interc_promedio: Optional[float] = None
+    k_interc_p10: Optional[float] = None
+    k_interc_p50: Optional[float] = None
+    k_interc_p90: Optional[float] = None
+
     drenaje_predominante: Optional[str] = None
     topografia_predominante: Optional[str] = None
     n_foliar_promedio: Optional[float] = None
@@ -73,8 +109,42 @@ class PerfilCultivoReal:
         "mo_p10": "mo_p10",
         "mo_p50": "mo_p50",
         "mo_p90": "mo_p90",
+        "calcio_promedio": "calcio_promedio",
+        "calcio_p10": "calcio_p10",
+        "calcio_p50": "calcio_p50",
+        "calcio_p90": "calcio_p90",
+        "cic_promedio": "cic_promedio",
+        "cic_p10": "cic_p10",
+        "cic_p50": "cic_p50",
+        "cic_p90": "cic_p90",
+        "conductividad_promedio": "conductividad_promedio",
+        "conductividad_p10": "conductividad_p10",
+        "conductividad_p50": "conductividad_p50",
+        "conductividad_p90": "conductividad_p90",
+        "magnesio_promedio": "magnesio_promedio",
+        "magnesio_p10": "magnesio_p10",
+        "magnesio_p50": "magnesio_p50",
+        "magnesio_p90": "magnesio_p90",
+        "azufre_promedio": "azufre_promedio",
+        "azufre_p10": "azufre_p10",
+        "azufre_p50": "azufre_p50",
+        "azufre_p90": "azufre_p90",
+        "boro_promedio": "boro_promedio",
+        "boro_p10": "boro_p10",
+        "boro_p50": "boro_p50",
+        "boro_p90": "boro_p90",
+        "sodio_promedio": "sodio_promedio",
+        "sodio_p10": "sodio_p10",
+        "sodio_p50": "sodio_p50",
+        "sodio_p90": "sodio_p90",
         "p_bray_promedio": "p_bray_promedio",
+        "p_bray_p10": "p_bray_p10",
+        "p_bray_p50": "p_bray_p50",
+        "p_bray_p90": "p_bray_p90",
         "k_interc_promedio": "k_interc_promedio",
+        "k_interc_p10": "k_interc_p10",
+        "k_interc_p50": "k_interc_p50",
+        "k_interc_p90": "k_interc_p90",
         "drenaje_predominante": "drenaje_predominante",
         "topografia_predominante": "topografia_predominante",
         "n_foliar_promedio": "n_foliar_promedio",
