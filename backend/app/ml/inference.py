@@ -71,6 +71,7 @@ def predict_crop_recommendations(
     mes_siembra: str = "",
     lstm_anomalies: dict | None = None,
     altitud: float = 0.0,
+    ndwi: float = 0.0,
 ) -> tuple[list[dict], str]:
     """Predice recomendaciones de cultivo con ensemble RF+LSTM.
 
@@ -92,6 +93,7 @@ def predict_crop_recommendations(
             (dict con temp_anomalies, precip_anomalies, hum_anomalies, confidence).
             None para usar solo RF.
         altitud: Elevacion del terreno en metros. Default 0.0.
+        ndwi: Indice de agua NDWI. Default 0.0.
 
     Returns:
         Tupla (resultados, metodo) donde metodo indica el motor usado:
@@ -124,12 +126,14 @@ def predict_crop_recommendations(
                 "ph_suelo": ph_suelo,
                 "materia_organica": materia_organica,
                 "ndvi": ndvi,
+                "ndwi": ndwi,
                 "textura_encoded": textura_encoded,
                 "altitud": altitud,
             }
 
             features["precip_hum_ratio"] = precipitacion / max(humedad, 1.0)
             features["precip_temp_ratio"] = precipitacion / max(temperatura, 0.1)
+            features["ndvi_ndwi_ratio"] = ndvi / max(ndwi, 0.01)
 
             feat_vector = [features.get(c, 0) for c in ALL_FEATURE_COLS]
             X = np.array([feat_vector])

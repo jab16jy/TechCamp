@@ -60,6 +60,7 @@ FEATURE_COLS = [
     "ph_suelo",
     "materia_organica",
     "ndvi",
+    "ndwi",
     "textura_encoded",
     "altitud",
 ]
@@ -67,6 +68,7 @@ FEATURE_COLS = [
 ENGINEERED_COLS = [
     "precip_hum_ratio",
     "precip_temp_ratio",
+    "ndvi_ndwi_ratio",
 ]
 
 ALL_FEATURE_COLS = FEATURE_COLS + ENGINEERED_COLS
@@ -400,10 +402,23 @@ def generate_synthetic_dataset(
     Uses real climate distributions from NASA POWER as the basis for
     synthetic samples, weighted by Caribbean production priors.
 
+    When PerfilCultivoReal data is available, uses real pH and MO
+    percentiles instead of crops_requirements.csv ranges.
+
     Includes altitude (via Open-Meteo Elevation API), precip_temp_ratio
-    engineered feature, and boundary oversampling for confused crops.
+    and ndvi_ndwi_ratio engineered features, and boundary oversampling
+    for confused crops.
     """
     crops_df = pd.read_csv(CSV_PATH)
+
+    # Load real crop profiles for pH/MO ranges (non-blocking fallback)
+    real_profiles: dict | None = None
+    try:
+        from app.ml.perfiles_reales import PerfilCultivoReal
+        real_profiles = PerfilCultivoReal.load_all()
+        logger.info("PerfilCultivoReal: %d perfiles cargados", len(real_profiles))
+    except Exception as e:
+        logger.warning("No se pudieron cargar perfiles reales: %s. Usando ranges sinteticos.", e)
 
     if not climate_zones:
         climate_zones = [{
@@ -466,13 +481,30 @@ def generate_synthetic_dataset(
                 hum = _gaussian_sample(hum_mean, PARAM_STD["RH2M"], hum_lo, hum_hi)
                 prec = _gaussian_sample(prec_mean, PARAM_STD["PRECTOTCORR"], prec_lo, prec_hi)
 
-                # Soil features (triangular around optimal, with expanded range for ph)
-                ph = _triangular_sample(ph_lo, ph_hi, 0.5)
-
-                mo_center = max(crop["materia_organica_min"], 1.5)
-                mo = _triangular_sample(max(0.5, mo_center - 1.5), mo_center + 2.0, 0.45)
+                # Soil features — use real profiles when available
+                profile = real_profiles.get(crop_name) if real_profiles is not None else None
+                if profile is not None:
+                    ph = _triangular_sample(
+                        max(ph_lo, profile.ph_p10),
+                        min(ph_hi, profile.ph_p90),
+                        0.5,
+                    )
+                    mo_center = max(profile.mo_p50 or crop["materia_organica_min"], 1.5)
+                    mo = _triangular_sample(
+                        max(0.5, profile.mo_p10 or mo_center - 1.5),
+                        profile.mo_p90 or mo_center + 2.0,
+                        0.45,
+                    )
+                else:
+                    ph = _triangular_sample(ph_lo, ph_hi, 0.5)
+                    mo_center = max(crop["materia_organica_min"], 1.5)
+                    mo = _triangular_sample(max(0.5, mo_center - 1.5), mo_center + 2.0, 0.45)
 
                 ndvi = ndvi_sampler.sample(prec)
+
+                # NDWI sampling (synthetic triangular with noise)
+                ndwi = float(np.random.triangular(0.1, 0.5, 0.8))
+                ndwi = float(np.clip(ndwi + np.random.normal(0, 0.05), 0.0, 1.0))
 
                 # ── Agronomic features (crop-specific constants, not training features) ──
                 drought_tolerance = float(crop["drought_tolerance"]) + np.random.normal(0, 0.05)
@@ -511,11 +543,13 @@ def generate_synthetic_dataset(
                 ph = _add_gaussian_noise(ph, ph_hi - ph_lo, 0.05)
                 mo = _add_gaussian_noise(mo, 2.5, 0.04)
                 ndvi = _add_gaussian_noise(ndvi, 0.7, 0.04)
+                ndwi = _add_gaussian_noise(ndwi, 0.6, 0.04)
                 textura_encoded = _add_gaussian_noise(textura_encoded, 5.0, 0.05)
 
                 # Engineered features
                 precip_hum = prec / max(hum, 1.0)
                 precip_temp = prec / max(temp, 0.1)
+                ndvi_ndwi_ratio = ndvi / max(ndwi, 0.01)
 
                 rows.append({
                     "temperatura": round(temp, 2),
@@ -524,10 +558,12 @@ def generate_synthetic_dataset(
                     "ph_suelo": round(ph, 2),
                     "materia_organica": round(mo, 2),
                     "ndvi": round(ndvi, 3),
+                    "ndwi": round(ndwi, 3),
                     "textura_encoded": round(textura_encoded, 2),
                     "altitud": round(altitud, 1),
                     "precip_hum_ratio": round(precip_hum, 3),
                     "precip_temp_ratio": round(precip_temp, 3),
+                    "ndvi_ndwi_ratio": round(ndvi_ndwi_ratio, 3),
                     # Agronomic features (metadata only, not in ALL_FEATURE_COLS)
                     "drought_tolerance": round(drought_tolerance, 3),
                     "photoperiod_hours": round(photoperiod_hours, 2),
@@ -573,6 +609,9 @@ def generate_synthetic_dataset(
             perturbed["ndvi"] = round(
                 row["ndvi"] * np.random.uniform(0.98, 1.02), 3,
             )
+            perturbed["ndwi"] = round(
+                row["ndwi"] * np.random.uniform(0.98, 1.02) if row.get("ndwi") else np.random.triangular(0.1, 0.5, 0.8), 3,
+            )
             perturbed["textura_encoded"] = round(
                 _add_gaussian_noise(row["textura_encoded"], 5.0, 0.02), 2,
             )
@@ -583,8 +622,11 @@ def generate_synthetic_dataset(
             t = perturbed["temperatura"]
             h = perturbed["humedad"]
             p = perturbed["precipitacion"]
+            nv = perturbed["ndvi"]
+            nw = perturbed["ndwi"]
             perturbed["precip_hum_ratio"] = round(p / max(h, 1.0), 3)
             perturbed["precip_temp_ratio"] = round(p / max(t, 0.1), 3)
+            perturbed["ndvi_ndwi_ratio"] = round(nv / max(nw, 0.01), 3)
             oversampled.append(perturbed)
 
     rows.extend(oversampled)
@@ -956,10 +998,13 @@ def predict(model, scaler, features: dict) -> tuple[str, dict]:
     t = features.get("temperatura", 0)
     h = features.get("humedad", 0)
     p = features.get("precipitacion", 0)
+    nv = features.get("ndvi", 0)
+    nw = features.get("ndwi", 0)
 
     feat.extend([
         p / max(h, 1.0),
         p / max(t, 0.1),
+        nv / max(nw, 0.01),
     ])
 
     X = scaler.transform(np.array([feat]))
