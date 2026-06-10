@@ -128,8 +128,8 @@ CLASS_WEIGHTS = {
     1: 2.5,   # Yuca
     4: 1.8,   # Ñame
     7: 1.6,   # Algodón
-     10: 3.0,  # Mango — low accuracy (68%), boost weight
-     11: 2.5,  # Ají  — very low accuracy (47%), boost weight
+     10: 2.0,  # Mango — moderate boost (was 68%)
+     11: 1.5,  # Ají  — moderate boost (was 47%)
 }
 
 # Overlap region where Maíz, Sorgo, Yuca, Ñame, Algodón share ecological ranges
