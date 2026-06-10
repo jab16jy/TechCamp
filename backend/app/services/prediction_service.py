@@ -249,6 +249,7 @@ CICLOS_DIAS = {
     "Maíz": 90, "Yuca": 270, "Arroz": 120, "Frijol": 75,
     "Ñame": 210, "Plátano": 365, "Cacao": 180, "Algodón": 150,
     "Sorgo": 110, "Palma Aceitera": 365,
+    "Mango": 365, "Ají": 120,
 }
 
 

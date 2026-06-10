@@ -6,6 +6,7 @@ import {
 const CULTIVOS = [
   'Maiz', 'Yuca', 'Arroz', 'Frijol', 'Platano',
   'Name', 'Cacao', 'Algodón', 'Sorgo', 'Palma Aceitera',
+  'Mango', 'Ají',
 ];
 
 const CICLOS_DIAS = {
@@ -13,6 +14,7 @@ const CICLOS_DIAS = {
   Name: 210, Platano: 365, Cacao: 180, Algodón: 150,
   Sorgo: 110, 'Palma Aceitera': 365,
   'Maíz': 90, 'Ñame': 210, 'Plátano': 365,
+  Mango: 365, Ají: 120,
 };
 
 const ETAPAS = [

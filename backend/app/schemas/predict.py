@@ -73,6 +73,7 @@ CICLOS_DIAS_MAP = {
     "Name": 210, "Platano": 365, "Cacao": 180, "Algodon": 150,
     "Sorgo": 110, "Palma Aceitera": 365,
     "Maíz": 90, "Ñame": 210, "Plátano": 365, "Palma Aceitera": 365,
+    "Mango": 365, "Ají": 120,
 }
 
 
