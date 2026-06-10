@@ -56,6 +56,12 @@ SUELOS_STATS_COLS: Final[list[str]] = [
     "Potasio intercambiable",
     "Calcio intercambiable",
     "Magnesio intercambiable",
+    # New chemistry analytes (9 total, 4 already above)
+    "capacidad de intercambio cationico",
+    "Conductividad electrica",
+    "Azufre Fosfato monocalcico",
+    "Boro disponible",
+    "Sodio intercambiable",
 ]
 
 FOLIAR_STATS_COLS: Final[dict[str, str]] = {
@@ -65,28 +71,73 @@ FOLIAR_STATS_COLS: Final[dict[str, str]] = {
 }
 
 # Output CSV column order
+# 22 original + 36 new = 58 columns total
+# New analyte groups (4 stats each: promedio, p10, p50, p90) inserted after mo_p90
 OUTPUT_COLUMNS: Final[list[str]] = [
     "cultivo",
+    # pH (4)
     "ph_promedio",
     "ph_p10",
     "ph_p50",
     "ph_p90",
+    # MO (4)
     "mo_promedio",
     "mo_p10",
     "mo_p50",
     "mo_p90",
+    # NEW: 7 completely new chemistry analytes (7 × 4 = 28)
+    "calcio_promedio",
+    "calcio_p10",
+    "calcio_p50",
+    "calcio_p90",
+    "cic_promedio",
+    "cic_p10",
+    "cic_p50",
+    "cic_p90",
+    "conductividad_promedio",
+    "conductividad_p10",
+    "conductividad_p50",
+    "conductividad_p90",
+    "magnesio_promedio",
+    "magnesio_p10",
+    "magnesio_p50",
+    "magnesio_p90",
+    "azufre_promedio",
+    "azufre_p10",
+    "azufre_p50",
+    "azufre_p90",
+    "boro_promedio",
+    "boro_p10",
+    "boro_p50",
+    "boro_p90",
+    "sodio_promedio",
+    "sodio_p10",
+    "sodio_p50",
+    "sodio_p90",
+    # EXISTING: P Bray II - keep promedio, ADD percentiles (4)
     "p_bray_promedio",
+    "p_bray_p10",
+    "p_bray_p50",
+    "p_bray_p90",
+    # EXISTING: K intercambiable - keep promedio, ADD percentiles (4)
     "k_interc_promedio",
+    "k_interc_p10",
+    "k_interc_p50",
+    "k_interc_p90",
+    # Drenaje / Topografia (2)
     "drenaje_predominante",
     "topografia_predominante",
+    # Foliar (3)
     "n_foliar_promedio",
     "p_foliar_promedio",
     "k_foliar_promedio",
+    # EVA counts (5)
     "n_registros_eva",
     "n_registros_suelos",
     "n_registros_foliar",
     "n_municipios",
     "n_departamentos",
+    # Rendimiento (1)
     "rendimiento_promedio",
 ]
 
@@ -121,59 +172,90 @@ def _mode(series: pd.Series) -> Any:
     return result.iloc[0]
 
 
+# Mapping from input column name to output field prefix
+SUELOS_COLUMN_MAP: Final[dict[str, str]] = {
+    "pH agua:suelo": "ph",
+    "Materia organica": "mo",
+    "Fósforo Bray II": "p_bray",
+    "Potasio intercambiable": "k_interc",
+    "Calcio intercambiable": "calcio",
+    "Magnesio intercambiable": "magnesio",
+    "capacidad de intercambio cationico": "cic",
+    "Conductividad electrica": "conductividad",
+    "Azufre Fosfato monocalcico": "azufre",
+    "Boro disponible": "boro",
+    "Sodio intercambiable": "sodio",
+}
+
+
+def _compute_stats_for_column(
+    series: pd.Series,
+    prefix: str,
+) -> dict[str, Any]:
+    """Compute mean + percentiles (p10, p50, p90) for a single column.
+
+    Args:
+        series: Data series (may contain NaN).
+        prefix: Output field prefix (e.g., 'ph', 'calcio', 'cic').
+
+    Returns:
+        Dictionary with {prefix}_promedio, {prefix}_p10, {prefix}_p50, {prefix}_p90.
+    """
+    vals = series.dropna()
+    result: dict[str, Any] = {}
+
+    if len(vals) > 0:
+        result[f"{prefix}_promedio"] = round(vals.mean(), 2)
+        q = vals.quantile([0.1, 0.5, 0.9])
+        result[f"{prefix}_p10"] = round(q.iloc[0], 2)
+        result[f"{prefix}_p50"] = round(q.iloc[1], 2)
+        result[f"{prefix}_p90"] = round(q.iloc[2], 2)
+    else:
+        result[f"{prefix}_promedio"] = np.nan
+        result[f"{prefix}_p10"] = np.nan
+        result[f"{prefix}_p50"] = np.nan
+        result[f"{prefix}_p90"] = np.nan
+
+    return result
+
+
 def _compute_suelos_stats(
     suelos: pd.DataFrame,
     cultivo: str,
 ) -> dict[str, Any]:
     """Compute soil statistics for a single crop.
 
+    Computes mean + percentiles (p10, p50, p90) for all columns in SUELOS_STATS_COLS,
+    plus drenaje and topografia modes.
+
     Args:
         suelos: Suelos DataFrame filtered for the given crop.
         cultivo: Crop name.
 
     Returns:
-        Dictionary with pH/MO stats, P/K means, drenaje/topografia mode.
+        Dictionary with stats for all soil chemistry analytes.
     """
     stats: dict[str, Any] = {
         "cultivo": cultivo,
         "n_registros_suelos": len(suelos),
     }
 
-    # pH stats
-    ph = suelos["pH agua:suelo"].dropna()
-    stats["ph_promedio"] = round(ph.mean(), 2) if len(ph) > 0 else np.nan
-    if len(ph) > 0:
-        ph_q = ph.quantile([0.1, 0.5, 0.9])
-        stats["ph_p10"] = round(ph_q.iloc[0], 2)
-        stats["ph_p50"] = round(ph_q.iloc[1], 2)
-        stats["ph_p90"] = round(ph_q.iloc[2], 2)
-    else:
-        stats["ph_p10"] = stats["ph_p50"] = stats["ph_p90"] = np.nan
-
-    # MO stats
-    mo = suelos["Materia organica"].dropna()
-    stats["mo_promedio"] = round(mo.mean(), 2) if len(mo) > 0 else np.nan
-    if len(mo) > 0:
-        mo_q = mo.quantile([0.1, 0.5, 0.9])
-        stats["mo_p10"] = round(mo_q.iloc[0], 2)
-        stats["mo_p50"] = round(mo_q.iloc[1], 2)
-        stats["mo_p90"] = round(mo_q.iloc[2], 2)
-    else:
-        stats["mo_p10"] = stats["mo_p50"] = stats["mo_p90"] = np.nan
-
-    # P Bray II mean
-    p = suelos["Fósforo Bray II"].dropna()
-    stats["p_bray_promedio"] = round(p.mean(), 2) if len(p) > 0 else np.nan
-
-    # K intercambiable mean
-    k = suelos["Potasio intercambiable"].dropna()
-    stats["k_interc_promedio"] = round(k.mean(), 2) if len(k) > 0 else np.nan
+    # Compute mean + percentiles for each soil column
+    for col, prefix in SUELOS_COLUMN_MAP.items():
+        if col in suelos.columns:
+            stats.update(_compute_stats_for_column(suelos[col], prefix))
+        else:
+            # Column not present in data — fill with NaN
+            stats[f"{prefix}_promedio"] = np.nan
+            stats[f"{prefix}_p10"] = np.nan
+            stats[f"{prefix}_p50"] = np.nan
+            stats[f"{prefix}_p90"] = np.nan
 
     # Drenaje mode
-    stats["drenaje_predominante"] = _mode(suelos["Drenaje"])
+    stats["drenaje_predominante"] = _mode(suelos["Drenaje"]) if "Drenaje" in suelos.columns else np.nan
 
     # Topografia mode
-    stats["topografia_predominante"] = _mode(suelos["Topografia"])
+    stats["topografia_predominante"] = _mode(suelos["Topografia"]) if "Topografia" in suelos.columns else np.nan
 
     return stats
 
