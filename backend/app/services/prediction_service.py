@@ -250,7 +250,18 @@ def _normalize_cultivo(name: str) -> str:
     """Strip accents, replace Ñ→N, spaces→underscores for cultivo matching."""
     nfkd = unicodedata.normalize('NFD', name)
     ascii_str = nfkd.encode('ascii', 'ignore').decode('ascii')
-    return ascii_str.replace(' ', '_')
+    ascii_str = ascii_str.replace(' ', '_')
+    # Aliases mapping
+    aliases = {
+        "MANGO": "Mango",
+        "AJI": "Ají",
+        "PALMA_ACEITERA": "Palma_Aceitera",
+        "PALMA_DE_ACEITERA": "Palma_Aceitera",
+    }
+    key = ascii_str.upper()
+    if key in aliases:
+        return aliases[key]
+    return ascii_str
 
 
 def _ciclo_dias_for(cultivo: str, default: int = 90) -> int:
