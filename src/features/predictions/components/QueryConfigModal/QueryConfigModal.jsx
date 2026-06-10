@@ -1,21 +1,14 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   X, MapPin, Sprout, Calendar, Search, Loader2, Droplets, FlaskConical,
 } from 'lucide-react';
+import { getCropMetadata } from '@shared/services/api';
 
 const CULTIVOS = [
   'Maiz', 'Yuca', 'Arroz', 'Frijol', 'Platano',
   'Name', 'Cacao', 'Algodón', 'Sorgo', 'Palma Aceitera',
   'Mango', 'Ají',
 ];
-
-const CICLOS_DIAS = {
-  Maiz: 90, Yuca: 270, Arroz: 120, Frijol: 75,
-  Name: 210, Platano: 365, Cacao: 180, Algodón: 150,
-  Sorgo: 110, 'Palma Aceitera': 365,
-  'Maíz': 90, 'Ñame': 210, 'Plátano': 365,
-  Mango: 365, Ají: 120,
-};
 
 const ETAPAS = [
   { key: 'germinacion', label: 'Germinación', min: 0, max: 0.1 },
@@ -45,6 +38,11 @@ export default function QueryConfigModal({
   const [lote, setLote] = useState('');
   const [cultivo, setCultivo] = useState('');
   const [fechaSiembra, setFechaSiembra] = useState('');
+  const [cropsData, setCropsData] = useState([]);
+
+  useEffect(() => {
+    getCropMetadata().then(setCropsData);
+  }, []);
 
   // When an analysis is selected, pre-fill fields
   const handleSelectAnalysisInternal = useCallback((item) => {
@@ -94,12 +92,14 @@ export default function QueryConfigModal({
   // Phenology preview
   const fenologiaPreview = useMemo(() => {
     if (!fechaSiembra || !cultivo) return null;
-    const ciclo = CICLOS_DIAS[cultivo] || 90;
+    const _normalize = (name) => name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ /g, '_');
+    const crop = cropsData.find((c) => _normalize(c.cultivo) === _normalize(cultivo));
+    const ciclo = crop?.ciclo_dias || 90;
     const dias = Math.max(0, Math.floor((Date.now() - new Date(fechaSiembra).getTime()) / 86400000));
     const pct = Math.min(100, Math.round((dias / ciclo) * 100));
     const etapa = getEtapaFromDias(dias, ciclo);
     return { dias, ciclo, pct, etapa };
-  }, [fechaSiembra, cultivo]);
+  }, [fechaSiembra, cultivo, cropsData]);
 
   // Soil preview from analysis data
   const soilPreview = useMemo(() => {

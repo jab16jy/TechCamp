@@ -1,12 +1,18 @@
 import { useState, useCallback, useMemo } from 'react';
 import useAppStore from '@shared/store';
-import { getPrediccion, getAnalysis, postScenario, getCompareScenarios } from '@shared/services/api';
+import { getPrediccion, getAnalysis, postScenario, getCompareScenarios, getCropMetadata } from '@shared/services/api';
 
-const CICLOS_DIAS = {
-  Maiz: 90, Yuca: 270, Arroz: 120, Frijol: 75,
-  Name: 210, Platano: 365, Cacao: 180, Algodon: 150,
-  Sorgo: 110, 'Palma Aceitera': 365,
-  Mango: 365, Ají: 120,
+const _normalize = (name) => name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ /g, '_');
+
+const _resolveCicloDias = async (cultivo) => {
+  try {
+    const crops = await getCropMetadata();
+    const normalized = _normalize(cultivo);
+    const crop = crops.find((c) => _normalize(c.cultivo) === normalized);
+    return crop?.ciclo_dias || 90;
+  } catch {
+    return 90;
+  }
 };
 
 const ESTADOS = {
@@ -55,14 +61,14 @@ export default function usePrediccion() {
   }, [fechaSiembra, proyeccion6M]);
 
   // ── Core helpers ──
-  const _resolveFenologia = useCallback((siembraStr, cultivo, result) => {
+  const _resolveFenologia = useCallback(async (siembraStr, cultivo, result) => {
     if (!siembraStr) {
       setFechaSiembra(null);
       return;
     }
     try {
       const siembraDate = new Date(siembraStr);
-      const ciclo = CICLOS_DIAS[cultivo] || 90;
+      const ciclo = await _resolveCicloDias(cultivo);
       const dias = Math.max(0, Math.floor((Date.now() - siembraDate.getTime()) / 86400000));
       setFechaSiembra(siembraDate);
       const etapa = result?.meses?.[0]?.etapa_fenologica || 'germinacion';
@@ -74,7 +80,7 @@ export default function usePrediccion() {
   }, []);
 
   const _runPrediccion = useCallback(async (lat, lng, cultivo, meses, analysisId, siembraStr, npk, riego) => {
-    const ciclo = CICLOS_DIAS[cultivo] || 90;
+    const ciclo = await _resolveCicloDias(cultivo);
     let diasDesdeSiembra = null;
     let fechaBase = null;
     if (siembraStr) {

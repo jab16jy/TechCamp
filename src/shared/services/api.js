@@ -476,6 +476,39 @@ export const exportarPlanATareas = async (plan) => {
   }
 };
 
+// ── Crop metadata cache ──
+let _cropsCache = null;
+
+/** Static fallback with all 12 crops when API is unavailable */
+const CROPS_FALLBACK = [
+  { cultivo: "Maíz", emoji: "🌽", ciclo_dias: 90, temp_min: 24, temp_max: 30, ph_min: 5.5, ph_max: 7.5, humedad_min: 60, humedad_max: 85, precipitacion_min: 400, precipitacion_max: 1200, tipo_suelo: ["Franco","Franco-Arcilloso"], textura_optima: "Franco", materia_organica_min: 2.0, altitud_min: 0, altitud_max: 2800, rendimiento_promedio: "4.2", drought_tolerance: 0.4, photoperiod_hours: 0, soil_depth_cm: 40, kc_value: 1.15, salinity_ds_per_m: 1.7, is_c4: 1 },
+  { cultivo: "Yuca", emoji: "🥔", ciclo_dias: 270, temp_min: 20, temp_max: 35, ph_min: 4.5, ph_max: 8.0, humedad_min: 50, humedad_max: 80, precipitacion_min: 500, precipitacion_max: 1500, tipo_suelo: ["Franco-Arenoso","Franco"], textura_optima: "Franco-Arenoso", materia_organica_min: 1.0, altitud_min: 0, altitud_max: 1500, rendimiento_promedio: "12.5", drought_tolerance: 0.7, photoperiod_hours: 12, soil_depth_cm: 50, kc_value: 0.90, salinity_ds_per_m: 3.0, is_c4: 0 },
+  { cultivo: "Arroz", emoji: "🍚", ciclo_dias: 120, temp_min: 20, temp_max: 33, ph_min: 5.0, ph_max: 7.0, humedad_min: 70, humedad_max: 90, precipitacion_min: 800, precipitacion_max: 2000, tipo_suelo: ["Arcilloso","Franco-Arcilloso"], textura_optima: "Arcilloso", materia_organica_min: 2.5, altitud_min: 0, altitud_max: 1000, rendimiento_promedio: "5.8", drought_tolerance: 0.2, photoperiod_hours: 0, soil_depth_cm: 25, kc_value: 1.10, salinity_ds_per_m: 3.0, is_c4: 0 },
+  { cultivo: "Frijol", emoji: "🫘", ciclo_dias: 75, temp_min: 18, temp_max: 28, ph_min: 5.5, ph_max: 7.0, humedad_min: 50, humedad_max: 75, precipitacion_min: 300, precipitacion_max: 800, tipo_suelo: ["Franco","Franco-Arenoso"], textura_optima: "Franco", materia_organica_min: 1.5, altitud_min: 200, altitud_max: 2800, rendimiento_promedio: "1.8", drought_tolerance: 0.3, photoperiod_hours: 0, soil_depth_cm: 30, kc_value: 1.05, salinity_ds_per_m: 1.0, is_c4: 0 },
+  { cultivo: "Ñame", emoji: "🌱", ciclo_dias: 210, temp_min: 25, temp_max: 35, ph_min: 5.5, ph_max: 7.0, humedad_min: 65, humedad_max: 85, precipitacion_min: 800, precipitacion_max: 1500, tipo_suelo: ["Franco-Arcilloso","Franco"], textura_optima: "Franco-Arcilloso", materia_organica_min: 2.5, altitud_min: 0, altitud_max: 1200, rendimiento_promedio: "12.0", drought_tolerance: 0.5, photoperiod_hours: 12, soil_depth_cm: 40, kc_value: 1.02, salinity_ds_per_m: 1.5, is_c4: 0 },
+  { cultivo: "Plátano", emoji: "🍌", ciclo_dias: 365, temp_min: 24, temp_max: 30, ph_min: 5.5, ph_max: 7.5, humedad_min: 70, humedad_max: 90, precipitacion_min: 1200, precipitacion_max: 2500, tipo_suelo: ["Franco","Franco-Arcilloso"], textura_optima: "Franco", materia_organica_min: 3.0, altitud_min: 0, altitud_max: 2000, rendimiento_promedio: "15.0", drought_tolerance: 0.3, photoperiod_hours: 0, soil_depth_cm: 60, kc_value: 1.10, salinity_ds_per_m: 1.5, is_c4: 0 },
+  { cultivo: "Cacao", emoji: "🍫", ciclo_dias: 180, temp_min: 21, temp_max: 30, ph_min: 5.0, ph_max: 7.0, humedad_min: 75, humedad_max: 90, precipitacion_min: 1500, precipitacion_max: 2500, tipo_suelo: ["Franco-Arcilloso"], textura_optima: "Franco-Arcilloso", materia_organica_min: 3.5, altitud_min: 0, altitud_max: 1200, rendimiento_promedio: "1.2", drought_tolerance: 0.2, photoperiod_hours: 0, soil_depth_cm: 60, kc_value: 1.05, salinity_ds_per_m: 1.0, is_c4: 0 },
+  { cultivo: "Algodón", emoji: "🌿", ciclo_dias: 150, temp_min: 20, temp_max: 30, ph_min: 5.5, ph_max: 7.5, humedad_min: 50, humedad_max: 70, precipitacion_min: 500, precipitacion_max: 1200, tipo_suelo: ["Franco","Franco-Arenoso"], textura_optima: "Franco", materia_organica_min: 1.5, altitud_min: 0, altitud_max: 500, rendimiento_promedio: "2.5", drought_tolerance: 0.5, photoperiod_hours: 0, soil_depth_cm: 50, kc_value: 1.15, salinity_ds_per_m: 4.0, is_c4: 0 },
+  { cultivo: "Sorgo", emoji: "🌾", ciclo_dias: 110, temp_min: 22, temp_max: 32, ph_min: 5.5, ph_max: 7.5, humedad_min: 50, humedad_max: 75, precipitacion_min: 400, precipitacion_max: 1000, tipo_suelo: ["Franco","Franco-Arenoso"], textura_optima: "Franco-Arenoso", materia_organica_min: 1.5, altitud_min: 0, altitud_max: 800, rendimiento_promedio: "3.5", drought_tolerance: 0.8, photoperiod_hours: 12, soil_depth_cm: 35, kc_value: 1.00, salinity_ds_per_m: 4.0, is_c4: 1 },
+  { cultivo: "Palma_Aceitera", emoji: "🛢️", ciclo_dias: 365, temp_min: 24, temp_max: 30, ph_min: 4.5, ph_max: 7.0, humedad_min: 75, humedad_max: 90, precipitacion_min: 1800, precipitacion_max: 2800, tipo_suelo: ["Franco-Arcilloso","Arcilloso"], textura_optima: "Franco-Arcilloso", materia_organica_min: 3.0, altitud_min: 0, altitud_max: 500, rendimiento_promedio: "20.0", drought_tolerance: 0.3, photoperiod_hours: 12, soil_depth_cm: 80, kc_value: 1.00, salinity_ds_per_m: 2.0, is_c4: 0 },
+  { cultivo: "Mango", emoji: "🥭", ciclo_dias: 365, temp_min: 24, temp_max: 33, ph_min: 5.5, ph_max: 7.5, humedad_min: 60, humedad_max: 85, precipitacion_min: 600, precipitacion_max: 1500, tipo_suelo: ["Franco","Franco-Arenoso"], textura_optima: "Franco", materia_organica_min: 1.5, altitud_min: 0, altitud_max: 1800, rendimiento_promedio: "15.0", drought_tolerance: 0.5, photoperiod_hours: 12, soil_depth_cm: 60, kc_value: 0.75, salinity_ds_per_m: 1.5, is_c4: 0 },
+  { cultivo: "Ají", emoji: "🌶️", ciclo_dias: 120, temp_min: 20, temp_max: 32, ph_min: 5.5, ph_max: 7.0, humedad_min: 60, humedad_max: 85, precipitacion_min: 500, precipitacion_max: 1200, tipo_suelo: ["Franco","Franco-Arcilloso"], textura_optima: "Franco", materia_organica_min: 2.0, altitud_min: 0, altitud_max: 1500, rendimiento_promedio: "8.0", drought_tolerance: 0.3, photoperiod_hours: 0, soil_depth_cm: 40, kc_value: 1.05, salinity_ds_per_m: 1.5, is_c4: 0 },
+];
+
+/** Fetch crop metadata from API with module-level cache. Falls back to static data on failure. */
+export const getCropMetadata = async () => {
+  if (_cropsCache) return _cropsCache;
+  try {
+    const { data } = await apiClient.get("/model/crops");
+    _cropsCache = data;
+    return data;
+  } catch {
+    console.warn("API de cultivos no disponible — usando datos estáticos");
+    _cropsCache = CROPS_FALLBACK;
+    return CROPS_FALLBACK;
+  }
+};
+
 /** Obtener metricas reales del modelo ML (accuracy, precision, etc.) */
 export const getModelMetrics = async () => {
   try {
