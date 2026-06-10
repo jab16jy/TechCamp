@@ -23,7 +23,6 @@ import {
 
 import AmbientBackground from '../AmbientBackground/AmbientBackground';
 import HistorialDropdown from '@features/history/components/HistorialDropdown/HistorialDropdown';
-import logoSrc from '@assets/images/logo.png';
 import noFotoSrc from '@assets/images/nofoto-Usuario.png';
 import './ResearcherLayout.css';
 
@@ -92,10 +91,7 @@ const ResearcherLayout = ({ children, activeTab }) => {
     <div className="rl-root">
       <AmbientBackground />
 
-      {/* ── Logo (Top-Left) ── */}
-      <Link to="/investigador/dashboard" className="rl-logo">
-        <img src={logoSrc} alt="AgroCaribe IA" />
-      </Link>
+
 
       {/* ── Nav Pill (Top-Center) ── */}
       <nav className="rl-nav-pill">

@@ -8,27 +8,6 @@
   overflow: hidden;
 }
 
-/* ── Logo (Top-Left) ── */
-.rl-logo {
-  position: fixed;
-  top: 20px;
-  left: 24px;
-  z-index: 50;
-  display: flex;
-  align-items: center;
-  transition: transform 0.2s ease, opacity 0.2s ease;
-}
-
-.rl-logo:hover {
-  transform: scale(1.05);
-  opacity: 0.9;
-}
-
-.rl-logo img {
-  height: 96px;
-  width: auto;
-}
-
 /* ── Nav Pill (Top-Center) ── */
 .rl-nav-pill {
   position: fixed;
