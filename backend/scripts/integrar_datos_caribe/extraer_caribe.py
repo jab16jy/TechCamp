@@ -147,15 +147,38 @@ def _normalize_depto(depto: str) -> str:
 
 
 def _normalize_cultivo(cultivo: str) -> str:
-    """Normalize crop name: capitalize first letter, strip whitespace.
+    """Normalize crop name: handle accents, aliases, and capitalization.
 
     Args:
-        cultivo: Raw crop name.
+        cultivo: Raw crop name (e.g. 'Aji', 'Palma de aceite', '  MAIZ  ').
 
     Returns:
-        Normalized crop name with consistent capitalization.
+        Normalized crop name matching PRIORITY_CROPS entries.
     """
-    return cultivo.strip().capitalize()
+    s = cultivo.strip()
+    if not s:
+        return s
+
+    # Explicit alias mapping (must be checked before capitalize)
+    alias_map = {
+        "aji": "Ají",
+        "AJI": "Ají",
+        "Aji": "Ají",
+        "palma de aceite": "Palma",
+        "PALMA DE ACEITE": "Palma",
+        "Palma de aceite": "Palma",
+        "mango": "Mango",
+        "MANGO": "Mango",
+        "Mango": "Mango",
+    }
+
+    # Check lowercase for alias matching
+    s_lower = s.lower()
+    if s_lower in alias_map:
+        return alias_map[s_lower]
+
+    # Default: capitalize first letter, rest lowercase (handles most cases)
+    return s.capitalize()
 
 
 def _is_caribe(depto_norm: str) -> bool:
