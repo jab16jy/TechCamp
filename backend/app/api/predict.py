@@ -9,7 +9,7 @@ from app.core.dependencies import get_db
 from app.models.analisis import Analisis
 from app.schemas.predict import (
     PredictRequest, PredictResponse, OptimalDayRequest, OptimalDayResponse,
-    MonthProjection, CropScore, FactorWeight, Alert, CICLOS_DIAS_MAP,
+    MonthProjection, CropScore, FactorWeight, Alert, _ciclo_dias_for,
     ScenarioRequest, ScenarioPreset,
 )
 from app.services.prediction_service import project_window, project_window_with_scenario, _mes_siembra_to_num
@@ -164,7 +164,7 @@ async def predict_crops(
             dias_desde_siembra = None
 
     if not ciclo_dias and cultivo:
-        ciclo_dias = CICLOS_DIAS_MAP.get(cultivo, CICLOS_DIAS_MAP.get("Maiz", 90))
+        ciclo_dias = _ciclo_dias_for(cultivo)
 
     try:
         result = await project_window(

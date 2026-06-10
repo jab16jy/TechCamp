@@ -1,3 +1,4 @@
+import unicodedata
 from enum import Enum
 from pydantic import BaseModel, Field
 from typing import Optional
@@ -68,13 +69,22 @@ class PredictRequest(BaseModel):
     ciclo_dias: Optional[int] = Field(default=None, description="Duracion total del ciclo del cultivo en dias")
 
 
-CICLOS_DIAS_MAP = {
-    "Maiz": 90, "Yuca": 270, "Arroz": 120, "Frijol": 75,
-    "Name": 210, "Platano": 365, "Cacao": 180, "Algodon": 150,
-    "Sorgo": 110, "Palma Aceitera": 365,
-    "Maíz": 90, "Ñame": 210, "Plátano": 365, "Palma Aceitera": 365,
-    "Mango": 365, "Ají": 120,
-}
+def _normalize_cultivo(name: str) -> str:
+    """Strip accents, replace Ñ→N, spaces→underscores for cultivo matching."""
+    nfkd = unicodedata.normalize('NFD', name)
+    ascii_str = nfkd.encode('ascii', 'ignore').decode('ascii')
+    return ascii_str.replace(' ', '_')
+
+
+def _ciclo_dias_for(cultivo: str, default: int = 90) -> int:
+    """Resolve ciclo_dias from CropClassifier by cultivo name."""
+    from app.ml.model import get_crop_classifier
+    classifier = get_crop_classifier()
+    normalized = _normalize_cultivo(cultivo)
+    for crop in classifier.crops:
+        if _normalize_cultivo(crop["cultivo"]) == normalized:
+            return crop["ciclo_dias"]
+    return default
 
 
 class OptimalDayRequest(BaseModel):

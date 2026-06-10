@@ -1,5 +1,6 @@
 import logging
 import math
+import unicodedata
 from datetime import datetime, timezone
 from dateutil.relativedelta import relativedelta
 
@@ -245,12 +246,22 @@ async def _find_optimal_window(lat: float, lng: float, start_month: int, n_month
     }
 
 
-CICLOS_DIAS = {
-    "Maíz": 90, "Yuca": 270, "Arroz": 120, "Frijol": 75,
-    "Ñame": 210, "Plátano": 365, "Cacao": 180, "Algodón": 150,
-    "Sorgo": 110, "Palma Aceitera": 365,
-    "Mango": 365, "Ají": 120,
-}
+def _normalize_cultivo(name: str) -> str:
+    """Strip accents, replace Ñ→N, spaces→underscores for cultivo matching."""
+    nfkd = unicodedata.normalize('NFD', name)
+    ascii_str = nfkd.encode('ascii', 'ignore').decode('ascii')
+    return ascii_str.replace(' ', '_')
+
+
+def _ciclo_dias_for(cultivo: str, default: int = 90) -> int:
+    """Resolve ciclo_dias from CropClassifier by cultivo name."""
+    from app.ml.model import get_crop_classifier
+    classifier = get_crop_classifier()
+    normalized = _normalize_cultivo(cultivo)
+    for crop in classifier.crops:
+        if _normalize_cultivo(crop["cultivo"]) == normalized:
+            return crop["ciclo_dias"]
+    return default
 
 
 def _etapa_fenologica(dias_desde_siembra: int, ciclo_dias: int) -> str:
