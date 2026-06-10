@@ -9,5 +9,5 @@ Cacao,21,30,5.0,7.0,75,90,1500,2500,Franco-Arcilloso,Franco-Arcilloso,3.5,0,1200
 Algodón,20,30,5.5,7.5,50,70,500,1200,Franco;Franco-Arenoso,Franco,1.5,0,500,🌿,150,2.5,0.5,0,50,1.15,4.0,0
 Sorgo,22,32,5.5,7.5,50,75,400,1000,Franco;Franco-Arenoso,Franco-Arenoso,1.5,0,800,🌾,110,3.5,0.8,12,35,1.00,4.0,1
 Palma_Aceitera,24,30,4.5,7.0,75,90,1800,2800,Franco-Arcilloso;Arcilloso,Franco-Arcilloso,3.0,0,500,🛢️,365,20.0,0.3,12,80,1.00,2.0,0
-Mango,24,30,5.5,7.0,60,80,800,1800,Franco;Franco-Arenoso;Franco-Arcilloso,Franco,1.0,0,1000,🥭,365,10.62,0.6,0,80,0.75,1.5,0
-Ají,20,30,5.5,7.0,60,80,600,1200,Franco;Franco-Arenoso,Franco,2.0,0,1500,🌶️,120,6.35,0.3,0,40,1.05,1.0,0
+Mango,24,33,5.5,7.5,60,85,600,1500,Franco;Franco-Arenoso,Franco,1.5,0,1800,🥭,365,15.0,0.5,12,60,0.75,1.5,0
+Ají,20,32,5.5,7.0,60,85,500,1200,Franco;Franco-Arcilloso,Franco,2.0,0,1500,🌶️,120,8.0,0.3,0,40,1.05,1.5,0

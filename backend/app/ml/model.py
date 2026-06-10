@@ -55,6 +55,8 @@ class CropClassifier:
                         "tipo_suelo": row["tipo_suelo"].split(";"),
                         "textura_optima": row["textura_optima"],
                         "materia_organica_min": float(row["materia_organica_min"]),
+                        "altitud_min": float(row["altitud_min"]),
+                        "altitud_max": float(row["altitud_max"]),
                         "emoji": row["emoji"],
                         "ciclo_dias": int(row["ciclo_dias"]),
                         "rendimiento_promedio": row["rendimiento_promedio"],
