@@ -10,5 +10,6 @@ from app.models.conversacion import Conversacion
 from app.models.mensaje import Mensaje
 from app.models.plan_riego import PlanRiego
 from app.models.tarea import Tarea
+from app.models.dato_campo import DatoCampo
 
-__all__ = ["Base", "Municipio", "Analisis", "Usuario", "IndiceSatelital", "Sensor", "LecturaSensor", "Parcela", "Conversacion", "Mensaje", "PlanRiego", "Tarea"]
+__all__ = ["Base", "Municipio", "Analisis", "Usuario", "IndiceSatelital", "Sensor", "LecturaSensor", "Parcela", "Conversacion", "Mensaje", "PlanRiego", "Tarea", "DatoCampo"]

@@ -344,9 +344,9 @@ def _fetch_ndvi_distribution() -> list[float] | None:
 
 
 async def _fetch_ndvi_by_precip_decile() -> dict | None:
-    """Fetch NDVI distribution per precipitation decile from indices_satelitales.
+    """Fetch NDVI distribution per NDVI decile from indices_satelitales.
     
-    Returns dict mapping decile (0-10) to {mean, std, count} or None if DB unavailable.
+    Returns dict mapping decile (1-10) to {mean, std, count} or None if DB unavailable.
     """
     import asyncpg
     dsn = "postgresql://agrocaribe:agrocaribe_secret@localhost:5432/agrocaribe"
@@ -355,12 +355,12 @@ async def _fetch_ndvi_by_precip_decile() -> dict | None:
         conn = await asyncpg.connect(dsn)
         rows = await conn.fetch("""
             SELECT 
-                width_bucket(precipitacion, 0, 400, 10) as decile,
+                width_bucket(ndvi, 0, 1, 10) as decile,
                 AVG(ndvi) as mean_ndvi,
                 STDDEV(ndvi) as std_ndvi,
                 COUNT(*) as n
             FROM indices_satelitales 
-            WHERE ndvi IS NOT NULL AND precipitacion IS NOT NULL
+            WHERE ndvi IS NOT NULL
             GROUP BY decile
             ORDER BY decile
         """)
