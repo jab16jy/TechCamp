@@ -42,6 +42,8 @@ PRIORITY_CROPS: Final[set[str]] = {
     "SORGO",
     "YUCA",
     "ÑAME",
+    "MANGO",
+    "AJÍ",
 }
 
 # Additional normalized names to exclude (variants of priority crops)
@@ -57,6 +59,8 @@ PRIORITY_CROPS_NORM: Final[set[str]] = {
     "SORGO",
     "YUCA",
     "NAME",
+    "MANGO",
+    "AJI",
 }
 
 # Minimum thresholds for each priority tier
