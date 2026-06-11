@@ -276,7 +276,7 @@ class CropClassifier:
             })
 
         results.sort(key=lambda r: r["score"], reverse=True)
-        return results[:3]
+        return results
 
 
 _crop_classifier: CropClassifier | None = None

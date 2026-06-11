@@ -232,6 +232,15 @@ def predict_crop_recommendations(
 
             results.sort(key=lambda r: r["score"], reverse=True)
 
+            # --- Heuristic boundary correction (30% weight) ---
+            # The RF was trained on synthetic data with soft overlapping ranges.
+            # Crops outside hard agronomic limits (temp, precip, pH) get a penalty
+            # so real-world conditions override the synthetic overconfidence.
+            results = _apply_heuristic_correction(
+                results, heuristic_scores, weight=0.30
+            )
+            results.sort(key=lambda r: r["score"], reverse=True)
+
             # --- Ensemble RF + LSTM (60/40) ---
             if lstm_anomalies is not None:
                 results = _apply_lstm_ensemble(
@@ -250,6 +259,39 @@ def predict_crop_recommendations(
         s["metodo"] = "heuristico"
         s["probabilidad"] = None
     return heuristic_scores, "heuristico"
+
+
+def _apply_heuristic_correction(
+    rf_results: list[dict],
+    heuristic_scores: list[dict],
+    weight: float = 0.30,
+) -> list[dict]:
+    """Blend RF scores with agronomic boundary scores to correct synthetic overconfidence.
+
+    The RF can overestimate crops outside their real temperature/precipitation range
+    because synthetic training data uses soft overlapping Gaussians. This blends in
+    heuristic scores (which apply hard min/max limits) so boundary violations
+    actually penalize the final score.
+
+    Args:
+        rf_results: All RF results with 'cultivo' and 'score' (0-100).
+        heuristic_scores: Per-crop heuristic scores from score_with_factors.
+        weight: Fraction of heuristic score to blend in (0-1). 0.30 means
+                70% RF + 30% heuristic boundary check.
+
+    Returns:
+        rf_results with blended scores, same order (caller re-sorts).
+    """
+    heuristic_by_crop = {
+        h["cultivo"]: h["score"]
+        for h in heuristic_scores
+    }
+    for r in rf_results:
+        h_score = heuristic_by_crop.get(r["cultivo"])
+        if h_score is not None:
+            blended = int(r["score"] * (1 - weight) + h_score * weight)
+            r["score"] = max(0, min(100, blended))
+    return rf_results
 
 
 def _apply_lstm_ensemble(
