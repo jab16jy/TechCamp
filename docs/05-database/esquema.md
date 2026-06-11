@@ -1,4 +1,4 @@
-﻿---
+---
 titulo: "Arquitectura de Base de Datos"
 proyecto: AgroCaribe IA
 tags: [base-datos, postgresql, postgis, esquema, supabase]
@@ -234,7 +234,7 @@ Actualmente todas las politicas RLS permiten SELECT sin restricciones (`USING (t
 
 ## Referencias
 
-- [[2-backend/ARQUITECTURA_BACKEND]] — Modelos SQLAlchemy + ERD
-- [[4-arquitectura/VISION_SISTEMA]] — Flujo de datos en el sistema
-- [[4-arquitectura/FLUJO_DATOS]] — Mapeo de endpoints a tablas
-- [[4-arquitectura/DESPLIEGUE]] — Conexion Docker-Supabase y pooler
+- [[03-architecture/backend]] — Modelos SQLAlchemy + ERD
+- [[03-architecture/vision-general]] — Flujo de datos en el sistema
+- [[03-architecture/flujo-datos]] — Mapeo de endpoints a tablas
+- [[07-deployment/despliegue]] — Conexion Docker-Supabase y pooler

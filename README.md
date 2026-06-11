@@ -1,12 +1,10 @@
-# 🌾 AgroCaribe AI
+# AgroCaribe AI
 
 **AgroCaribe AI** es una plataforma avanzada de análisis agrícola impulsada por inteligencia artificial, diseñada específicamente para optimizar la producción de cultivos en la región del Caribe colombiano.
 
 ---
 
-## 🚀 Inicio Rápido
-
-Para ejecutar el proyecto localmente:
+## Inicio Rápido
 
 ```bash
 npm install
@@ -15,36 +13,44 @@ npm run dev
 
 ---
 
-## 📚 Documentación Técnica
+## Documentación Técnica
 
-La documentación del proyecto está organizada bajo el framework Diátaxis en `docs/`.
+La documentación completa está organizada en `docs/`:
 
 ### [👉 Ir a la Documentación](docs/README.md)
 
-| Documento | Tipo | Descripción |
-|-----------|------|-------------|
-| [Introducción](docs/1-INTRODUCTION.md) | Explicación | Visión general, stack y propósito |
-| [Arquitectura](docs/2-ARCHITECTURE.md) | Explicación | Arquitectura y flujo de datos |
-| [Setup](docs/3-SETUP.md) | Guía práctica | Instalación, configuración y scripts |
-| [Frontend Reference](docs/4-FRONTEND-REFERENCE.md) | Referencia | Componentes, rutas, estado y servicios |
-| [Backend API](docs/5-BACKEND-API.md) | Referencia | Endpoints, schemas y mock data |
-| [Módulos de Desarrollo](docs/6-DEVELOPMENT.md) | Explicación | IA, sensores, dashboard y reportes |
-| [Troubleshooting](docs/7-TROUBLESHOOTING.md) | Guía práctica | Problemas comunes y roadmap |
+| Sección | Contenido |
+|---------|-----------|
+| [01-business](docs/01-business/vision.md) | Visión del proyecto, problema, objetivos |
+| [02-requirements](docs/02-requirements/requisitos.md) | Requisitos y escenarios de validación |
+| [03-architecture](docs/03-architecture/vision-general.md) | Arquitectura, módulos, flujo de datos |
+| [04-development](docs/04-development/setup.md) | Setup, workflow, troubleshooting |
+| [05-database](docs/05-database/esquema.md) | Base de datos, PostGIS, migraciones |
+| [06-api](docs/06-api/referencia.md) | API REST, endpoints, schemas |
+| [07-deployment](docs/07-deployment/docker.md) | Docker, Vercel, Cloudflare |
+| [08-testing](docs/08-testing/estrategia.md) | Validación ML, resultados, plan de reentreno |
+| [09-operations](docs/09-operations/runbook.md) | Runbook, monitoreo, backup |
+| [10-decisions](docs/10-decisions/) | Architecture Decision Records |
 
 ---
 
-## 🛠️ Stack Tecnológico
-- **Frontend**: React 19 + Vite 8
-- **Estado**: Zustand 5
-- **Estilos**: Tailwind CSS 3 + Glassmorphism
-- **Integración**: API FastAPI (Mock fallback incluido)
+## Stack Tecnológico
+
+- **Frontend**: React 19 + Vite 8 + Zustand 5 + Tailwind CSS 3
+- **Backend**: FastAPI + SQLAlchemy + asyncpg + PostGIS
+- **ML**: HistGradientBoosting + CalibratedClassifierCV + LSTM
+- **IA**: LangChain + LangGraph + Ollama + RAG (TF-IDF)
+- **Infra**: Docker + Docker Compose
 
 ---
 
-## 🧪 Estado del Proyecto
-Actualmente el proyecto se encuentra en fase de **Prototipo de Alta Fidelidad (Frontend)**. Todas las interacciones están implementadas y consumen servicios que simulan la respuesta de una IA mediante datos mock cuando el servidor no está presente.
+## Estado del Proyecto
 
-## 🌿 Workflow con OpenCode
+Backend funcional con 26+ endpoints, modelo ML entrenado (84.6% accuracy en sintéticos), chatbot con RAG sobre 40+ documentos agronómicos, y pipeline de reentreno con datos reales EVA Caribe en progreso.
+
+---
+
+## Workflow con OpenCode
 
 Este proyecto se desarrolla usando OpenCode con branches por tarea:
 

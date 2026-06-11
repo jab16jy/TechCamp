@@ -111,7 +111,7 @@ backend/
 │   │   ├── crop_model_rf.joblib       # Modelo entrenado (HistGradientBoosting)
 │   │   ├── crop_scaler.joblib         # StandardScaler del modelo
 │   │   ├── training.py                # Pipeline de entrenamiento con datos sintéticos
-│   │   ├── inference.py               # RF inference con fallback automático a CropClassifier
+│   │   ├── inference.py               # Inferencia ML con fallback automático a CropClassifier
 │   │   ├── model.py                   # CropClassifier heurístico (reglas agronómicas)
 │   │   └── lstm_model.py             # LSTM para anomalías climáticas a 6 meses
 │   │
@@ -327,172 +327,7 @@ INSERT INTO sensores (nodo_id, nombre, lat, lng, estado, ubicacion) VALUES
 
 ---
 
-## 4. API Endpoints (25+ endpoints)
-
-### 4.1 Contrato Completo
-
-| Método | Ruta | Request | Response | Estado |
-|--------|------|---------|----------|--------|
-| `GET` | `/health` | — | `{status, version}` | ✅ |
-| `GET` | `/municipalities` | — | `Municipio[]` | ✅ |
-| `POST` | `/analyze-location` | `AnalyzeRequest` | `AnalyzeResponse` | ✅ |
-| `GET` | `/analysis/{id}` | `id` path | `AnalysisDetail` | ✅ |
-| `GET` | `/climate` | `lat, lng` (query) | `ClimateData` | ✅ |
-| `GET` | `/satellite-indicators` | `lat, lng` (query) | `SatelliteData` | ✅ |
-| `GET` | `/history` | `tipo, limit` (query) | `HistorialEntry[]` | ✅ |
-| `DELETE` | `/history/{id}` | `id` path | `204` | ✅ |
-| `POST` | `/predict` | `PredictRequest` | `PredictResponse` | ✅ |
-| `POST` | `/predict/optimal-day` | `OptimalDayRequest` | `OptimalDayResponse` | ✅ |
-| `POST` | `/predict/scenario` | `ScenarioRequest` | `PredictResponse` | ✅ |
-| `GET` | `/soil/data` | `lat, lng` (query) | `SoilData` | ✅ |
-| `POST` | `/irrigation-plans` | `IrrigationPlanRequest` | `IrrigationPlanResponse` | ✅ |
-| `GET` | `/irrigation-plans/{id}` | `id` path | `IrrigationPlanResponse` | ✅ |
-| `GET` | `/irrigation-plans/thresholds` | — | `ThresholdsResponse` | ✅ |
-| `GET` | `/sensors` | — | `SensorResponse[]` | ✅ |
-| `GET` | `/sensors/{id}/readings` | `id, limit` | `LecturaResponse[]` | ✅ |
-| `POST` | `/sensors/readings` | `CreateLecturaRequest` | `LecturaResponse` | ✅ |
-| `POST` | `/chat` | `ChatRequest` | `ChatResponse` | ✅ |
-| `GET` | `/chat/test-llm` | — | `{status, provider}` | ✅ |
-| `POST` | `/geo/decode` | `lat, lng` | `GeoDecodeResponse` | ✅ |
-| `POST` | `/auth/login` | `LoginRequest` | `TokenResponse` | ✅ |
-| `GET` | `/dashboard/summary` | — | `DashboardSummaryResponse` | ✅ |
-| `GET` | `/reports/alerts` | — | `AlertsResponse` | ✅ |
-| `POST` | `/reports/compare` | `CompareRequest` | `CompareResponse` | ✅ |
-| `POST` | `/reports/export` | `ExportRequest` | `ExportResponse` | ✅ |
-
-### 4.2 Endpoints Clave — Especificación
-
-#### `POST /analyze-location`
-
-```json
-// Request
-{
-  "departamento": "Bolívar",
-  "municipio": "Turbaco",
-  "lat": 10.33,
-  "lng": -75.41,
-  "tipo_suelo": "Franco-Arcilloso",
-  "acceso_riego": true,
-  "mes_siembra": "Mayo",
-  "area_hectareas": 5.0,
-  "ph_suelo": 6.5,
-  "materia_organica": 3.2,
-  "textura_suelo": "Franco"
-}
-
-// Response 200
-{
-  "clima": { "temperatura": 29.1, "precipitacion": 74.5, ... },
-  "indicadores_satelite": { "ndvi": 0.42, "ndwi": 0.18, ... },
-  "recomendaciones": [
-    {
-      "cultivo": "Maíz",
-      "score": 86,
-      "riesgo": "medio",
-      "justificacion": "...",
-      "emoji": "🌽",
-      "ciclo_dias": 90,
-      "rendimiento_estimado": "4.2 t/ha",
-      "metodo": "random_forest",
-      "probabilidad": 0.86
-    }
-  ],
-  "anomalia": { "temp_anomalies": [], ... },
-  "ubicacion": { "lat": 10.33, "lng": -75.41 },
-  "es_mock": false
-}
-```
-
-**Pipeline interno:**
-1. Validar request (Pydantic)
-2. Obtener clima → OpenMeteo API (o mock si falla)
-3. Obtener NDVI → lookup pre-procesado en tabla `indices_satelitales`
-4. Obtener anomalía climática → LSTM (si disponible)
-5. Ejecutar motor de recomendación híbrido (reglas + HistGradientBoosting)
-6. Guardar análisis en DB (tabla `analisis`)
-7. Retornar respuesta con `metodo` y `probabilidad` por cultivo
-
-#### `POST /predict`
-
-Endpoint principal de proyección fenológica. Acepta `analysis_id` para heredar datos de un análisis previo, o coordenadas directas.
-
-```json
-// Request
-{
-  "lat": 10.33,
-  "lng": -75.41,
-  "cultivo": "Maíz",
-  "meses": 6,
-  "npk_override": 120,
-  "riego_override": 75,
-  "fecha_siembra": "2025-04-01"
-}
-
-// Response 200
-{
-  "ubicacion": { "lat": 10.33, "lng": -75.41 },
-  "meses": [
-    {
-      "mes": "Mayo",
-      "temp_media": 28.3,
-      "precipitacion": 120.0,
-      "humedad": 80.0,
-      "ndvi_estimado": 0.52,
-      "score": 86,
-      "alertas": [...]
-    }
-  ],
-  "mejor_mes": "Mayo",
-  "mejor_cultivo": "Maíz",
-  "best_window": { "fecha_inicio": "2025-05-01", "dias_optimos": 25 },
-  "alertas_globales": [],
-  "alertas_patrones": [],
-  "fuente": "NASA POWER + OpenMeteo + NDVI: Sentinel-2 BD + Suelo: ISRIC SoilGrids v2.0"
-}
-```
-
-#### `POST /predict/optimal-day`
-
-Encuentra la ventana óptima de siembra en los próximos 90 días. Analiza temperatura, precipitación y fenología del cultivo seleccionado. Retorna `fecha_inicio` y `dias_optimos`.
-
-#### `POST /predict/scenario`
-
-Simulador de escenarios climáticos **what-if** con presets predefinidos:
-
-| Preset | Precipitación | Temperatura | NPK | Riego |
-|--------|---------------|-------------|-----|-------|
-| `nino` | -30% | +3.0°C | 140 | 90% |
-| `nina` | +40% | -1.5°C | 100 | 40% |
-| `normal` | 0% | 0.0°C | 120 | 75% |
-
-El usuario puede sobrescribir cualquier delta individualmente.
-
-#### `DELETE /history/{id}`
-
-Elimina un análisis del historial. Soporta búsqueda por UUID completo o por prefijo de 8 caracteres (formato `C-0421` → UUID match).
-
-#### `GET /analysis/{id}`
-
-Retorna detalle completo de un análisis por ID (UUID o prefijo de 8 chars).
-
-#### `GET /sensors` / `GET /sensors/{id}/readings` / `POST /sensors/readings`
-
-CRUD completo de sensores IoT y sus lecturas. Incluye joins optimizados con subquery para obtener la última lectura de cada sensor en una sola consulta.
-
-#### `GET /reports/alerts`
-
-Genera alertas automáticas basadas en:
-- Sensores en estado `warn` o `critical`
-- Análisis con score < 50%
-- Lecturas anormales (NDVI bajo, humedad crítica, temperatura elevada)
-
-#### `POST /geo/decode`
-
-Reverse geocoding usando PostGIS `ST_Contains`: dada una coordenada, retorna municipio y departamento.
-
----
-
-## 5. Pipeline de Análisis (Workflow)
+## 4. Pipeline de Análisis (Workflow)
 
 ```mermaid
 graph TD
@@ -525,7 +360,7 @@ graph TD
         Q3{Cargó modelo ML?}
         Q3 -->|Sí| Q4[Predict proba + top 3]
         Q3 -->|No| Q5[CropClassifier heurístico]
-        Q4 --> Q6[Ensemble RF+LSTM 60/40 si hay anomalías]
+        Q4 --> Q6[Ensemble ML+LSTM 60/40 si hay anomalías]
         Q6 --> Q7[Enriquecer: emoji, ciclo, rendimiento]
         Q5 --> Q7
     end
@@ -534,7 +369,7 @@ graph TD
     R --> S[Response JSON al frontend]
 ```
 
-### 5.1 Reglas Agronómicas (Filtro inicial en `model.py`)
+### 4.1 Reglas Agronómicas (Filtro inicial en `model.py`)
 
 Validación de rangos óptimos para cada cultivo con scoring por factores:
 
@@ -558,7 +393,7 @@ CROP_REQUIREMENTS = {
 
 Si las variables están fuera de rango, el score del cultivo se penaliza drásticamente.
 
-### 5.2 HistGradientBoosting (Scoring fino en `training.py`)
+### 4.2 HistGradientBoosting (Scoring fino en `training.py`)
 
 El modelo en producción es **HistGradientBoostingClassifier** (guardado como `crop_model_rf.joblib` por razones históricas):
 
@@ -581,29 +416,29 @@ model = HistGradientBoostingClassifier(
 
 > El pipeline se envuelve en `CalibratedClassifierCV` (Platt scaling) para calibrar las probabilidades predichas, lo que mejora la precisión respecto al `HistGradientBoosting` sin calibrar (~62.5%). La calibración ajusta la confianza de las predicciones a la frecuencia observada de clases, crítica para un sistema de recomendación donde el score de probabilidad se muestra al usuario.
 
-### 5.3 Ensamble RF + LSTM (en `inference.py`)
+### 4.3 Ensamble ML + LSTM (en `inference.py`)
 
 Cuando el modelo LSTM está disponible, se aplica un ensamble 60/40:
 
 ```
-score_final = score_rf * 0.6 + lstm_factor * 0.4
+score_final = score_ml * 0.6 + lstm_factor * 0.4
 ```
 
 Donde `lstm_factor` se calcula a partir de las anomalías proyectadas de temperatura, precipitación y humedad para los próximos 6 meses. Anomalías extremas reducen el score, condiciones favorables lo mantienen.
 
-### 5.4 Mecanismo de Fallback (`inference.py`)
+### 4.4 Mecanismo de Fallback (`inference.py`)
 
-Carga lazy del modelo (`_load_rf()`) con auto-entrenamiento si los archivos `.joblib` no existen:
+Carga lazy del modelo (`_load_model()`) con auto-entrenamiento si los archivos `.joblib` no existen:
 
 1. **Intenta cargar** HistGradientBoosting + scaler desde disco
 2. **Si no existen:** ejecuta `train_model()` con datos sintéticos
-3. **Si falla:** retorna `CropClassifier` heurístico puro (sin `metodo: random_forest`)
+3. **Si falla:** retorna `CropClassifier` heurístico puro (sin `metodo: hist_gradient_boosting`)
 
 ---
 
-## 6. Arquitectura del Chatbot (AgroAsesor IA)
+## 5. Arquitectura del Chatbot (AgroAsesor IA)
 
-### 6.1 Estado del Agente
+### 5.1 Estado del Agente
 
 ```python
 from typing import TypedDict
@@ -619,7 +454,7 @@ class AgentState(TypedDict):
     final_response: str
 ```
 
-### 6.2 Flujo del Chat
+### 5.2 Flujo del Chat
 
 ```mermaid
 graph TD
@@ -641,7 +476,7 @@ graph TD
     L --> M[Response al frontend]
 ```
 
-### 6.3 Sistema de 3 Capas
+### 5.3 Sistema de 3 Capas
 
 | Capa | Fuente | Activación |
 |------|--------|------------|
@@ -649,7 +484,7 @@ graph TD
 | **LLM Directo** | Ollama gemma2:2b + RAG (sin herramientas) | Si el agent graph falla |
 | **Keyword Fallback** | Matching de palabras clave + RAG snippets | Si Ollama no responde |
 
-### 6.4 Clasificación de Intents (17 categorías en `graph.py`)
+### 5.4 Clasificación de Intents (17 categorías en `graph.py`)
 
 | Categoría | Keywords | Comportamiento |
 |-----------|----------|----------------|
@@ -671,7 +506,7 @@ graph TD
 | `ndvi` | ndvi, satélite, índice vegetación | RAG en doc de NDVI |
 | `siembra` | siembra, sembrar, época, calendario | RAG en doc de épocas de siembra |
 
-### 6.5 Módulo RAG (`rag_service.py`)
+### 5.5 Módulo RAG (`rag_service.py`)
 
 - **Vectorizer:** TF-IDF con n-gramas (1,2), max_features=5000, stopwords personalizadas
 - **Indexación:** Documentos chunked por secciones (target 500 chars por chunk)
@@ -679,7 +514,7 @@ graph TD
 - **Fallback:** Keyword search con scoring por término cuando TF-IDF falla
 - **Documentos:** 40+ archivos Markdown en `backend/data/rag/` cubriendo cultivos, plagas, fertilización, BPA, clima, NDVI, suelos, postcosecha, economía agrícola, etc.
 
-### 6.6 Herramientas del Agente (`agent/tools.py`)
+### 5.6 Herramientas del Agente (`agent/tools.py`)
 
 | Herramienta | Función | Fuente |
 |-------------|---------|--------|
@@ -689,9 +524,9 @@ graph TD
 
 ---
 
-## 7. Docker Compose
+## 6. Docker Compose
 
-### 7.1 Servicios (Actual — 3 contenedores)
+### 6.1 Servicios (Actual — 3 contenedores)
 
 ```yaml
 services:
@@ -773,7 +608,7 @@ networks:
     driver: bridge
 ```
 
-### 7.2 Arquitectura de Servicios
+### 6.2 Arquitectura de Servicios
 
 ```
                     ┌─────────────┐
@@ -799,7 +634,7 @@ networks:
 
 **Supabase solo se usa para autenticación (Auth).** La base de datos principal es PostgreSQL local vía PostGIS. No hay dependencia de Supabase DB.
 
-### 7.3 Variables de Entorno
+### 6.3 Variables de Entorno
 
 ```
 # .env
@@ -815,7 +650,7 @@ OPENMETEO_BASE_URL=https://api.open-meteo.com/v1
 CORS_ORIGINS=http://localhost:5173,http://localhost
 ```
 
-### 7.4 Uso
+### 6.4 Uso
 
 ```bash
 # Desarrollo local (sin Docker)
@@ -841,9 +676,9 @@ docker compose ps
 
 ---
 
-## 8. Módulo de Riego Inteligente
+## 7. Módulo de Riego Inteligente
 
-### 8.1 Arquitectura
+### 7.1 Arquitectura
 
 El módulo de riego (`irrigation_service.py`) genera planes de riego personalizados basados en:
 
@@ -854,7 +689,7 @@ El módulo de riego (`irrigation_service.py`) genera planes de riego personaliza
 5. **ISRIC SoilGrids** → datos reales de textura para la coordenada
 6. **ET0 de referencia** → evapotranspiración base por cultivo
 
-### 8.2 Explicabilidad (XAI)
+### 7.2 Explicabilidad (XAI)
 
 Cada plan incluye `justificacion_xai` en lenguaje natural explicando:
 
@@ -867,7 +702,7 @@ El suelo franco-arenoso tiene alta capacidad de drenaje,
 requiriendo riego más frecuente.
 ```
 
-### 8.3 Cálculo de Volumen
+### 7.3 Cálculo de Volumen
 
 ```
 volumen = ET0_ajustada * factor_textura * factor_raiz * 7 días
@@ -877,9 +712,9 @@ horario_optimo = 05:00 - 07:00 (mínima evaporación)
 
 ---
 
-## 9. Modelo de Machine Learning
+## 8. Modelo de Machine Learning
 
-### 9.1 Pipeline de Entrenamiento
+### 8.1 Pipeline de Entrenamiento
 
 El modelo se entrena con datos **sintéticos** generados por distribución triangular + ruido gaussiano:
 
@@ -891,26 +726,26 @@ Algoritmo: HistGradientBoosting (max_iter=300, max_depth=6)
 Validación: StratifiedKFold 5-fold + CalibratedClassifierCV → accuracy ~84.6%
 ```
 
-### 9.2 Modelo LSTM (`lstm_model.py`)
+### 8.2 Modelo LSTM (`lstm_model.py`)
 
 - **Arquitectura:** Input(12 meses, 3 features) → LSTM(32) → Dropout(0.2) → LSTM(16) → Dropout(0.2) → Dense(6×3)
 - **Datos:** Series sintéticas basadas en climatología NASA POWER para el Caribe colombiano
 - **Salida:** Anomalías de temperatura, precipitación y humedad para los próximos 6 meses
 - **Confianza:** Calculada dinámicamente según la magnitud de las anomalías (max_temp_anomalía / 10)
 
-### 9.3 Precisión vs. Documentación Anterior
+### 8.3 Precisión vs. Documentación Anterior
 
 | Métrica | Valor Anterior (Doc) | Valor Real (Código) | Nota |
 |---------|---------------------|---------------------|------|
-| Algoritmo | Random Forest | HistGradientBoosting | Mejor performance en tabular |
-| Accuracy | ~94% | ~84.6% | Datos sintéticos con ruido realista + CalibratedClassifierCV |
+| Algoritmo | Random Forest | HistGradientBoosting + CalibratedClassifierCV | Mejor performance en tabular |
+| Accuracy | ~94% | ~84.6% | Datos sintéticos con ruido realista + calibración Platt |
 | Clases | 6 cultivos | 10 cultivos | Mayor granularidad |
 | Features | 7 raw | 10 (7 raw + 3 engineered) | Interacciones incluidas |
 | LSTM | No existía | 2 capas, 6 meses forecast | Nuevo desde Fase 3 |
 
 ---
 
-## 10. Dependencias (requirements.txt)
+## 9. Dependencias (requirements.txt)
 
 ```txt
 fastapi==0.115.0
@@ -939,28 +774,7 @@ lxml>=5.3.0
 
 ---
 
-## 11. Migración del Frontend
-
-El frontend consume estos endpoints principales desde `api.js`:
-
-| Función Frontend | Endpoint Backend | Estado |
-|-----------------|-----------------|--------|
-| `getMunicipios()` | `GET /municipalities` | ✅ Real |
-| `analizarUbicacion()` | `POST /analyze-location` | ✅ Real |
-| `getClima()` | `GET /climate` | ✅ Real |
-| `getIndicadoresSatelite()` | `GET /satellite-indicators` | ✅ Real |
-| `getHistorial()` | `GET /history` | ✅ Real |
-| `deleteHistorial()` | `DELETE /history/{id}` | ✅ Real |
-| `sendChatMessage()` | `POST /chat` | ✅ Real |
-| `getSensores()` | `GET /sensors` | ✅ Real |
-| `getAlertas()` | `GET /reports/alerts` | ✅ Real |
-| `predecir()` | `POST /predict` | ✅ Real |
-
-Los mecanismos de fallback mock en `api.js` ya no son necesarios para la mayoría de endpoints, pero permanecen como safety net.
-
----
-
-## 12. Plan de Implementación — Estado Actual
+## 10. Plan de Implementación — Estado Actual
 
 ### ✅ Fase MVP (Completada) — Backend funcional
 
@@ -1030,14 +844,15 @@ Los mecanismos de fallback mock en `api.js` ya no son necesarios para la mayorí
 
 ## Referencias
 
-- [[2-backend/TASKS]] — Seguimiento de implementación por fase
-- [[4-arquitectura/ARQUITECTURA_DB]] — Esquema detallado de la base de datos
-- [[4-arquitectura/MODULO_CLIMA]] — Servicio climático (OpenMeteo + NASA POWER + LSTM)
-- [[4-arquitectura/MODULO_SATELITAL]] — Servicio satelital (Sentinel-2 + NDVI + índices)
-- [[4-arquitectura/MODULO_RECOMENDACION]] — Motor híbrido de recomendación (ML + reglas)
-- [[4-arquitectura/MODULO_SUELO_SOILGRIDS]] — Integración SoilGrids ISRIC v2.0
-- [[4-arquitectura/MODULO_RIEGO]] — Planificación inteligente de riego (NUEVO)
-- [[4-arquitectura/FLUJO_DATOS]] — Mapa de conexión Frontend-Backend
-- [[4-arquitectura/DESPLIEGUE]] — Docker y producción
-- [[4-arquitectura/GUIAS_QGIS]] — Guía para procesar imágenes satelitales
-- [[5-implementacion/CHAT_2025-05-19]] — Contexto de sesión (chat completado)
+- [[../2-backend/TASKS]] — Seguimiento de implementación por fase
+- [[../4-arquitectura/ARQUITECTURA_DB]] — Esquema detallado de la base de datos
+- [[../4-arquitectura/MODULO_CLIMA]] — Servicio climático (OpenMeteo + NASA POWER + LSTM)
+- [[../4-arquitectura/MODULO_SATELITAL]] — Servicio satelital (Sentinel-2 + NDVI + índices)
+- [[../4-arquitectura/MODULO_RECOMENDACION]] — Motor híbrido de recomendación (ML + reglas)
+- [[../4-arquitectura/MODULO_SUELO_SOILGRIDS]] — Integración SoilGrids ISRIC v2.0
+- [[../4-arquitectura/MODULO_RIEGO]] — Planificación inteligente de riego
+- [[../4-arquitectura/FLUJO_DATOS]] — Mapa de conexión Frontend-Backend
+- [[../4-arquitectura/DESPLIEGUE]] — Docker y producción
+- [[../4-arquitectura/GUIAS_QGIS]] — Guía para procesar imágenes satelitales
+- [[../_archive/5-implementacion/CHAT_2025-05-19]] — Contexto de sesión (chat completado)
+- [[../06-api/referencia]] — Referencia completa de API y endpoints

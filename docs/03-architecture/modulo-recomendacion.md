@@ -1,7 +1,7 @@
 ---
 titulo: "Modulo de Recomendacion — Motor Hibrido"
 proyecto: AgroCaribe IA
-tags: [recomendacion, random-forest, reglas-agronomicas, scoring]
+tags: [recomendacion, histgradientboosting, reglas-agronomicas, scoring]
 ---
 
 # Motor de Recomendacion Hibrido
@@ -22,7 +22,7 @@ Factores de entrada:
         ↓
 CropClassifier.score() → puntuacion 0-98 para cada cultivo
   O
-Inference ML → Random Forest → probabilidades por cultivo
+Inference ML → HistGradientBoosting → probabilidades por cultivo
         ↓
 Sort por score descendente → Top 3 cultivos
         ↓
@@ -35,33 +35,38 @@ Retorna: { cultivo, score, riesgo, justificacion, emoji, ciclo_dias, rendimiento
 
 El sistema intenta primero el modelo ML; si falla, cae al heuristico:
 
-1. Cargar modelo RF (`crop_model_rf.joblib` + `crop_scaler.joblib`)
-2. Si modelo existe → `RF.predict_proba()` → score = int(prob * 100), metodo = "random_forest"
+1. Cargar modelo HGB (`crop_model_rf.joblib` + `crop_scaler.joblib`)
+2. Si modelo existe → `HGB.predict_proba()` → score = int(prob * 100), metodo = "random_forest"
 3. Si modelo falla o no existe → fallback a `CropClassifier.score()` (heuristico), metodo = "heuristico"
 
-### Modelo Random Forest
+> El modelo se guarda como `crop_model_rf.joblib` por razones historicas, aunque el algoritmo real es HistGradientBoosting.
+
+### Modelo HistGradientBoosting
 
 ```python
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import HistGradientBoostingClassifier
 
-model = RandomForestClassifier(
-    n_estimators=200,
-    max_depth=12,
+model = HistGradientBoostingClassifier(
+    max_iter=300,
+    max_depth=6,
+    learning_rate=0.1,
     random_state=42,
 )
 ```
 
-**Features:** temperatura, humedad, precipitacion, ph_suelo, materia_organica, ndvi
-**Metricas reales:** Accuracy: 84.6%, CV: 84.35% ± 2.38%
-**Dataset:** Sintetico (200 muestras por cultivo con variacion dentro de rangos optimos)
+**Features (10):** temperatura, humedad, precipitacion, ph_suelo, materia_organica, ndvi, textura_encoded + 3 features ingenieriles (temp_hum_interaction, ph_mo_interaction, precip_hum_ratio)
 
-> **Nota:** El accuracy del 84.6% se logró tras agregar `CalibratedClassifierCV` (Platt scaling) al pipeline. El modelo actual esta entrenado con datos generados a partir de `crops_requirements.csv`. Con datos reales de campo se espera mejorar aun más.
+**Metricas reales:** Accuracy: 84.6% (validacion cruzada 5-fold + CalibratedClassifierCV)
+
+**Dataset:** Sintetico (1000 muestras por cultivo con distribucion triangular + ruido gaussiano)
+
+> **Nota:** El pipeline se envuelve en `CalibratedClassifierCV` (Platt scaling) para calibrar las probabilidades predichas, lo que mejora la precision respecto al `HistGradientBoosting` sin calibrar (~62.5%). El modelo se entrena con datos generados a partir de `crops_requirements.csv`. Con datos reales de campo se espera mejorar aun mas.
 
 ### Modelo LSTM (Condicional)
 
 **Archivo:** `backend/app/ml/lstm_model.py`
 
-Modelo LSTM para prediccion de series temporales climaticas. **Activado solo cuando hay datos de anomalía climática** — no es el método principal de recomendación. Se activa únicamente si `climate_service` detecta anomalías significativas en temperatura, precipitación o humedad. En ese caso, sus salidas influyen en el ensemble 60/40 (ML + LSTM) dentro del motor híbrido. Sin datos de anomalía, el LSTM se omite y la recomendación opera con HistGradientBoosting + reglas agronómicas puras.
+Modelo LSTM para prediccion de series temporales climaticas. **Activado solo cuando hay datos de anomalia climatica** — no es el metodo principal de recomendacion. Se activa unicamente si `climate_service` detecta anomalias significativas en temperatura, precipitacion o humedad. En ese caso, sus salidas influyen en el ensemble 60/40 (ML + LSTM) dentro del motor hibrido. Sin datos de anomalia, el LSTM se omite y la recomendacion opera con HistGradientBoosting + reglas agronomicas puras.
 
 ## CropClassifier — Reglas Agronomicas
 
@@ -110,7 +115,7 @@ Cada recomendacion incluye una justificacion generada dinamicamente:
 POST /analyze-location
     → climate_service.get_climate_data()       (OpenMeteo)
     → satellite_service.get_satellite_data()    (Nearest NDVI)
-    → inference.predict_crop_recommendations()  (RF + fallback heuristico)
+    → inference.predict_crop_recommendations()  (HistGradientBoosting + fallback heuristico)
     → Guardar en tabla analisis
     → Retornar AnalyzeResponse
 ```
@@ -119,8 +124,8 @@ POST /analyze-location
 
 ## Referencias
 
-- [[4-arquitectura/VISION_SISTEMA]] — Flujo de procesamiento general
-- [[4-arquitectura/MODULO_CLIMA]] — Datos climaticos de entrada
-- [[4-arquitectura/MODULO_SATELITAL]] — Datos satelitales de entrada
-- [[4-arquitectura/FLUJO_DATOS]] — Mapeo de conexion Frontend-Backend
-- [[4-arquitectura/MODULO_SUELO_SOILGRIDS]] — Datos de suelo
+- [[03-architecture/vision-sistema]] — Flujo de procesamiento general
+- [[03-architecture/modulo-clima]] — Datos climaticos de entrada
+- [[03-architecture/modulo-satelital]] — Datos satelitales de entrada
+- [[03-architecture/flujo-datos]] — Mapeo de conexion Frontend-Backend
+- [[03-architecture/modulo-suelo]] — Datos de suelo

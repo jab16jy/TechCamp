@@ -1,4 +1,4 @@
-﻿---
+---
 titulo: "Modulo de Suelo — SoilGrids v2.0"
 proyecto: AgroCaribe IA
 tags: [suelo, soilgrids, isric, ph, materia-organica, textura]
@@ -74,6 +74,6 @@ Arcilloso, Arcillo-Arenoso, Arcillo-Limoso, Franco-Arcilloso, Franco-Arcillo-Lim
 
 ## Referencias
 
-- [[5-implementacion/CHAT_2025-05-19]]
-- [[2-backend/ARQUITECTURA_BACKEND]]
-- [[4-arquitectura/FLUJO_DATOS]]
+- [[05-database/arquitectura-db]]
+- [[06-api/backend-architecture]]
+- [[03-architecture/flujo-datos]]

@@ -145,6 +145,6 @@ Si hay datos en la tabla, el backend los usara. Si no, retorna valores mock.
 
 ## Referencias
 
-- [[4-arquitectura/MODULO_SATELITAL]] — Detalle del almacenamiento y consulta de NDVI
-- [[4-arquitectura/ARQUITECTURA_DB]] — Tabla indices_satelitales y PostGIS
-- [[4-arquitectura/DESPLIEGUE]] — Como desplegar el sistema con Docker
+- [[03-architecture/modulo-satelital]] — Detalle del almacenamiento y consulta de NDVI
+- [[05-database/arquitectura-db]] — Tabla indices_satelitales y PostGIS
+- [[07-deployment/despliegue]] — Como desplegar el sistema con Docker

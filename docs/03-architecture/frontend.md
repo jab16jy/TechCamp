@@ -728,6 +728,6 @@ La URL también puede configurarse desde la UI en [[Ajustes]] → Servidor API. 
 
 ## Referencias
 
-- [[2-backend/ARQUITECTURA_BACKEND]] — Arquitectura del backend y endpoints
-- [[4-arquitectura/FLUJO_DATOS]] — Mapa de conexión Frontend-Backend completo
-- [[4-arquitectura/VISION_SISTEMA]] — Stack tecnológico y flujo de procesamiento
+- [[06-api/backend]] — Arquitectura del backend y endpoints
+- [[03-architecture/flujo-datos]] — Mapa de conexión Frontend-Backend completo
+- [[03-architecture/vision-sistema]] — Stack tecnológico y flujo de procesamiento

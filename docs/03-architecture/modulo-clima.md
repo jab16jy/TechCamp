@@ -66,6 +66,10 @@ class ClimateData(BaseModel):
 | Temperatura | °C | OpenMeteo | Scoring (25% peso) |
 | Precipitacion | mm | OpenMeteo | Scoring (20% peso) |
 | Humedad | % | OpenMeteo | Scoring (15% peso) |
+| pH del suelo | - | ISRIC SoilGrids | Scoring (15% peso) |
+| Materia Organica | % | ISRIC SoilGrids | Scoring (10% peso) |
+| Textura del suelo | USDA | ISRIC SoilGrids | Scoring (10% peso) |
+| NDVI | 0-1 | Sentinel-2 / QGIS | Scoring (5% peso) |
 | Radiacion solar | W/m² | OpenMeteo | Visualizacion |
 | Evapotranspiracion | mm | Calculada | Reporte |
 
@@ -73,7 +77,7 @@ class ClimateData(BaseModel):
 
 ## Referencias
 
-- [[4-arquitectura/VISION_SISTEMA]] — Vision general del sistema
-- [[4-arquitectura/MODULO_RECOMENDACION]] — Motor hibrido que usa los datos climaticos
-- [[4-arquitectura/FLUJO_DATOS]] — Flujo de datos: como se conecta el clima al frontend
-- [[2-backend/ARQUITECTURA_BACKEND]] — Endpoints y servicios del backend
+- [[03-architecture/vision-sistema]] — Vision general del sistema
+- [[03-architecture/modulo-recomendacion]] — Motor hibrido que usa los datos climaticos
+- [[03-architecture/flujo-datos]] — Flujo de datos: como se conecta el clima al frontend
+- [[06-api/backend-architecture]] — Endpoints y servicios del backend

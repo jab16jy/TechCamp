@@ -1,51 +1,95 @@
-﻿---
-titulo: "Flujo de Datos Completo"
+---
+titulo: "Vision General del Sistema"
 proyecto: AgroCaribe IA
-tags: [flujo, datos, pipeline, integracion]
+tags: [arquitectura, sistema, flujo, diagrama, pipeline, integracion, datos]
 ---
 
-# Flujo de Datos Completo
+# Vision General del Sistema
 
-## Mapa de conexion Frontend ↔ Backend
+## Diagrama de Bloques
 
-```
-Frontend (api.js)                   Backend (api/)                 Fuente
-──────────────────────────────────────────────────────────────────────────
-GET /municipalities          →   api/municipios.py       →   PostgreSQL
-POST /analyze-location       →   api/analisis.py         →   OpenMeteo + NDVI + RF
-                                services/climate_service
-                                services/satellite_service
-                                services/recommendation
-                                ml/inference
-GET /climate                 →   api/clima.py            →   OpenMeteo
-GET /satellite-indicators    →   api/satelite.py         →   PostgreSQL (nearest NDVI)
-GET /history                 →   api/historial.py        →   PostgreSQL + Municipios
-DELETE /history/{id}         →   api/historial.py        →   PostgreSQL
-GET /analysis/{id}           →   api/analisis.py         →   PostgreSQL (analisis detail)
-POST /auth/login             →   api/auth.py             →   Supabase Auth
-POST /chat                   →   api/chat.py             →   RAG + LangChain + Ollama
-                                services/chat_service
-                                services/rag_service
-                                services/llm_service
-GET /sensors                 →   api/sensores.py         →   PostgreSQL
-GET /sensors/{id}/readings   →   api/sensores.py         →   PostgreSQL (lecturas)
-POST /sensors/readings       →   api/sensores.py         →   PostgreSQL (insert)
-POST /geo/decode             →   api/geo.py              →   PostgreSQL (ST_Contains)
-POST /predict                →   api/predict.py          →   NASA POWER + OpenMeteo
-                                services/prediction_service
-POST /predict/optimal-day    →   api/predict.py          →   NASA POWER + OpenMeteo
-POST /predict/scenario       →   api/predict.py          →   NASA POWER + OpenMeteo
-GET /reports/alerts          →   api/reports.py          →   PostgreSQL (sensores + analisis)
-POST /reports/compare        →   api/reports.py          →   PostgreSQL (analisis)
-POST /reports/export         →   api/reports.py          →   PostgreSQL (analisis)
-GET /dashboard/summary       →   api/dashboard.py        →   PostgreSQL (analisis + sensores)
-GET /soil/data               →   api/soil.py             →   ISRIC SoilGrids REST API
-POST /irrigation-plans       →   api/irrigation.py       →   PostgreSQL + ET0 calculation
-GET /irrigation-plans/{id}   →   api/irrigation.py       →   PostgreSQL
-GET /irrigation-plans/thresholds → api/irrigation.py    →   Cultivo-specific thresholds
+```mermaid
+graph TD
+    U[Usuario Productor / Investigador] --> FW[Frontend Web React 19]
+    FW --> API[Backend API FastAPI :8000]
+
+    API --> CLIMA[Servicio Climatico OpenMeteo + NASA POWER]
+    API --> DB[(PostgreSQL + PostGIS Docker)]
+    API --> SUELO[ISRIC SoilGrids v2.0]
+    API --> MOTOR[Motor de Recomendacion Hibrido]
+
+    SAT[Sentinel-2] --> QGIS[Procesamiento QGIS]
+    QGIS --> INDICES[2.5M puntos NDVI / NDWI]
+    INDICES --> DB
+
+    CLIMA --> VAR[Variables Climaticas]
+    SUELO --> SUELO_VAR[pH, MO, Textura]
+    VAR --> MOTOR
+    SUELO_VAR --> MOTOR
+    DB --> MOTOR
+
+    MOTOR --> RECO[Top 3 Cultivos + Score]
+    RECO --> RAG[Base de Conocimiento RAG 20+ Docs]
+    RECO --> CHAT[AgroAsesor Chatbot]
+    RAG --> CHAT
+
+    DB --> HIST[Historial de Consultas]
+    HIST --> FW
+    DB --> SENSORES[Sensores IoT]
+    SENSORES --> FW
+
+    API --> RIEGO[Planificador de Riego Inteligente]
+    RIEGO --> FW
 ```
 
-## Flujo de un analisis tipico
+## Stack Tecnologico
+
+| Capa | Tecnologia | Version |
+|------|-----------|---------|
+| Frontend | React + Vite + Tailwind + Zustand | 19 / 8 / 3.4 / 5 |
+| Backend | FastAPI + SQLAlchemy + asyncpg | 0.115+ / 2.0+ / 0.30+ |
+| Base de datos | PostgreSQL + PostGIS (Docker local) | 17 / 3.4 |
+| Contenedores | Docker + Docker Compose | 27+ / 2.30+ |
+| ML | scikit-learn RF + LSTM | 1.6+ |
+| Agente IA | LangChain + LangGraph + RAG TF-IDF + Ollama | 0.3+ |
+| Datos satelitales | Sentinel-2 (ESA) via QGIS | — |
+| Datos climaticos | NASA POWER + OpenMeteo | — |
+| Datos de suelo | ISRIC SoilGrids v2.0 | REST API |
+| Mapas | Leaflet + react-leaflet + leaflet-draw | 1.9 / 5.0 / 1.0 |
+
+## Flujo de Procesamiento
+
+```
+Usuario selecciona parcela en el mapa (clic o dibujo)
+    ↓
+GET /soil/data?lat=X&lng=Y → ISRIC SoilGrids → pH, MO, textura (autocompleta)
+    ↓
+Usuario ajusta parametros y hace submit
+    ↓
+POST /analyze-location con coordenadas + datos de suelo
+    ↓
+Backend:
+1. POST /geo/decode → PostGIS ST_Contains → municipio
+2. climate_service.get_climate_data() → OpenMeteo
+3. satellite_service.get_satellite_data() → Nearest NDVI (ST_Distance)
+4. recommendation.generate_recommendations()
+   → CropClassifier heuristico + RF inference (con fallback)
+5. Guarda analisis en DB
+6. Retorna JSON: clima, satelite, top 3 cultivos
+    ↓
+Frontend muestra resultados en /resultado (AnalysisResults)
+    ↓
+Usuario puede:
+  - Ver detalle por factor
+  - Comparar cultivos
+  - Exportar reporte
+  - Preguntar al AgroAsesor
+  - Ir a IA Predictiva para proyeccion de 6 meses
+```
+
+## Flujos Detallados
+
+### Flujo de un analisis tipico
 
 ```
 Usuario completa formulario en AnalisisCultivos
@@ -70,7 +114,7 @@ Frontend recibe datos → Zustand setResultado() → agrega al historial
 Navega a /resultado → AnalysisResults muestra reporte
 ```
 
-## Flujo AgroAsesor (Chat + RAG + LangChain + Ollama)
+### Flujo AgroAsesor (Chat + RAG + LangChain + Ollama)
 
 ```
 Usuario escribe "como controlo el gusano cogollero en maiz?"
@@ -97,7 +141,7 @@ chat_service.process_chat_message()
 8. Retornar respuesta
 ```
 
-## Flujo IA Predictiva (Proyeccion 6 meses)
+### Flujo IA Predictiva (Proyeccion 6 meses)
 
 ```
 Usuario va a IA Predictiva
@@ -135,7 +179,7 @@ Frontend renderiza:
   - MitigationActions: acciones de mitigacion sugeridas
 ```
 
-## Flujo SoilGrids (Datos de Suelo Automaticos)
+### Flujo SoilGrids (Datos de Suelo Automaticos)
 
 ```
 Usuario hace clic en el mapa (MapSelector) o dibuja un area
@@ -156,7 +200,7 @@ actualizarFormulario() → toast informativo "Datos de suelo cargados"
 Usuario puede sobrescribir manualmente los valores
 ```
 
-## Flujo Motor Hibrido (Random Forest + Heuristico)
+### Flujo Motor Hibrido (Random Forest + Heuristico)
 
 ```
 recommendation.generate_recommendations()
@@ -177,7 +221,7 @@ Enriquecer con metadatos del CSV (emoji, ciclo, rendimiento)
 Retornar top 3 + metodo usado
 ```
 
-## Flujo Plan de Riego Inteligente
+### Flujo Plan de Riego Inteligente
 
 ```
 Usuario va a SensoresIoT → panel de riego
@@ -220,11 +264,11 @@ La URL del backend se lee desde localStorage en `api.js` al importar el modulo.
 
 ## Referencias
 
-- [[4-arquitectura/VISION_SISTEMA]] — Diagrama de bloques del sistema
-- [[4-arquitectura/MODULO_CLIMA]] — Servicio climatico detallado
-- [[4-arquitectura/MODULO_SATELITAL]] — Servicio satelital detallado
-- [[4-arquitectura/MODULO_RECOMENDACION]] — Motor de recomendacion detallado
-- [[4-arquitectura/MODULO_SUELO_SOILGRIDS]] — Datos de suelo
-- [[4-arquitectura/ARQUITECTURA_DB]] — Tablas involucradas por endpoint
-- [[2-backend/ARQUITECTURA_BACKEND]] — Documentacion de endpoints
-- [[3-frontend/ARQUITECTURA_FRONTEND]] — Documentacion del frontend
+- [[03-architecture/modulo-clima]] — Clima: NASA POWER + OpenMeteo
+- [[03-architecture/modulo-satelital]] — Satelital: QGIS + Sentinel-2 + NDVI
+- [[03-architecture/modulo-recomendacion]] — Motor hibrido de recomendacion
+- [[03-architecture/modulo-suelo-soilgrids]] — Datos de suelo automaticos
+- [[05-database/arquitectura-db]] — Base de datos: esquema, PostGIS
+- [[07-deployment/despliegue]] — Docker + Vercel deploy
+- [[06-api/endpoints]] — Documentacion de endpoints del backend
+- [[03-architecture/arquitectura-frontend]] — Documentacion del frontend
