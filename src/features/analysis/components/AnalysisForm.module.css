@@ -127,3 +127,76 @@
   margin-top: 0.25rem;
   margin-left: 0.5rem;
 }
+
+/* ── Advanced panel (soil chemistry) ── */
+
+.advancedToggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid #edf0ed;
+}
+
+.advancedBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: none;
+  border: 1px solid rgba(45, 90, 39, 0.18);
+  border-radius: 2rem;
+  padding: 0.3rem 0.75rem;
+  font-family: 'Manrope', sans-serif;
+  font-size: 0.67rem;
+  font-weight: 700;
+  color: #2D5A27;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.advancedBtn:hover {
+  background: rgba(45, 90, 39, 0.05);
+}
+
+.advancedChev {
+  color: #2D5A27;
+  transition: transform 0.2s;
+}
+
+.advancedChev.open {
+  transform: rotate(180deg);
+}
+
+.advancedPanel {
+  margin-top: 0.75rem;
+  padding: 0.85rem;
+  background: rgba(45, 90, 39, 0.03);
+  border: 1px solid rgba(45, 90, 39, 0.1);
+  border-radius: 0.85rem;
+  animation: slideDown 0.18s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.advancedHint {
+  font-size: 0.64rem;
+  color: #707973;
+  margin: 0 0 0.75rem;
+  line-height: 1.45;
+}
+
+.advancedGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.6rem;
+}
+
+@media (max-width: 640px) {
+  .advancedGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

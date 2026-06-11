@@ -3,9 +3,45 @@ import {
   MapPin, Thermometer, Droplets, CloudRain, Sun,
   Sprout, FileText, Download, ArrowLeft, Gauge,
   FlaskConical, Satellite, BarChart3, ChevronDown,
-  TrendingUp, TrendingDown, Minus,
+  TrendingUp, TrendingDown, Minus, Lightbulb,
 } from 'lucide-react';
 import styles from './AnalysisResults.module.css';
+
+const IMPROVEMENT_MAP = {
+  'Temperatura':      'Elegir variedad tolerante al calor o ajustar fecha de siembra',
+  'Precipitacion':    'Instalar riego por goteo para compensar déficit hídrico',
+  'Humedad':          'Mejorar drenaje o usar cobertura vegetal para retener humedad',
+  'pH':               'Encalar con cal agrícola (subir pH) o aplicar azufre (bajar pH)',
+  'Materia Organica': 'Incorporar compost, abono verde o bokashi para aumentar MO',
+  'Calcio':           'Aplicar cal dolomítica o yeso agrícola (CaSO₄)',
+  'CIC':              'Aumentar MO para mejorar la capacidad de intercambio catiónico',
+  'Conductividad':    'Reducir salinidad con lixiviación y aplicación de yeso',
+  'Magnesio':         'Aplicar dolomita o sulfato de magnesio (Kieserita)',
+  'Potasio':          'Fertilizar con KCl o sulfato de potasio según análisis foliar',
+  'Fosforo':          'Aplicar superfosfato triple o roca fosfórica según pH',
+  'Azufre':           'Aplicar azufre elemental o yeso al suelo',
+  'Boro':             'Aplicar bórax (1–2 kg/ha) en fertirriego o foliar',
+  'Sodio':            'Aplicar yeso agrícola para desplazar el sodio intercambiable',
+  'NDVI':             'Mejorar fertilización y control de malezas para incrementar vigor',
+};
+
+function getImprovements(crop) {
+  if (!crop) return [];
+  const weights = crop.factor_weights || [];
+  if (crop.score >= 85) {
+    return ['Mantener pH y MO con compost anual', 'Monitorear plagas en período crítico'];
+  }
+  const weak = weights
+    .filter((f) => f.score_parcial != null && f.score_parcial < 0.55)
+    .sort((a, b) => a.score_parcial - b.score_parcial)
+    .slice(0, 3);
+
+  const hints = weak.map((f) => IMPROVEMENT_MAP[f.factor] || `Optimizar ${f.factor}`);
+  if (hints.length === 0) {
+    return ['Realizar análisis de suelo completo para identificar limitantes'];
+  }
+  return hints;
+}
 
 const SCORE_COLOR = (s) => s >= 80 ? '#2D5A27' : s >= 55 ? '#b8860b' : '#ba1a1a';
 const SCORE_BG = (s) => s >= 80 ? 'rgba(45,106,79,0.08)' : s >= 55 ? 'rgba(184,134,11,0.08)' : 'rgba(186,26,26,0.08)';
@@ -27,6 +63,7 @@ function CropCard({ crop, rank, isBest }) {
   const [open, setOpen] = useState(isBest);
   const color = SCORE_COLOR(crop.score);
   const bg = SCORE_BG(crop.score);
+  const improvements = useMemo(() => getImprovements(crop), [crop]);
 
   return (
     <div className={`${styles.cropCard} ${isBest ? styles.cropBest : ''}`}>
@@ -48,8 +85,21 @@ function CropCard({ crop, rank, isBest }) {
           <p className={styles.cropJust}>{crop.justificacion}</p>
           {crop.ciclo_dias && (
             <div className={styles.cropMeta}>
-              <span>Ciclo: {crop.ciclo_dias} dias</span>
+              <span>Ciclo: {crop.ciclo_dias} días</span>
               {crop.rendimiento_estimado && <span>Rend. estimado: {crop.rendimiento_estimado}</span>}
+            </div>
+          )}
+          {improvements.length > 0 && (
+            <div className={styles.improvementsBox}>
+              <div className={styles.improvementsHead}>
+                <Lightbulb size={11} />
+                <span>¿Cómo mejorar?</span>
+              </div>
+              <ul className={styles.improvementsList}>
+                {improvements.map((hint, i) => (
+                  <li key={i} className={styles.improvementItem}>{hint}</li>
+                ))}
+              </ul>
             </div>
           )}
         </div>
@@ -73,6 +123,46 @@ function AnomalyDiff({ value, unit }) {
   );
 }
 
+const CHEM_DISPLAY = [
+  { key: 'calcio',        label: 'Calcio',       unit: 'cmol/kg' },
+  { key: 'cic',           label: 'CIC',           unit: 'cmol/kg' },
+  { key: 'conductividad', label: 'Conduct.',      unit: 'dS/m'    },
+  { key: 'magnesio',      label: 'Magnesio',      unit: 'cmol/kg' },
+  { key: 'potasio',       label: 'Potasio',       unit: 'cmol/kg' },
+  { key: 'fosforo',       label: 'Fósforo',       unit: 'mg/kg'   },
+  { key: 'azufre',        label: 'Azufre',        unit: 'mg/kg'   },
+  { key: 'boro',          label: 'Boro',          unit: 'mg/kg'   },
+  { key: 'sodio',         label: 'Sodio',         unit: 'cmol/kg' },
+];
+
+// High-stress variables where exceeding p90 is also bad
+const HIGH_IS_BAD = new Set(['conductividad', 'sodio']);
+
+function getSemaphore(value, fieldKey, perfil) {
+  if (value == null || !perfil) return 'unknown';
+  const p10 = perfil[`${fieldKey}_p10`];
+  const p90 = perfil[`${fieldKey}_p90`];
+  if (p10 == null || p90 == null) return 'unknown';
+  const v = Number(value);
+
+  if (HIGH_IS_BAD.has(fieldKey)) {
+    if (v <= p90) return 'optimal';
+    if (v <= p90 * 1.6) return 'warning';
+    return 'critical';
+  }
+  // Deficiency-based semaphore
+  if (v >= p10) return 'optimal';
+  if (v >= p10 * 0.4) return 'warning';
+  return 'critical';
+}
+
+const SEMAPHORE_STYLES = {
+  optimal:  { color: '#15803d', bg: 'rgba(21,128,61,0.12)',  label: '✓' },
+  warning:  { color: '#b45309', bg: 'rgba(180,83,9,0.12)',   label: '!' },
+  critical: { color: '#b91c1c', bg: 'rgba(185,28,28,0.12)',  label: '↓' },
+  unknown:  { color: '#9ca3af', bg: 'rgba(156,163,175,0.1)', label: '?' },
+};
+
 const AnalysisResults = ({ data, onNewAnalysis, onDownloadPDF }) => {
   const [showBreakdown, setShowBreakdown] = useState(true);
 
@@ -84,6 +174,9 @@ const AnalysisResults = ({ data, onNewAnalysis, onDownloadPDF }) => {
   const clima = data.clima || {};
   const satelite = data.indicadores_satelite || {};
   const anomalia = data.anomalia || null;
+
+  const chemValues = CHEM_DISPLAY.filter(({ key }) => ubicacion[key] != null);
+  const topPerfil = topCrop?.perfil_quimico || null;
 
   const factors = useMemo(() => [
     { label: 'Temperatura', value: clima.temperatura || 0, max: 40, unit: '°C', color: '#f59e0b', icon: <Thermometer size={13} /> },
@@ -118,10 +211,10 @@ const AnalysisResults = ({ data, onNewAnalysis, onDownloadPDF }) => {
           <section className={styles.card}>
             <div className={styles.cardHead}>
               <Sprout size={18} /> <h2>Cultivos Recomendados</h2>
-              <span className={styles.badge}>{recs.length} cultivos evaluados</span>
+              <span className={styles.badge}>Top 3 · 18 variables</span>
             </div>
             <div className={styles.cropList}>
-              {recs.map((c, i) => (
+              {recs.slice(0, 3).map((c, i) => (
                 <CropCard key={i} crop={c} rank={i + 1} isBest={i === 0} />
               ))}
             </div>
@@ -253,6 +346,49 @@ const AnalysisResults = ({ data, onNewAnalysis, onDownloadPDF }) => {
                   <AnomalyDiff value={anomalia.anomalia_humedad} unit="%" />
                 </div>
               </div>
+            </section>
+          )}
+
+          {chemValues.length > 0 && (
+            <section className={styles.card}>
+              <div className={styles.cardHead}>
+                <FlaskConical size={18} /> <h2>Química del Suelo</h2>
+                <span className={styles.badge}>AGROSAVIA</span>
+              </div>
+              {topPerfil && (
+                <p className={styles.chemHint}>
+                  Semáforo vs. {topCrop.emoji} {topCrop.cultivo}
+                </p>
+              )}
+              <div className={styles.soilGrid}>
+                {chemValues.map(({ key, label, unit }) => {
+                  const status = getSemaphore(ubicacion[key], key, topPerfil);
+                  const s = SEMAPHORE_STYLES[status];
+                  return (
+                    <div key={key} className={styles.soilItem}>
+                      <div className={styles.soilItemHead}>
+                        <span className={styles.soilLabel}>{label}</span>
+                        <span
+                          className={styles.semDot}
+                          style={{ color: s.color, background: s.bg }}
+                          title={status}
+                        >
+                          {s.label}
+                        </span>
+                      </div>
+                      <span className={styles.soilVal}>{Number(ubicacion[key]).toFixed(2)}</span>
+                      <span className={styles.soilUnit}>{unit}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              {topPerfil && (
+                <div className={styles.semLegend}>
+                  <span style={{ color: SEMAPHORE_STYLES.optimal.color }}>✓ Óptimo</span>
+                  <span style={{ color: SEMAPHORE_STYLES.warning.color }}>! Marginal</span>
+                  <span style={{ color: SEMAPHORE_STYLES.critical.color }}>↓ Deficiente</span>
+                </div>
+              )}
             </section>
           )}
 

@@ -1,27 +1,30 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { FileText, Clock, Sprout, CheckCircle } from 'lucide-react';
+import { FileText, Clock, Sprout, CheckCircle, Leaf, TrendingUp } from 'lucide-react';
 import { enviarMensajeChat } from '@shared/services/api';
+import useAppStore from '@shared/store';
 
 const WELCOME_MSG = {
   rol: 'ia',
-  texto: '**AgroAsesor IA**\n\nConozco los cultivos del Caribe colombiano: maiz, yuca, arroz, platano, cacao, palma, y mas. Preguntame sobre siembra, fertilizacion, plagas, riego, sensores IoT o interpretacion de NDVI.\n\nSelecciona una accion rapida o escribeme directamente.',
+  texto: '**AgroAsesor IA**\n\nConozco los cultivos del Caribe colombiano: maíz, yuca, arroz, plátano, cacao, palma, y más. Pregúntame sobre siembra, fertilización, plagas, riego, **rendimiento histórico** o **perfil foliar de nutrientes**.\n\nSelecciona una acción rápida o escríbeme directamente.',
   hora: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }),
 };
 
 const ACCIONES_RAPIDAS = [
-  { id: 'ultimo', label: 'Ver ultimo analisis', icon: <FileText size={14} /> },
-  { id: 'historial', label: 'Comparar historicos', icon: <Clock size={14} /> },
-  { id: 'recomendar', label: 'Recomendar cultivo', icon: <Sprout size={14} /> },
-  { id: 'sensores', label: 'Estado de sensores', icon: <CheckCircle size={14} /> },
+  { id: 'ultimo',    label: 'Ver último análisis',   icon: <FileText size={14} /> },
+  { id: 'cosecha',   label: 'Predicción de cosecha', icon: <TrendingUp size={14} /> },
+  { id: 'foliar',    label: 'Perfil foliar',          icon: <Leaf size={14} /> },
+  { id: 'sensores',  label: 'Estado de sensores',    icon: <CheckCircle size={14} /> },
 ];
 
 export { WELCOME_MSG, ACCIONES_RAPIDAS };
 
 const ACCION_MESSAGES = {
-  ultimo: 'ultimo analisis',
+  ultimo:   'muéstrame mi último análisis con predicción de cosecha',
+  cosecha:  'predicción de cosecha para mi cultivo recomendado',
+  foliar:   'perfil foliar de nutrientes de mi cultivo',
+  sensores: 'estado de los sensores',
   historial: 'historial',
   recomendar: 'recomendar cultivo',
-  sensores: 'estado de los sensores',
 };
 
 export default function useChat() {
@@ -30,6 +33,8 @@ export default function useChat() {
   const [loading, setLoading] = useState(false);
   const [conversationId, setConversationId] = useState(null);
   const messagesEndRef = useRef(null);
+
+  const { resultado } = useAppStore();
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -45,12 +50,22 @@ export default function useChat() {
     } catch {
       /* fallback */
     }
-    return 'No pude procesar tu mensaje en este momento. El servidor no esta disponible. Intenta de nuevo.';
+    return 'No pude procesar tu mensaje en este momento. El servidor no está disponible. Intenta de nuevo.';
   }, [conversationId]);
 
   const handleAccion = useCallback((accionId) => {
     const hora = new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
-    const textoAccion = ACCION_MESSAGES[accionId] || 'ayuda';
+
+    // Enrich harvest/foliar prompts with the current analysis crop if available
+    let textoAccion = ACCION_MESSAGES[accionId] || 'ayuda';
+    const topCultivo = resultado?.recomendaciones?.[0]?.cultivo;
+    const depto = resultado?.ubicacion?.departamento;
+
+    if (accionId === 'cosecha' && topCultivo) {
+      textoAccion = `predicción de cosecha para ${topCultivo}${depto ? ` en ${depto}` : ''}`;
+    } else if (accionId === 'foliar' && topCultivo) {
+      textoAccion = `perfil foliar de nutrientes de ${topCultivo}${depto ? ` en ${depto}` : ''}`;
+    }
 
     setMensajes((p) => [...p, { rol: 'usuario', texto: textoAccion, hora }]);
     setLoading(true);
@@ -60,7 +75,7 @@ export default function useChat() {
       const horaResp = new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
       setMensajes((p) => [...p, { rol: 'ia', texto: respText, hora: horaResp }]);
     });
-  }, [callAgent]);
+  }, [callAgent, resultado]);
 
   const enviar = useCallback(() => {
     if (!input.trim()) return;

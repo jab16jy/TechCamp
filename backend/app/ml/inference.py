@@ -11,6 +11,25 @@ logger = logging.getLogger(__name__)
 
 _model = None
 _scaler = None
+_real_profiles = None
+
+_PROFILE_NAME_MAP = {
+    "Palma Aceitera": "Palma",
+}
+
+
+def _get_real_profiles() -> dict:
+    global _real_profiles
+    if _real_profiles is not None:
+        return _real_profiles
+    try:
+        from app.ml.perfiles_reales import PerfilCultivoReal
+        _real_profiles = PerfilCultivoReal.load_all()
+        logger.info("Perfiles reales cargados: %d cultivos", len(_real_profiles))
+    except Exception as e:
+        logger.warning("No se pudieron cargar perfiles reales para semáforo: %s", e)
+        _real_profiles = {}
+    return _real_profiles
 
 
 def _load_rf():
@@ -39,21 +58,21 @@ def _load_rf():
 
 
 def _enrich_with_metadata(results: list[dict]) -> list[dict]:
-    """Enrich RF results with metadata from crops_requirements.csv.
+    """Enrich RF results with metadata from crops_requirements.csv and chemistry profiles.
 
     Always overwrites emoji/ciclo_dias/rendimiento_estimado with real data
     because the inference loop pre-populates these keys with empty/None values
     before calling this function — setdefault() would silently skip them.
     """
     classifier = get_crop_classifier()
+    profiles = _get_real_profiles()
+
     for r in results:
         raw_name = r["cultivo"].replace(" ", "_")
         crop_data = next(
             (c for c in classifier.crops if c["cultivo"] == raw_name), None
         )
         if crop_data:
-            # Direct assignment — never use setdefault here: the keys already
-            # exist with empty/None values set by the inference loop above.
             r["emoji"] = crop_data.get("emoji", "")
             r["ciclo_dias"] = crop_data.get("ciclo_dias")
             r["rendimiento_estimado"] = f"{crop_data.get('rendimiento_promedio', '')} t/ha"
@@ -61,6 +80,25 @@ def _enrich_with_metadata(results: list[dict]) -> list[dict]:
             r["emoji"] = ""
             r["ciclo_dias"] = None
             r["rendimiento_estimado"] = None
+
+        # Chemistry profile for semaphore comparison (p10/p90 per analyte)
+        profile_name = _PROFILE_NAME_MAP.get(r["cultivo"], r["cultivo"])
+        profile = profiles.get(profile_name)
+        if profile:
+            r["perfil_quimico"] = {
+                "calcio_p10": profile.calcio_p10,        "calcio_p90": profile.calcio_p90,
+                "cic_p10": profile.cic_p10,              "cic_p90": profile.cic_p90,
+                "conductividad_p10": profile.conductividad_p10, "conductividad_p90": profile.conductividad_p90,
+                "magnesio_p10": profile.magnesio_p10,    "magnesio_p90": profile.magnesio_p90,
+                "fosforo_p10": profile.p_bray_p10,       "fosforo_p90": profile.p_bray_p90,
+                "potasio_p10": profile.k_interc_p10,     "potasio_p90": profile.k_interc_p90,
+                "azufre_p10": profile.azufre_p10,        "azufre_p90": profile.azufre_p90,
+                "boro_p10": profile.boro_p10,            "boro_p90": profile.boro_p90,
+                "sodio_p10": profile.sodio_p10,          "sodio_p90": profile.sodio_p90,
+            }
+        else:
+            r["perfil_quimico"] = {}
+
     return results
 
 

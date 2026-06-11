@@ -1,6 +1,19 @@
 /* eslint-disable react/prop-types */
 import React, { useState, useEffect } from "react";
+import { ChevronDown, FlaskConical } from "lucide-react";
 import styles from "./AnalysisForm.module.css";
+
+const CHEMISTRY_FIELDS = [
+  { name: "calcio",        label: "Calcio",        unit: "cmol/kg" },
+  { name: "cic",           label: "CIC",            unit: "cmol/kg" },
+  { name: "conductividad", label: "Conductividad",  unit: "dS/m"    },
+  { name: "magnesio",      label: "Magnesio",       unit: "cmol/kg" },
+  { name: "potasio",       label: "Potasio",        unit: "cmol/kg" },
+  { name: "fosforo",       label: "Fósforo (Bray)", unit: "mg/kg"   },
+  { name: "azufre",        label: "Azufre",         unit: "mg/kg"   },
+  { name: "boro",          label: "Boro",           unit: "mg/kg"   },
+  { name: "sodio",         label: "Sodio",          unit: "cmol/kg" },
+];
 
 /**
  * Validates a single form field.
@@ -53,6 +66,7 @@ const AnalysisForm = ({ data, onChange, municipalities = [], drawnArea = null })
   const [departamentos, setDepartamentos] = useState([]);
   const [municipiosFiltrados, setMunicipiosFiltrados] = useState([]);
   const [errors, setErrors] = useState({});
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   useEffect(() => {
     if (municipalities.length > 0) {
@@ -298,6 +312,56 @@ const AnalysisForm = ({ data, onChange, municipalities = [], drawnArea = null })
           </div>
         </div>
       </div>
+
+      {/* ── Avanzado: variables de química de suelo ── */}
+      <div className={styles.advancedToggle}>
+        <button
+          type="button"
+          className={styles.advancedBtn}
+          onClick={() => setShowAdvanced((v) => !v)}
+        >
+          <FlaskConical size={13} />
+          <span>Avanzado — Química de Suelo</span>
+          <ChevronDown size={13} className={`${styles.advancedChev} ${showAdvanced ? styles.open : ""}`} />
+        </button>
+        {!showAdvanced && data.calcio && (
+          <span className={styles.autoFilled}>
+            {9} variables auto
+          </span>
+        )}
+      </div>
+
+      {showAdvanced && (
+        <div className={styles.advancedPanel}>
+          <p className={styles.advancedHint}>
+            Rellenado automáticamente desde la base de datos AGROSAVIA (suelos_caribe.csv).
+            Puedes ajustar los valores manualmente si tienes datos de laboratorio.
+          </p>
+          <div className={styles.advancedGrid}>
+            {CHEMISTRY_FIELDS.map(({ name, label, unit }) => {
+              const hasValue = data[name] !== "" && data[name] != null;
+              return (
+                <div key={name} className={styles.field}>
+                  <label>
+                    {label}
+                    {hasValue && <span className={styles.autoFilled}>auto</span>}
+                    <span className={styles.optional}>({unit})</span>
+                  </label>
+                  <input
+                    type="number"
+                    name={name}
+                    value={data[name] || ""}
+                    onChange={handleInputChange}
+                    placeholder="0.00"
+                    step="0.01"
+                    min="0"
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -47,6 +47,15 @@ async def generate_recommendations(
     mes_siembra: str,
     anomaly: dict | None = None,
     altitud: float = 0.0,
+    calcio: float | None = None,
+    magnesio: float | None = None,
+    azufre: float | None = None,
+    boro: float | None = None,
+    sodio: float | None = None,
+    fosforo: float | None = None,
+    potasio: float | None = None,
+    cic: float | None = None,
+    conductividad: float | None = None,
 ) -> list[RecomendacionCultivo]:
     lstm_anomalies = _anomaly_to_lstm_format(anomaly)
     scores, metodo = predict_crop_recommendations(
@@ -61,6 +70,15 @@ async def generate_recommendations(
         mes_siembra=mes_siembra,
         lstm_anomalies=lstm_anomalies,
         altitud=altitud,
+        calcio=calcio,
+        magnesio=magnesio,
+        azufre=azufre,
+        boro=boro,
+        sodio=sodio,
+        p_bray=fosforo,
+        k_interc=potasio,
+        cic=cic,
+        conductividad=conductividad,
     )
     logger.info(f"Recomendaciones generadas via {metodo}")
 

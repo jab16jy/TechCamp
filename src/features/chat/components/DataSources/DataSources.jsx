@@ -1,24 +1,18 @@
-import { Satellite, Droplets, FlaskConical, MapPin, Database } from 'lucide-react';
+import { Satellite, Droplets, FlaskConical, MapPin, Database, Leaf, TrendingUp } from 'lucide-react';
 import useAppStore from '@shared/store';
 import './DataSources.css';
 
 const DataSources = () => {
   const { historial, resultado } = useAppStore();
 
-  const lastAnalysis = historial.length > 0 ? historial[historial.length - 1] : null;
-  const soilCount = historial.filter((h) => h.tipo === 'suelo').length;
-  const analysisCount = historial.filter((h) => h.tipo === 'analisis').length;
+  const lastAnalysis = historial.length > 0
+    ? [...historial].sort((a, b) => new Date(b.fecha) - new Date(a.fecha))[0]
+    : null;
 
-  const sensors = [
-    { id: 'Norte-01', name: 'Nodo Norte', ndvi: 0.73, humedad: 72, temp: 28.4, status: 'ok' },
-    { id: 'Sur-02', name: 'Nodo Sur', ndvi: 0.61, humedad: 61, temp: 29.8, status: 'warn' },
-    { id: 'Este-03', name: 'Nodo Este', ndvi: 0.54, humedad: 55, temp: 31.2, status: 'critical' },
-  ];
-
-  const parcelas = [
-    { name: 'Hacienda El Sol', area: '24 ha', cultivo: 'Maíz', lastUpdate: 'Hace 2 días' },
-    { name: 'Lote Norte', area: '18 ha', cultivo: 'Yuca', lastUpdate: 'Hace 1 semana' },
-  ];
+  const topCultivo = resultado?.recomendaciones?.[0]?.cultivo;
+  const depto = resultado?.ubicacion?.departamento;
+  const municipio = resultado?.ubicacion?.municipio;
+  const ndvi = resultado?.indicadores_satelite?.ndvi;
 
   return (
     <div className="data-sources">
@@ -34,15 +28,47 @@ const DataSources = () => {
               <FlaskConical size={16} strokeWidth={1.5} />
             </div>
             <div className="ds-card-info">
-              <span className="ds-card-label">Análisis de suelo</span>
-              <span className="ds-card-value">{soilCount} registros</span>
+              <span className="ds-card-label">Análisis de cultivos</span>
+              <span className="ds-card-value">{historial.length} {historial.length === 1 ? 'registro' : 'registros'}</span>
             </div>
           </div>
           {lastAnalysis && (
             <div className="ds-card-detail">
-              Último: {lastAnalysis.municipio || 'Sin ubicación'}
+              Último: {lastAnalysis.municipio || lastAnalysis.departamento || 'Sin ubicación'}
+              {lastAnalysis.cultivo && ` · ${lastAnalysis.cultivo}`}
             </div>
           )}
+          {topCultivo && (
+            <div className="ds-card-detail" style={{ color: '#2D5A27', fontWeight: 600 }}>
+              Activo: {topCultivo}{municipio ? ` · ${municipio}` : ''}{depto ? `, ${depto}` : ''}
+            </div>
+          )}
+        </div>
+
+        <div className="ds-card">
+          <div className="ds-card-header">
+            <div className="ds-icon-wrap amber">
+              <TrendingUp size={16} strokeWidth={1.5} />
+            </div>
+            <div className="ds-card-info">
+              <span className="ds-card-label">EVA · Cosechas Caribe</span>
+              <span className="ds-card-value">26,402 registros · 2018–2025</span>
+            </div>
+          </div>
+          <div className="ds-card-detail">Área, producción y rendimiento por municipio</div>
+        </div>
+
+        <div className="ds-card">
+          <div className="ds-card-header">
+            <div className="ds-icon-wrap green" style={{ background: 'rgba(5,150,105,0.1)', color: '#059669' }}>
+              <Leaf size={16} strokeWidth={1.5} />
+            </div>
+            <div className="ds-card-info">
+              <span className="ds-card-label">Foliar AGROSAVIA</span>
+              <span className="ds-card-value">1,756 registros · 6 dptos</span>
+            </div>
+          </div>
+          <div className="ds-card-detail">N, P, K, Ca, Mg, S, Fe, Cu, Mn, Zn, B por cultivo</div>
         </div>
 
         <div className="ds-card">
@@ -55,11 +81,7 @@ const DataSources = () => {
               <span className="ds-card-value">Sentinel-2 · NDVI</span>
             </div>
           </div>
-          {resultado?.indicadores_satelite?.ndvi && (
-            <div className="ds-card-detail">
-              NDVI actual: {resultado.indicadores_satelite.ndvi}
-            </div>
-          )}
+          {ndvi && <div className="ds-card-detail">NDVI actual: {ndvi}</div>}
         </div>
 
         <div className="ds-card">
@@ -68,62 +90,36 @@ const DataSources = () => {
               <Droplets size={16} strokeWidth={1.5} />
             </div>
             <div className="ds-card-info">
-              <span className="ds-card-label">Clima</span>
-              <span className="ds-card-value">NASA POWER</span>
+              <span className="ds-card-label">Clima · NASA POWER</span>
+              <span className="ds-card-value">Temp · Precip · Humedad</span>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="ds-section">
-        <h3 className="ds-section-title">
-          <MapPin size={14} strokeWidth={1.5} />
-          Parcelas
-        </h3>
-        {parcelas.map((p, i) => (
-          <div key={i} className="ds-card ds-card-compact">
+      {topCultivo && (
+        <div className="ds-section">
+          <h3 className="ds-section-title">
+            <MapPin size={14} strokeWidth={1.5} />
+            Análisis activo
+          </h3>
+          <div className="ds-card ds-card-compact">
             <div className="ds-card-header">
               <div className="ds-card-info">
-                <span className="ds-card-label">{p.name}</span>
-                <span className="ds-card-value">{p.area} · {p.cultivo}</span>
+                <span className="ds-card-label">{topCultivo}</span>
+                <span className="ds-card-value">
+                  {[municipio, depto].filter(Boolean).join(', ') || 'Región Caribe'}
+                </span>
               </div>
             </div>
-            <div className="ds-card-detail">{p.lastUpdate}</div>
+            {resultado?.recomendaciones?.[0]?.score != null && (
+              <div className="ds-card-detail">
+                Score: {resultado.recomendaciones[0].score}% · {resultado.recomendaciones[0].riesgo}
+              </div>
+            )}
           </div>
-        ))}
-      </div>
-
-      <div className="ds-section">
-        <h3 className="ds-section-title">
-          <Satellite size={14} strokeWidth={1.5} />
-          Sensores IoT
-        </h3>
-        {sensors.map((s) => (
-          <div key={s.id} className="ds-card ds-card-sensor">
-            <div className="ds-sensor-header">
-              <div className="ds-sensor-status">
-                <span className={`ds-dot ds-dot-${s.status}`} />
-                <span className="ds-sensor-name">{s.name}</span>
-              </div>
-              <span className="ds-sensor-id">{s.id}</span>
-            </div>
-            <div className="ds-sensor-metrics">
-              <div className="ds-metric">
-                <span className="ds-metric-label">NDVI</span>
-                <span className="ds-metric-value">{s.ndvi}</span>
-              </div>
-              <div className="ds-metric">
-                <span className="ds-metric-label">Humedad</span>
-                <span className="ds-metric-value">{s.humedad}%</span>
-              </div>
-              <div className="ds-metric">
-                <span className="ds-metric-label">Temp</span>
-                <span className="ds-metric-value">{s.temp}°C</span>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

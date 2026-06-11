@@ -40,6 +40,28 @@ _ZONA_CARIBE_TRANSICION = {
     "zona": "Transición Caribe",
 }
 
+# ── Química de suelo por departamento ──
+# Medianas calculadas de suelos_caribe.csv (11,949 muestras AGROSAVIA)
+_DEPARTAMENTO_CHEMISTRY: dict[str, dict] = {
+    "ATLANTICO":  dict(calcio=12.42, cic=19.89, conductividad=0.49, magnesio=4.48, potasio=0.36, fosforo=21.70, azufre=14.66, boro=0.41, sodio=0.72),
+    "BOLIVAR":    dict(calcio=10.72, cic=15.53, conductividad=0.25, magnesio=2.83, potasio=0.29, fosforo=6.46,  azufre=5.19,  boro=0.24, sodio=0.23),
+    "CESAR":      dict(calcio=5.68,  cic=7.92,  conductividad=0.21, magnesio=1.38, potasio=0.24, fosforo=11.73, azufre=4.70,  boro=0.22, sodio=0.18),
+    "CORDOBA":    dict(calcio=10.45, cic=17.28, conductividad=0.25, magnesio=4.95, potasio=0.32, fosforo=7.86,  azufre=5.52,  boro=0.24, sodio=0.16),
+    "LA GUAJIRA": dict(calcio=20.00, cic=25.18, conductividad=0.64, magnesio=2.78, potasio=0.37, fosforo=25.20, azufre=10.82, boro=0.51, sodio=0.27),
+    "MAGDALENA":  dict(calcio=9.25,  cic=14.18, conductividad=0.29, magnesio=3.32, potasio=0.25, fosforo=19.05, azufre=5.50,  boro=0.29, sodio=0.51),
+    "SUCRE":      dict(calcio=15.55, cic=23.18, conductividad=0.22, magnesio=5.33, potasio=0.36, fosforo=6.38,  azufre=4.03,  boro=0.25, sodio=0.31),
+}
+
+# Regional Caribe default (median across all 7 departments)
+_DEFAULT_CHEMISTRY = dict(calcio=10.45, cic=17.28, conductividad=0.27, magnesio=3.49, potasio=0.31, fosforo=11.73, azufre=5.52, boro=0.27, sodio=0.30)
+
+# Zone-level chemistry aggregates (average of constituent departments)
+_ZONA_CHEMISTRY: dict[str, dict] = {
+    "seca":       dict(calcio=16.21, cic=22.54, conductividad=0.57, magnesio=3.63, potasio=0.37, fosforo=23.45, azufre=12.74, boro=0.46, sodio=0.50),
+    "humeda":     dict(calcio=13.00, cic=20.23, conductividad=0.24, magnesio=5.14, potasio=0.34, fosforo=7.12,  azufre=4.78,  boro=0.25, sodio=0.24),
+    "transicion": dict(calcio=8.55,  cic=12.54, conductividad=0.25, magnesio=2.51, potasio=0.26, fosforo=12.41, azufre=5.13,  boro=0.25, sodio=0.31),
+}
+
 
 # ── Datos de suelo por municipio del Caribe colombiano ──
 # Coordenadas: centroide aproximado del casco urbano
@@ -47,76 +69,58 @@ _ZONA_CARIBE_TRANSICION = {
 
 _MUNICIPIOS_SUELO_MAP: dict[str, dict] = {
     "Riohacha": {
-        "lat": 11.5444,
-        "lng": -72.9072,
-        "ph": 7.8,
-        "materia_organica": 1.2,
-        "textura_suelo": "Arenoso",
-        "orden_suelo": "Aridisol",
+        "lat": 11.5444, "lng": -72.9072,
+        "ph": 7.8, "materia_organica": 1.2,
+        "textura_suelo": "Arenoso", "orden_suelo": "Aridisol",
+        "depto_norm": "LA GUAJIRA",
     },
     "Maicao": {
-        "lat": 11.3824,
-        "lng": -72.2396,
-        "ph": 7.9,
-        "materia_organica": 0.9,
-        "textura_suelo": "Arenoso",
-        "orden_suelo": "Aridisol",
+        "lat": 11.3824, "lng": -72.2396,
+        "ph": 7.9, "materia_organica": 0.9,
+        "textura_suelo": "Arenoso", "orden_suelo": "Aridisol",
+        "depto_norm": "LA GUAJIRA",
     },
     "Santa Marta": {
-        "lat": 11.2408,
-        "lng": -74.1990,
-        "ph": 7.2,
-        "materia_organica": 2.1,
-        "textura_suelo": "Franco",
-        "orden_suelo": "Inceptisol",
+        "lat": 11.2408, "lng": -74.1990,
+        "ph": 7.2, "materia_organica": 2.1,
+        "textura_suelo": "Franco", "orden_suelo": "Inceptisol",
+        "depto_norm": "MAGDALENA",
     },
     "Barranquilla": {
-        "lat": 10.9685,
-        "lng": -74.7813,
-        "ph": 7.5,
-        "materia_organica": 1.8,
-        "textura_suelo": "Franco-Arenoso",
-        "orden_suelo": "Entisol",
+        "lat": 10.9685, "lng": -74.7813,
+        "ph": 7.5, "materia_organica": 1.8,
+        "textura_suelo": "Franco-Arenoso", "orden_suelo": "Entisol",
+        "depto_norm": "ATLANTICO",
     },
     "Soledad": {
-        "lat": 10.9186,
-        "lng": -74.7646,
-        "ph": 7.4,
-        "materia_organica": 1.7,
-        "textura_suelo": "Franco-Arenoso",
-        "orden_suelo": "Entisol",
+        "lat": 10.9186, "lng": -74.7646,
+        "ph": 7.4, "materia_organica": 1.7,
+        "textura_suelo": "Franco-Arenoso", "orden_suelo": "Entisol",
+        "depto_norm": "ATLANTICO",
     },
     "Cartagena": {
-        "lat": 10.3910,
-        "lng": -75.5144,
-        "ph": 7.6,
-        "materia_organica": 1.5,
-        "textura_suelo": "Arcilloso",
-        "orden_suelo": "Vertisol",
+        "lat": 10.3910, "lng": -75.5144,
+        "ph": 7.6, "materia_organica": 1.5,
+        "textura_suelo": "Arcilloso", "orden_suelo": "Vertisol",
+        "depto_norm": "BOLIVAR",
     },
     "Sincelejo": {
-        "lat": 9.3047,
-        "lng": -75.3978,
-        "ph": 6.8,
-        "materia_organica": 2.8,
-        "textura_suelo": "Franco",
-        "orden_suelo": "Mollisol",
+        "lat": 9.3047, "lng": -75.3978,
+        "ph": 6.8, "materia_organica": 2.8,
+        "textura_suelo": "Franco", "orden_suelo": "Mollisol",
+        "depto_norm": "SUCRE",
     },
     "Montería": {
-        "lat": 8.7579,
-        "lng": -75.8900,
-        "ph": 6.2,
-        "materia_organica": 3.5,
-        "textura_suelo": "Franco-Arcilloso",
-        "orden_suelo": "Alfisol",
+        "lat": 8.7579, "lng": -75.8900,
+        "ph": 6.2, "materia_organica": 3.5,
+        "textura_suelo": "Franco-Arcilloso", "orden_suelo": "Alfisol",
+        "depto_norm": "CORDOBA",
     },
     "Valledupar": {
-        "lat": 10.4631,
-        "lng": -73.2532,
-        "ph": 7.3,
-        "materia_organica": 2.0,
-        "textura_suelo": "Franco",
-        "orden_suelo": "Inceptisol",
+        "lat": 10.4631, "lng": -73.2532,
+        "ph": 7.3, "materia_organica": 2.0,
+        "textura_suelo": "Franco", "orden_suelo": "Inceptisol",
+        "depto_norm": "CESAR",
     },
 }
 
@@ -152,6 +156,8 @@ def _municipio_fallback(lat: float, lng: float) -> dict | None:
         data = _MUNICIPIOS_SUELO_MAP[best_name]
         textura = data["textura_suelo"]
         awc = _available_water_capacity(None, None, None, textura)
+        depto = data.get("depto_norm", "")
+        chemistry = _DEPARTAMENTO_CHEMISTRY.get(depto, _DEFAULT_CHEMISTRY)
         return {
             "ph": data["ph"],
             "materia_organica": data["materia_organica"],
@@ -164,6 +170,7 @@ def _municipio_fallback(lat: float, lng: float) -> dict | None:
             "clay": None,
             "awc": awc,
             "textura_clasificacion_usda": textura,
+            **chemistry,
             "fuente": f"Datos de referencia — {best_name}, Caribe colombiana",
             "cached_at": datetime.now(timezone.utc).isoformat(),
             "_fallback": True,
@@ -186,16 +193,20 @@ def _caribbean_zone_fallback(lat: float, lng: float) -> dict | None:
     # Mayor pH por suelos calcáreos, baja MO por aridez
     if lat > 10.8 or (lat > 10.2 and lng < -75.2):
         zone = _ZONA_CARIBE_SECA
+        zone_key = "seca"
     # --- Zona húmeda: Córdoba, Sucre, sur de Bolívar ---
     # Menor pH por lixiviación, mayor MO
     elif lat < 9.5 and lng > -76.2:
         zone = _ZONA_CARIBE_HUMEDA
+        zone_key = "humeda"
     # --- Zona de transición: Magdalena, Cesar, Bolívar interior ---
     else:
         zone = _ZONA_CARIBE_TRANSICION
+        zone_key = "transicion"
 
     textura = zone["textura_suelo"]
     awc = _available_water_capacity(None, None, None, textura)
+    chemistry = _ZONA_CHEMISTRY[zone_key]
     return {
         "ph": zone["ph"],
         "materia_organica": zone["materia_organica"],
@@ -206,6 +217,7 @@ def _caribbean_zone_fallback(lat: float, lng: float) -> dict | None:
         "clay": None,
         "awc": awc,
         "textura_clasificacion_usda": textura,
+        **chemistry,
         "fuente": f"Estimación para zona agroecológica ({zone['zona']}) — Agrosavia/IGAC",
         "cached_at": datetime.now(timezone.utc).isoformat(),
         "_fallback": True,
@@ -243,6 +255,7 @@ def _caribbean_fallback(lat: float, lng: float) -> dict:
         "clay": None,
         "awc": awc,
         "textura_clasificacion_usda": textura,
+        **_DEFAULT_CHEMISTRY,
         "fuente": "Valores genéricos por defecto",
         "cached_at": datetime.now(timezone.utc).isoformat(),
         "_fallback": True,
@@ -414,6 +427,10 @@ async def get_soil_data(lat: float, lng: float) -> dict | None:
     clay_val = float(clay) if clay is not None else None
     awc = _available_water_capacity(sand_val, silt_val, clay_val, textura)
 
+    # SoilGrids doesn't have chemistry data — supplement with Caribe fallback by zone
+    chemistry = _caribbean_fallback(lat, lng)
+    chemistry_fields = {k: chemistry.get(k) for k in ("calcio", "cic", "conductividad", "magnesio", "potasio", "fosforo", "azufre", "boro", "sodio")}
+
     result = {
         "ph": ph,
         "materia_organica": materia_organica,
@@ -424,7 +441,8 @@ async def get_soil_data(lat: float, lng: float) -> dict | None:
         "clay": clay_val,
         "awc": awc,
         "textura_clasificacion_usda": textura,
-        "fuente": "ISRIC SoilGrids v2.0",
+        **chemistry_fields,
+        "fuente": "ISRIC SoilGrids v2.0 + química AGROSAVIA",
         "cached_at": datetime.now(timezone.utc).isoformat(),
     }
 

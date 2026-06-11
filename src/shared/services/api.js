@@ -210,6 +210,15 @@ export const enviarMensajeChat = async (
   return data;
 };
 
+/** Obtener datos del Studio Panel (predicción cosecha + foliar) */
+export const getStudioData = async (cultivo, depto = null, area_ha = null) => {
+  const params = { cultivo };
+  if (depto) params.depto = depto;
+  if (area_ha) params.area_ha = area_ha;
+  const { data } = await apiClient.get('/analysis/studio-data', { params });
+  return data;
+};
+
 /** Obtener lista de sensores IoT con ultima lectura */
 export const getSensores = async () => {
   try {

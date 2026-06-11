@@ -10,6 +10,8 @@ from app.models.sensor import Sensor
 from app.models.lectura_sensor import LecturaSensor
 from app.services.climate_service import get_climate_data
 from app.ml.model import get_crop_classifier
+from app.services.foliar_service import format_foliar_for_llm, diagnose_nutrient_gaps
+from app.services.eva_service import get_harvest_forecast, get_production_trends
 
 logger = logging.getLogger(__name__)
 
@@ -116,3 +118,68 @@ async def get_sensor_status(db: AsyncSession) -> str:
     except Exception as e:
         logger.exception("Error querying sensors")
         return "Error al consultar el estado de sensores."
+
+
+def get_foliar_profile_text(cultivo: str, depto: str | None = None) -> str:
+    """Return foliar nutrient norms for a crop as a formatted text block."""
+    try:
+        return format_foliar_for_llm(cultivo, depto)
+    except Exception as e:
+        logger.warning("Error en perfil foliar: %s", e)
+        return f"No se pudo obtener el perfil foliar para {cultivo}."
+
+
+def get_harvest_forecast_text(
+    cultivo: str,
+    depto: str | None = None,
+    area_ha: float | None = None,
+) -> str:
+    """Return harvest forecast from EVA data as a formatted text block."""
+    try:
+        forecast = get_harvest_forecast(cultivo, depto, area_ha)
+        if not forecast:
+            return f"Sin datos de rendimiento histórico para {cultivo} en {depto or 'el Caribe'}."
+        return forecast.get("summary", "Datos de cosecha no disponibles.")
+    except Exception as e:
+        logger.warning("Error en forecast de cosecha: %s", e)
+        return f"No se pudo calcular la predicción de cosecha para {cultivo}."
+
+
+async def get_analysis_with_forecast(db: AsyncSession, user_id: str) -> str:
+    """Return last user analysis enriched with EVA harvest forecast + foliar profile."""
+    try:
+        user_uuid = uuid.UUID(user_id)
+        result = await db.execute(
+            select(Analisis)
+            .where(Analisis.usuario_id == user_uuid)
+            .order_by(Analisis.created_at.desc())
+            .limit(1)
+        )
+        ana = result.scalars().one_or_none()
+        if ana is None:
+            return "No tienes análisis registrados. Ve a Análisis de Cultivos para generar tu primer diagnóstico."
+
+        cultivo = ana.cultivo_recomendado or ""
+        depto = (ana.datos_formulario or {}).get("departamento", "") if hasattr(ana, "datos_formulario") else ""
+        area_ha = None
+        if hasattr(ana, "datos_formulario") and isinstance(ana.datos_formulario, dict):
+            area_ha = ana.datos_formulario.get("area_hectareas")
+
+        lines = [
+            f"Último análisis ({ana.created_at.strftime('%d/%m/%Y')}):",
+            f"  Cultivo recomendado: {cultivo} (Score: {ana.score}%)",
+            f"  Ubicación: {depto or 'N/D'}",
+            "",
+        ]
+
+        if cultivo:
+            forecast_text = get_harvest_forecast_text(cultivo, depto or None, area_ha)
+            lines.append(forecast_text)
+            lines.append("")
+            foliar_text = get_foliar_profile_text(cultivo, depto or None)
+            lines.append(foliar_text)
+
+        return "\n".join(lines)
+    except Exception as e:
+        logger.warning("Error en analysis_with_forecast: %s", e)
+        return "Error al consultar el análisis con predicción."

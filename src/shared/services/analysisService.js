@@ -101,6 +101,8 @@ const buildTechnicalNote = (ndvi) => {
 const AnalysisService = {
   async performAnalysis(formData) {
     // Ensure all required fields have defaults before calling the API
+    const toFloat = (v) => (v !== '' && v != null ? Number(v) : null);
+
     const payload = {
       departamento: formData.departamento || 'Atlántico',
       municipio: formData.municipio || 'Barranquilla',
@@ -114,6 +116,16 @@ const AnalysisService = {
       mes_siembra: formData.mes_siembra || 'Junio',
       humedad: Number(formData.humedad) || 74,
       acceso_riego: Boolean(formData.acceso_riego),
+      // soil chemistry (auto-filled from AGROSAVIA dataset; null = use model defaults)
+      calcio: toFloat(formData.calcio),
+      cic: toFloat(formData.cic),
+      conductividad: toFloat(formData.conductividad),
+      magnesio: toFloat(formData.magnesio),
+      potasio: toFloat(formData.potasio),
+      fosforo: toFloat(formData.fosforo),
+      azufre: toFloat(formData.azufre),
+      boro: toFloat(formData.boro),
+      sodio: toFloat(formData.sodio),
     };
 
     try {
@@ -135,6 +147,16 @@ const AnalysisService = {
           area_hectareas: payload.area_hectareas,
           municipio: payload.municipio,
           departamento: payload.departamento,
+          // chemistry (only include non-null values)
+          ...(payload.calcio       != null && { calcio:        payload.calcio        }),
+          ...(payload.cic          != null && { cic:           payload.cic           }),
+          ...(payload.conductividad!= null && { conductividad: payload.conductividad }),
+          ...(payload.magnesio     != null && { magnesio:      payload.magnesio      }),
+          ...(payload.potasio      != null && { potasio:       payload.potasio       }),
+          ...(payload.fosforo      != null && { fosforo:       payload.fosforo       }),
+          ...(payload.azufre       != null && { azufre:        payload.azufre        }),
+          ...(payload.boro         != null && { boro:          payload.boro          }),
+          ...(payload.sodio        != null && { sodio:         payload.sodio         }),
         },
       };
     } catch (error) {

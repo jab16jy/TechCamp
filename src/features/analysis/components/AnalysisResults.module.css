@@ -124,6 +124,48 @@
 .cropJust { font-size: 0.72rem; color: #4a554c; line-height: 1.45; margin: 0 0 0.35rem; }
 .cropMeta { display: flex; gap: 1rem; font-size: 0.65rem; color: #707973; font-weight: 600; }
 
+/* Improvements box */
+.improvementsBox {
+  margin-top: 0.55rem;
+  padding: 0.5rem 0.65rem;
+  background: rgba(45, 90, 39, 0.04);
+  border-left: 2px solid rgba(45, 90, 39, 0.25);
+  border-radius: 0 0.45rem 0.45rem 0;
+}
+.improvementsHead {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.58rem;
+  font-weight: 800;
+  color: #2D5A27;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.35rem;
+}
+.improvementsList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.improvementItem {
+  font-size: 0.66rem;
+  color: #4a554c;
+  line-height: 1.4;
+  padding-left: 0.8rem;
+  position: relative;
+}
+.improvementItem::before {
+  content: '→';
+  position: absolute;
+  left: 0;
+  color: #2D5A27;
+  font-size: 0.6rem;
+}
+
 /* Factors */
 .factorList { display: flex; flex-direction: column; gap: 0.5rem; }
 .factorItem { display: flex; align-items: center; gap: 0.5rem; }
@@ -160,8 +202,39 @@
 /* Soil */
 .soilGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
 .soilItem { display: flex; flex-direction: column; padding: 0.4rem; background: rgba(255,255,255,0.3); border-radius: 0.5rem; }
+.soilItemHead { display: flex; align-items: center; justify-content: space-between; }
 .soilLabel { font-size: 0.55rem; font-weight: 700; color: #707973; text-transform: uppercase; letter-spacing: 0.03em; }
 .soilVal { font-size: 0.78rem; font-weight: 700; color: #1A1C1A; margin-top: 0.1rem; }
+.soilUnit { font-size: 0.48rem; color: #a0a8a3; font-weight: 500; }
+
+.semDot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  font-size: 0.55rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.chemHint {
+  font-size: 0.6rem;
+  color: #707973;
+  margin: -0.25rem 0 0.5rem;
+  font-style: italic;
+}
+
+.semLegend {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid rgba(191,201,193,0.15);
+  font-size: 0.55rem;
+  font-weight: 700;
+}
 
 .mockBanner {
   display: flex;

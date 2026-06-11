@@ -1,7 +1,7 @@
 import logging
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -18,6 +18,8 @@ from app.schemas.analisis import (
 from app.services.climate_service import get_climate_data, get_mock_climate, get_climate_anomaly
 from app.services.satellite_service import get_satellite_data
 from app.services.recommendation import generate_recommendations
+from app.services.foliar_service import get_foliar_profile, diagnose_nutrient_gaps
+from app.services.eva_service import get_harvest_forecast, get_production_trends
 
 logger = logging.getLogger(__name__)
 
@@ -74,6 +76,15 @@ async def analyze_location(
             mes_siembra=body.mes_siembra,
             anomaly=anomaly.model_dump() if anomaly is not None else None,
             altitud=elevation,
+            calcio=body.calcio,
+            magnesio=body.magnesio,
+            azufre=body.azufre,
+            boro=body.boro,
+            sodio=body.sodio,
+            fosforo=body.fosforo,
+            potasio=body.potasio,
+            cic=body.cic,
+            conductividad=body.conductividad,
         )
     except Exception:
         logger.exception("Error en motor de recomendacion")
@@ -189,4 +200,35 @@ async def set_analysis_feedback(
         "exito": ana.exito,
         "rendimiento_real": ana.rendimiento_real,
     }
+
+
+@analysis_router.get("/studio-data")
+async def get_studio_data(
+    cultivo: str = Query(..., description="Crop name"),
+    depto: str | None = Query(None, description="Department (optional)"),
+    area_ha: float | None = Query(None, description="Area in hectares for production estimate"),
+):
+    """Return harvest forecast + foliar profile for the Studio Panel.
+
+    This endpoint is called by the AgroAsesor Studio Panel to populate
+    the 'Predicción de cosecha' and 'Mapa de nutrientes' widgets.
+    """
+    result: dict = {
+        "cultivo": cultivo,
+        "depto": depto,
+    }
+
+    # Harvest forecast from EVA data
+    forecast = get_harvest_forecast(cultivo, depto, area_ha)
+    result["harvest"] = forecast if forecast else None
+
+    # Production trend (last 5 years) for chart
+    trends = get_production_trends(cultivo, depto, last_n_years=5)
+    result["production_trend"] = trends
+
+    # Foliar nutrient profile
+    foliar = get_foliar_profile(cultivo, depto)
+    result["foliar"] = foliar if foliar else None
+
+    return result
 

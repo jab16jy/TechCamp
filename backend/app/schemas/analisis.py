@@ -18,6 +18,16 @@ class AnalyzeRequest(BaseModel):
     ph_suelo: float
     materia_organica: float
     textura_suelo: str
+    # Soil chemistry — auto-filled from AGROSAVIA dataset; user may override via advanced panel
+    calcio: Optional[float] = None
+    cic: Optional[float] = None
+    conductividad: Optional[float] = None
+    magnesio: Optional[float] = None
+    potasio: Optional[float] = None
+    fosforo: Optional[float] = None
+    azufre: Optional[float] = None
+    boro: Optional[float] = None
+    sodio: Optional[float] = None
 
 
 class RecomendacionCultivo(BaseModel):
@@ -30,6 +40,7 @@ class RecomendacionCultivo(BaseModel):
     rendimiento_estimado: Optional[str] = None
     metodo: str = "heuristico"
     probabilidad: Optional[float] = None
+    perfil_quimico: dict = {}
 
 
 class AnalyzeResponse(BaseModel):

@@ -225,10 +225,19 @@ export function useAnalisisCultivos() {
 
         actualizarFormulario({
           ph_suelo: String(soil.ph),
-          materia_organica:
-            soil.materia_organica != null ? String(soil.materia_organica) : "",
+          materia_organica: soil.materia_organica != null ? String(soil.materia_organica) : "",
           textura_suelo: soilClass || soil.textura_suelo || "",
           tipo_suelo: soilClass,
+          // soil chemistry from AGROSAVIA dataset
+          calcio: soil.calcio != null ? String(soil.calcio) : "",
+          cic: soil.cic != null ? String(soil.cic) : "",
+          conductividad: soil.conductividad != null ? String(soil.conductividad) : "",
+          magnesio: soil.magnesio != null ? String(soil.magnesio) : "",
+          potasio: soil.potasio != null ? String(soil.potasio) : "",
+          fosforo: soil.fosforo != null ? String(soil.fosforo) : "",
+          azufre: soil.azufre != null ? String(soil.azufre) : "",
+          boro: soil.boro != null ? String(soil.boro) : "",
+          sodio: soil.sodio != null ? String(soil.sodio) : "",
         });
         const isFallback = soil._fallback;
         agregarToast(

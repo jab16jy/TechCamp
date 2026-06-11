@@ -1,106 +1,106 @@
 {
-  "accuracy": 0.9889,
-  "precision_macro": 0.9866,
-  "recall_macro": 0.9863,
-  "f1_macro": 0.9864,
+  "accuracy": 0.9904,
+  "precision_macro": 0.9887,
+  "recall_macro": 0.9886,
+  "f1_macro": 0.9887,
   "ndvi_source": "empirical",
   "confusion_matrix": [
     [
-      838,
+      861,
       0,
       0,
       0,
       0,
-      4,
-      26,
-      0,
-      0,
-      26,
+      2,
       13,
+      0,
+      0,
+      10,
+      21,
       0
     ],
     [
       0,
-      1151,
-      0,
-      0,
-      0,
-      1,
-      1,
+      1127,
       0,
       0,
       0,
       0,
-      0
-    ],
-    [
-      2,
-      0,
-      1911,
-      0,
-      0,
-      2,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0,
-      2662,
-      0,
-      0,
-      0,
-      0,
-      1,
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0,
-      0,
-      1151,
-      0,
-      2,
-      0,
-      0,
-      0,
-      0,
-      0
-    ],
-    [
-      1,
-      0,
-      1,
-      0,
-      0,
-      1018,
       3,
       0,
       0,
-      4,
-      2,
+      0,
+      0,
       0
     ],
     [
-      40,
-      1,
+      0,
+      0,
+      1909,
       0,
       0,
       2,
+      3,
       0,
-      3476,
+      1,
       0,
       0,
-      15,
-      16,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      2663,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      1147,
+      0,
+      6,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      3,
+      0,
+      0,
+      0,
+      0,
+      1016,
+      5,
+      0,
+      0,
+      2,
+      3,
+      0
+    ],
+    [
+      29,
+      0,
+      0,
+      0,
+      0,
+      1,
+      3485,
+      0,
+      0,
+      22,
+      12,
       0
     ],
     [
@@ -118,18 +118,18 @@
       0
     ],
     [
-      0,
-      0,
-      0,
       1,
       0,
       0,
+      3,
       0,
       0,
-      2615,
       0,
       0,
-      1
+      2614,
+      0,
+      0,
+      0
     ],
     [
       26,
@@ -138,25 +138,25 @@
       0,
       0,
       0,
-      38,
+      27,
       0,
       0,
-      1554,
-      5,
-      0
-    ],
-    [
-      7,
-      0,
-      0,
-      0,
-      0,
-      1,
-      7,
-      0,
-      0,
+      1567,
       4,
-      2676,
+      0
+    ],
+    [
+      7,
+      0,
+      0,
+      0,
+      0,
+      2,
+      10,
+      0,
+      0,
+      1,
+      2641,
       0
     ],
     [
@@ -170,32 +170,151 @@
       0,
       0,
       0,
-      1,
-      2101
+      0,
+      2098
     ]
   ],
-  "log_loss": 0.0488,
+  "log_loss": 0.0458,
   "brier_score_per_crop": {
-    "Aj\u00ed": 0.005,
-    "Algod\u00f3n": 0.0008,
-    "Arroz": 0.0008,
+    "Aj\u00ed": 0.0041,
+    "Algod\u00f3n": 0.0006,
+    "Arroz": 0.0007,
     "Cacao": 0.0002,
-    "Frijol": 0.0006,
+    "Frijol": 0.0009,
     "Mango": 0.001,
-    "Ma\u00edz": 0.0062,
+    "Ma\u00edz": 0.0054,
     "Palma_Aceitera": 0.0,
     "Pl\u00e1tano": 0.0004,
-    "Sorgo": 0.0046,
-    "Yuca": 0.0029,
-    "\u00d1ame": 0.0005
+    "Sorgo": 0.0035,
+    "Yuca": 0.0031,
+    "\u00d1ame": 0.0004
   },
-  "brier_score": 0.0019,
-  "top3_accuracy": 0.9998,
-  "roc_auc_ovr": 0.9997,
+  "brier_score": 0.0017,
+  "top3_accuracy": 0.9997,
+  "roc_auc_ovr": 0.9998,
   "cv_accuracy_mean": null,
   "cv_accuracy_std": null,
   "cv_method": "omitido para velocidad de retrain",
   "per_crop_accuracy": {
+    "Aj\u00ed": 0.9493,
+    "Algod\u00f3n": 0.9973,
+    "Arroz": 0.9969,
+    "Cacao": 1.0,
+    "Frijol": 0.9948,
+    "Mango": 0.9874,
+    "Ma\u00edz": 0.982,
+    "Palma_Aceitera": 1.0,
+    "Pl\u00e1tano": 0.9985,
+    "Sorgo": 0.9649,
+    "Yuca": 0.9925,
+    "\u00d1ame": 1.0
+  },
+  "per_crop_f1": {
+    "Aj\u00ed": 0.9389,
+    "Algod\u00f3n": 0.9987,
+    "Arroz": 0.9984,
+    "Cacao": 0.9994,
+    "Frijol": 0.9974,
+    "Mango": 0.9903,
+    "Ma\u00edz": 0.9816,
+    "Palma_Aceitera": 1.0,
+    "Pl\u00e1tano": 0.999,
+    "Sorgo": 0.9715,
+    "Yuca": 0.9888,
+    "\u00d1ame": 1.0
+  },
+  "feature_importance": [
+    {
+      "feature": "precipitacion",
+      "importance": 0.3624
+    },
+    {
+      "feature": "sodio",
+      "importance": 0.1335
+    },
+    {
+      "feature": "azufre",
+      "importance": 0.1087
+    },
+    {
+      "feature": "p_bray",
+      "importance": 0.0587
+    },
+    {
+      "feature": "calcio",
+      "importance": 0.0443
+    },
+    {
+      "feature": "ndvi",
+      "importance": 0.0439
+    },
+    {
+      "feature": "cic",
+      "importance": 0.0421
+    },
+    {
+      "feature": "humedad",
+      "importance": 0.0339
+    },
+    {
+      "feature": "altitud",
+      "importance": 0.0338
+    },
+    {
+      "feature": "textura_encoded",
+      "importance": 0.02
+    },
+    {
+      "feature": "k_interc",
+      "importance": 0.0188
+    },
+    {
+      "feature": "conductividad",
+      "importance": 0.0115
+    },
+    {
+      "feature": "magnesio",
+      "importance": 0.0101
+    },
+    {
+      "feature": "ph_suelo",
+      "importance": 0.0025
+    },
+    {
+      "feature": "boro",
+      "importance": 0.0017
+    },
+    {
+      "feature": "precip_temp_ratio",
+      "importance": 0.0011
+    },
+    {
+      "feature": "materia_organica",
+      "importance": 0.0007
+    },
+    {
+      "feature": "temperatura",
+      "importance": 0.0006
+    },
+    {
+      "feature": "precip_hum_ratio",
+      "importance": 0.0005
+    },
+    {
+      "feature": "ndwi",
+      "importance": 0.0002
+    },
+    {
+      "feature": "ndvi_ndwi_ratio",
+      "importance": 0.0002
+    }
+  ],
+  "n_samples": 114095,
+  "n_features": 21,
+  "n_climate_zones": 7,
+  "model_type": "HistGradientBoosting + CalibratedClassifierCV(sigmoid)",
+  "data_source": "NASA POWER climatology + empirical NDVI from indices_satelitales (overlapped ranges)",
+  "per_crop_accuracy_previous": {
     "Aj\u00ed": 0.9239,
     "Algod\u00f3n": 0.9983,
     "Arroz": 0.9979,
@@ -208,125 +327,6 @@
     "Sorgo": 0.9575,
     "Yuca": 0.9929,
     "\u00d1ame": 0.9995
-  },
-  "per_crop_f1": {
-    "Aj\u00ed": 0.9204,
-    "Algod\u00f3n": 0.9987,
-    "Arroz": 0.9987,
-    "Cacao": 0.9996,
-    "Frijol": 0.9983,
-    "Mango": 0.9908,
-    "Ma\u00edz": 0.9787,
-    "Palma_Aceitera": 1.0,
-    "Pl\u00e1tano": 0.9994,
-    "Sorgo": 0.9634,
-    "Yuca": 0.9896,
-    "\u00d1ame": 0.9995
-  },
-  "feature_importance": [
-    {
-      "feature": "precipitacion",
-      "importance": 0.3884
-    },
-    {
-      "feature": "sodio",
-      "importance": 0.1387
-    },
-    {
-      "feature": "azufre",
-      "importance": 0.0994
-    },
-    {
-      "feature": "calcio",
-      "importance": 0.0608
-    },
-    {
-      "feature": "p_bray",
-      "importance": 0.0561
-    },
-    {
-      "feature": "ndvi",
-      "importance": 0.0439
-    },
-    {
-      "feature": "altitud",
-      "importance": 0.0331
-    },
-    {
-      "feature": "humedad",
-      "importance": 0.0276
-    },
-    {
-      "feature": "cic",
-      "importance": 0.0264
-    },
-    {
-      "feature": "k_interc",
-      "importance": 0.0189
-    },
-    {
-      "feature": "textura_encoded",
-      "importance": 0.0173
-    },
-    {
-      "feature": "magnesio",
-      "importance": 0.0104
-    },
-    {
-      "feature": "conductividad",
-      "importance": 0.0087
-    },
-    {
-      "feature": "temperatura",
-      "importance": 0.0019
-    },
-    {
-      "feature": "boro",
-      "importance": 0.0019
-    },
-    {
-      "feature": "ph_suelo",
-      "importance": 0.0017
-    },
-    {
-      "feature": "precip_hum_ratio",
-      "importance": 0.0013
-    },
-    {
-      "feature": "precip_temp_ratio",
-      "importance": 0.0008
-    },
-    {
-      "feature": "materia_organica",
-      "importance": 0.0006
-    },
-    {
-      "feature": "ndvi_ndwi_ratio",
-      "importance": 0.0002
-    },
-    {
-      "feature": "ndwi",
-      "importance": 0.0001
-    }
-  ],
-  "n_samples": 114395,
-  "n_features": 21,
-  "n_climate_zones": 7,
-  "model_type": "HistGradientBoosting + CalibratedClassifierCV(sigmoid)",
-  "data_source": "NASA POWER climatology + empirical NDVI from indices_satelitales (overlapped ranges)",
-  "per_crop_accuracy_previous": {
-    "Aj\u00ed": 0.5711,
-    "Algod\u00f3n": 0.9309,
-    "Arroz": 0.9121,
-    "Cacao": 0.9917,
-    "Frijol": 0.8825,
-    "Mango": 0.7065,
-    "Ma\u00edz": 0.6736,
-    "Palma_Aceitera": 0.9959,
-    "Pl\u00e1tano": 0.9934,
-    "Sorgo": 0.7409,
-    "Yuca": 0.6137,
-    "\u00d1ame": 0.9619
   },
   "model_available": true
 }
