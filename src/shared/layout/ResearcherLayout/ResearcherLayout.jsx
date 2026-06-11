@@ -16,8 +16,7 @@ import {
   Sprout,
   Bot,
   Brain,
-  Wifi,
-  FileText,
+
   Clock,
 } from 'lucide-react';
 
@@ -31,15 +30,14 @@ const NAV_ITEMS = [
   { path: '/investigador/analisis', label: 'Análisis', icon: Sprout },
   { path: '/investigador/mapas', label: 'AgroAsesor', icon: Bot },
   { path: '/investigador/ia', label: 'IA Predictiva', icon: Brain },
-  { path: '/investigador/sensores', label: 'Sensores', icon: Wifi },
-  { path: '/investigador/reportes', label: 'Reportes', icon: FileText },
+
   { path: '/investigador/historial', label: 'Historial', icon: Clock },
 ];
 
 const ALERTS = [
   { title: 'Estres hidrico detectado', desc: 'Nodo Sur-02 registra 61% HR.', time: 'Hace 5 min', type: 'warn' },
   { title: 'Imagenes Sentinel-2 listas', desc: 'NDVI procesado para todos los lotes.', time: 'Hace 1 hora', type: 'success' },
-  { title: 'Reporte semanal generado', desc: 'Descarga disponible en Reportes.', time: 'Hace 3 horas', type: 'info' },
+
 ];
 
 const alertIcon = {
@@ -77,7 +75,7 @@ const ResearcherLayout = ({ children, activeTab }) => {
   const handleLogout = () => {
     sessionStorage.removeItem('rol');
     agregarToast('Sesion cerrada correctamente', 'info');
-    navigate('/');
+    navigate('/investigador/login');
   };
 
   const isActive = (path) => {
@@ -196,7 +194,6 @@ const ResearcherLayout = ({ children, activeTab }) => {
                 </div>
                 {[
                   { label: 'Mi Perfil', icon: <User size={15} />, path: '/perfil' },
-                  { label: 'Ajustes', icon: <Settings size={15} />, path: '/investigador/ajustes' },
                 ].map((option) => (
                   <Link
                     key={option.label}

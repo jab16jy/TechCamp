@@ -30,7 +30,6 @@ const DashboardInvestigador = () => {
     SPARK_DATA,
     modelMetrics,
     modelMetricsStatus,
-    navigate,
   } = useDashboard();
 
   if (!authorized) return null;
@@ -52,11 +51,11 @@ const DashboardInvestigador = () => {
               <ModelMetricsTable metrics={MODEL_METRICS} modelMetrics={modelMetrics} status={modelMetricsStatus} />
               <WeatherWidget weather={WEATHER} />
             </motion.div>
-            <FieldUpdatesFeed updates={FIELD_UPDATES} onViewAll={moduleShortcuts.find(m => m.path === '/investigador/sensores')?.onClick} />
+            <FieldUpdatesFeed updates={FIELD_UPDATES} />
           </div>
 
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.15, ease: 'easeOut' }} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <WeeklySummary stats={weeklyStats} onGenerateReport={() => navigate('/investigador/reportes')} />
+            <WeeklySummary stats={weeklyStats} />
             <ModuleShortcuts modules={moduleShortcuts} />
           </motion.div>
         </div>

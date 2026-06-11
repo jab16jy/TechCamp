@@ -1,11 +1,10 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
 // Componentes compartidos
 import Toast from '@shared/ui/Toast/Toast';
 import FloatingAIButton from '@shared/layout/FloatingAIButton/FloatingAIButton';
 
 // ── Páginas de acceso ──
-import Acceso from '@features/auth/pages/Acceso';
 import LoginInvestigador from '@features/auth/pages/LoginInvestigador';
 
 // ── Páginas del panel investigador ──
@@ -13,10 +12,7 @@ import DashboardInvestigador from '@features/dashboard/pages/DashboardInvestigad
 import AgroAsesor from '@features/chat/pages/AgroAsesor';
 import AnalisisCultivosInvestigador from '@features/analysis/pages/AnalisisCultivos';
 import IAPredictiva from '@features/predictions/pages/IAPredictiva';
-import SensoresIoT from '@features/sensors/pages/SensoresIoT';
-import GestionReportes from '@features/reports/pages/GestionReportes';
 import Historial from '@features/history/pages/Historial';
-import Ajustes from '@features/settings/pages/Ajustes';
 
 // ── Páginas compartidas ──
 import Resultado from '@features/analysis/pages/Resultado';
@@ -30,8 +26,8 @@ const App = () => (
     <FloatingAIButton />
 
     <Routes>
-      {/* ── Pantalla de selección de perfil (landing principal) ── */}
-      <Route path="/" element={<Acceso />} />
+      {/* ── Root redirect to login ── */}
+      <Route path="/" element={<Navigate to="/investigador/login" replace />} />
 
       {/* ── Rutas del investigador ── */}
       <Route path="/investigador/login" element={<LoginInvestigador />} />
@@ -40,11 +36,8 @@ const App = () => (
       <Route path="/dashboard" element={<DashboardInvestigador />} />
       <Route path="/investigador/mapas" element={<AgroAsesor />} />
       <Route path="/investigador/historial" element={<Historial />} />
-      <Route path="/investigador/ajustes" element={<Ajustes />} />
       <Route path="/investigador/analisis" element={<AnalisisCultivosInvestigador />} />
       <Route path="/investigador/ia" element={<IAPredictiva />} />
-      <Route path="/investigador/sensores" element={<SensoresIoT />} />
-      <Route path="/investigador/reportes" element={<GestionReportes />} />
 
       {/* ── Rutas compartidas ── */}
       <Route path="/resultado" element={<Resultado />} />

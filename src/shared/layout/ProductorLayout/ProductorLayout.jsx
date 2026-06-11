@@ -13,13 +13,13 @@ const ProductorLayout = ({ children }) => {
   const rol = sessionStorage.getItem('rol');
 
   useEffect(() => {
-    if (rol !== 'productor' && rol !== 'investigador') navigate('/');
+    if (rol !== 'productor' && rol !== 'investigador') navigate('/investigador/login');
   }, [rol, navigate]);
 
   const handleLogout = () => {
     sessionStorage.removeItem('rol');
     agregarToast('Sesion cerrada correctamente', 'info');
-    navigate('/');
+    navigate('/investigador/login');
   };
 
   return (

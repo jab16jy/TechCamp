@@ -229,38 +229,6 @@ export const getSensores = async () => {
   }
 };
 
-/** Obtener lecturas de un sensor especifico */
-export const getLecturasSensor = async (sensorId, limit = 20) => {
-  try {
-    const { data } = await apiClient.get(`/sensors/${sensorId}/readings`, {
-      params: { limit },
-    });
-    return data;
-  } catch {
-    return [];
-  }
-};
-
-/** Registrar una nueva lectura de sensor */
-export const crearLecturaSensor = async (
-  sensorId,
-  ndvi,
-  humedad,
-  temperatura,
-) => {
-  try {
-    const { data } = await apiClient.post("/sensors/readings", {
-      sensor_id: sensorId,
-      ndvi,
-      humedad,
-      temperatura,
-    });
-    return data;
-  } catch {
-    return null;
-  }
-};
-
 // Mapa de referencia: coordenadas aproximadas de municipios del Caribe colombiano (solo para geolocalización)
 const MUNICIPIO_COORDS_REF = {
   "10.97,-74.78": { municipio: "Barranquilla", departamento: "Atlántico" },
@@ -371,16 +339,6 @@ export const getPrediccion = async (
   }
 };
 
-/** Obtener alertas del sistema (sensores + analisis) */
-export const getAlertas = async () => {
-  try {
-    const { data } = await apiClient.get("/reports/alerts");
-    return data;
-  } catch {
-    return { alertas: [], total_criticas: 0, total_advertencias: 0 };
-  }
-};
-
 /** Comparar analisis por IDs */
 export const compararAnalisis = async (analysisIds) => {
   try {
@@ -390,18 +348,6 @@ export const compararAnalisis = async (analysisIds) => {
     return data;
   } catch {
     return { items: [] };
-  }
-};
-
-/** Exportar reporte de un analisis */
-export const exportarReporte = async (analysisId) => {
-  try {
-    const { data } = await apiClient.post("/reports/export", {
-      analysis_id: analysisId,
-    });
-    return data;
-  } catch {
-    return null;
   }
 };
 

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   BrainCircuit, Leaf, Zap, Thermometer, Droplets, Wind, Sun,
-  AlertTriangle, Radio, FlaskConical, Activity,
+  AlertTriangle, FlaskConical, Activity,
 } from 'lucide-react';
 import { getDashboardSummary, getClima, getModelMetrics } from '@shared/services/api';
 
@@ -72,8 +72,6 @@ export default function useDashboard() {
           color: 'emerald',
         },
         { label: 'Analisis Totales', value: String(summary.total_analisis), delta: null, up: null, icon: <Activity size={18} />, color: 'blue' },
-        { label: 'Sensores IoT', value: String(summary.total_sensores), delta: summary.sensores_criticos > 0 ? `${summary.sensores_criticos} criticos` : 'OK', up: summary.sensores_criticos === 0, icon: <Radio size={18} />, color: summary.sensores_criticos > 0 ? 'amber' : 'emerald' },
-        { label: 'Alertas Activas', value: String(summary.sensores_criticos + summary.sensores_advertencias), delta: summary.sensores_criticos > 0 ? 'criticas' : 'OK', up: false, icon: <AlertTriangle size={18} />, color: summary.sensores_criticos > 0 ? 'amber' : 'emerald' },
       ]
     : [
         {
@@ -100,13 +98,10 @@ export default function useDashboard() {
     { label: 'Agro-Asesor IA', sub: 'Mapa + Chatbot', path: '/investigador/mapas', icon: <BrainCircuit size={16} />, color: 'emerald', onClick: () => navigate('/investigador/mapas') },
     { label: 'Analisis Suelos', sub: 'Laboratorio digital', path: '/investigador/analisis', icon: <FlaskConical size={16} />, color: 'blue', onClick: () => navigate('/investigador/analisis') },
     { label: 'IA Predictiva', sub: 'Ventana siembra 6 meses', path: '/investigador/ia', icon: <Activity size={16} />, color: 'purple', onClick: () => navigate('/investigador/ia') },
-    { label: 'Nodos IoT', sub: 'Sensores en campo', path: '/investigador/sensores', icon: <Radio size={16} />, color: 'amber', onClick: () => navigate('/investigador/sensores') },
   ];
 
   const weeklyStats = [
     { label: 'Analisis realizados', val: String(summary?.total_analisis || '—'), color: 'text-[#2D5A27]' },
-    { label: 'Alertas gestionadas', val: String(summary?.sensores_advertencias || 0), color: 'text-amber-600' },
-    { label: 'Sensores activos', val: String(summary?.total_sensores || '—'), color: 'text-blue-600' },
   ];
 
   const modelMetricsPerCrop = modelMetrics?.per_crop_accuracy
