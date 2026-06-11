@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   BrainCircuit, Leaf, Zap, Thermometer, Droplets, Wind, Sun,
-  AlertTriangle, FlaskConical, Activity,
+  FlaskConical, Activity,
 } from 'lucide-react';
 import { getDashboardSummary, getClima, getModelMetrics } from '@shared/services/api';
 
