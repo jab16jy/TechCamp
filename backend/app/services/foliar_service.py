@@ -15,7 +15,7 @@ import pandas as pd
 
 logger = logging.getLogger(__name__)
 
-_CSV_PATH = Path(__file__).parents[3] / "data" / "caribe" / "foliar_caribe.csv"
+_CSV_PATH = Path(__file__).parents[2] / "data" / "caribe" / "foliar_caribe.csv"
 
 NUTRIENTS = {
     "n_pct":  "Nitrógeno (N) % STD",

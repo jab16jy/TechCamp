@@ -1194,7 +1194,12 @@ def _ensure_artifact_dir() -> None:
 
 
 def _bootstrap_bundled_artifacts() -> None:
-    """Copy image-bundled model artifacts into the writable artifact dir once."""
+    """Copy image-bundled model artifacts into the writable artifact dir.
+
+    Overwrites the volume copy whenever the bundled (image) file is newer,
+    so a rebuilt image with fresh training artifacts is always applied.
+    Skips only when source == target path or source is missing.
+    """
     _ensure_artifact_dir()
     pairs = [
         (BUNDLED_MODEL_PATH, MODEL_PATH),
@@ -1202,11 +1207,13 @@ def _bootstrap_bundled_artifacts() -> None:
         (BUNDLED_METRICS_PATH, METRICS_PATH),
     ]
     for source, target in pairs:
-        if source.resolve() == target.resolve() or target.exists() or not source.exists():
+        if source.resolve() == target.resolve() or not source.exists():
+            continue
+        if target.exists() and target.stat().st_mtime >= source.stat().st_mtime:
             continue
         try:
             target.write_bytes(source.read_bytes())
-            logger.info("Artefacto ML inicial copiado a %s", target)
+            logger.info("Artefacto ML actualizado desde imagen: %s", target)
         except OSError as e:
             logger.warning("No se pudo copiar artefacto ML %s -> %s: %s", source, target, e)
 

@@ -130,6 +130,21 @@ import uuid
 analysis_router = APIRouter(prefix="/analysis", tags=["analisis"])
 
 
+@analysis_router.get("/studio-data")
+async def get_studio_data(
+    cultivo: str = Query(..., description="Crop name"),
+    depto: str | None = Query(None, description="Department (optional)"),
+    area_ha: float | None = Query(None, description="Area in hectares for production estimate"),
+):
+    """Return harvest forecast + foliar profile for the Studio Panel."""
+    result: dict = {"cultivo": cultivo, "depto": depto}
+    result["harvest"] = get_harvest_forecast(cultivo, depto, area_ha) or None
+    result["production_trend"] = get_production_trends(cultivo, depto, last_n_years=5)
+    foliar = get_foliar_profile(cultivo, depto)
+    result["foliar"] = foliar if foliar else None
+    return result
+
+
 @analysis_router.get("/{id}")
 async def get_analysis_by_id(id: str, db: AsyncSession = Depends(get_db)):
     query = select(Analisis)
@@ -202,33 +217,4 @@ async def set_analysis_feedback(
     }
 
 
-@analysis_router.get("/studio-data")
-async def get_studio_data(
-    cultivo: str = Query(..., description="Crop name"),
-    depto: str | None = Query(None, description="Department (optional)"),
-    area_ha: float | None = Query(None, description="Area in hectares for production estimate"),
-):
-    """Return harvest forecast + foliar profile for the Studio Panel.
-
-    This endpoint is called by the AgroAsesor Studio Panel to populate
-    the 'Predicción de cosecha' and 'Mapa de nutrientes' widgets.
-    """
-    result: dict = {
-        "cultivo": cultivo,
-        "depto": depto,
-    }
-
-    # Harvest forecast from EVA data
-    forecast = get_harvest_forecast(cultivo, depto, area_ha)
-    result["harvest"] = forecast if forecast else None
-
-    # Production trend (last 5 years) for chart
-    trends = get_production_trends(cultivo, depto, last_n_years=5)
-    result["production_trend"] = trends
-
-    # Foliar nutrient profile
-    foliar = get_foliar_profile(cultivo, depto)
-    result["foliar"] = foliar if foliar else None
-
-    return result
 

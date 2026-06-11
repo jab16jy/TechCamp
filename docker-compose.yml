@@ -66,6 +66,7 @@ services:
         condition: service_started
     volumes:
       - ml-data:/app/model_artifacts/
+      - ./data/caribe:/app/data/caribe:ro
     restart: unless-stopped
     networks:
       - backend_net
