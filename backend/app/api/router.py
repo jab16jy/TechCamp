@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api import municipios, analisis, clima, satelite, historial, auth, chat, sensores, geo, predict, reports, dashboard, soil, irrigation, model
+from app.api import municipios, analisis, clima, satelite, historial, auth, chat, sensores, geo, predict, reports, dashboard, soil, irrigation, model, riesgo_climatico
 
 router = APIRouter()
 
@@ -20,3 +20,4 @@ router.include_router(dashboard.router, tags=["dashboard"])
 router.include_router(soil.router, tags=["soil"])
 router.include_router(irrigation.router, tags=["irrigation"])
 router.include_router(model.router, tags=["model"])
+router.include_router(riesgo_climatico.router, tags=["riesgo-climatico"])

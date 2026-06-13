@@ -328,5 +328,65 @@
     "Yuca": 0.9929,
     "\u00d1ame": 0.9995
   },
-  "model_available": true
+  "model_available": true,
+  "climate_risk": {
+    "updated_at": "2026-06-13T23:05:22.234509+00:00",
+    "models": {
+      "drought": {
+        "event_type": "drought",
+        "test_pr_auc": 0.5524,
+        "test_brier": 0.1288,
+        "test_recall_at_p90": 0.0,
+        "baseline_pr_auc": 0.5565,
+        "beats_baseline": false,
+        "n_train": 803,
+        "n_val": 58,
+        "n_test": 147,
+        "n_features": 25,
+        "gbm_iterations": 62,
+        "top_features": [
+          {
+            "feature": "precip_m5",
+            "importance": 0.1799
+          },
+          {
+            "feature": "era5_sro_mm",
+            "importance": 0.0305
+          },
+          {
+            "feature": "precip_m4",
+            "importance": 0.0067
+          },
+          {
+            "feature": "precip_total_3m",
+            "importance": 0.0039
+          },
+          {
+            "feature": "era5_swvl3",
+            "importance": 0.0033
+          },
+          {
+            "feature": "era5_t2m",
+            "importance": 0.0008
+          },
+          {
+            "feature": "consecutive_dry_months",
+            "importance": 0.0
+          },
+          {
+            "feature": "chirps_coverage",
+            "importance": 0.0
+          },
+          {
+            "feature": "heuristic_score",
+            "importance": 0.0
+          },
+          {
+            "feature": "precip_min_month",
+            "importance": -0.0015
+          }
+        ]
+      }
+    }
+  }
 }
