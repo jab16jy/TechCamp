@@ -21,3 +21,7 @@ joblib==1.5.3
 cachetools==5.5.0
 rasterio>=1.4.0
 lxml>=5.3.0
+xarray>=2024.6.0
+h5netcdf>=1.4.0
+h5py>=3.11.0
+openpyxl>=3.1.0

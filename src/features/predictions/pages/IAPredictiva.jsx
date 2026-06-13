@@ -12,6 +12,7 @@ import GrowthStressChart from '@features/predictions/components/ScenarioSimulato
 import MonthlyProjectionTabs from '@features/predictions/components/MonthlyProjectionTabs/MonthlyProjectionTabs';
 import FeatureChart from '@features/predictions/components/FeatureChart/FeatureChart';
 import ClimateRiskPanel from '@features/predictions/components/ClimateRiskPanel/ClimateRiskPanel';
+import MLRiskPanel from '@features/predictions/components/MLRiskPanel/MLRiskPanel';
 import SimulationSection from '@features/predictions/components/SimulationSection/SimulationSection';
 import MitigationActions from '@features/predictions/components/MitigationActions/MitigationActions';
 import './IAPredictiva.css';
@@ -49,6 +50,22 @@ class ResultsErrorBoundary extends Component {
     return this.props.children;
   }
 }
+
+// ── Department centroid coordinates [lon, lat] for Caribbean region ──
+const DEPT_COORDS = {
+  'Atlántico':   [-74.88, 10.94],
+  'Bolívar':     [-74.85,  8.67],
+  'Córdoba':     [-75.88,  8.33],
+  'Magdalena':   [-74.18, 10.42],
+  'Cesar':       [-73.65,  9.33],
+  'La Guajira':  [-72.50, 11.33],
+  'Sucre':       [-75.13,  9.30],
+  'San Andrés':  [-81.70, 12.53],
+};
+
+const _nowDate = new Date();
+const CURRENT_YEAR  = _nowDate.getFullYear();
+const CURRENT_MONTH = _nowDate.getMonth() + 1;
 
 const IAPredictiva = () => {
   const authorized = useAuthGuard('investigador');
@@ -276,6 +293,20 @@ const IAPredictiva = () => {
                   <ClimateRiskPanel proyeccion={proyeccion6M} />
                 </BentoCard>
               </ResultsErrorBoundary>
+
+              {/* ROW 1b: MLRiskPanel — ML climate risk predictions */}
+              {queryCoords && (
+                <ResultsErrorBoundary label="MLRiskPanel">
+                  <BentoCard span={{ col: 12, row: 1 }} variant="default">
+                    <MLRiskPanel
+                      lat={queryCoords.lat}
+                      lon={queryCoords.lng}
+                      year={CURRENT_YEAR}
+                      month={CURRENT_MONTH}
+                    />
+                  </BentoCard>
+                </ResultsErrorBoundary>
+              )}
 
               {/* ROW 2: SimulationSection */}
               {proyeccion6M && (

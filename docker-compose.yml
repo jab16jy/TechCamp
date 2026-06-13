@@ -57,7 +57,8 @@ services:
       OPENMETEO_BASE_URL: https://api.open-meteo.com/v1
       OLLAMA_BASE_URL: http://ollama:11434
       OLLAMA_MODEL: gemma2:2b
-      MODEL_ARTIFACT_DIR: /app/model_artifacts
+      MODEL_ARTIFACT_DIR: /app/app/ml/data
+      CLIMATE_DATA_DIR: /app/data/climate
       CORS_ORIGINS: http://localhost:5173,http://localhost:5173,http://localhost
     depends_on:
       db:
@@ -65,8 +66,9 @@ services:
       ollama:
         condition: service_started
     volumes:
-      - ml-data:/app/model_artifacts/
+      - ml-data:/app/app/ml/data/
       - ./data/caribe:/app/data/caribe:ro
+      - "/home/jabyn/Downloads/dataset ml prediccciones:/app/data/climate:ro"
     restart: unless-stopped
     networks:
       - backend_net
