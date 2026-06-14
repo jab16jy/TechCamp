@@ -180,7 +180,7 @@ def build_series_dataset() -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarr
 
 # ── Training ──────────────────────────────────────────────────────────────────
 
-def train(epochs: int = 80, batch_size: int = 64) -> dict:
+def train(epochs: int = 200, batch_size: int = 64) -> dict:
     """Train the LSTM forecaster on real CHIRPS+ERA5 series.
 
     Returns metrics dict with train/val/test RMSE per variable.
@@ -230,8 +230,12 @@ def train(epochs: int = 80, batch_size: int = 64) -> dict:
     model.compile(optimizer=keras.optimizers.Adam(1e-3), loss=combined_loss)
 
     cb = [
-        keras.callbacks.EarlyStopping(patience=10, restore_best_weights=True),
-        keras.callbacks.ReduceLROnPlateau(patience=5, factor=0.5, min_lr=1e-5),
+        keras.callbacks.EarlyStopping(
+            patience=15, restore_best_weights=True, monitor="val_loss"
+        ),
+        keras.callbacks.ReduceLROnPlateau(
+            patience=7, factor=0.4, min_lr=1e-5
+        ),
     ]
 
     logger.info("Training LSTM: %d sequences, %d epochs", len(X_tr), epochs)

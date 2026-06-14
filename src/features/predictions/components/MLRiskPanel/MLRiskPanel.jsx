@@ -105,7 +105,7 @@ function ShimmerCard({ span }) {
 
 // ── Main component ─────────────────────────────────────────────────────────
 
-export default function MLRiskPanel({ lat, lon, year, month }) {
+export default function MLRiskPanel({ lat, lon, year, month, onRiskData }) {
   const { flood, drought, loading, error, fetchRisk } = useRiesgoClimatico();
 
   const hasCoords = lat != null && lon != null && year != null && month != null;
@@ -115,6 +115,12 @@ export default function MLRiskPanel({ lat, lon, year, month }) {
       fetchRisk(lat, lon, year, month);
     }
   }, [lat, lon, year, month, hasCoords, fetchRisk]);
+
+  useEffect(() => {
+    if (onRiskData && (flood !== null || drought !== null)) {
+      onRiskData({ flood, drought });
+    }
+  }, [flood, drought, onRiskData]);
 
   if (!hasCoords) return null;
 

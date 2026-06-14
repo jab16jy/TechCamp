@@ -9,6 +9,7 @@ Features per sample:
   ERA5 window    — temperature, soil moisture, runoff (if downloaded; else omitted)
   Temporal       — month_sin, month_cos (cyclical)
   Heuristic      — existing rule-based flood/drought score as a FEATURE (not a target)
+  Static         — soil_ph, soil_clay, soil_awc, elevation_m (pre-fetched once per dept)
 
 Temporal split (no leakage):
   train      1990 – 2016
@@ -19,6 +20,7 @@ Usage:
     from app.ml.riesgo_climatico_dataset import build_dataset
     X_tr, y_tr, X_val, y_val, X_te, y_te, feat_names = build_dataset("flood")
 """
+import asyncio
 import logging
 import math
 import random
@@ -87,6 +89,37 @@ def _heuristic_score(lat: float, lon: float, year: int, month: int,
         return 0.5   # neutral fallback
 
 
+async def _prefetch_dept_static(sem: asyncio.Semaphore) -> dict[int, dict]:
+    """Fetch soil + elevation for all dept centroids concurrently.
+
+    Returns dict[dept_code -> {"soil_ph": ..., "soil_clay": ..., "soil_awc": ..., "elevation_m": ...}]
+    The dept centroids are fixed (33 depts), so we pre-fetch once and reuse per-row.
+    """
+    from app.services.soil_service import get_soil_data
+    from app.ml.data_sources.elevation import get_elevation
+
+    async def _fetch_one(dept_code: int, lon: float, lat: float) -> tuple[int, dict]:
+        async with sem:
+            soil, elev = await asyncio.gather(
+                get_soil_data(lat, lon),
+                get_elevation(lat, lon),
+            )
+        soil = soil or {}
+        return dept_code, {
+            "soil_ph":    soil.get("ph"),
+            "soil_clay":  soil.get("clay"),
+            "soil_awc":   soil.get("awc"),
+            "elevation_m": elev,
+        }
+
+    tasks = [
+        _fetch_one(dept_code, lon, lat)
+        for dept_code, (lon, lat) in DEPT_CENTROIDS.items()
+    ]
+    results = await asyncio.gather(*tasks)
+    return dict(results)
+
+
 def _build_feature_row(
     lat: float,
     lon: float,
@@ -94,6 +127,7 @@ def _build_feature_row(
     month: int,
     event_type: str,
     label: int,
+    static: dict | None = None,
 ) -> dict | None:
     chirps = compute_precip_features(lat, lon, year, month, N_MONTHS)
     if chirps["chirps_coverage"] < 0.5:
@@ -107,6 +141,12 @@ def _build_feature_row(
         era5 = get_era5_window(lat, lon, year, month, ERA5_WINDOW)
         row.update(era5)
 
+    if static:
+        row["soil_ph"]    = static.get("soil_ph")
+        row["soil_clay"]  = static.get("soil_clay")
+        row["soil_awc"]   = static.get("soil_awc")
+        row["elevation_m"] = static.get("elevation_m")
+
     row.update({"year": year, "month": month,
                 "lat": lat, "lon": lon,
                 "event_type": event_type, "label": label})
@@ -118,6 +158,7 @@ def _sample_negatives(
     event_type: str,
     n: int,
     positive_keys: set[tuple[int, int, int]],
+    static_by_dept: dict[int, dict] | None = None,
 ) -> list[dict]:
     """Generate `n` negative samples not overlapping with known events."""
     yr_range = available_year_range()
@@ -141,7 +182,8 @@ def _sample_negatives(
             continue
 
         coords = DEPT_CENTROIDS[dept]
-        row = _build_feature_row(coords[1], coords[0], year, month, event_type, 0)
+        static = static_by_dept.get(dept) if static_by_dept else None
+        row = _build_feature_row(coords[1], coords[0], year, month, event_type, 0, static=static)
         if row:
             row["dept_code"] = dept
             rows.append(row)
@@ -182,21 +224,35 @@ def build_dataset(
 
     logger.info("Positive events: %d", len(labels))
 
+    # Pre-fetch static features (soil + elevation) once for all dept centroids.
+    # This avoids redundant API calls — 33 depts × 2 APIs, done once up front.
+    logger.info("Pre-fetching soil + elevation for %d dept centroids …", len(DEPT_CENTROIDS))
+    try:
+        sem = asyncio.Semaphore(8)  # limit concurrent API calls
+        static_by_dept: dict[int, dict] = asyncio.run(_prefetch_dept_static(sem))
+        logger.info("Static features fetched for %d departments", len(static_by_dept))
+    except Exception as exc:
+        logger.warning("Could not pre-fetch static features (%s) — proceeding without them", exc)
+        static_by_dept = {}
+
     # Build positive samples
     pos_rows: list[dict] = []
     positive_keys: set[tuple[int, int, int]] = set()
 
     for _, ev in labels.iterrows():
+        dept_code = int(ev["dept_code"])
+        static = static_by_dept.get(dept_code)
         row = _build_feature_row(
             lat=ev["lat"], lon=ev["lon"],
             year=ev["year"], month=ev["month"],
             event_type=ev["event_type"],
             label=1,
+            static=static,
         )
         if row:
-            row["dept_code"] = ev["dept_code"]
+            row["dept_code"] = dept_code
             pos_rows.append(row)
-            positive_keys.add((int(ev["dept_code"]), ev["year"], ev["month"]))
+            positive_keys.add((dept_code, ev["year"], ev["month"]))
 
     logger.info("Positive rows with sufficient CHIRPS coverage: %d / %d",
                 len(pos_rows), len(labels))
@@ -206,7 +262,7 @@ def build_dataset(
 
     # Build negative samples
     n_neg = len(pos_rows) * NEG_RATIO
-    neg_rows = _sample_negatives(labels, event_type, n_neg, positive_keys)
+    neg_rows = _sample_negatives(labels, event_type, n_neg, positive_keys, static_by_dept=static_by_dept)
     logger.info("Negative rows: %d", len(neg_rows))
 
     df = pd.DataFrame(pos_rows + neg_rows)

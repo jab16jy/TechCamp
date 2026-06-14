@@ -1,12 +1,14 @@
-import React, { useState, useMemo, useCallback, Component } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, Component } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Loader2, Settings2, Search, Sun, AlertTriangle, GitCompare } from 'lucide-react';
 import ResearcherLayout from '@shared/layout/ResearcherLayout/ResearcherLayout';
 import useAuthGuard from '@shared/hooks/useAuthGuard';
 import useAppStore from '@shared/store';
 import usePrediccion from '@features/predictions/hooks/usePrediccion';
 import { BentoGrid, BentoCard } from '@shared/ui/BentoGrid';
-import QueryConfigModal from '@features/predictions/components/QueryConfigModal/QueryConfigModal';
+import ControlBar from '@features/predictions/components/ControlBar';
+import PlantabilityPanel from '@features/predictions/components/PlantabilityPanel';
 import ScenarioSimulator from '@features/predictions/components/ScenarioSimulator/ScenarioSimulator';
 import GrowthStressChart from '@features/predictions/components/ScenarioSimulator/GrowthStressChart';
 import MonthlyProjectionTabs from '@features/predictions/components/MonthlyProjectionTabs/MonthlyProjectionTabs';
@@ -79,18 +81,25 @@ const IAPredictiva = () => {
   const {
     proyeccion6M, loadingProyeccion, estado,
     npkSim, riegoSim, stale: predStale,
-    fechaSiembra, selectedAnalysisData,
+    fechaSiembra,
     setNpkSim, setRiegoSim,
-    simularEscenario, selectAnalysis, handleManualQuery, clearProyeccion,
+    simularEscenario, selectAnalysis, clearProyeccion,
     compareData, loadingCompare, compararEscenarios, clearCompare,
   } = predHook;
 
   // ── Local state ──
-  const [queryModalOpen, setQueryModalOpen] = useState(false);
   const [selectedAnalysisId, setSelectedAnalysisId] = useState(null);
   const [queryCoords, setQueryCoords] = useState(null);
   const [precipDeltaPct, setPrecipDeltaPctState] = useState(0);
   const [tempDeltaC, setTempDeltaCState] = useState(0);
+  const [selectedDept, setSelectedDept] = useState(null);
+  const [selectedCultivo, setSelectedCultivo] = useState('');
+  const [selectedFecha, setSelectedFecha] = useState('');
+  const [riskData, setRiskData] = useState({ flood: null, drought: null });
+
+  const handleRiskData = useCallback(({ flood, drought }) => {
+    setRiskData({ flood, drought });
+  }, []);
 
   // ── Derived: analysis list with coordinates ──
   const analisisConCoordenadas = useMemo(
@@ -108,18 +117,15 @@ const IAPredictiva = () => {
   );
 
   // ── Handlers ──
-  const handleQueryApply = useCallback(({ lat, lng, cultivo, fechaSiembra, source }) => {
-    if (source === 'analysis' && lat && lng) {
-      setQueryCoords({ lat: Number(lat), lng: Number(lng) });
-      setQueryModalOpen(false);
-      return;
+  const handleDeptChange = useCallback((dept) => {
+    setSelectedDept(dept);
+    if (dept && DEPT_COORDS[dept]) {
+      const [lon, lat] = DEPT_COORDS[dept];
+      setQueryCoords({ lat, lng: lon });
+    } else {
+      setQueryCoords(null);
     }
-    if (lat && lng) {
-      setQueryCoords({ lat: Number(lat), lng: Number(lng) });
-      handleManualQuery({ lat, lng, cultivo, fechaSiembra });
-    }
-    setQueryModalOpen(false);
-  }, [handleManualQuery]);
+  }, []);
 
   const handleSelectAnalysis = useCallback((id) => {
     setSelectedAnalysisId(id);
@@ -153,6 +159,9 @@ const IAPredictiva = () => {
     setQueryCoords(null);
     setPrecipDeltaPctState(0);
     setTempDeltaCState(0);
+    setSelectedDept(null);
+    setSelectedCultivo('');
+    setSelectedFecha('');
   }, [clearProyeccion]);
 
   // ── Precip/temp setters that also trigger stale ──
@@ -196,13 +205,6 @@ const IAPredictiva = () => {
                 IA Predictiva
                 <span className="ia-title-light"> — Riesgos y Mitigación</span>
               </h1>
-              <button
-                className="ia-config-btn"
-                onClick={() => setQueryModalOpen(true)}
-                title="Configurar consulta"
-              >
-                <Settings2 size={16} />
-              </button>
             </div>
             <p className="ia-page-intent">
               Proyecciones climáticas con simulación de escenarios, detección de riesgos
@@ -224,16 +226,16 @@ const IAPredictiva = () => {
           </div>
         </header>
 
-        {/* ═══════════ QUERY CONFIG MODAL ═══════════ */}
-        <QueryConfigModal
-          isOpen={queryModalOpen}
-          onClose={() => setQueryModalOpen(false)}
-          onApply={handleQueryApply}
-          analisis={analisisConCoordenadas}
-          selectedAnalysisId={selectedAnalysisId}
-          onSelectAnalysis={handleSelectAnalysis}
-          loading={loadingProyeccion}
-          analysisData={selectedAnalysisData}
+        {/* ═══════════ CONTROL BAR ═══════════ */}
+        <ControlBar
+          selectedDept={selectedDept}
+          onDeptChange={handleDeptChange}
+          selectedCultivo={selectedCultivo}
+          onCultivoChange={setSelectedCultivo}
+          selectedFecha={selectedFecha}
+          onFechaChange={setSelectedFecha}
+          onClear={handleClearAll}
+          loading={isLoading}
         />
 
         {/* ═══════════ BENTO GRID ═══════════ */}
@@ -260,15 +262,12 @@ const IAPredictiva = () => {
                   <Settings2 size={28} style={{ color: '#0f5238', opacity: 0.6 }} />
                 </div>
                 <div className="text-center">
-                  <h3 className="text-sm font-bold text-[#1A1C1A] mb-1">Configura tu Consulta</h3>
+                  <h3 className="text-sm font-bold text-[#1A1C1A] mb-1">Selecciona un departamento</h3>
                   <p className="text-xs text-[#6b7280] max-w-md">
-                    Define lote, cultivo y fecha de siembra para generar la proyección estacional
-                    y el análisis de riesgos.
+                    Usa la barra de controles superior para seleccionar departamento, cultivo y fecha
+                    de siembra y generar la proyección estacional con análisis de riesgos.
                   </p>
                 </div>
-                <button className="ia-generate-btn mt-2" onClick={() => setQueryModalOpen(true)}>
-                  <Settings2 size={15} /> Configurar Consulta
-                </button>
               </div>
             </BentoCard>
           )}
@@ -303,10 +302,25 @@ const IAPredictiva = () => {
                       lon={queryCoords.lng}
                       year={CURRENT_YEAR}
                       month={CURRENT_MONTH}
+                      onRiskData={handleRiskData}
                     />
                   </BentoCard>
                 </ResultsErrorBoundary>
               )}
+
+              {/* ROW 1c: PlantabilityPanel — planting recommendation */}
+              <AnimatePresence>
+                {queryCoords && (riskData.flood || riskData.drought) && (
+                  <ResultsErrorBoundary label="PlantabilityPanel">
+                    <PlantabilityPanel
+                      flood={riskData.flood}
+                      drought={riskData.drought}
+                      cultivo={selectedCultivo || null}
+                      fecha={selectedFecha || null}
+                    />
+                  </ResultsErrorBoundary>
+                )}
+              </AnimatePresence>
 
               {/* ROW 2: SimulationSection */}
               {proyeccion6M && (

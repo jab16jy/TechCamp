@@ -60,6 +60,19 @@ def train(
         len(y_tr), len(y_val), len(y_te), X_tr.shape[1],
     )
 
+    # SMOTE over-sampling for drought: minority class is often severely under-represented.
+    if event_type == "drought":
+        original_len = len(y_tr)
+        try:
+            from imblearn.over_sampling import SMOTE
+            sm = SMOTE(random_state=42, k_neighbors=min(5, int(y_tr.sum()) - 1))
+            X_tr, y_tr = sm.fit_resample(X_tr, y_tr)
+            logger.info("SMOTE applied — drought train set: %d rows (was %d)", len(y_tr), original_len)
+        except ImportError:
+            logger.warning("imbalanced-learn not installed — skipping SMOTE. pip install imbalanced-learn")
+        except Exception as e:
+            logger.warning("SMOTE failed (%s) — training without resampling", e)
+
     # Combine train+val for final fit; use test for honest evaluation
     X_trainval = np.vstack([X_tr, X_val])
     y_trainval = np.concatenate([y_tr, y_val])
