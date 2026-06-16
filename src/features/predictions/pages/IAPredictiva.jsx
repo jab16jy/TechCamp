@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback, useEffect, Component } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Loader2, Settings2, Search, Sun, AlertTriangle, GitCompare } from 'lucide-react';
+import { ArrowLeft, Loader2, Sprout, Search, Sun, AlertTriangle, GitCompare } from 'lucide-react';
 import ResearcherLayout from '@shared/layout/ResearcherLayout/ResearcherLayout';
 import useAuthGuard from '@shared/hooks/useAuthGuard';
 import useAppStore from '@shared/store';
@@ -83,7 +83,7 @@ const IAPredictiva = () => {
     npkSim, riegoSim, stale: predStale,
     fechaSiembra,
     setNpkSim, setRiegoSim,
-    simularEscenario, selectAnalysis, clearProyeccion,
+    fetchProyeccion, simularEscenario, selectAnalysis, clearProyeccion,
     compareData, loadingCompare, compararEscenarios, clearCompare,
   } = predHook;
 
@@ -119,13 +119,22 @@ const IAPredictiva = () => {
   // ── Handlers ──
   const handleDeptChange = useCallback((dept) => {
     setSelectedDept(dept);
-    if (dept && DEPT_COORDS[dept]) {
-      const [lon, lat] = DEPT_COORDS[dept];
-      setQueryCoords({ lat, lng: lon });
-    } else {
-      setQueryCoords(null);
-    }
+    if (!dept) setQueryCoords(null);
   }, []);
+
+  const handleExecute = useCallback(() => {
+    if (!selectedDept || !DEPT_COORDS[selectedDept]) return;
+    const [lon, lat] = DEPT_COORDS[selectedDept];
+    setQueryCoords({ lat, lng: lon });
+    // Trigger the full seasonal projection — drives the isProjected dashboard
+    fetchProyeccion({
+      lat,
+      lng: lon,
+      cultivo: selectedCultivo || 'Maiz',
+      meses: 6,
+      fechaSiembraStr: selectedFecha || null,
+    });
+  }, [selectedDept, selectedCultivo, selectedFecha, fetchProyeccion]);
 
   const handleSelectAnalysis = useCallback((id) => {
     setSelectedAnalysisId(id);
@@ -235,6 +244,7 @@ const IAPredictiva = () => {
           selectedFecha={selectedFecha}
           onFechaChange={setSelectedFecha}
           onClear={handleClearAll}
+          onExecute={handleExecute}
           loading={isLoading}
         />
 
@@ -255,17 +265,22 @@ const IAPredictiva = () => {
           )}
 
           {/* ── STATE: IDLE — empty state (solo cuando no está cargando ni proyectado) ── */}
-          {!isLoading && !isProjected && (
+          {!isLoading && !isProjected && !queryCoords && (
             <BentoCard span={{ col: 12, row: 1 }} variant="default">
-              <div className="flex flex-col items-center justify-center py-8 gap-3">
-                <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(15,82,56,0.08)' }}>
-                  <Settings2 size={28} style={{ color: '#0f5238', opacity: 0.6 }} />
+              <div className="flex flex-col items-center justify-center py-12 gap-4 text-center">
+                <div
+                  className="w-16 h-16 rounded-2xl flex items-center justify-center"
+                  style={{ background: 'linear-gradient(135deg, rgba(26,141,90,0.12), rgba(15,82,56,0.06))' }}
+                >
+                  <Sprout size={30} style={{ color: '#0f5238' }} />
                 </div>
-                <div className="text-center">
-                  <h3 className="text-sm font-bold text-[#1A1C1A] mb-1">Selecciona un departamento</h3>
-                  <p className="text-xs text-[#6b7280] max-w-md">
-                    Usa la barra de controles superior para seleccionar departamento, cultivo y fecha
-                    de siembra y generar la proyección estacional con análisis de riesgos.
+                <div>
+                  <h3 className="text-base font-bold text-[#1A1C1A] mb-1.5">Aún no hay proyección</h3>
+                  <p className="text-xs text-[#6b7280] max-w-md mx-auto leading-relaxed">
+                    Selecciona un departamento del Caribe en el mapa, ajusta el cultivo y la fecha de
+                    siembra, y presiona <strong style={{ color: '#0f5238' }}>Ejecutar proyección</strong> para
+                    obtener el pronóstico estacional, los riesgos de inundación y sequía, y las
+                    recomendaciones de mitigación.
                   </p>
                 </div>
               </div>
@@ -292,35 +307,6 @@ const IAPredictiva = () => {
                   <ClimateRiskPanel proyeccion={proyeccion6M} />
                 </BentoCard>
               </ResultsErrorBoundary>
-
-              {/* ROW 1b: MLRiskPanel — ML climate risk predictions */}
-              {queryCoords && (
-                <ResultsErrorBoundary label="MLRiskPanel">
-                  <BentoCard span={{ col: 12, row: 1 }} variant="default">
-                    <MLRiskPanel
-                      lat={queryCoords.lat}
-                      lon={queryCoords.lng}
-                      year={CURRENT_YEAR}
-                      month={CURRENT_MONTH}
-                      onRiskData={handleRiskData}
-                    />
-                  </BentoCard>
-                </ResultsErrorBoundary>
-              )}
-
-              {/* ROW 1c: PlantabilityPanel — planting recommendation */}
-              <AnimatePresence>
-                {queryCoords && (riskData.flood || riskData.drought) && (
-                  <ResultsErrorBoundary label="PlantabilityPanel">
-                    <PlantabilityPanel
-                      flood={riskData.flood}
-                      drought={riskData.drought}
-                      cultivo={selectedCultivo || null}
-                      fecha={selectedFecha || null}
-                    />
-                  </ResultsErrorBoundary>
-                )}
-              </AnimatePresence>
 
               {/* ROW 2: SimulationSection */}
               {proyeccion6M && (
@@ -438,6 +424,33 @@ const IAPredictiva = () => {
               </ResultsErrorBoundary>
             </>
           )}
+          {/* ── ML Risk + Plantability — independent of isProjected, show whenever coords are set ── */}
+          {queryCoords && (
+            <ResultsErrorBoundary label="MLRiskPanel">
+              <BentoCard span={{ col: 12, row: 1 }} variant="default">
+                <MLRiskPanel
+                  lat={queryCoords.lat}
+                  lon={queryCoords.lng}
+                  year={CURRENT_YEAR}
+                  month={CURRENT_MONTH}
+                  onRiskData={handleRiskData}
+                />
+              </BentoCard>
+            </ResultsErrorBoundary>
+          )}
+
+          <AnimatePresence>
+            {queryCoords && (riskData.flood || riskData.drought) && (
+              <ResultsErrorBoundary label="PlantabilityPanel">
+                <PlantabilityPanel
+                  flood={riskData.flood}
+                  drought={riskData.drought}
+                  cultivo={selectedCultivo || null}
+                  fecha={selectedFecha || null}
+                />
+              </ResultsErrorBoundary>
+            )}
+          </AnimatePresence>
         </BentoGrid>
 
         {/* ── Clear projection ── */}

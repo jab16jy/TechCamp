@@ -66,6 +66,8 @@ services:
       ollama:
         condition: service_started
     volumes:
+      # Live source mount so uvicorn --reload picks up code changes without rebuild
+      - ./backend/app:/app/app
       - ml-data:/app/app/ml/data/
       - ./data/caribe:/app/data/caribe:ro
       - "/home/jabyn/Downloads/dataset ml prediccciones:/app/data/climate:ro"

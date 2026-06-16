@@ -1,53 +1,13 @@
 import { motion } from 'framer-motion';
+import { MapPin, Sprout, Calendar, Play, RotateCcw, Loader2 } from 'lucide-react';
+import DeptMap from './DeptMap';
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
-const DEPARTAMENTOS = [
-  'Atlántico',
-  'Bolívar',
-  'Córdoba',
-  'Magdalena',
-  'Cesar',
-  'La Guajira',
-  'Sucre',
-  'San Andrés',
-];
-
 const CULTIVOS = [
-  'Maiz',
-  'Yuca',
-  'Arroz',
-  'Frijol',
-  'Platano',
-  'Name',
-  'Cacao',
-  'Algodón',
-  'Sorgo',
-  'Palma Aceitera',
-  'Mango',
-  'Ají',
+  'Maiz', 'Yuca', 'Arroz', 'Frijol', 'Platano', 'Name',
+  'Cacao', 'Algodón', 'Sorgo', 'Palma Aceitera', 'Mango', 'Ají',
 ];
-
-const BAR_STYLE = {
-  background: 'rgba(255,255,255,0.72)',
-  backdropFilter: 'blur(18px)',
-  borderBottom: '1px solid rgba(0,0,0,0.07)',
-  position: 'sticky',
-  top: 0,
-  zIndex: 10,
-  width: '100%',
-};
-
-const PULSE_DOT_STYLE = {
-  width: 7,
-  height: 7,
-  borderRadius: '50%',
-  background: '#0f5238',
-  animation: 'pulse-critical 1.2s ease-in-out infinite',
-  display: 'inline-block',
-  marginLeft: 6,
-  verticalAlign: 'middle',
-};
 
 // ── Component ──────────────────────────────────────────────────────────────
 
@@ -59,48 +19,43 @@ export default function ControlBar({
   selectedFecha,
   onFechaChange,
   onClear,
+  onExecute,
   loading,
 }) {
   const hasSelection = selectedDept || selectedCultivo || selectedFecha;
+  const canExecute = !!selectedDept && !loading;
 
   return (
-    <motion.div
-      style={BAR_STYLE}
-      initial={{ y: -8, opacity: 0 }}
+    <motion.section
+      className="cb-panel"
+      initial={{ y: -10, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.25 }}
+      transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
     >
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'flex-end',
-          gap: '1rem',
-          padding: '0.75rem 1.5rem',
-          flexWrap: 'wrap',
-        }}
-      >
-        {/* Dept selector */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: '1 1 180px' }}>
-          <label className="bento-field-label" htmlFor="cb-dept">
-            Departamento
-            {loading && <span style={PULSE_DOT_STYLE} />}
-          </label>
-          <select
-            id="cb-dept"
-            className="bento-field-input"
-            value={selectedDept || ''}
-            onChange={(e) => onDeptChange(e.target.value || null)}
-          >
-            <option value="">Seleccionar departamento...</option>
-            {DEPARTAMENTOS.map((d) => (
-              <option key={d} value={d}>{d}</option>
-            ))}
-          </select>
+      {/* ── Left: interactive map ── */}
+      <div className="cb-map-col">
+        <div className="cb-section-label">
+          <MapPin size={13} />
+          Departamento
+          {loading && <span className="cb-pulse-dot" />}
+        </div>
+        <DeptMap selectedDept={selectedDept} onDeptChange={onDeptChange} />
+      </div>
+
+      {/* ── Right: controls ── */}
+      <div className="cb-controls-col">
+        <div>
+          <h2 className="cb-title">Configurar consulta</h2>
+          <p className="cb-subtitle">
+            Elige un departamento en el mapa, define cultivo y fecha de siembra,
+            y ejecuta la proyección climática.
+          </p>
         </div>
 
         {/* Crop selector */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: '1 1 160px' }}>
+        <div className="cb-field">
           <label className="bento-field-label" htmlFor="cb-cultivo">
+            <Sprout size={13} />
             Cultivo
           </label>
           <select
@@ -109,7 +64,7 @@ export default function ControlBar({
             value={selectedCultivo || ''}
             onChange={(e) => onCultivoChange(e.target.value)}
           >
-            <option value="">Seleccionar cultivo...</option>
+            <option value="">Maíz (por defecto)</option>
             {CULTIVOS.map((c) => (
               <option key={c} value={c}>{c}</option>
             ))}
@@ -117,9 +72,10 @@ export default function ControlBar({
         </div>
 
         {/* Date picker */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: '1 1 160px' }}>
+        <div className="cb-field">
           <label className="bento-field-label" htmlFor="cb-fecha">
-            Fecha de siembra
+            <Calendar size={13} />
+            Fecha de siembra <span className="cb-optional">(opcional)</span>
           </label>
           <input
             id="cb-fecha"
@@ -130,19 +86,33 @@ export default function ControlBar({
           />
         </div>
 
-        {/* Clear button — only when something is selected */}
-        {hasSelection && (
-          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', paddingBottom: 1 }}>
-            <button
-              className="bento-btn-secondary"
-              onClick={onClear}
-              style={{ whiteSpace: 'nowrap', height: 34 }}
-            >
-              Limpiar
+        {/* Actions */}
+        <div className="cb-actions">
+          <button
+            className="cb-btn-execute"
+            onClick={onExecute}
+            disabled={!canExecute}
+          >
+            {loading ? (
+              <><Loader2 size={15} className="cb-spin" /> Calculando…</>
+            ) : (
+              <><Play size={15} fill="currentColor" /> Ejecutar proyección</>
+            )}
+          </button>
+
+          {hasSelection && (
+            <button className="cb-btn-clear" onClick={onClear} title="Limpiar selección">
+              <RotateCcw size={14} /> Limpiar
             </button>
-          </div>
+          )}
+        </div>
+
+        {!selectedDept && (
+          <p className="cb-hint">
+            👆 Selecciona un departamento para habilitar el botón.
+          </p>
         )}
       </div>
-    </motion.div>
+    </motion.section>
   );
 }

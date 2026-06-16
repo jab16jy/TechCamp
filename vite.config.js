@@ -24,6 +24,7 @@ export default defineConfig({
       '/satellite-indicators': { target: API_TARGET, changeOrigin: true },
       '/chat':                 { target: API_TARGET, changeOrigin: true },
       '/predict':              { target: API_TARGET, changeOrigin: true },
+      '/riesgo-climatico':     { target: API_TARGET, changeOrigin: true },
       '/health':               { target: API_TARGET, changeOrigin: true },
       '/tasks':                { target: API_TARGET, changeOrigin: true },
 
