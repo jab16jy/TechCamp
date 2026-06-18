@@ -854,5 +854,5 @@ lxml>=5.3.0
 - [[../4-arquitectura/FLUJO_DATOS]] — Mapa de conexión Frontend-Backend
 - [[../4-arquitectura/DESPLIEGUE]] — Docker y producción
 - [[../4-arquitectura/GUIAS_QGIS]] — Guía para procesar imágenes satelitales
-- [[../_archive/5-implementacion/CHAT_2025-05-19]] — Contexto de sesión (chat completado)
-- [[../06-api/referencia]] — Referencia completa de API y endpoints
+- [[CHAT_2025-05-19]] — Contexto de sesión (chat completado)
+- [[referencia]] — Referencia completa de API y endpoints

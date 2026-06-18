@@ -175,8 +175,8 @@ La sesión se guarda en `sessionStorage` y se limpia al cerrar la pestaña.
 
 ## Referencias
 
-- [[07-deployment/docker]] — Despliegue con Docker + Vercel (producción)
-- [[03-architecture/backend]] — Arquitectura del backend y endpoints
-- [[03-architecture/vision-general]] — Stack tecnológico completo
-- [[03-architecture/frontend]] — Frontend, páginas y configuración
-- [[04-development/troubleshooting]] — Problemas comunes y soluciones
+- [[docker]] — Despliegue con Docker + Vercel (producción)
+- [[backend]] — Arquitectura del backend y endpoints
+- [[vision-general]] — Stack tecnológico completo
+- [[frontend]] — Frontend, páginas y configuración
+- [[Proyectos/docs techcamp/04-development/troubleshooting]] — Problemas comunes y soluciones

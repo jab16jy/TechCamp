@@ -264,9 +264,9 @@ La URL del backend se lee desde localStorage en `api.js` al importar el modulo.
 
 ## Referencias
 
-- [[03-architecture/modulo-clima]] — Clima: NASA POWER + OpenMeteo
-- [[03-architecture/modulo-satelital]] — Satelital: QGIS + Sentinel-2 + NDVI
-- [[03-architecture/modulo-recomendacion]] — Motor hibrido de recomendacion
+- [[modulo-clima]] — Clima: NASA POWER + OpenMeteo
+- [[modulo-satelital]] — Satelital: QGIS + Sentinel-2 + NDVI
+- [[modulo-recomendacion]] — Motor hibrido de recomendacion
 - [[03-architecture/modulo-suelo-soilgrids]] — Datos de suelo automaticos
 - [[05-database/arquitectura-db]] — Base de datos: esquema, PostGIS
 - [[07-deployment/despliegue]] — Docker + Vercel deploy

@@ -45,7 +45,7 @@ Además, se descubrió un bug en `training.py:357` que consultaba `indices_satel
 
 ## Referencias
 
-- [[03-architecture/backend.md]] (sección 9 — pipeline ML)
-- [[03-architecture/modulo-recomendacion.md]]
-- [[08-testing/plan-retrain.md]]
-- [[08-testing/resultados-validacion.md]]
+- [[backend]] (sección 9 — pipeline ML)
+- [[modulo-recomendacion]]
+- [[plan-retrain]]
+- [[resultados-validacion]]

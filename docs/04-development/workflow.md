@@ -112,7 +112,7 @@ Cambiar de agente con `Tab` en la TUI de OpenCode.
 
 ## Referencias
 
-- [[04-development/setup]] — Instalación y configuración local
-- [[04-development/troubleshooting]] — Problemas comunes
-- [[03-architecture/backend]] — Arquitectura del backend
-- [[03-architecture/frontend]] — Arquitectura del frontend
+- [[Proyectos/docs techcamp/04-development/setup]] — Instalación y configuración local
+- [[Proyectos/docs techcamp/04-development/troubleshooting]] — Problemas comunes
+- [[backend]] — Arquitectura del backend
+- [[frontend]] — Arquitectura del frontend

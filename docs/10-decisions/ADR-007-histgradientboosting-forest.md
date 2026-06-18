@@ -51,6 +51,6 @@ Razones:
 
 ## Referencias
 
-- [[03-architecture/backend.md]] (secciones 5.2, 9.1 — pipeline ML)
-- [[03-architecture/modulo-recomendacion.md]]
-- [[08-testing/resultados-validacion.md]]
+- [[backend]] (secciones 5.2, 9.1 — pipeline ML)
+- [[modulo-recomendacion]]
+- [[resultados-validacion]]

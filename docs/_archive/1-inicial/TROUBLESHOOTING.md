@@ -84,7 +84,7 @@ tags: [troubleshooting, errores, soluciones, notas]
 
 ## Referencias
 
-- [[1-inicial/SETUP]] — Instalacion y configuracion
+- [[Proyectos/docs techcamp/_archive/1-inicial/SETUP]] — Instalacion y configuracion
 - [[4-arquitectura/DESPLIEGUE]] — Docker y produccion
 - [[4-arquitectura/MODULO_SUELO_SOILGRIDS]] — Datos de suelo automaticos
 - [[3-frontend/ARQUITECTURA_FRONTEND]] — Pagina de Ajustes

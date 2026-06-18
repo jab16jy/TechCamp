@@ -15,7 +15,7 @@ export default function FeatureChart({ factors }) {
       <div className="rounded-2xl p-5" style={{ background: 'rgba(255,255,255,0.55)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.25)' }}>
         <div className="flex items-center gap-2 mb-3">
           <Target size={16} style={{ color: '#0f5238' }} />
-          <h2 className="text-sm font-bold text-[#1A1C1A]">Factores de Influencia (XAI)</h2>
+          <h2 className="text-sm font-bold text-[#1A1C1A]">Factores considerados</h2>
         </div>
         <p className="text-xs text-[#6b7280] italic">Sin datos de factores disponibles. Genera una proyeccion primero.</p>
       </div>
@@ -29,11 +29,11 @@ export default function FeatureChart({ factors }) {
     <div className="rounded-2xl p-5" style={{ background: 'rgba(255,255,255,0.55)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.25)' }}>
       <div className="flex items-center gap-2 mb-1">
         <Target size={16} style={{ color: '#0f5238' }} />
-        <h2 className="text-sm font-bold text-[#1A1C1A]">Factores de Influencia (XAI)</h2>
+        <h2 className="text-sm font-bold text-[#1A1C1A]">Factores considerados</h2>
       </div>
       <p className="text-xs text-[#6b7280] mb-4">
-        Contribucion de cada variable climatica y edafica en la recomendacion del cultivo optimo.
-        Estos pesos explican por que la IA selecciona este cultivo para la ventana proyectada.
+        Contribucion ponderada de cada variable climatica y edafica en la recomendacion del cultivo
+        optimo. Estos pesos provienen del motor de recomendacion estacional, no del modelo de riesgo.
       </p>
 
       <div className="space-y-2.5">
@@ -70,8 +70,8 @@ export default function FeatureChart({ factors }) {
       </div>
 
       <p className="text-[10px] text-[#9ca3af] mt-3">
-        IA Explicable (XAI): Las barras muestran el porcentaje de impacto relativo de cada factor en la
-        puntuacion final del cultivo recomendado.
+        Justificacion tecnica: las barras muestran el porcentaje de impacto relativo de cada factor en la
+        puntuacion final del cultivo recomendado por el motor de planificacion estacional.
       </p>
     </div>
   );

@@ -423,7 +423,7 @@ ENVIRONMENT=development
 LOG_LEVEL=INFO
 ```
 
-Referencia: [[../04-development/setup|04-development/setup]] — configuración local del entorno de desarrollo.
+Referencia: [[Proyectos/docs techcamp/04-development/setup|04-development/setup]] — configuración local del entorno de desarrollo.
 
 ---
 

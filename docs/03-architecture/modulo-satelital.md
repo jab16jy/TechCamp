@@ -119,7 +119,7 @@ Backend descarga Sentinel-2 via Copernicus Data Space API, calcula NDVI automati
 
 ## Referencias
 
-- [[03-architecture/guia-qgis]] — Guia paso a paso para procesar imagenes Sentinel-2
+- [[guia-qgis]] — Guia paso a paso para procesar imagenes Sentinel-2
 - [[03-architecture/vision-sistema]] — Vision general del sistema
 - [[05-database/arquitectura-db]] — Tabla indices_satelitales y PostGIS
 - [[06-api/backend-architecture]] — Endpoint GET /satellite-indicators

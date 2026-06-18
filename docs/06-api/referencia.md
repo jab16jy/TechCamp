@@ -596,7 +596,7 @@ Los mecanismos de fallback mock en `api.js` ya no son necesarios para la mayorí
 
 ## Referencias
 
-- [[../03-architecture/backend]] — Arquitectura del backend (stack, DB, pipelines, infra)
+- [[backend]] — Arquitectura del backend (stack, DB, pipelines, infra)
 - [[../4-arquitectura/ARQUITECTURA_DB]] — Esquema detallado de la base de datos
 - [[../4-arquitectura/MODULO_CLIMA]] — Servicio climático (OpenMeteo + NASA POWER + LSTM)
 - [[../4-arquitectura/MODULO_SATELITAL]] — Servicio satelital (Sentinel-2 + NDVI)

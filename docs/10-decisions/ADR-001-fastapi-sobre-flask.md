@@ -34,6 +34,6 @@ Las razones:
 
 ## Referencias
 
-- [[03-architecture/backend.md]]
-- [[04-development/setup.md]]
-- [[06-api/referencia.md]]
+- [[backend]]
+- [[Proyectos/docs techcamp/04-development/setup]]
+- [[referencia]]

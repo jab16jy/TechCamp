@@ -43,5 +43,5 @@ Región Caribe colombiana: Atlántico, Bolívar, Cesar, Córdoba, La Guajira, Ma
 
 ---
 
-**Documentación relacionada:** [[02-requirements/requisitos]] — [[03-architecture/vision-general]]
-**Referencia histórica:** [[_archive/1-inicial/PLAN_DESARROLLO]] — [[_archive/1-inicial/DOCUMENTACION_INICIAL]]
+**Documentación relacionada:** [[requisitos]] — [[vision-general]]
+**Referencia histórica:** [[PLAN_DESARROLLO]] — [[DOCUMENTACION_INICIAL]]

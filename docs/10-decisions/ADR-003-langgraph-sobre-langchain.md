@@ -43,5 +43,5 @@ Razones:
 
 ## Referencias
 
-- [[03-architecture/backend.md]] (sección de chatbot)
-- [[08-testing/estrategia.md]]
+- [[backend]] (sección de chatbot)
+- [[estrategia]]

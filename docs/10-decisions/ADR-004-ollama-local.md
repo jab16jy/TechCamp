@@ -42,5 +42,5 @@ Razones:
 
 ## Referencias
 
-- [[03-architecture/backend.md]] (secciones de chatbot y Docker Compose)
+- [[backend]] (secciones de chatbot y Docker Compose)
 - [[07-deployment/]] (servicio ollama en docker-compose.yml)

@@ -2,7 +2,7 @@
 
 **Fecha:** 2026-06-11  
 **Región:** Caribe colombiano (7 departamentos)  
-**Documentos relacionados:** [[08-testing/estrategia]] · [[08-testing/plan-retrain]] · [[03-architecture/modulo-recomendacion]]  
+**Documentos relacionados:** [[estrategia]] · [[plan-retrain]] · [[modulo-recomendacion]]  
 **Fuentes de datos:** EVA (producción), Suelos AGROSAVIA (fisicoquímicos), Foliar AGROSAVIA (tejido vegetal)
 
 ---
@@ -13,7 +13,7 @@ La validación del modelo ML contra **13 125 registros reales del Caribe colombi
 
 **Causa raíz:** Los perfiles sintéticos (`crops_requirements.csv`) sobreestiman sistemáticamente la materia orgánica y el rendimiento de los cultivos. Los rangos de pH son compatibles (10/10), pero la MO solo es realista en 4/10 cultivos y el rendimiento está sobreestimado en los 10 cultivos.
 
-**Decisión:** Proceder con el reentreno del modelo usando datos reales (ver [[08-testing/plan-retrain]]).
+**Decisión:** Proceder con el reentreno del modelo usando datos reales (ver [[plan-retrain]]).
 
 ---
 
@@ -191,7 +191,7 @@ El caso más extremo. El perfil sintético asume un rendimiento de 20 t/ha basad
 
 | # | Acción | Prioridad |
 |---|--------|-----------|
-| 1 | Ejecutar reentreno con datos reales (ver [[08-testing/plan-retrain]]) | 🔴 Crítica |
+| 1 | Ejecutar reentreno con datos reales (ver [[plan-retrain]]) | 🔴 Crítica |
 | 2 | Ajustar rangos sintéticos de MO y rendimiento con percentiles reales | 🔴 Crítica |
 | 3 | Agregar NDWI como 11.ª feature | 🟡 Alta |
 | 4 | Corregir bug de `precipitacion` en `training.py:357` | 🔴 Crítica |
@@ -201,4 +201,4 @@ El caso más extremo. El perfil sintético asume un rendimiento de 20 t/ha basad
 
 ---
 
-*Los datos completos de perfiles sintéticos vs. reales están disponibles en `data/caribe/reporte_sintetico_vs_real.md`. La estrategia de validación general está en [[08-testing/estrategia]].*
+*Los datos completos de perfiles sintéticos vs. reales están disponibles en `data/caribe/reporte_sintetico_vs_real.md`. La estrategia de validación general está en [[estrategia]].*

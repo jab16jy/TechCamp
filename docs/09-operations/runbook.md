@@ -7,8 +7,8 @@ tags: [operaciones, runbook, docker, postgis, ollama, nginx, monitoreo]
 # Runbook de Operaciones
 
 Sistema desplegado con Docker Compose en 4 contenedores. Referencias:
-[[../07-deployment/docker]] para arquitectura de contenedores y
-[[../05-database/esquema]] para esquema de base de datos.
+[[docker]] para arquitectura de contenedores y
+[[esquema]] para esquema de base de datos.
 
 ---
 
@@ -149,7 +149,7 @@ docker compose exec nginx nginx -T
 ```
 
 Para más detalle, se puede inspeccionar el archivo de configuración en
-[[../07-deployment/docker#nginx---reverse-proxy]].
+[[docker#nginx---reverse-proxy]].
 
 ---
 
@@ -419,7 +419,7 @@ docker compose exec backend alembic revision --autogenerate -m "descripcion"
 ```
 
 Las migraciones de Alembic se guardan en `backend/alembic/versions/`.
-Referencia: [[../05-database/esquema]] para el esquema completo.
+Referencia: [[esquema]] para el esquema completo.
 
 ### 6.2 PostGIS
 
@@ -554,7 +554,7 @@ SELECT * FROM pg_extension;
    docker compose up -d
    ```
 
-4. **Si no hay backup válido**, ver [[../05-database/esquema]] para
+4. **Si no hay backup válido**, ver [[esquema]] para
    recrear el esquema desde las migraciones Alembic y los seeds.
 
 ### 7.2 Backend No Arranca
@@ -771,7 +771,7 @@ ORDER BY query_start;
    ```
 
 4. Si es recurrente: considerar índices faltantes, revisar
-   [[../05-database/esquema]] para optimizar consultas.
+   [[esquema]] para optimizar consultas.
 
 ### 7.6 Disco Lleno
 
@@ -817,8 +817,8 @@ docker run --rm -v ml-data:/data alpine du -sh /data
 
 | Documento | Descripción |
 |-----------|-------------|
-| [[../07-deployment/docker]] | Arquitectura Docker, compose, healthchecks, troubleshooting |
-| [[../05-database/esquema]] | Esquema relacional, migraciones, índices geoespaciales |
+| [[docker]] | Arquitectura Docker, compose, healthchecks, troubleshooting |
+| [[esquema]] | Esquema relacional, migraciones, índices geoespaciales |
 | `docker-compose.yml` | Configuración de servicios, volúmenes, redes |
 | `nginx.conf` | Reglas de proxy reverso, cache, timeouts |
 | `backend/Dockerfile` | Construcción de imagen del backend |

@@ -103,8 +103,8 @@ tags: [troubleshooting, errores, soluciones, debug]
 
 ## Referencias
 
-- [[04-development/setup]] — Instalación y configuración local
-- [[07-deployment/docker]] — Docker y producción
-- [[03-architecture/modulo-suelo]] — Datos de suelo automáticos
-- [[03-architecture/frontend]] — Frontend y página de Ajustes
-- [[03-architecture/backend]] — Arquitectura del backend
+- [[Proyectos/docs techcamp/04-development/setup]] — Instalación y configuración local
+- [[docker]] — Docker y producción
+- [[modulo-suelo]] — Datos de suelo automáticos
+- [[frontend]] — Frontend y página de Ajustes
+- [[backend]] — Arquitectura del backend

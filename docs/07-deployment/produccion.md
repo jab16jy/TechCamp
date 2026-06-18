@@ -387,8 +387,8 @@ curl -H "Origin: https://agrocaribe.vercel.app" \
 
 ## Referencias
 
-- [[../04-development/setup|04-development/setup]] — configuración local del entorno
-- [[../05-database/esquema|05-database/esquema]] — esquema de base de datos y tablas
-- [[./docker|docker]] — despliegue Docker del backend
+- [[Proyectos/docs techcamp/04-development/setup|04-development/setup]] — configuración local del entorno
+- [[esquema|05-database/esquema]] — esquema de base de datos y tablas
+- [[docker|docker]] — despliegue Docker del backend
 - [Documentación Vite Deploy](https://vite.dev/guide/static-deploy)
 - [Cloudflare Pages SPA Fallback](https://developers.cloudflare.com/pages/configuration/serving-pages/#single-page-application-spa-rendering)

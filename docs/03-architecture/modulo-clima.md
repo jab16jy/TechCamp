@@ -78,6 +78,6 @@ class ClimateData(BaseModel):
 ## Referencias
 
 - [[03-architecture/vision-sistema]] — Vision general del sistema
-- [[03-architecture/modulo-recomendacion]] — Motor hibrido que usa los datos climaticos
+- [[modulo-recomendacion]] — Motor hibrido que usa los datos climaticos
 - [[03-architecture/flujo-datos]] — Flujo de datos: como se conecta el clima al frontend
 - [[06-api/backend-architecture]] — Endpoints y servicios del backend

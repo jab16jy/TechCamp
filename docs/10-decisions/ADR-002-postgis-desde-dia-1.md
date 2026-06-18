@@ -39,6 +39,6 @@ Razones:
 
 ## Referencias
 
-- [[03-architecture/backend.md]]
-- [[05-database/esquema.md]]
+- [[backend]]
+- [[esquema]]
 - [[07-deployment/]] (Docker Compose con db service)

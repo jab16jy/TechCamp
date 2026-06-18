@@ -125,7 +125,7 @@ POST /analyze-location
 ## Referencias
 
 - [[03-architecture/vision-sistema]] — Flujo de procesamiento general
-- [[03-architecture/modulo-clima]] — Datos climaticos de entrada
-- [[03-architecture/modulo-satelital]] — Datos satelitales de entrada
+- [[modulo-clima]] — Datos climaticos de entrada
+- [[modulo-satelital]] — Datos satelitales de entrada
 - [[03-architecture/flujo-datos]] — Mapeo de conexion Frontend-Backend
-- [[03-architecture/modulo-suelo]] — Datos de suelo
+- [[modulo-suelo]] — Datos de suelo

@@ -149,8 +149,8 @@ agro-recommender-api/
 
 ## Referencias
 
-- [[1-inicial/PLAN_DESARROLLO]] — Cronograma original del proyecto
-- [[1-inicial/VALIDACION_SISTEMA]] — Validacion del modelo y escenarios de prueba
+- [[PLAN_DESARROLLO]] — Cronograma original del proyecto
+- [[VALIDACION_SISTEMA]] — Validacion del modelo y escenarios de prueba
 - [[4-arquitectura/VISION_SISTEMA]] — Arquitectura actual del sistema implementado
 - [[4-arquitectura/MODULO_CLIMA]] — Detalle tecnico de NASA POWER + OpenMeteo
 - [[4-arquitectura/MODULO_SATELITAL]] — Detalle de procesamiento QGIS + Sentinel-2

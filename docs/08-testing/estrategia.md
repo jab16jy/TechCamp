@@ -2,7 +2,7 @@
 
 **Estado:** Definitivo  
 **Fecha:** 2026-06-11  
-**Documentos relacionados:** [[08-testing/resultados-validacion]] · [[08-testing/plan-retrain]]  
+**Documentos relacionados:** [[resultados-validacion]] · [[plan-retrain]]  
 **Referencia histórica:** [[ml-model-validation-plan]] (versión original en inglés)
 
 ---
@@ -117,7 +117,7 @@ Calcular y documentar:
 | Campaña de recolección de campo | 2–4 semanas | Agrónomo + técnicos de campo, GPS, kits de análisis de suelo |
 | Ejecución de validación | 1 día | Muestras recolectadas, pipeline de inferencia operativo |
 | Análisis y reporte | 2–3 días | Resultados de inferencia, scripts de métricas |
-| Reentreno (si aplica) | 1 día | Ver [[08-testing/plan-retrain]] |
+| Reentreno (si aplica) | 1 día | Ver [[plan-retrain]] |
 | Iteración y ajuste fino | 1–2 semanas | Según resultados del reentreno |
 
 ---
@@ -126,10 +126,10 @@ Calcular y documentar:
 
 1. **El dato sintético no reemplaza al real.** La diferencia de ~77 pp demuestra que los rangos de la literatura global no representan las condiciones del Caribe colombiano.
 2. **El pH es consistente** (10/10 perfiles compatibles), pero la **materia orgánica** (4/10 realistas) y el **rendimiento** (0/10 realistas) están sistemáticamente sobreestimados.
-3. **Se necesita un pipeline de reentreno rápido.** El entrenamiento actual toma ~40 min; el plan de reentreno ([[08-testing/plan-retrain]]) lo reduce a 6–8 min con caching y optimizaciones.
+3. **Se necesita un pipeline de reentreno rápido.** El entrenamiento actual toma ~40 min; el plan de reentreno ([[plan-retrain]]) lo reduce a 6–8 min con caching y optimizaciones.
 4. **La validación reveló un bug crítico:** `training.py:357` consulta una columna `precipitacion` que no existe en `indices_satelitales`. Esto causa que el NDVI siempre se genere sintéticamente en vez de usar distribuciones empíricas.
 5. **Incluir NDWI como feature adicional** puede ayudar al modelo a distinguir cultivos con requerimientos hídricos diferentes.
 
 ---
 
-*Este documento actualiza y reemplaza la versión en inglés [[ml-model-validation-plan]]. Los hallazgos de validación detallados están en [[08-testing/resultados-validacion]].*
+*Este documento actualiza y reemplaza la versión en inglés [[ml-model-validation-plan]]. Los hallazgos de validación detallados están en [[resultados-validacion]].*

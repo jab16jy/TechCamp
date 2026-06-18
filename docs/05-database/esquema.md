@@ -234,7 +234,7 @@ Actualmente todas las politicas RLS permiten SELECT sin restricciones (`USING (t
 
 ## Referencias
 
-- [[03-architecture/backend]] — Modelos SQLAlchemy + ERD
-- [[03-architecture/vision-general]] — Flujo de datos en el sistema
+- [[backend]] — Modelos SQLAlchemy + ERD
+- [[vision-general]] — Flujo de datos en el sistema
 - [[03-architecture/flujo-datos]] — Mapeo de endpoints a tablas
 - [[07-deployment/despliegue]] — Conexion Docker-Supabase y pooler

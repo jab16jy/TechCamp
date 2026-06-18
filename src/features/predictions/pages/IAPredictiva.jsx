@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback, useEffect, Component } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Loader2, Sprout, Search, Sun, AlertTriangle, GitCompare } from 'lucide-react';
+import { ArrowLeft, Loader2, Sprout, Search, Sun, AlertTriangle, GitCompare, ShieldAlert, CalendarRange, ChevronDown } from 'lucide-react';
 import ResearcherLayout from '@shared/layout/ResearcherLayout/ResearcherLayout';
 import useAuthGuard from '@shared/hooks/useAuthGuard';
 import useAppStore from '@shared/store';
@@ -96,6 +96,7 @@ const IAPredictiva = () => {
   const [selectedCultivo, setSelectedCultivo] = useState('');
   const [selectedFecha, setSelectedFecha] = useState('');
   const [riskData, setRiskData] = useState({ flood: null, drought: null });
+  const [seasonalOpen, setSeasonalOpen] = useState(true);
 
   const handleRiskData = useCallback(({ flood, drought }) => {
     setRiskData({ flood, drought });
@@ -212,15 +213,16 @@ const IAPredictiva = () => {
             <div className="ia-header-row">
               <h1 className="ia-title">
                 IA Predictiva
-                <span className="ia-title-light"> — Riesgos y Mitigación</span>
+                <span className="ia-title-light"> — Modelo de Riesgo Climático</span>
               </h1>
             </div>
             <p className="ia-page-intent">
-              Proyecciones climáticas con simulación de escenarios, detección de riesgos
-              y recomendaciones de mitigación para cultivos del Caribe colombiano.
+              Predicción de riesgo de inundación y sequía con un modelo ML para cultivos del
+              Caribe colombiano. La planificación estacional y la simulación de escenarios se
+              ofrecen como apoyo complementario.
             </p>
             <div className="flex items-center gap-2 mt-2 flex-wrap">
-              <span className="ia-badge-mode">NASA POWER + OpenMeteo + LSTM</span>
+              <span className="ia-badge-mode">RiskClassifier ML · NASA POWER + OpenMeteo</span>
               {selectedAnalysisId && inheritedRecord && (
                 <span
                   className="text-xs text-[#4a4a4a] flex items-center gap-1.5"
@@ -275,21 +277,84 @@ const IAPredictiva = () => {
                   <Sprout size={30} style={{ color: '#0f5238' }} />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-[#1A1C1A] mb-1.5">Aún no hay proyección</h3>
+                  <h3 className="text-base font-bold text-[#1A1C1A] mb-1.5">Aún no hay análisis de riesgo</h3>
                   <p className="text-xs text-[#6b7280] max-w-md mx-auto leading-relaxed">
                     Selecciona un departamento del Caribe en el mapa, ajusta el cultivo y la fecha de
-                    siembra, y presiona <strong style={{ color: '#0f5238' }}>Ejecutar proyección</strong> para
-                    obtener el pronóstico estacional, los riesgos de inundación y sequía, y las
-                    recomendaciones de mitigación.
+                    siembra, y presiona <strong style={{ color: '#0f5238' }}>Ejecutar</strong> para
+                    obtener la <strong style={{ color: '#ba1a1a' }}>predicción de riesgo de inundación y
+                    sequía</strong>. La planificación estacional aparece como sección complementaria.
                   </p>
                 </div>
               </div>
             </BentoCard>
           )}
 
-          {/* ── STATE: PROJECTED / PLAN_READY — full dashboard ── */}
+          {/* ═══════════ PRIMARY: Modelo Predictivo de Riesgos ═══════════ */}
+          {queryCoords && (
+            <>
+              <div className="ia-section ia-section--primary">
+                <div className="ia-section-text">
+                  <span className="ia-section-eyebrow"><ShieldAlert size={13} /> Predicción de riesgo</span>
+                  <h2 className="ia-section-title">Modelo Predictivo de Riesgos</h2>
+                  <p className="ia-section-subtitle">
+                    Probabilidad de inundación y sequía estimada por el modelo ML (RiskClassifier)
+                    para la ubicación y fecha seleccionadas.
+                  </p>
+                </div>
+              </div>
+
+              <ResultsErrorBoundary label="MLRiskPanel">
+                <BentoCard span={{ col: 12, row: 1 }} variant="default">
+                  <MLRiskPanel
+                    lat={queryCoords.lat}
+                    lon={queryCoords.lng}
+                    year={CURRENT_YEAR}
+                    month={CURRENT_MONTH}
+                    onRiskData={handleRiskData}
+                  />
+                </BentoCard>
+              </ResultsErrorBoundary>
+
+              <AnimatePresence>
+                {(riskData.flood || riskData.drought) && (
+                  <ResultsErrorBoundary label="PlantabilityPanel">
+                    <PlantabilityPanel
+                      flood={riskData.flood}
+                      drought={riskData.drought}
+                      cultivo={selectedCultivo || null}
+                      fecha={selectedFecha || null}
+                    />
+                  </ResultsErrorBoundary>
+                )}
+              </AnimatePresence>
+            </>
+          )}
+
+          {/* ═══════════ SECONDARY: Planificación Estacional (colapsable) ═══════════ */}
           {isProjected && !isLoading && (
             <>
+              <div className="ia-section ia-section--secondary">
+                <div className="ia-section-text">
+                  <span className="ia-section-eyebrow"><CalendarRange size={13} /> Apoyo a la planificación</span>
+                  <h2 className="ia-section-title">Planificación Estacional</h2>
+                  <p className="ia-section-subtitle">
+                    Proyección climática estacional, simulación de escenarios y mitigación.
+                    Es apoyo a la planificación, no la predicción de riesgo principal.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="ia-section-toggle"
+                  aria-expanded={seasonalOpen}
+                  onClick={() => setSeasonalOpen((o) => !o)}
+                >
+                  {seasonalOpen ? 'Ocultar' : 'Mostrar'}
+                  <ChevronDown size={15} className="ia-section-chevron" />
+                </button>
+              </div>
+
+              {seasonalOpen && (
+                <>
               {/* ROW 1: MonthlyProjectionTabs + ClimateRiskPanel */}
               <ResultsErrorBoundary label="Proyección Estacional">
                 <BentoCard span={{ col: 8, row: 1 }} variant="default" title="Proyección Estacional" icon={Search}>
@@ -422,35 +487,10 @@ const IAPredictiva = () => {
                   <MitigationActions proyeccion={proyeccion6M} />
                 </BentoCard>
               </ResultsErrorBoundary>
+                </>
+              )}
             </>
           )}
-          {/* ── ML Risk + Plantability — independent of isProjected, show whenever coords are set ── */}
-          {queryCoords && (
-            <ResultsErrorBoundary label="MLRiskPanel">
-              <BentoCard span={{ col: 12, row: 1 }} variant="default">
-                <MLRiskPanel
-                  lat={queryCoords.lat}
-                  lon={queryCoords.lng}
-                  year={CURRENT_YEAR}
-                  month={CURRENT_MONTH}
-                  onRiskData={handleRiskData}
-                />
-              </BentoCard>
-            </ResultsErrorBoundary>
-          )}
-
-          <AnimatePresence>
-            {queryCoords && (riskData.flood || riskData.drought) && (
-              <ResultsErrorBoundary label="PlantabilityPanel">
-                <PlantabilityPanel
-                  flood={riskData.flood}
-                  drought={riskData.drought}
-                  cultivo={selectedCultivo || null}
-                  fecha={selectedFecha || null}
-                />
-              </ResultsErrorBoundary>
-            )}
-          </AnimatePresence>
         </BentoGrid>
 
         {/* ── Clear projection ── */}

@@ -131,7 +131,7 @@ Infraestructura de testing: `pytest-asyncio` + `httpx` + `ASGITransport`.
 
 ## Próximos pasos
 
-1. **Reentreno con datos reales** — El modelo ML (HGB + LSTM) usa datos sintéticos. Plan detallado en [[08-testing/plan-retrain]].
+1. **Reentreno con datos reales** — El modelo ML (HGB + LSTM) usa datos sintéticos. Plan detallado en [[plan-retrain]].
 2. **Página de inicio de sesión independiente** — Separar login del layout (issue conocido).
 3. **Pruebas de integración frontend-backend** — Validar flujos completos punta a punta.
 4. **Pipeline CI/CD** — Automatizar build + test + deploy.
@@ -141,9 +141,9 @@ Infraestructura de testing: `pytest-asyncio` + `httpx` + `ASGITransport`.
 
 ## Referencias
 
-- [[03-architecture/backend]] — Arquitectura del backend y endpoints
-- [[03-architecture/vision-general]] — Visión general del sistema
-- [[04-development/setup]] — Instalación y configuración local
-- [[06-api/referencia]] — Referencia de API REST
-- [[08-testing/plan-retrain]] — Plan de reentreno con datos reales
+- [[backend]] — Arquitectura del backend y endpoints
+- [[vision-general]] — Visión general del sistema
+- [[Proyectos/docs techcamp/04-development/setup]] — Instalación y configuración local
+- [[referencia]] — Referencia de API REST
+- [[plan-retrain]] — Plan de reentreno con datos reales
 - [[02-backend/TASKS]] — Seguimiento detallado de tareas (archivo histórico en `_archive/`)

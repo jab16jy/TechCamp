@@ -46,5 +46,5 @@ Razones:
 
 ## Referencias
 
-- [[03-architecture/backend.md]] (sección RAG en chatbot)
-- [[08-testing/plan-retrain.md]]
+- [[backend]] (sección RAG en chatbot)
+- [[plan-retrain]]

@@ -2,7 +2,7 @@
 
 **Estado:** Aprobado (derivado del SDD Change Proposal `real-data-retrain`)  
 **Fecha:** 2026-06-11  
-**Documentos relacionados:** [[08-testing/resultados-validacion]] · [[08-testing/estrategia]] · [[03-architecture/modulo-recomendacion]]  
+**Documentos relacionados:** [[resultados-validacion]] · [[estrategia]] · [[modulo-recomendacion]]  
 **Decisión arquitectónica:** [[10-decisions/ADR-008]] (Reentreno con datos reales EVA Caribe)  
 **Change ID:** `real-data-retrain`
 
@@ -33,7 +33,7 @@ Esto condiciona el muestreo de NDVI en sus propios deciles observados, eliminand
 
 ### Sobreestimación Sintética
 
-Como se documenta en [[08-testing/resultados-validacion]], los perfiles sintéticos sobreestiman sistemáticamente:
+Como se documenta en [[resultados-validacion]], los perfiles sintéticos sobreestiman sistemáticamente:
 
 | Variable | Diagnóstico |
 |----------|-------------|
@@ -254,4 +254,4 @@ El script de ingesta es **idempotente** (`INSERT ... ON CONFLICT DO NOTHING`), p
 
 ---
 
-*Para resultados detallados de validación, ver [[08-testing/resultados-validacion]]. Para la estrategia general de testing, ver [[08-testing/estrategia]]. La decisión arquitectónica completa está en [[10-decisions/ADR-008]].*
+*Para resultados detallados de validación, ver [[resultados-validacion]]. Para la estrategia general de testing, ver [[estrategia]]. La decisión arquitectónica completa está en [[10-decisions/ADR-008]].*

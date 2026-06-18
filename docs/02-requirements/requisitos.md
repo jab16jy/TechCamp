@@ -69,6 +69,6 @@
 
 ---
 
-**Documentación relacionada:** [[01-business/vision]] — [[03-architecture/modulo-recomendacion]]
+**Documentación relacionada:** [[vision]] — [[modulo-recomendacion]]
 
-**Referencia histórica (diseño original de módulos):** [[_archive/1-inicial/DISENO_MODULOS]] — [[_archive/1-inicial/VALIDACION_SISTEMA]]
+**Referencia histórica (diseño original de módulos):** [[DISENO_MODULOS]] — [[VALIDACION_SISTEMA]]

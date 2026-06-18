@@ -277,7 +277,87 @@
   }
 }
 
-/* ── Generate Button ── */
+/* ── Section Headers (risk-first layout) ── */
+.ia-section {
+  grid-column: span 12;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.25rem 0.25rem 0;
+  margin-top: 0.25rem;
+}
+
+.ia-section-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.ia-section-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ia-section--primary .ia-section-eyebrow { color: #ba1a1a; }
+.ia-section--secondary .ia-section-eyebrow { color: #0f5238; }
+
+.ia-section-title {
+  font-family: Manrope, sans-serif;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #1A1C1A;
+  margin: 0;
+}
+
+.ia-section-subtitle {
+  font-family: Manrope, sans-serif;
+  font-size: 0.78rem;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.4;
+  max-width: 640px;
+}
+
+/* Collapsible toggle for the seasonal planning group */
+.ia-section-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+  padding: 0.45rem 0.9rem;
+  border: 1px solid rgba(15, 82, 56, 0.18);
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(12px);
+  font-family: Manrope, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #0f5238;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ia-section-toggle:hover {
+  background: rgba(15, 82, 56, 0.08);
+  border-color: rgba(15, 82, 56, 0.3);
+}
+
+.ia-section-toggle .ia-section-chevron {
+  transition: transform 0.25s ease;
+}
+
+.ia-section-toggle[aria-expanded="true"] .ia-section-chevron {
+  transform: rotate(180deg);
+}
+
+/* Generate Button ── */
 .ia-generate-btn {
   display: inline-flex;
   align-items: center;

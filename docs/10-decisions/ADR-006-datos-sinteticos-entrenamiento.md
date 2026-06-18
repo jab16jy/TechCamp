@@ -44,6 +44,6 @@ Mecanismo:
 
 ## Referencias
 
-- [[03-architecture/backend.md]] (sección 9, pipeline de entrenamiento)
-- [[03-architecture/modulo-recomendacion.md]]
-- [[08-testing/resultados-validacion.md]]
+- [[backend]] (sección 9, pipeline de entrenamiento)
+- [[modulo-recomendacion]]
+- [[resultados-validacion]]
