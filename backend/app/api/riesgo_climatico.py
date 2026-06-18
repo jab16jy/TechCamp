@@ -1,5 +1,7 @@
+import json
 import logging
 from datetime import datetime
+from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, status
 
@@ -14,6 +16,8 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/riesgo-climatico", tags=["riesgo-climatico"])
 
+_METRICS_PATH = Path(__file__).resolve().parent.parent / "ml" / "model_metrics.json"
+
 
 def _severidad(prob: float) -> str:
     if prob >= 0.7:
@@ -23,6 +27,34 @@ def _severidad(prob: float) -> str:
     if prob >= 0.3:
         return "medio"
     return "bajo"
+
+
+def _load_risk_metrics(event_type: str) -> dict:
+    """Read the persisted training metrics for one event type (best-effort)."""
+    try:
+        data = json.loads(_METRICS_PATH.read_text())
+        return data.get("climate_risk", {}).get("models", {}).get(event_type, {}) or {}
+    except Exception:
+        return {}
+
+
+async def _fetch_static(lat: float, lon: float) -> dict:
+    """Fetch soil + elevation for inference so features match training."""
+    try:
+        from app.services.soil_service import get_soil_data
+        from app.ml.data_sources.elevation import get_elevation
+
+        soil = await get_soil_data(lat, lon) or {}
+        elev = await get_elevation(lat, lon)
+        return {
+            "soil_ph": soil.get("ph"),
+            "soil_clay": soil.get("clay"),
+            "soil_awc": soil.get("awc"),
+            "elevation_m": elev,
+        }
+    except Exception as e:
+        logger.warning("Static feature fetch failed for (%s,%s): %s", lat, lon, e)
+        return {}
 
 
 def _heuristic_fallback(lat: float, lon: float, year: int, month: int) -> list[RiesgoScore]:
@@ -41,12 +73,14 @@ def _heuristic_fallback(lat: float, lon: float, year: int, month: int) -> list[R
                 tipo="inundacion",
                 probabilidad=round(flood["score"] / 100.0, 3),
                 severidad=flood["severidad"],
+                modelo_usado="heuristico",
                 fallback_heuristico=True,
             ),
             RiesgoScore(
                 tipo="sequia",
                 probabilidad=round(drought["score"] / 100.0, 3),
                 severidad=drought["severidad"],
+                modelo_usado="heuristico",
                 fallback_heuristico=True,
             ),
         ]
@@ -74,22 +108,44 @@ async def predict_climate_risk(req: ClimateRiskRequest) -> ClimateRiskResponse:
     modelo_disponible = flood_trained or drought_trained
 
     if modelo_disponible:
+        # Fetch soil/elevation once so inference features match training.
+        static = await _fetch_static(req.lat, req.lon)
         for event_type, trained in [("flood", flood_trained), ("drought", drought_trained)]:
             if not trained:
                 continue
             try:
                 clf = RiskClassifier(event_type)
-                result = clf.predict_from_coords(req.lat, req.lon, req.year, req.month)
+                result = clf.predict_from_coords(
+                    req.lat, req.lon, req.year, req.month, static=static
+                )
                 if result.get("probability") is None:
                     logger.warning("Insufficient CHIRPS coverage for %s at (%s, %s)", event_type, req.lat, req.lon)
                     continue
                 prob = result["probability"]
                 tipo = "inundacion" if event_type == "flood" else "sequia"
+
+                m = _load_risk_metrics(event_type)
+                supera = m.get("beats_baseline")
+                brier = m.get("test_brier")
+                confianza = round(max(0.0, min(1.0, 1.0 - brier)), 3) if brier is not None else None
+                advertencia = None
+                if supera is False:
+                    advertencia = (
+                        "El modelo ML no supera el heurístico base en validación; "
+                        "interpretar esta probabilidad con cautela."
+                    )
+
                 riesgos.append(RiesgoScore(
                     tipo=tipo,
                     probabilidad=prob,
-                    severidad=_severidad(prob),
+                    # severity from the model's own validation-derived bands
+                    severidad=result.get("severity") or _severidad(prob),
+                    modelo_usado="RiskClassifier",
                     fallback_heuristico=False,
+                    confianza_modelo=confianza,
+                    calibracion=result.get("calibration_method"),
+                    supera_baseline=supera,
+                    advertencia=advertencia,
                 ))
             except Exception as e:
                 logger.error("RiskClassifier failed for %s: %s", event_type, e)

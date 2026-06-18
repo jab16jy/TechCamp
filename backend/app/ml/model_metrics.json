@@ -330,60 +330,231 @@
   },
   "model_available": true,
   "climate_risk": {
-    "updated_at": "2026-06-13T23:05:22.234509+00:00",
+    "updated_at": "2026-06-18T07:21:21.166836+00:00",
     "models": {
-      "drought": {
-        "event_type": "drought",
-        "test_pr_auc": 0.5524,
-        "test_brier": 0.1288,
-        "test_recall_at_p90": 0.0,
-        "baseline_pr_auc": 0.5565,
-        "beats_baseline": false,
-        "n_train": 803,
-        "n_val": 58,
-        "n_test": 147,
-        "n_features": 25,
-        "gbm_iterations": 62,
+      "flood": {
+        "event_type": "flood",
+        "test_pr_auc": 0.8025,
+        "test_brier": 0.1767,
+        "test_recall_at_p90": 0.089,
+        "baseline_pr_auc": 0.5543,
+        "beats_baseline": true,
+        "promoted": true,
+        "promotion_reason": "beats heuristic baseline by +44.8% PR-AUC",
+        "calibration_method": "isotonic",
+        "calibration_brier_isotonic": 0.1788,
+        "calibration_brier_sigmoid": 0.1828,
+        "severity_thresholds": {
+          "medio": 0.0,
+          "alto": 0.345,
+          "critico": 0.784
+        },
+        "threshold_matrix": [
+          {
+            "threshold": 0.3,
+            "tp": 829,
+            "fp": 361,
+            "fn": 149,
+            "tn": 581,
+            "precision": 0.6966,
+            "recall": 0.8476
+          },
+          {
+            "threshold": 0.5,
+            "tp": 724,
+            "fp": 238,
+            "fn": 254,
+            "tn": 704,
+            "precision": 0.7526,
+            "recall": 0.7403
+          },
+          {
+            "threshold": 0.7,
+            "tp": 353,
+            "fp": 45,
+            "fn": 625,
+            "tn": 897,
+            "precision": 0.8869,
+            "recall": 0.3609
+          }
+        ],
+        "severity_breakdown": {
+          "bajo": {
+            "n": 0,
+            "positive_rate": null
+          },
+          "medio": {
+            "n": 838,
+            "positive_rate": 0.2399
+          },
+          "alto": {
+            "n": 991,
+            "positive_rate": 0.6963
+          },
+          "critico": {
+            "n": 91,
+            "positive_rate": 0.956
+          }
+        },
+        "n_train": 10304,
+        "n_val": 1152,
+        "n_val_positives": 506,
+        "n_test": 1920,
+        "n_features": 29,
+        "gbm_iterations": 202,
         "top_features": [
           {
-            "feature": "precip_m5",
-            "importance": 0.1799
+            "feature": "precip_m6",
+            "importance": 0.0869
           },
           {
-            "feature": "era5_sro_mm",
-            "importance": 0.0305
-          },
-          {
-            "feature": "precip_m4",
-            "importance": 0.0067
-          },
-          {
-            "feature": "precip_total_3m",
-            "importance": 0.0039
-          },
-          {
-            "feature": "era5_swvl3",
-            "importance": 0.0033
+            "feature": "soil_ph",
+            "importance": 0.0809
           },
           {
             "feature": "era5_t2m",
-            "importance": 0.0008
+            "importance": 0.0346
           },
           {
-            "feature": "consecutive_dry_months",
-            "importance": 0.0
+            "feature": "elevation_m",
+            "importance": 0.02
           },
           {
-            "feature": "chirps_coverage",
-            "importance": 0.0
+            "feature": "era5_tp_mm",
+            "importance": 0.0174
           },
+          {
+            "feature": "precip_total_3m",
+            "importance": 0.0161
+          },
+          {
+            "feature": "precip_m5",
+            "importance": 0.0157
+          },
+          {
+            "feature": "era5_sro_mm",
+            "importance": 0.0136
+          },
+          {
+            "feature": "month_cos",
+            "importance": 0.0059
+          },
+          {
+            "feature": "precip_anomaly_last",
+            "importance": 0.0041
+          }
+        ]
+      },
+      "drought": {
+        "event_type": "drought",
+        "test_pr_auc": 0.6737,
+        "test_brier": 0.1965,
+        "test_recall_at_p90": 0.0882,
+        "baseline_pr_auc": 0.5742,
+        "beats_baseline": true,
+        "promoted": true,
+        "promotion_reason": "beats heuristic baseline by +17.3% PR-AUC",
+        "calibration_method": "sigmoid",
+        "calibration_brier_isotonic": 0.1053,
+        "calibration_brier_sigmoid": 0.1271,
+        "severity_thresholds": {
+          "medio": 0.208,
+          "alto": 0.319,
+          "critico": 0.319
+        },
+        "threshold_matrix": [
+          {
+            "threshold": 0.3,
+            "tp": 9,
+            "fp": 5,
+            "fn": 25,
+            "tn": 71,
+            "precision": 0.6429,
+            "recall": 0.2647
+          },
+          {
+            "threshold": 0.5,
+            "tp": 0,
+            "fp": 0,
+            "fn": 34,
+            "tn": 76,
+            "precision": null,
+            "recall": 0.0
+          },
+          {
+            "threshold": 0.7,
+            "tp": 0,
+            "fp": 0,
+            "fn": 34,
+            "tn": 76,
+            "precision": null,
+            "recall": 0.0
+          }
+        ],
+        "severity_breakdown": {
+          "bajo": {
+            "n": 76,
+            "positive_rate": 0.1579
+          },
+          "medio": {
+            "n": 27,
+            "positive_rate": 0.6296
+          },
+          "alto": {
+            "n": 0,
+            "positive_rate": null
+          },
+          "critico": {
+            "n": 7,
+            "positive_rate": 0.7143
+          }
+        },
+        "n_train": 1244,
+        "n_val": 70,
+        "n_val_positives": 12,
+        "n_test": 110,
+        "n_features": 29,
+        "gbm_iterations": 221,
+        "top_features": [
           {
             "feature": "heuristic_score",
-            "importance": 0.0
+            "importance": 0.0668
           },
           {
-            "feature": "precip_min_month",
-            "importance": -0.0015
+            "feature": "era5_tp_mm",
+            "importance": 0.0592
+          },
+          {
+            "feature": "era5_sro_mm",
+            "importance": 0.042
+          },
+          {
+            "feature": "precip_m4",
+            "importance": 0.0397
+          },
+          {
+            "feature": "month_sin",
+            "importance": 0.0269
+          },
+          {
+            "feature": "era5_soil_moisture_mean",
+            "importance": 0.0218
+          },
+          {
+            "feature": "consecutive_wet_months",
+            "importance": 0.02
+          },
+          {
+            "feature": "precip_total_6m",
+            "importance": 0.0197
+          },
+          {
+            "feature": "precip_m5",
+            "importance": 0.0185
+          },
+          {
+            "feature": "era5_swvl4",
+            "importance": 0.0123
           }
         ]
       }

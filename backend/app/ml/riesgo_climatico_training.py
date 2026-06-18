@@ -44,12 +44,16 @@ def _save_metrics(metrics_by_type: dict) -> None:
     logger.info("Metrics saved: %s", METRICS_PATH)
 
 
-def train_event_type(event_type: str, force_rebuild: bool) -> dict:
+def train_event_type(event_type: str, force_rebuild: bool, force_promote: bool = False) -> dict:
     from app.ml.riesgo_climatico_model import train
     logger.info("=" * 60)
     logger.info("Training RiskClassifier for event_type=%s", event_type)
     logger.info("=" * 60)
-    metrics = train(event_type, force_rebuild_dataset=force_rebuild)
+    metrics = train(
+        event_type,
+        force_rebuild_dataset=force_rebuild,
+        force_promote=force_promote,
+    )
     logger.info("Results: %s", json.dumps(metrics, indent=2))
     return metrics
 
@@ -67,13 +71,19 @@ def main():
         action="store_true",
         help="Force rebuild of the dataset cache",
     )
+    parser.add_argument(
+        "--force-promote",
+        action="store_true",
+        help="Save the model even if it does not beat the heuristic baseline "
+             "(use only for bootstrapping a first model)",
+    )
     args = parser.parse_args()
 
     types = ["flood", "drought"] if args.event_type == "all" else [args.event_type]
     results = {}
     for et in types:
         try:
-            results[et] = train_event_type(et, args.force_rebuild)
+            results[et] = train_event_type(et, args.force_rebuild, args.force_promote)
         except Exception as e:
             logger.error("Training failed for %s: %s", et, e)
             results[et] = {"error": str(e)}
@@ -88,7 +98,12 @@ def main():
             print(f"  {et}: ERROR — {m['error']}")
         else:
             beats = "✅ beats heuristic" if m.get("beats_baseline") else "⚠️  does NOT beat heuristic"
-            print(f"  {et}: PR-AUC={m['test_pr_auc']:.4f} | Brier={m['test_brier']:.4f} | {beats}")
+            promo = "PROMOTED" if m.get("promoted") else "BLOCKED (not saved)"
+            print(f"  {et}: PR-AUC={m['test_pr_auc']:.4f} | Brier={m['test_brier']:.4f} "
+                  f"| Recall@P90={m.get('test_recall_at_p90')} | calib={m.get('calibration_method')} | {beats}")
+            print(f"       severity bands={m.get('severity_thresholds')} | {promo}")
+            if m.get("promotion_reason"):
+                print(f"       → {m['promotion_reason']}")
     print("=" * 60)
 
 

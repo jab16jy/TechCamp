@@ -18,8 +18,13 @@ class RiesgoScore(BaseModel):
     tipo: str
     probabilidad: float = Field(..., ge=0.0, le=1.0)
     severidad: str
-    confianza_modelo: Optional[float] = None
+    # Transparency fields — let the UI show HOW the number was produced.
+    modelo_usado: str = "heuristico"          # "RiskClassifier" | "heuristico"
     fallback_heuristico: bool = False
+    confianza_modelo: Optional[float] = None  # calibration-based, ~ 1 - Brier
+    calibracion: Optional[str] = None         # "isotonic" | "sigmoid"
+    supera_baseline: Optional[bool] = None    # vs the rule-based heuristic
+    advertencia: Optional[str] = None         # set when model does NOT beat baseline
 
 
 class ClimateRiskResponse(BaseModel):

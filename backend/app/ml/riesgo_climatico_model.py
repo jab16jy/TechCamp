@@ -18,10 +18,29 @@ from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.isotonic import IsotonicRegression
 from sklearn.metrics import average_precision_score, brier_score_loss
 
+from app.ml.riesgo_climatico_metrics import (
+    DEFAULT_SEVERITY,
+    decide_promotion,
+    derive_severity_thresholds,
+    pick_calibration_method,
+    severity_breakdown,
+    severity_label,
+    threshold_matrix,
+)
+
 logger = logging.getLogger(__name__)
 
 _MODEL_DIR = Path(__file__).parent / "data"
 _MODEL_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def _apply_calibrator(method: str, calibrator, raw) -> np.ndarray:
+    """Apply a fitted calibrator to raw GBM scores. Shared by train + inference."""
+    raw = np.asarray(raw, dtype=float)
+    if method == "isotonic":
+        return np.asarray(calibrator.predict(raw), dtype=float)
+    # sigmoid / Platt: LogisticRegression over the single raw-score feature
+    return calibrator.predict_proba(raw.reshape(-1, 1))[:, 1]
 
 
 def _model_path(event_type: str) -> Path:
@@ -37,10 +56,14 @@ def _feat_path(event_type: str) -> Path:
 def train(
     event_type: str = "flood",
     force_rebuild_dataset: bool = False,
+    force_promote: bool = False,
 ) -> dict:
     """Train the RiskClassifier and persist the model.
 
-    Returns a metrics dict with PR-AUC, Brier, and baseline comparison.
+    The model is PROMOTED (written to the live path) only if it beats the
+    heuristic baseline, unless `force_promote=True`. Returns a metrics dict with
+    PR-AUC, Brier, Recall@P90, a threshold matrix, validation-driven severity
+    bands, the chosen calibration method, and the promotion decision.
     """
     import joblib
     from app.ml.riesgo_climatico_dataset import build_dataset
@@ -100,32 +123,31 @@ def train(
     gbm.fit(X_tr, y_tr)
     logger.info("GBM fitted — iterations used: %d", gbm.n_iter_)
 
-    # Calibrate with isotonic regression on temporal val set (2017-2019)
-    # This is the correct approach for temporal data: no cross-validation leakage
-    raw_val_proba = gbm.predict_proba(X_val)[:, 1]
-    calibrator = IsotonicRegression(out_of_bounds="clip")
-    calibrator.fit(raw_val_proba, y_val)
+    # --- Calibration: fit isotonic AND sigmoid (Platt) on the temporal val set
+    #     (2017-2019), then choose. Isotonic overfits tiny val sets, so
+    #     pick_calibration_method forces sigmoid below MIN positives. ---
+    from sklearn.linear_model import LogisticRegression
 
-    # Composite predictor: GBM scores → isotonic calibration
-    class _CalibratedGBM:
-        def __init__(self, base, cal):
-            self._base = base
-            self._cal = cal
-        def predict_proba(self, X):
-            raw = self._base.predict_proba(X)[:, 1]
-            calib = self._cal.predict(raw)
-            return np.column_stack([1 - calib, calib])
-        @property
-        def feature_importances_(self):
-            return self._base.feature_importances_
-        @property
-        def n_iter_(self):
-            return self._base.n_iter_
+    raw_val = gbm.predict_proba(X_val)[:, 1]
+    raw_te = gbm.predict_proba(X_te)[:, 1]
+    val_positives = int(np.sum(y_val))
 
-    clf = _CalibratedGBM(gbm, calibrator)
+    iso = IsotonicRegression(out_of_bounds="clip")
+    iso.fit(raw_val, y_val)
+    sig = LogisticRegression(max_iter=1000)
+    sig.fit(raw_val.reshape(-1, 1), y_val)
+
+    brier_iso = brier_score_loss(y_val, _apply_calibrator("isotonic", iso, raw_val))
+    brier_sig = brier_score_loss(y_val, _apply_calibrator("sigmoid", sig, raw_val))
+    calibration_method = pick_calibration_method(val_positives, brier_iso, brier_sig)
+    calibrator = iso if calibration_method == "isotonic" else sig
+    logger.info(
+        "Calibration: method=%s (val pos=%d, brier iso=%.4f sig=%.4f)",
+        calibration_method, val_positives, brier_iso, brier_sig,
+    )
 
     # --- Evaluate on held-out test set ---
-    proba_te = clf.predict_proba(X_te)[:, 1]
+    proba_te = _apply_calibrator(calibration_method, calibrator, raw_te)
     pr_auc_te = average_precision_score(y_te, proba_te)
     brier_te = brier_score_loss(y_te, proba_te)
 
@@ -140,15 +162,20 @@ def train(
         pr_auc_te, brier_te, recall_at_p90,
     )
 
-    if baseline_pr_auc is not None and pr_auc_te <= baseline_pr_auc:
-        logger.warning(
-            "MODEL DOES NOT BEAT HEURISTIC BASELINE (%.4f vs %.4f). "
-            "Consider more data or feature engineering.",
-            pr_auc_te, baseline_pr_auc,
-        )
-    elif baseline_pr_auc is not None:
-        improvement = (pr_auc_te - baseline_pr_auc) / baseline_pr_auc * 100
-        logger.info("Beats heuristic by +%.1f%% PR-AUC", improvement)
+    # --- Operational threshold matrix + validation-driven severity bands ---
+    raw_val_cal = _apply_calibrator(calibration_method, calibrator, raw_val)
+    severity_thresholds = derive_severity_thresholds(y_val, raw_val_cal)
+    thr_matrix = threshold_matrix(y_te, proba_te, (0.3, 0.5, 0.7))
+    sev_breakdown = severity_breakdown(y_te, proba_te, severity_thresholds)
+    logger.info("Severity bands (val-derived): %s", severity_thresholds)
+
+    # --- Promotion gate: never ship a model that fails to beat the heuristic ---
+    beats = (pr_auc_te > baseline_pr_auc) if baseline_pr_auc is not None else None
+    promote, promotion_reason = decide_promotion(beats, pr_auc_te, baseline_pr_auc)
+    if force_promote and not promote:
+        promote = True
+        promotion_reason = "forced (force_promote=True): " + promotion_reason
+    logger.info("Promotion: %s — %s", "PROMOTE" if promote else "BLOCKED", promotion_reason)
 
     # Feature importances via permutation on val set (HGBC has no built-in importances)
     top_features = []
@@ -173,19 +200,42 @@ def train(
         "test_brier": round(brier_te, 4),
         "test_recall_at_p90": round(recall_at_p90, 4),
         "baseline_pr_auc": round(baseline_pr_auc, 4) if baseline_pr_auc else None,
-        "beats_baseline": (pr_auc_te > baseline_pr_auc) if baseline_pr_auc else None,
+        "beats_baseline": bool(beats) if beats is not None else None,
+        "promoted": bool(promote),
+        "promotion_reason": promotion_reason,
+        "calibration_method": calibration_method,
+        "calibration_brier_isotonic": round(float(brier_iso), 4),
+        "calibration_brier_sigmoid": round(float(brier_sig), 4),
+        "severity_thresholds": severity_thresholds,
+        "threshold_matrix": thr_matrix,
+        "severity_breakdown": sev_breakdown,
         "n_train": int(len(y_tr)),
         "n_val": int(len(y_val)),
+        "n_val_positives": val_positives,
         "n_test": int(len(y_te)),
         "n_features": int(X_tr.shape[1]),
         "gbm_iterations": int(gbm.n_iter_),
         "top_features": top_features,
     }
 
-    # Persist components: GBM + calibrator separately
-    joblib.dump({"gbm": gbm, "calibrator": calibrator}, _model_path(event_type))
-    _feat_path(event_type).write_text(json.dumps(feat_names))
-    logger.info("Model saved: %s", _model_path(event_type))
+    # Persist ONLY if promoted — a blocked model leaves any existing live model
+    # (or the heuristic fallback) untouched.
+    if promote:
+        joblib.dump(
+            {
+                "gbm": gbm,
+                "calibrator": calibrator,
+                "calibration_method": calibration_method,
+                "severity_thresholds": severity_thresholds,
+            },
+            _model_path(event_type),
+        )
+        _feat_path(event_type).write_text(json.dumps(feat_names))
+        logger.info("Model PROMOTED and saved: %s", _model_path(event_type))
+    else:
+        logger.warning(
+            "Model NOT promoted (%s). Live model left untouched.", promotion_reason
+        )
 
     return metrics
 
@@ -205,6 +255,10 @@ class RiskClassifier:
         bundle = joblib.load(path)
         self._gbm = bundle["gbm"]
         self._calibrator = bundle["calibrator"]
+        # Backward compatible: older bundles persisted only an isotonic calibrator
+        # and no severity bands.
+        self._calibration_method = bundle.get("calibration_method", "isotonic")
+        self._severity_thresholds = bundle.get("severity_thresholds", dict(DEFAULT_SEVERITY))
         feat_path = _feat_path(event_type)
         self._feat_names: list[str] = json.loads(feat_path.read_text()) if feat_path.exists() else []
         self._event_type = event_type
@@ -213,10 +267,21 @@ class RiskClassifier:
     def feature_names(self) -> list[str]:
         return self._feat_names
 
+    @property
+    def calibration_method(self) -> str:
+        return self._calibration_method
+
+    @property
+    def severity_thresholds(self) -> dict:
+        return self._severity_thresholds
+
+    def severity_for(self, prob: float) -> str:
+        return severity_label(prob, self._severity_thresholds)
+
     def predict_proba(self, X: np.ndarray) -> np.ndarray:
         """Return calibrated probability of event for each sample. Shape: (n,)"""
         raw = self._gbm.predict_proba(X)[:, 1]
-        return self._calibrator.predict(raw)
+        return _apply_calibrator(self._calibration_method, self._calibrator, raw)
 
     def predict_from_coords(
         self,
@@ -224,10 +289,16 @@ class RiskClassifier:
         lon: float,
         year: int,
         month: int,
+        static: dict | None = None,
     ) -> dict:
-        """Build features from coordinates and return risk score + metadata."""
+        """Build features from coordinates and return risk score + metadata.
+
+        `static` (soil_ph/soil_clay/soil_awc/elevation_m) should be supplied by
+        the caller for train/inference parity — the model is trained WITH these
+        features, so omitting them degrades the prediction.
+        """
         from app.ml.riesgo_climatico_dataset import _build_feature_row
-        row = _build_feature_row(lat, lon, year, month, self._event_type, label=0)
+        row = _build_feature_row(lat, lon, year, month, self._event_type, label=0, static=static)
         if row is None:
             return {"probability": None, "error": "insufficient_chirps_coverage"}
 
@@ -238,7 +309,9 @@ class RiskClassifier:
         prob = float(self.predict_proba(feat_values)[0])
         return {
             "probability": round(prob, 4),
+            "severity": self.severity_for(prob),
             "event_type": self._event_type,
+            "calibration_method": self._calibration_method,
             "features_used": len(self._feat_names),
         }
 
