@@ -40,7 +40,9 @@ export default function useHistorialEventos() {
       if (eventType) params.event_type = eventType;
       if (municipio) params.municipio = municipio;
 
-      const { data } = await apiClient.get('/riesgo-climatico/historial', { params });
+      // Heavier endpoint (parses historical datasets on a cold cache) — give it
+      // more room than the 15s global default; the backend also pre-warms on boot.
+      const { data } = await apiClient.get('/riesgo-climatico/historial', { params, timeout: 30000 });
       const list = data.eventos ?? [];
 
       setEventos(list);

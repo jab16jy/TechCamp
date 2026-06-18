@@ -169,3 +169,20 @@ def available_year_range() -> tuple[int, int] | None:
         except (IndexError, ValueError):
             pass
     return (min(years), max(years)) if years else None
+
+
+@lru_cache(maxsize=1)
+def latest_available_month() -> tuple[int, int] | None:
+    """Return the most recent (year, month) with a CHIRPS file, or None.
+
+    Used to evaluate risk against the latest real climate window when the caller
+    asks for a date beyond coverage (e.g. a future month).
+    """
+    months: list[tuple[int, int]] = []
+    for f in CHIRPS_DIR.glob("chirps_col_*.tif"):
+        parts = f.stem.split("_")
+        try:
+            months.append((int(parts[2]), int(parts[3])))
+        except (IndexError, ValueError):
+            pass
+    return max(months) if months else None

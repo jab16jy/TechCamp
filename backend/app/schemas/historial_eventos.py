@@ -31,6 +31,13 @@ class RangoFechas(BaseModel):
     hasta: str
 
 
+class SerieAnualItem(BaseModel):
+    anio: int
+    total: int
+    inundaciones: int
+    sequias: int
+
+
 class ResumenAgregado(BaseModel):
     total_eventos: int
     inundaciones: int
@@ -42,6 +49,7 @@ class ResumenAgregado(BaseModel):
     viviendas_averiadas: Optional[float] = None
     fallecidos: Optional[float] = None
     rango_fechas: Optional[RangoFechas] = None
+    serie_anual: list[SerieAnualItem] = []
 
 
 class HistorialEventosResponse(BaseModel):

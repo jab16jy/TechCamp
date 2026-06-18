@@ -294,6 +294,11 @@ export default function MLRiskPanel({ lat, lon, year, month, onRiskData }) {
 
   if (!hasCoords) return null;
 
+  // The backend may evaluate a different (latest available) window than requested
+  // when the requested date is beyond climate-data coverage — show the real one.
+  const evalMonth = meta?.month ?? month;
+  const evalYear = meta?.year ?? year;
+
   return (
     <section style={{ marginTop: '1rem' }}>
       <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
@@ -302,7 +307,7 @@ export default function MLRiskPanel({ lat, lon, year, month, onRiskData }) {
           <h2 className="text-sm font-bold text-[#1A1C1A]">Predicción de Riesgo Climático</h2>
         </div>
         <span className="text-[11px] text-[#6b7280]">
-          Ventana evaluada: {MONTH_NAMES[(month || 1) - 1]} {year}
+          Ventana evaluada: {MONTH_NAMES[(evalMonth || 1) - 1]} {evalYear}
         </span>
       </div>
 

@@ -96,69 +96,92 @@ def _heuristic_fallback(lat: float, lon: float, year: int, month: int) -> list[R
         return []
 
 
+def _run_models(lat, lon, year, month, static, trained: dict[str, bool]) -> list[RiesgoScore]:
+    """Run the trained RiskClassifier(s) for one (year, month) window.
+
+    Returns [] when the window has no usable climate coverage (probability None).
+    """
+    from app.ml.riesgo_climatico_model import RiskClassifier
+
+    riesgos: list[RiesgoScore] = []
+    for event_type in ("flood", "drought"):
+        if not trained.get(event_type):
+            continue
+        try:
+            result = RiskClassifier(event_type).predict_from_coords(
+                lat, lon, year, month, static=static
+            )
+            if result.get("probability") is None:
+                logger.warning("Insufficient CHIRPS coverage for %s at (%s, %s) %s-%s",
+                               event_type, lat, lon, year, month)
+                continue
+            prob = result["probability"]
+            m = _load_risk_metrics(event_type)
+            supera = m.get("beats_baseline")
+            brier = m.get("test_brier")
+            confianza = round(max(0.0, min(1.0, 1.0 - brier)), 3) if brier is not None else None
+            advertencia = (
+                "El modelo ML no supera el heurístico base en validación; "
+                "interpretar esta probabilidad con cautela."
+            ) if supera is False else None
+
+            riesgos.append(RiesgoScore(
+                tipo="inundacion" if event_type == "flood" else "sequia",
+                probabilidad=prob,
+                severidad=result.get("severity") or _severidad(prob),
+                modelo_usado="RiskClassifier",
+                fallback_heuristico=False,
+                confianza_modelo=confianza,
+                calibracion=result.get("calibration_method"),
+                supera_baseline=supera,
+                advertencia=advertencia,
+            ))
+        except Exception as e:
+            logger.error("RiskClassifier failed for %s: %s", event_type, e)
+    return riesgos
+
+
 @router.post("", response_model=ClimateRiskResponse)
 async def predict_climate_risk(req: ClimateRiskRequest) -> ClimateRiskResponse:
     """Predict flood and drought risk for a given location and time.
 
-    Uses the trained RiskClassifier (Fase 2) when available.
-    Falls back to the rule-based heuristic transparently when the model is not trained.
+    Uses the trained RiskClassifier (Fase 2) when available. If the requested
+    window is beyond climate-data coverage (e.g. a future month), it re-evaluates
+    the most recent available window and says so. Falls back to the rule-based
+    heuristic only when no model or no usable climate data exists.
     """
-    from app.ml.riesgo_climatico_model import RiskClassifier, is_trained
+    from app.ml.riesgo_climatico_model import is_trained
+    from app.ml.data_sources.chirps import latest_available_month
+
+    factores: list[FactorContribucion] = []
+    mensaje = None
+    eval_year, eval_month = req.year, req.month
+
+    trained = {"flood": is_trained("flood"), "drought": is_trained("drought")}
+    modelo_disponible = any(trained.values())
 
     riesgos: list[RiesgoScore] = []
-    factores: list[FactorContribucion] = []
-    modelo_disponible = False
-    mensaje = None
-
-    flood_trained = is_trained("flood")
-    drought_trained = is_trained("drought")
-    modelo_disponible = flood_trained or drought_trained
-
     if modelo_disponible:
         # Fetch soil/elevation once so inference features match training.
         static = await _fetch_static(req.lat, req.lon)
-        for event_type, trained in [("flood", flood_trained), ("drought", drought_trained)]:
-            if not trained:
-                continue
-            try:
-                clf = RiskClassifier(event_type)
-                result = clf.predict_from_coords(
-                    req.lat, req.lon, req.year, req.month, static=static
-                )
-                if result.get("probability") is None:
-                    logger.warning("Insufficient CHIRPS coverage for %s at (%s, %s)", event_type, req.lat, req.lon)
-                    continue
-                prob = result["probability"]
-                tipo = "inundacion" if event_type == "flood" else "sequia"
+        riesgos = _run_models(req.lat, req.lon, req.year, req.month, static, trained)
 
-                m = _load_risk_metrics(event_type)
-                supera = m.get("beats_baseline")
-                brier = m.get("test_brier")
-                confianza = round(max(0.0, min(1.0, 1.0 - brier)), 3) if brier is not None else None
-                advertencia = None
-                if supera is False:
-                    advertencia = (
-                        "El modelo ML no supera el heurístico base en validación; "
-                        "interpretar esta probabilidad con cautela."
+        # Requested window out of coverage → evaluate the latest real window.
+        if not riesgos:
+            latest = latest_available_month()
+            if latest and latest != (req.year, req.month):
+                ly, lm = latest
+                retry = _run_models(req.lat, req.lon, ly, lm, static, trained)
+                if retry:
+                    riesgos = retry
+                    eval_year, eval_month = ly, lm
+                    mensaje = (
+                        f"Sin datos climáticos para {req.month:02d}/{req.year}. "
+                        f"Se evalúa la ventana más reciente disponible: {lm:02d}/{ly}."
                     )
 
-                riesgos.append(RiesgoScore(
-                    tipo=tipo,
-                    probabilidad=prob,
-                    # severity from the model's own validation-derived bands
-                    severidad=result.get("severity") or _severidad(prob),
-                    modelo_usado="RiskClassifier",
-                    fallback_heuristico=False,
-                    confianza_modelo=confianza,
-                    calibracion=result.get("calibration_method"),
-                    supera_baseline=supera,
-                    advertencia=advertencia,
-                ))
-            except Exception as e:
-                logger.error("RiskClassifier failed for %s: %s", event_type, e)
-
     if not riesgos:
-        riesgos = _heuristic_fallback(req.lat, req.lon, req.year, req.month)
+        riesgos = _heuristic_fallback(req.lat, req.lon, eval_year, eval_month)
         if not riesgos:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -167,13 +190,16 @@ async def predict_climate_risk(req: ClimateRiskRequest) -> ClimateRiskResponse:
         mensaje = (
             "Modelo ML no entrenado aún. Se usa el heurístico de reglas como aproximación. "
             "Ejecuta riesgo_climatico_training.py para entrenar el modelo."
+            if not modelo_disponible else
+            "No hay datos climáticos suficientes para esta ubicación. "
+            "Se usa el heurístico de reglas como aproximación."
         )
 
     return ClimateRiskResponse(
         lat=req.lat,
         lon=req.lon,
-        year=req.year,
-        month=req.month,
+        year=eval_year,
+        month=eval_month,
         riesgos=riesgos,
         factores_principales=factores,
         modelo_disponible=modelo_disponible,

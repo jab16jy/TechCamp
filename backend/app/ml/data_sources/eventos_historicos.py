@@ -15,6 +15,7 @@ A reported ``0`` is kept as ``0`` because that is a real recorded value.
 from __future__ import annotations
 
 import logging
+import threading
 import unicodedata
 from pathlib import Path
 
@@ -24,14 +25,15 @@ from app.ml.data_sources.config import (
     DEPT_CENTROIDS,
     HDX_PATH,
     UNGRD_CSV_PATHS,
-    divipola_to_coords,
 )
-from app.ml.data_sources.ungrd import _normalize_event, _parse_date
+from app.ml.data_sources.ungrd import _parse_date
 
 logger = logging.getLogger(__name__)
 
 # Module-level cache: the raw files are static, so we normalize once.
+# The lock prevents a concurrent double-load (startup warm-up vs first request).
 _EVENTS_CACHE: list[dict] | None = None
+_LOAD_LOCK = threading.Lock()
 
 _TEXT_NULLS = frozenset(["", "NO REGISTRA", "NO APLICA", "N/A", "NA", "SIN DATO", "NINGUNO"])
 
@@ -132,44 +134,57 @@ def normalize_events_frame(raw: pd.DataFrame, source: str) -> list[dict]:
     if impact_cols["fallecidos"] is None:  # HDX names it MUERTOS
         impact_cols["fallecidos"] = _find_col(cols, exact="MUERTOS")
 
-    dates = _parse_date(raw[fecha_col])
-    divipola = pd.to_numeric(
-        raw[divipola_col].astype(str).str.replace(",", "").str.strip(), errors="coerce"
+    # Vectorized event-type classification → keep ONLY flood/drought rows first.
+    # Iterating every row of the multi-MB exports is the slow path; pre-filtering
+    # drops it from ~300k rows to ~20k before we build per-row dicts.
+    evento_norm = (
+        raw[evento_col].fillna("").astype(str)
+        .str.normalize("NFKD").str.encode("ascii", "ignore").str.decode("ascii")
+        .str.upper()
     )
+    is_flood = evento_norm.str.contains("INUNDACION|AVENIDA|CRECIENTE|DESBORD", regex=True, na=False)
+    is_drought = evento_norm.str.contains("SEQU", regex=True, na=False)
+    mask = is_flood | is_drought
+    if not mask.any():
+        return []
+
+    df = raw.loc[mask].copy()
+    df["_tipo"] = "sequia"
+    df.loc[is_flood.loc[mask], "_tipo"] = "inundacion"  # flood wins if both match
+    df["_ts"] = _parse_date(df[fecha_col])
+    df["_dvp"] = pd.to_numeric(
+        df[divipola_col].astype(str).str.replace(",", "").str.strip(), errors="coerce"
+    )
+    df = df.dropna(subset=["_ts", "_dvp"])
+    if df.empty:
+        return []
+    df["_dept"] = (df["_dvp"] // 1000).astype(int)
+    df["_coords"] = df["_dept"].map(DEPT_CENTROIDS)
+    df = df[df["_coords"].notna()]
 
     events: list[dict] = []
-    for i, (_, row) in enumerate(raw.iterrows()):
-        tipo = _normalize_event(str(row[evento_col]) if pd.notna(row[evento_col]) else "")
-        if tipo is None:
-            continue
-        date = dates.iloc[i]
-        dvp = divipola.iloc[i]
-        if pd.isna(date) or pd.isna(dvp):
-            continue
-        dvp = int(dvp)
-        coords = divipola_to_coords(dvp)
-        if coords is None:
-            continue
-        lon, lat = coords
-        muni_raw = _to_text(row[muni_col]) if muni_col else None
+    for rec in df.to_dict("records"):
+        dvp = int(rec["_dvp"])
+        lon, lat = rec["_coords"]
+        muni_raw = _to_text(rec[muni_col]) if muni_col else None
         # HDX stores 'DEPT/MUNICIPIO' — show only the municipio segment.
         muni_display = muni_raw.split("/")[-1].strip() if muni_raw and "/" in muni_raw else muni_raw
         event = {
-            "fecha": date.date().isoformat(),
-            "_ts": date,
-            "departamento": _to_text(row[depto_col]) if depto_col else None,
+            "fecha": rec["_ts"].date().isoformat(),
+            "_ts": rec["_ts"],
+            "departamento": _to_text(rec[depto_col]) if depto_col else None,
             "municipio": muni_display,
             "municipio_norm": normalize_municipio(muni_raw),
-            "tipo": "inundacion" if tipo == "flood" else "sequia",
+            "tipo": rec["_tipo"],
             "fuente": source,
-            "comentarios": _to_text(row[comentario_col]) if comentario_col else None,
+            "comentarios": _to_text(rec[comentario_col]) if comentario_col else None,
             "divipola": dvp,
             "dept_code": dvp // 1000,
             "lat": lat,
             "lon": lon,
         }
         for field, col in impact_cols.items():
-            event[field] = _to_number(row[col]) if col else None
+            event[field] = _to_number(rec[col]) if col else None
         events.append(event)
 
     logger.info("eventos_historicos: %s → %d flood/drought events", source, len(events))
@@ -199,22 +214,30 @@ def _read_excel(path: Path) -> pd.DataFrame:
 
 
 def load_all_events(*, force_reload: bool = False) -> list[dict]:
-    """Load + normalize every flood/drought event with impacts (cached)."""
+    """Load + normalize every flood/drought event with impacts (cached).
+
+    Thread-safe (double-checked lock) so the startup warm-up and a racing first
+    request don't both pay the multi-MB parse cost.
+    """
     global _EVENTS_CACHE
     if _EVENTS_CACHE is not None and not force_reload:
         return _EVENTS_CACHE
 
-    events: list[dict] = []
-    events += normalize_events_frame(_read_excel(HDX_PATH), "hdx_1990_2020")
-    for path in UNGRD_CSV_PATHS:
-        stem = path.stem.lower()
-        label = stem if stem.startswith("ungrd") else "ungrd_emergencias"
-        events += normalize_events_frame(_read_csv(path), label)
+    with _LOAD_LOCK:
+        if _EVENTS_CACHE is not None and not force_reload:
+            return _EVENTS_CACHE
 
-    events.sort(key=lambda e: e["_ts"], reverse=True)
-    _EVENTS_CACHE = events
-    logger.info("eventos_historicos: cached %d total events", len(events))
-    return events
+        events: list[dict] = []
+        events += normalize_events_frame(_read_excel(HDX_PATH), "hdx_1990_2020")
+        for path in UNGRD_CSV_PATHS:
+            stem = path.stem.lower()
+            label = stem if stem.startswith("ungrd") else "ungrd_emergencias"
+            events += normalize_events_frame(_read_csv(path), label)
+
+        events.sort(key=lambda e: e["_ts"], reverse=True)
+        _EVENTS_CACHE = events
+        logger.info("eventos_historicos: cached %d total events", len(events))
+        return _EVENTS_CACHE
 
 
 # ── Querying (pure — unit-tested with synthetic event lists) ─────────────────
@@ -235,6 +258,16 @@ def _aggregate(events: list[dict]) -> dict:
         return sum(vals) if vals else None
 
     fechas = [e["fecha"] for e in events]
+
+    # Per-year counts for the UI sparkline (computed over the full filtered set).
+    by_year: dict[int, dict] = {}
+    for e in events:
+        y = int(e["fecha"][:4])
+        bucket = by_year.setdefault(y, {"anio": y, "total": 0, "inundaciones": 0, "sequias": 0})
+        bucket["total"] += 1
+        bucket["inundaciones" if e["tipo"] == "inundacion" else "sequias"] += 1
+    serie_anual = [by_year[y] for y in sorted(by_year)]
+
     return {
         "total_eventos": len(events),
         "inundaciones": sum(1 for e in events if e["tipo"] == "inundacion"),
@@ -246,6 +279,7 @@ def _aggregate(events: list[dict]) -> dict:
         "viviendas_averiadas": _sum("viviendas_averiadas"),
         "fallecidos": _sum("fallecidos"),
         "rango_fechas": {"desde": min(fechas), "hasta": max(fechas)} if fechas else None,
+        "serie_anual": serie_anual,
     }
 
 
