@@ -1,7 +1,8 @@
 import { useState } from 'react';
 
 // ── Real geographic SVG paths (from Colombia DANE GeoJSON, projected to 460×380) ──
-// Caribbean region mainland departments. San Andrés rendered as an inset.
+// Caribbean region mainland departments only (San Andrés excluded — no useful
+// agricultural/risk records for the continental Caribbean module).
 
 const DEPTS = [
   { name: 'La Guajira', d: 'M 364.2,24.8 L 382.7,32.5 L 388.5,44.3 L 388.9,49.9 L 375.3,61.1 L 376.9,61.5 L 376.3,63.3 L 342.9,72 L 326.2,102.7 L 320.5,102 L 311.4,106 L 300.8,131.2 L 291.5,147.1 L 282.6,148.4 L 275.7,146.3 L 270.7,149 L 268.8,143.8 L 272.7,140.6 L 276.4,133 L 272.3,131.7 L 267.8,126.4 L 265.1,127.9 L 264.6,120.1 L 253.5,119.2 L 243.1,121.9 L 240.8,115.2 L 240.7,103.7 L 244.2,100.2 L 244.8,96.3 L 259.4,95.6 L 282.9,77.7 L 289,76.3 L 296.1,69.1 L 308,66 L 309.7,64.1 L 314,64.2 L 320.5,60.7 L 324.4,57.9 L 330.2,45 L 327.9,38.4 L 339.9,36.5 L 339.1,42.5 L 341.8,42 L 346.3,39.5 L 344.1,35.3 L 341,34.7 L 345.8,30.1 L 348,28.7 L 349.2,32.4 L 353.8,27.3 L 355.4,29.4 L 359.2,25.9 L 356.9,24.9 L 353.8,26.2 L 354.5,24.9 L 364.2,24.8 Z', labelX: 312, labelY: 84 },
@@ -13,17 +14,13 @@ const DEPTS = [
   { name: 'Córdoba', d: 'M 112.4,207.3 L 119.3,208.6 L 119.5,213 L 130.3,219.2 L 133.6,218.5 L 133.4,222.3 L 136.1,223.1 L 136,225.1 L 140.2,225.1 L 143.2,229.5 L 146.7,229.8 L 149,241.3 L 142,241.6 L 137.3,243.8 L 141,248.2 L 139.5,250.1 L 142.7,264.3 L 149,264.4 L 148.6,268.9 L 152.1,270.7 L 159,264.9 L 167.5,266.8 L 173.1,271.6 L 175.2,278.7 L 164.1,290.8 L 147.8,292.4 L 141.9,298.4 L 140.8,302.6 L 133.2,305.6 L 131.4,311.7 L 126.5,310.1 L 122.6,311.3 L 118.2,321.5 L 111.1,331.1 L 99.8,333.3 L 81.1,333.3 L 73,322.2 L 70.5,314.7 L 78,285.8 L 89.9,267.2 L 88.6,259.1 L 80.6,254.2 L 77.7,243.2 L 74.5,239.9 L 84.5,233.2 L 89.4,225.4 L 90.3,219.6 L 94.8,213.6 L 104.3,208.2 L 112.4,207.3 Z', labelX: 105, labelY: 270 },
 ];
 
-const ISLAND = { name: 'San Andrés', cx: 36, cy: 48, rx: 11, ry: 16, labelX: 36, labelY: 22 };
-
 // ── Component ──────────────────────────────────────────────────────────────
 
 export default function DeptMap({ selectedDept, onDeptChange }) {
   const [hovered, setHovered] = useState(null);
 
   const activeName = hovered || selectedDept;
-  const activeDept =
-    DEPTS.find((d) => d.name === activeName) ||
-    (ISLAND.name === activeName ? ISLAND : null);
+  const activeDept = DEPTS.find((d) => d.name === activeName) || null;
 
   const renderDept = (dept) => {
     const isSelected = selectedDept === dept.name;
@@ -91,31 +88,8 @@ export default function DeptMap({ selectedDept, onDeptChange }) {
         {/* Mainland departments */}
         {DEPTS.map(renderDept)}
 
-        {/* San Andrés inset */}
-        <g
-          onMouseEnter={() => setHovered(ISLAND.name)}
-          onMouseLeave={() => setHovered(null)}
-          onClick={() => onDeptChange(selectedDept === ISLAND.name ? null : ISLAND.name)}
-          style={{ cursor: 'pointer' }}
-        >
-          <rect x="14" y="14" width="64" height="68" rx="10" fill="rgba(255,255,255,0.35)" stroke="rgba(15,82,56,0.18)" strokeDasharray="3 3" strokeWidth="0.8" />
-          <ellipse
-            cx={ISLAND.cx} cy={ISLAND.cy} rx={ISLAND.rx} ry={ISLAND.ry}
-            fill={selectedDept === ISLAND.name ? 'url(#dept-selected)' : hovered === ISLAND.name ? 'url(#dept-hover)' : 'url(#dept-idle)'}
-            stroke={selectedDept === ISLAND.name ? '#0f5238' : 'rgba(15,82,56,0.35)'}
-            strokeWidth={selectedDept === ISLAND.name ? 1.8 : 0.8}
-            filter={selectedDept === ISLAND.name ? 'url(#dept-glow)' : undefined}
-            style={{ transition: 'fill 0.2s ease' }}
-          >
-            <title>San Andrés</title>
-          </ellipse>
-          <text x={ISLAND.labelX} y={ISLAND.labelY} textAnchor="middle" fontSize="8" fontWeight="600" fill="rgba(15,82,56,0.65)">
-            San Andrés
-          </text>
-        </g>
-
         {/* Active label (hover or selected) — rendered last so it sits on top */}
-        {activeDept && activeDept.name !== ISLAND.name && (
+        {activeDept && (
           <text
             x={activeDept.labelX}
             y={activeDept.labelY}

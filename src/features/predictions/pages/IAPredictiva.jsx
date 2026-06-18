@@ -1,14 +1,16 @@
 import React, { useState, useMemo, useCallback, useEffect, Component } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Loader2, Sprout, Search, Sun, AlertTriangle, GitCompare, ShieldAlert, CalendarRange, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Loader2, Sprout, Search, Sun, AlertTriangle, GitCompare, ShieldAlert, CalendarRange, ChevronDown, History } from 'lucide-react';
 import ResearcherLayout from '@shared/layout/ResearcherLayout/ResearcherLayout';
 import useAuthGuard from '@shared/hooks/useAuthGuard';
 import useAppStore from '@shared/store';
+import { getMunicipioReferencia } from '@shared/services/api';
 import usePrediccion from '@features/predictions/hooks/usePrediccion';
 import { BentoGrid, BentoCard } from '@shared/ui/BentoGrid';
 import ControlBar from '@features/predictions/components/ControlBar';
 import PlantabilityPanel from '@features/predictions/components/PlantabilityPanel';
+import HistorialLocalPanel from '@features/predictions/components/HistorialLocalPanel';
 import ScenarioSimulator from '@features/predictions/components/ScenarioSimulator/ScenarioSimulator';
 import GrowthStressChart from '@features/predictions/components/ScenarioSimulator/GrowthStressChart';
 import MonthlyProjectionTabs from '@features/predictions/components/MonthlyProjectionTabs/MonthlyProjectionTabs';
@@ -53,7 +55,8 @@ class ResultsErrorBoundary extends Component {
   }
 }
 
-// ── Department centroid coordinates [lon, lat] for Caribbean region ──
+// ── Department centroid coordinates [lon, lat] — mainland Caribbean only ──
+// San Andrés excluded: no useful agricultural/risk records for this module.
 const DEPT_COORDS = {
   'Atlántico':   [-74.88, 10.94],
   'Bolívar':     [-74.85,  8.67],
@@ -62,7 +65,6 @@ const DEPT_COORDS = {
   'Cesar':       [-73.65,  9.33],
   'La Guajira':  [-72.50, 11.33],
   'Sucre':       [-75.13,  9.30],
-  'San Andrés':  [-81.70, 12.53],
 };
 
 const _nowDate = new Date();
@@ -93,6 +95,8 @@ const IAPredictiva = () => {
   const [precipDeltaPct, setPrecipDeltaPctState] = useState(0);
   const [tempDeltaC, setTempDeltaCState] = useState(0);
   const [selectedDept, setSelectedDept] = useState(null);
+  const [selectedMunicipio, setSelectedMunicipio] = useState('');
+  const [queryMunicipio, setQueryMunicipio] = useState(null);
   const [selectedCultivo, setSelectedCultivo] = useState('');
   const [selectedFecha, setSelectedFecha] = useState('');
   const [riskData, setRiskData] = useState({ flood: null, drought: null });
@@ -120,22 +124,29 @@ const IAPredictiva = () => {
   // ── Handlers ──
   const handleDeptChange = useCallback((dept) => {
     setSelectedDept(dept);
+    setSelectedMunicipio(''); // municipios depend on the department
     if (!dept) setQueryCoords(null);
   }, []);
 
   const handleExecute = useCallback(() => {
     if (!selectedDept || !DEPT_COORDS[selectedDept]) return;
+    // Prefer the municipio centroid when chosen; fall back to the dept centroid.
+    const muniRef = selectedMunicipio ? getMunicipioReferencia(selectedMunicipio) : null;
     const [lon, lat] = DEPT_COORDS[selectedDept];
-    setQueryCoords({ lat, lng: lon });
+    const coords = muniRef
+      ? { lat: muniRef.lat, lng: muniRef.lng }
+      : { lat, lng: lon };
+    setQueryCoords(coords);
+    setQueryMunicipio(selectedMunicipio || null);
     // Trigger the full seasonal projection — drives the isProjected dashboard
     fetchProyeccion({
-      lat,
-      lng: lon,
+      lat: coords.lat,
+      lng: coords.lng,
       cultivo: selectedCultivo || 'Maiz',
       meses: 6,
       fechaSiembraStr: selectedFecha || null,
     });
-  }, [selectedDept, selectedCultivo, selectedFecha, fetchProyeccion]);
+  }, [selectedDept, selectedMunicipio, selectedCultivo, selectedFecha, fetchProyeccion]);
 
   const handleSelectAnalysis = useCallback((id) => {
     setSelectedAnalysisId(id);
@@ -167,9 +178,11 @@ const IAPredictiva = () => {
     clearProyeccion();
     setSelectedAnalysisId(null);
     setQueryCoords(null);
+    setQueryMunicipio(null);
     setPrecipDeltaPctState(0);
     setTempDeltaCState(0);
     setSelectedDept(null);
+    setSelectedMunicipio('');
     setSelectedCultivo('');
     setSelectedFecha('');
   }, [clearProyeccion]);
@@ -241,6 +254,8 @@ const IAPredictiva = () => {
         <ControlBar
           selectedDept={selectedDept}
           onDeptChange={handleDeptChange}
+          selectedMunicipio={selectedMunicipio}
+          onMunicipioChange={setSelectedMunicipio}
           selectedCultivo={selectedCultivo}
           onCultivoChange={setSelectedCultivo}
           selectedFecha={selectedFecha}
@@ -327,6 +342,27 @@ const IAPredictiva = () => {
                   </ResultsErrorBoundary>
                 )}
               </AnimatePresence>
+
+              {/* ── Evidencia histórica local (debajo del riesgo, antes de la planificación) ── */}
+              <div className="ia-section">
+                <div className="ia-section-text">
+                  <span className="ia-section-eyebrow"><History size={13} /> Evidencia histórica</span>
+                  <h2 className="ia-section-title">Historial local de eventos</h2>
+                  <p className="ia-section-subtitle">
+                    Inundaciones y sequías reales registradas cerca de la ubicación seleccionada
+                    (UNGRD / HDX). Es evidencia contextual, no una predicción.
+                  </p>
+                </div>
+              </div>
+
+              <ResultsErrorBoundary label="HistorialLocalPanel">
+                <HistorialLocalPanel
+                  lat={queryCoords.lat}
+                  lon={queryCoords.lng}
+                  municipio={queryMunicipio}
+                  limit={8}
+                />
+              </ResultsErrorBoundary>
             </>
           )}
 

@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
-import { MapPin, Sprout, Calendar, Play, RotateCcw, Loader2 } from 'lucide-react';
+import { MapPin, Building2, Sprout, Calendar, Play, RotateCcw, Loader2 } from 'lucide-react';
+import { MUNICIPIOS_REFERENCIA } from '@shared/services/api';
 import DeptMap from './DeptMap';
 
 // ── Constants ──────────────────────────────────────────────────────────────
@@ -14,6 +15,8 @@ const CULTIVOS = [
 export default function ControlBar({
   selectedDept,
   onDeptChange,
+  selectedMunicipio,
+  onMunicipioChange,
   selectedCultivo,
   onCultivoChange,
   selectedFecha,
@@ -22,8 +25,13 @@ export default function ControlBar({
   onExecute,
   loading,
 }) {
-  const hasSelection = selectedDept || selectedCultivo || selectedFecha;
+  const hasSelection = selectedDept || selectedMunicipio || selectedCultivo || selectedFecha;
   const canExecute = !!selectedDept && !loading;
+
+  // Municipios available for the chosen department (reference centroids).
+  const municipios = selectedDept
+    ? MUNICIPIOS_REFERENCIA.filter((m) => m.departamento === selectedDept)
+    : [];
 
   return (
     <motion.section
@@ -50,6 +58,28 @@ export default function ControlBar({
             Elige un departamento en el mapa, define cultivo y fecha de siembra,
             y ejecuta la proyección climática.
           </p>
+        </div>
+
+        {/* Municipio selector (depends on department) */}
+        <div className="cb-field">
+          <label className="bento-field-label" htmlFor="cb-municipio">
+            <Building2 size={13} />
+            Municipio <span className="cb-optional">(opcional)</span>
+          </label>
+          <select
+            id="cb-municipio"
+            className="bento-field-input"
+            value={selectedMunicipio || ''}
+            onChange={(e) => onMunicipioChange(e.target.value)}
+            disabled={!selectedDept || municipios.length === 0}
+          >
+            <option value="">
+              {selectedDept ? 'Todo el departamento (centroide)' : 'Elige un departamento primero'}
+            </option>
+            {municipios.map((m) => (
+              <option key={m.id} value={m.nombre}>{m.nombre}</option>
+            ))}
+          </select>
         </div>
 
         {/* Crop selector */}

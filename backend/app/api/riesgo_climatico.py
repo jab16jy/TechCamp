@@ -1,15 +1,22 @@
+import asyncio
 import json
 import logging
 from datetime import datetime
 from pathlib import Path
+from typing import Optional
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Query, status
 
 from app.schemas.riesgo_climatico import (
     ClimateRiskRequest,
     ClimateRiskResponse,
     FactorContribucion,
     RiesgoScore,
+)
+from app.schemas.historial_eventos import (
+    EventoHistorico,
+    HistorialEventosResponse,
+    ResumenAgregado,
 )
 
 logger = logging.getLogger(__name__)
@@ -170,6 +177,56 @@ async def predict_climate_risk(req: ClimateRiskRequest) -> ClimateRiskResponse:
         riesgos=riesgos,
         factores_principales=factores,
         modelo_disponible=modelo_disponible,
+        mensaje=mensaje,
+    )
+
+
+@router.get("/historial", response_model=HistorialEventosResponse)
+async def historial_eventos(
+    lat: float = Query(..., ge=-4.5, le=12.5, description="Latitud WGS84"),
+    lon: float = Query(..., ge=-79.0, le=-66.0, description="Longitud WGS84"),
+    event_type: Optional[str] = Query(
+        None, description="Filtrar: flood/inundacion | drought/sequia"
+    ),
+    municipio: Optional[str] = Query(None, description="Filtrar por municipio"),
+    limit: int = Query(20, ge=1, le=100),
+) -> HistorialEventosResponse:
+    """Recent real flood/drought events near a location, with reported impacts.
+
+    Contextual EVIDENCE only — not a prediction. Impacts are surfaced exactly as
+    reported by the source (UNGRD / HDX); missing figures stay null, never zero.
+    Returns an empty list (not an error) when no records match.
+    """
+    from app.ml.data_sources.eventos_historicos import load_all_events, query_events
+
+    try:
+        # Disk read + pandas work runs off the event loop; cached after first call.
+        events = await asyncio.to_thread(load_all_events)
+        result = await asyncio.to_thread(
+            query_events, events, lat, lon,
+            event_type=event_type, municipio=municipio, limit=limit,
+        )
+    except Exception as e:
+        logger.error("historial_eventos failed at (%s,%s): %s", lat, lon, e)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="No se pudo cargar el historial de eventos.",
+        )
+
+    eventos = [EventoHistorico(**e) for e in result["eventos"]]
+    resumen = ResumenAgregado(**result["resumen"])
+    departamento = eventos[0].departamento if eventos else None
+    mensaje = None
+    if not eventos:
+        mensaje = "Sin registros históricos cercanos en las fuentes disponibles."
+
+    return HistorialEventosResponse(
+        departamento=departamento,
+        municipio=municipio,
+        event_type=event_type,
+        total_disponibles=result["total_disponibles"],
+        eventos=eventos,
+        resumen=resumen,
         mensaje=mensaje,
     )
 
