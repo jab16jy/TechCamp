@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import React, { useEffect } from 'react';
-import { Activity, AlertTriangle, CalendarDays, Droplets, Info, MapPin, ShieldCheck, Sun } from 'lucide-react';
+import { Activity, AlertTriangle, CalendarDays, Droplets, FlaskConical, Info, MapPin, ShieldCheck, Sun } from 'lucide-react';
 import { BentoGrid, BentoCard } from '@shared/ui/BentoGrid';
 import useRiesgoClimatico from '@features/predictions/hooks/useRiesgoClimatico';
 
@@ -275,29 +275,29 @@ function FallbackNotice({ message }) {
 
 // ── Main component ─────────────────────────────────────────────────────────
 
-export default function MLRiskPanel({ lat, lon, year, month, onRiskData }) {
+export default function MLRiskPanel({ lat, lon, month, precipDeltaPct = 0, tempDeltaC = 0, onRiskData }) {
   const { flood, drought, meta, loading, error, fetchRisk } = useRiesgoClimatico();
 
-  const hasCoords = lat != null && lon != null && year != null && month != null;
+  const hasCoords = lat != null && lon != null && month != null;
 
   useEffect(() => {
     if (hasCoords) {
-      fetchRisk(lat, lon, year, month);
+      fetchRisk(lat, lon, month, { precipDeltaPct, tempDeltaC });
     }
-  }, [lat, lon, year, month, hasCoords, fetchRisk]);
+  }, [lat, lon, month, precipDeltaPct, tempDeltaC, hasCoords, fetchRisk]);
 
   useEffect(() => {
     if (onRiskData && (flood !== null || drought !== null)) {
-      onRiskData({ flood, drought });
+      onRiskData({ flood, drought, meta });
     }
-  }, [flood, drought, onRiskData]);
+  }, [flood, drought, meta, onRiskData]);
 
   if (!hasCoords) return null;
 
-  // The backend may evaluate a different (latest available) window than requested
-  // when the requested date is beyond climate-data coverage — show the real one.
+  // The backend resolves the latest available window and applies the scenario —
+  // show the window it actually evaluated, and flag when it was a simulation.
   const evalMonth = meta?.month ?? month;
-  const evalYear = meta?.year ?? year;
+  const evalYear = meta?.year ?? '';
 
   return (
     <section style={{ marginTop: '1rem' }}>
@@ -305,6 +305,19 @@ export default function MLRiskPanel({ lat, lon, year, month, onRiskData }) {
         <div className="flex items-center gap-2">
           <Activity size={16} style={{ color: '#0f5238' }} />
           <h2 className="text-sm font-bold text-[#1A1C1A]">Predicción de Riesgo Climático</h2>
+          {meta?.simulacion && (
+            <span
+              className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full inline-flex items-center gap-1"
+              style={{ background: 'rgba(184,134,11,0.12)', color: '#b8860b' }}
+              title={
+                meta?.escenario
+                  ? `Lluvia ${meta.escenario.precip_delta_pct > 0 ? '+' : ''}${meta.escenario.precip_delta_pct}% · Temp ${meta.escenario.temp_delta_c > 0 ? '+' : ''}${meta.escenario.temp_delta_c}°C`
+                  : 'Escenario simulado'
+              }
+            >
+              <FlaskConical size={11} /> Simulación
+            </span>
+          )}
         </div>
         <span className="text-[11px] text-[#6b7280]">
           Ventana evaluada: {MONTH_NAMES[(evalMonth || 1) - 1]} {evalYear}
@@ -332,7 +345,7 @@ export default function MLRiskPanel({ lat, lon, year, month, onRiskData }) {
           </>
         ) : (
           <>
-            <DecisionSummaryCard flood={flood} drought={drought} meta={meta || { lat, lon, year, month }} />
+            <DecisionSummaryCard flood={flood} drought={drought} meta={meta || { lat, lon, month }} />
             <RiskCard
               title="Riesgo de Inundación"
               Icon={Droplets}

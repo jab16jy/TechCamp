@@ -186,3 +186,20 @@ def latest_available_month() -> tuple[int, int] | None:
         except (IndexError, ValueError):
             pass
     return max(months) if months else None
+
+
+@lru_cache(maxsize=16)
+def latest_year_for_month(month: int) -> int | None:
+    """Most recent year that has a CHIRPS file for the given month, or None.
+
+    Lets the UI offer a 'month to evaluate' (Jan–Dec) and resolve it to the
+    latest real window (e.g. month=6 → 2024 when 2024-06 is the newest June).
+    """
+    years = []
+    for f in CHIRPS_DIR.glob(f"chirps_col_*_{month:02d}.tif"):
+        parts = f.stem.split("_")
+        try:
+            years.append(int(parts[2]))
+        except (IndexError, ValueError):
+            pass
+    return max(years) if years else None

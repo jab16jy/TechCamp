@@ -5,12 +5,14 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.schemas.riesgo_climatico import (
     ClimateRiskRequest,
     ClimateRiskResponse,
     FactorContribucion,
+    RegistroPrediccionRequest,
     RiesgoScore,
 )
 from app.schemas.historial_eventos import (
@@ -18,6 +20,7 @@ from app.schemas.historial_eventos import (
     HistorialEventosResponse,
     ResumenAgregado,
 )
+from app.core.dependencies import get_db
 
 logger = logging.getLogger(__name__)
 
@@ -42,25 +45,6 @@ def _load_risk_metrics(event_type: str) -> dict:
         data = json.loads(_METRICS_PATH.read_text())
         return data.get("climate_risk", {}).get("models", {}).get(event_type, {}) or {}
     except Exception:
-        return {}
-
-
-async def _fetch_static(lat: float, lon: float) -> dict:
-    """Fetch soil + elevation for inference so features match training."""
-    try:
-        from app.services.soil_service import get_soil_data
-        from app.ml.data_sources.elevation import get_elevation
-
-        soil = await get_soil_data(lat, lon) or {}
-        elev = await get_elevation(lat, lon)
-        return {
-            "soil_ph": soil.get("ph"),
-            "soil_clay": soil.get("clay"),
-            "soil_awc": soil.get("awc"),
-            "elevation_m": elev,
-        }
-    except Exception as e:
-        logger.warning("Static feature fetch failed for (%s,%s): %s", lat, lon, e)
         return {}
 
 
@@ -96,10 +80,12 @@ def _heuristic_fallback(lat: float, lon: float, year: int, month: int) -> list[R
         return []
 
 
-def _run_models(lat, lon, year, month, static, trained: dict[str, bool]) -> list[RiesgoScore]:
+def _run_models(lat, lon, year, month, trained: dict[str, bool],
+                precip_scale: float = 1.0, temp_delta_c: float = 0.0) -> list[RiesgoScore]:
     """Run the trained RiskClassifier(s) for one (year, month) window.
 
     Returns [] when the window has no usable climate coverage (probability None).
+    `precip_scale`/`temp_delta_c` apply the climate what-if to the model inputs.
     """
     from app.ml.riesgo_climatico_model import RiskClassifier
 
@@ -109,7 +95,7 @@ def _run_models(lat, lon, year, month, static, trained: dict[str, bool]) -> list
             continue
         try:
             result = RiskClassifier(event_type).predict_from_coords(
-                lat, lon, year, month, static=static
+                lat, lon, year, month, precip_scale=precip_scale, temp_delta_c=temp_delta_c
             )
             if result.get("probability") is None:
                 logger.warning("Insufficient CHIRPS coverage for %s at (%s, %s) %s-%s",
@@ -151,32 +137,44 @@ async def predict_climate_risk(req: ClimateRiskRequest) -> ClimateRiskResponse:
     heuristic only when no model or no usable climate data exists.
     """
     from app.ml.riesgo_climatico_model import is_trained
-    from app.ml.data_sources.chirps import latest_available_month
+    from app.ml.data_sources.chirps import latest_available_month, latest_year_for_month
 
     factores: list[FactorContribucion] = []
     mensaje = None
-    eval_year, eval_month = req.year, req.month
+
+    # Resolve the year: prefer the request's, else the latest year that has data
+    # for the requested month, else the latest available month overall.
+    req_year = req.year or latest_year_for_month(req.month)
+    if req_year is None:
+        latest = latest_available_month()
+        req_year, req_month = (latest if latest else (2024, req.month))
+    else:
+        req_month = req.month
+    eval_year, eval_month = req_year, req_month
+
+    # Climate scenario knobs (the model's real inputs — soil is NOT a feature).
+    precip_scale = 1.0 + (req.precip_delta_pct or 0.0) / 100.0
+    temp_delta = req.temp_delta_c or 0.0
+    simulacion = precip_scale != 1.0 or temp_delta != 0.0
 
     trained = {"flood": is_trained("flood"), "drought": is_trained("drought")}
     modelo_disponible = any(trained.values())
 
     riesgos: list[RiesgoScore] = []
     if modelo_disponible:
-        # Fetch soil/elevation once so inference features match training.
-        static = await _fetch_static(req.lat, req.lon)
-        riesgos = _run_models(req.lat, req.lon, req.year, req.month, static, trained)
+        riesgos = _run_models(req.lat, req.lon, eval_year, eval_month, trained, precip_scale, temp_delta)
 
         # Requested window out of coverage → evaluate the latest real window.
         if not riesgos:
             latest = latest_available_month()
-            if latest and latest != (req.year, req.month):
+            if latest and latest != (eval_year, eval_month):
                 ly, lm = latest
-                retry = _run_models(req.lat, req.lon, ly, lm, static, trained)
+                retry = _run_models(req.lat, req.lon, ly, lm, trained, precip_scale, temp_delta)
                 if retry:
                     riesgos = retry
                     eval_year, eval_month = ly, lm
                     mensaje = (
-                        f"Sin datos climáticos para {req.month:02d}/{req.year}. "
+                        f"Sin datos climáticos para {eval_month:02d}/{req_year}. "
                         f"Se evalúa la ventana más reciente disponible: {lm:02d}/{ly}."
                     )
 
@@ -195,6 +193,11 @@ async def predict_climate_risk(req: ClimateRiskRequest) -> ClimateRiskResponse:
             "Se usa el heurístico de reglas como aproximación."
         )
 
+    escenario = {
+        "precip_delta_pct": req.precip_delta_pct or 0.0,
+        "temp_delta_c": temp_delta,
+    } if simulacion else None
+
     return ClimateRiskResponse(
         lat=req.lat,
         lon=req.lon,
@@ -204,7 +207,40 @@ async def predict_climate_risk(req: ClimateRiskRequest) -> ClimateRiskResponse:
         factores_principales=factores,
         modelo_disponible=modelo_disponible,
         mensaje=mensaje,
+        escenario=escenario,
+        simulacion=simulacion,
     )
+
+
+@router.post("/registro", status_code=status.HTTP_201_CREATED)
+async def guardar_registro(
+    req: RegistroPrediccionRequest,
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """Persist one IAPredictiva run as a prediction record (tipo='prediccion')."""
+    from app.models.analisis import Analisis
+
+    try:
+        ana = Analisis(
+            municipio_id=None,
+            tipo="prediccion",
+            datos_formulario=req.datos_formulario or {},
+            resultado_completo=req.resultado_completo or {},
+            lat=req.lat,
+            lng=req.lon,
+            cultivo_recomendado=req.riesgo_dominante,
+            score=req.score,
+        )
+        db.add(ana)
+        await db.commit()
+        return {"id": str(ana.id)[:8].upper(), "tipo": "prediccion"}
+    except Exception:
+        await db.rollback()
+        logger.exception("Error guardando registro de prediccion")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="No se pudo guardar el registro de predicción.",
+        )
 
 
 @router.get("/historial", response_model=HistorialEventosResponse)

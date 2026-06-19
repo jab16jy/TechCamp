@@ -178,6 +178,12 @@ export const getHistorial = async () => {
   }
 };
 
+/** Persistir una corrida de IAPredictiva como registro de predicción */
+export const guardarRegistroPrediccion = async (payload) => {
+  const { data } = await apiClient.post("/riesgo-climatico/registro", payload);
+  return data;
+};
+
 /** Obtener detalles de un análisis previo */
 export const getAnalysis = async (id) => {
   try {

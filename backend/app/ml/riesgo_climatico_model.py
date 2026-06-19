@@ -290,17 +290,26 @@ class RiskClassifier:
         year: int,
         month: int,
         static: dict | None = None,
+        precip_scale: float = 1.0,
+        temp_delta_c: float = 0.0,
     ) -> dict:
         """Build features from coordinates and return risk score + metadata.
 
-        `static` (soil_ph/soil_clay/soil_awc/elevation_m) should be supplied by
-        the caller for train/inference parity — the model is trained WITH these
-        features, so omitting them degrades the prediction.
+        Climate what-if knobs (the model's real inputs):
+          `precip_scale`  — scales every precipitation feature (1.0 = no change);
+                            derived totals/anomaly are recomputed consistently.
+          `temp_delta_c`  — adds a constant to the ERA5 mean temperature feature.
+        Neither touches training.
         """
         from app.ml.riesgo_climatico_dataset import _build_feature_row
         row = _build_feature_row(lat, lon, year, month, self._event_type, label=0, static=static)
         if row is None:
             return {"probability": None, "error": "insufficient_chirps_coverage"}
+
+        if precip_scale != 1.0:
+            _scale_precip_features(row, precip_scale)
+        if temp_delta_c and row.get("era5_t2m") is not None:
+            row["era5_t2m"] = row["era5_t2m"] + temp_delta_c
 
         feat_values = np.array(
             [row.get(f, 0.0) for f in self._feat_names], dtype=np.float32
@@ -314,6 +323,37 @@ class RiskClassifier:
             "calibration_method": self._calibration_method,
             "features_used": len(self._feat_names),
         }
+
+
+def _scale_precip_features(row: dict, scale: float) -> None:
+    """In-place rainfall what-if: scale precip magnitudes, recompute derivations.
+
+    Keeps the climatological baseline fixed so the anomaly still measures the
+    departure of the (scaled) most-recent month from normal.
+    """
+    months = [row.get(f"precip_m{i}") for i in range(1, 7)]
+    if any(m is None for m in months):
+        return
+    clim_last = months[-1] - row.get("precip_anomaly_last", 0.0)  # recover baseline
+    months = [max(0.0, m * scale) for m in months]
+    for i, v in enumerate(months, start=1):
+        row[f"precip_m{i}"] = v
+    row["precip_total_3m"] = float(sum(months[-3:]))
+    row["precip_total_6m"] = float(sum(months))
+    row["precip_max_month"] = float(max(months))
+    row["precip_min_month"] = float(min(months))
+    row["precip_anomaly_last"] = months[-1] - clim_last
+
+    wet = dry = 0
+    for v in reversed(months):
+        if v > 100:
+            wet += 1; dry = 0
+        elif v < 30:
+            dry += 1; wet = 0
+        else:
+            break
+    row["consecutive_wet_months"] = float(wet)
+    row["consecutive_dry_months"] = float(dry)
 
 
 def is_trained(event_type: str = "flood") -> bool:

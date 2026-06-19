@@ -2,15 +2,17 @@ import { useState, useCallback } from 'react';
 import { apiClient } from '@shared/services/api';
 
 /**
- * useRiesgoClimatico — Calls POST /riesgo-climatico (single call returns flood + drought).
+ * useRiesgoClimatico — POST /riesgo-climatico (returns flood + drought).
+ *
+ * The backend resolves the most recent year that has climate data for `month`,
+ * and applies the optional climate scenario (rainfall / temperature what-if).
  *
  * Returns:
  *   flood   — { probability, risk_level, model_used, confidence } | null
- *   drought — { probability, risk_level, model_used, confidence } | null
- *   meta    — { modelo_disponible, mensaje, lat, lon, year, month } | null
- *   loading — boolean
- *   error   — string | null
- *   fetchRisk(lat, lon, year, month) — triggers the call
+ *   drought — same shape | null
+ *   meta    — { modelo_disponible, mensaje, lat, lon, year, month, simulacion, escenario } | null
+ *   loading, error
+ *   fetchRisk(lat, lon, month, { precipDeltaPct, tempDeltaC })
  */
 export default function useRiesgoClimatico() {
   const [flood, setFlood] = useState(null);
@@ -19,8 +21,9 @@ export default function useRiesgoClimatico() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchRisk = useCallback(async (lat, lon, year, month) => {
-    if (lat == null || lon == null || year == null || month == null) return;
+  const fetchRisk = useCallback(async (lat, lon, month, scenario = {}) => {
+    if (lat == null || lon == null || month == null) return;
+    const { precipDeltaPct = 0, tempDeltaC = 0 } = scenario;
 
     setLoading(true);
     setError(null);
@@ -29,7 +32,11 @@ export default function useRiesgoClimatico() {
     setMeta(null);
 
     try {
-      const res = await apiClient.post('/riesgo-climatico', { lat, lon, year, month });
+      const res = await apiClient.post('/riesgo-climatico', {
+        lat, lon, month,
+        precip_delta_pct: precipDeltaPct,
+        temp_delta_c: tempDeltaC,
+      });
       const riesgos = res.data.riesgos ?? [];
 
       const mapRiesgo = (r) => r ? {
@@ -49,6 +56,8 @@ export default function useRiesgoClimatico() {
         lon: res.data.lon,
         year: res.data.year,
         month: res.data.month,
+        simulacion: Boolean(res.data.simulacion),
+        escenario: res.data.escenario || null,
       });
     } catch (err) {
       const message = err?.response?.data?.detail || err?.message || 'Error al obtener riesgo climatico';

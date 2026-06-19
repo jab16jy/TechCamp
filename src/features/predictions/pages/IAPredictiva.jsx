@@ -1,38 +1,28 @@
-import React, { useState, useMemo, useCallback, useEffect, Component } from 'react';
+import React, { useState, useCallback, useRef, Component } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Loader2, Sprout, Search, Sun, AlertTriangle, GitCompare, ShieldAlert, CalendarRange, ChevronDown, History } from 'lucide-react';
+import { ArrowLeft, Sprout, AlertTriangle, ShieldAlert, History } from 'lucide-react';
 import ResearcherLayout from '@shared/layout/ResearcherLayout/ResearcherLayout';
 import useAuthGuard from '@shared/hooks/useAuthGuard';
 import useAppStore from '@shared/store';
-import { getMunicipioReferencia } from '@shared/services/api';
-import usePrediccion from '@features/predictions/hooks/usePrediccion';
+import { getMunicipioReferencia, guardarRegistroPrediccion } from '@shared/services/api';
 import { BentoGrid, BentoCard } from '@shared/ui/BentoGrid';
 import ControlBar from '@features/predictions/components/ControlBar';
 import PlantabilityPanel from '@features/predictions/components/PlantabilityPanel';
 import HistorialLocalPanel from '@features/predictions/components/HistorialLocalPanel';
-import ScenarioSimulator from '@features/predictions/components/ScenarioSimulator/ScenarioSimulator';
-import GrowthStressChart from '@features/predictions/components/ScenarioSimulator/GrowthStressChart';
-import MonthlyProjectionTabs from '@features/predictions/components/MonthlyProjectionTabs/MonthlyProjectionTabs';
-import FeatureChart from '@features/predictions/components/FeatureChart/FeatureChart';
-import ClimateRiskPanel from '@features/predictions/components/ClimateRiskPanel/ClimateRiskPanel';
 import MLRiskPanel from '@features/predictions/components/MLRiskPanel/MLRiskPanel';
-import SimulationSection from '@features/predictions/components/SimulationSection/SimulationSection';
-import MitigationActions from '@features/predictions/components/MitigationActions/MitigationActions';
 import './IAPredictiva.css';
 
 // ── Error Boundary para la sección de resultados ──
 class ResultsErrorBoundary extends Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false, error: null, info: null };
+    this.state = { hasError: false, error: null };
   }
   static getDerivedStateFromError(error) {
     return { hasError: true, error };
   }
   componentDidCatch(error, info) {
     console.error(`[IAPredictiva] Crash en "${this.props.label}":`, error?.message || error, info?.componentStack);
-    this.setState({ info });
   }
   render() {
     if (this.state.hasError) {
@@ -67,151 +57,105 @@ const DEPT_COORDS = {
   'Sucre':       [-75.13,  9.30],
 };
 
-const _nowDate = new Date();
-const CURRENT_YEAR  = _nowDate.getFullYear();
-const CURRENT_MONTH = _nowDate.getMonth() + 1;
+const CURRENT_MONTH = new Date().getMonth() + 1;
 
 const IAPredictiva = () => {
   const authorized = useAuthGuard('investigador');
   const navigate = useNavigate();
-  const { historial } = useAppStore();
+  const { agregarAlHistorial } = useAppStore();
 
-  // ── Hook: only usePrediccion remains ──
-  const predHook = usePrediccion();
-
-  // ── Destructure for convenience ──
-  const {
-    proyeccion6M, loadingProyeccion, estado,
-    npkSim, riegoSim, stale: predStale,
-    fechaSiembra,
-    setNpkSim, setRiegoSim,
-    fetchProyeccion, simularEscenario, selectAnalysis, clearProyeccion,
-    compareData, loadingCompare, compararEscenarios, clearCompare,
-  } = predHook;
-
-  // ── Local state ──
-  const [selectedAnalysisId, setSelectedAnalysisId] = useState(null);
-  const [queryCoords, setQueryCoords] = useState(null);
-  const [precipDeltaPct, setPrecipDeltaPctState] = useState(0);
-  const [tempDeltaC, setTempDeltaCState] = useState(0);
+  // ── Draft intake (edited freely; only committed on Ejecutar) ──
   const [selectedDept, setSelectedDept] = useState(null);
   const [selectedMunicipio, setSelectedMunicipio] = useState('');
-  const [queryMunicipio, setQueryMunicipio] = useState(null);
-  const [selectedCultivo, setSelectedCultivo] = useState('');
-  const [selectedFecha, setSelectedFecha] = useState('');
+  const [selectedMes, setSelectedMes] = useState(CURRENT_MONTH);
+  const [precipDelta, setPrecipDelta] = useState(0);   // % rainfall what-if
+  const [tempDelta, setTempDelta] = useState(0);        // °C what-if
+
+  // ── Committed query (props for MLRiskPanel; change together on Ejecutar) ──
+  const [query, setQuery] = useState(null); // { lat, lng, mes, precip, temp }
   const [riskData, setRiskData] = useState({ flood: null, drought: null });
-  const [seasonalOpen, setSeasonalOpen] = useState(true);
+  const [running, setRunning] = useState(false);
 
-  const handleRiskData = useCallback(({ flood, drought }) => {
-    setRiskData({ flood, drought });
-  }, []);
-
-  // ── Derived: analysis list with coordinates ──
-  const analisisConCoordenadas = useMemo(
-    () => historial.filter((item) => {
-      const lat = item.coordenadas?.lat ?? item.lat;
-      const lng = item.coordenadas?.lng ?? item.lng;
-      return Number.isFinite(Number(lat)) && Number.isFinite(Number(lng));
-    }),
-    [historial],
-  );
-
-  const inheritedRecord = useMemo(
-    () => analisisConCoordenadas.find((item) => item.id === selectedAnalysisId) || null,
-    [analisisConCoordenadas, selectedAnalysisId],
-  );
+  const queryRef = useRef(null);   // location/scenario context for persistence
+  const savedKeyRef = useRef(null); // dedupe: one history record per execution
 
   // ── Handlers ──
   const handleDeptChange = useCallback((dept) => {
     setSelectedDept(dept);
     setSelectedMunicipio(''); // municipios depend on the department
-    if (!dept) setQueryCoords(null);
   }, []);
 
   const handleExecute = useCallback(() => {
     if (!selectedDept || !DEPT_COORDS[selectedDept]) return;
-    // Prefer the municipio centroid when chosen; fall back to the dept centroid.
     const muniRef = selectedMunicipio ? getMunicipioReferencia(selectedMunicipio) : null;
     const [lon, lat] = DEPT_COORDS[selectedDept];
-    const coords = muniRef
-      ? { lat: muniRef.lat, lng: muniRef.lng }
-      : { lat, lng: lon };
-    setQueryCoords(coords);
-    setQueryMunicipio(selectedMunicipio || null);
-    // Trigger the full seasonal projection — drives the isProjected dashboard
-    fetchProyeccion({
-      lat: coords.lat,
-      lng: coords.lng,
-      cultivo: selectedCultivo || 'Maiz',
-      meses: 6,
-      fechaSiembraStr: selectedFecha || null,
-    });
-  }, [selectedDept, selectedMunicipio, selectedCultivo, selectedFecha, fetchProyeccion]);
+    const coords = muniRef ? { lat: muniRef.lat, lng: muniRef.lng } : { lat, lng: lon };
 
-  const handleSelectAnalysis = useCallback((id) => {
-    setSelectedAnalysisId(id);
-    const localRecord = analisisConCoordenadas.find((a) => a.id === id) || null;
-    selectAnalysis(id, localRecord).then((result) => {
-      if (result && localRecord) {
-        const lat = localRecord.coordenadas?.lat ?? localRecord.lat;
-        const lng = localRecord.coordenadas?.lng ?? localRecord.lng;
-        if (Number.isFinite(Number(lat)) && Number.isFinite(Number(lng))) {
-          setQueryCoords({ lat: Number(lat), lng: Number(lng) });
-        }
-      }
-    });
-  }, [selectAnalysis, analisisConCoordenadas]);
+    queryRef.current = {
+      lat: coords.lat, lng: coords.lng, mes: selectedMes,
+      precip: precipDelta, temp: tempDelta,
+      municipio: selectedMunicipio || null, departamento: selectedDept,
+    };
+    setRunning(true);
+    setRiskData({ flood: null, drought: null });
+    setQuery({ lat: coords.lat, lng: coords.lng, mes: selectedMes, precip: precipDelta, temp: tempDelta });
+  }, [selectedDept, selectedMunicipio, selectedMes, precipDelta, tempDelta]);
 
-  const handleSimularContramedida = useCallback(async () => {
-    if (!queryCoords) return;
-    await simularEscenario({
-      precipDeltaPct,
-      tempDeltaC,
-      npkOverride: npkSim,
-      riegoOverride: riegoSim,
-      lat: queryCoords.lat,
-      lng: queryCoords.lng,
+  // Persist one record per execution (localStorage immediately + Postgres).
+  const persistResult = useCallback((flood, drought, meta) => {
+    const q = queryRef.current;
+    if (!q) return;
+    const key = `${q.lat},${q.lng},${q.mes},${q.precip},${q.temp}`;
+    if (savedKeyRef.current === key) return;
+    savedKeyRef.current = key;
+
+    const items = [
+      flood && { label: 'inundacion', p: flood.probability },
+      drought && { label: 'sequia', p: drought.probability },
+    ].filter(Boolean);
+    const dom = items.sort((a, b) => (b.p || 0) - (a.p || 0))[0] || null;
+    const score = dom ? Math.round((dom.p || 0) * 100) : null;
+
+    agregarAlHistorial({
+      tipo: 'prediccion',
+      municipio: q.municipio || '',
+      departamento: q.departamento || '',
+      lat: q.lat,
+      lng: q.lng,
+      cultivo: dom ? dom.label : '—',
+      score,
     });
-  }, [simularEscenario, precipDeltaPct, tempDeltaC, npkSim, riegoSim, queryCoords]);
+    guardarRegistroPrediccion({
+      lat: q.lat, lon: q.lng, municipio: q.municipio, departamento: q.departamento,
+      datos_formulario: { mes: q.mes, precip_delta_pct: q.precip, temp_delta_c: q.temp },
+      resultado_completo: { riesgos: [flood, drought].filter(Boolean), meta },
+      score, riesgo_dominante: dom ? dom.label : null,
+    }).catch(() => { /* best-effort; localStorage already holds the record */ });
+  }, [agregarAlHistorial]);
+
+  const handleRiskData = useCallback(({ flood, drought, meta }) => {
+    setRiskData({ flood, drought });
+    setRunning(false);
+    if (flood || drought) persistResult(flood, drought, meta);
+  }, [persistResult]);
 
   const handleClearAll = useCallback(() => {
-    clearProyeccion();
-    setSelectedAnalysisId(null);
-    setQueryCoords(null);
-    setQueryMunicipio(null);
-    setPrecipDeltaPctState(0);
-    setTempDeltaCState(0);
     setSelectedDept(null);
     setSelectedMunicipio('');
-    setSelectedCultivo('');
-    setSelectedFecha('');
-  }, [clearProyeccion]);
-
-  // ── Precip/temp setters that also trigger stale ──
-  const handlePrecipChange = useCallback((v) => {
-    setPrecipDeltaPctState(v);
-    setNpkSim(npkSim); // trigger stale flag via usePrediccion
-  }, [setNpkSim, npkSim]);
-
-  const handleTempChange = useCallback((v) => {
-    setTempDeltaCState(v);
-    setRiegoSim(riegoSim); // trigger stale flag via usePrediccion
-  }, [setRiegoSim, riegoSim]);
-
-  // ── Derived: feature chart factors ──
-  const featureFactors = useMemo(
-    () => proyeccion6M?.meses?.[0]?.cultivos_recomendados?.[0]?.factor_weights || [],
-    [proyeccion6M],
-  );
+    setSelectedMes(CURRENT_MONTH);
+    setPrecipDelta(0);
+    setTempDelta(0);
+    setQuery(null);
+    setRiskData({ flood: null, drought: null });
+    setRunning(false);
+    queryRef.current = null;
+    savedKeyRef.current = null;
+  }, []);
 
   // ── Auth guard ──
   if (!authorized) return null;
 
-  // Debug: log state transitions
-  console.debug('[IAPredictiva] Render — estado:', estado, 'loadingProyeccion:', loadingProyeccion, 'proyeccion6M:', !!proyeccion6M);
-
-  const isProjected = estado === 'PROJECTED' || estado === 'PLAN_READY';
-  const isLoading = estado === 'LOADING' || estado === 'SIMULATING' || loadingProyeccion;
+  const hasResult = !!query;
 
   return (
     <ResearcherLayout activeTab="ia">
@@ -230,22 +174,12 @@ const IAPredictiva = () => {
               </h1>
             </div>
             <p className="ia-page-intent">
-              Predicción de riesgo de inundación y sequía con un modelo ML para cultivos del
-              Caribe colombiano. La planificación estacional y la simulación de escenarios se
-              ofrecen como apoyo complementario.
+              Predicción de riesgo de inundación y sequía para el Caribe colombiano. Elige una
+              ubicación y un mes; puedes simular escenarios de clima (más/menos lluvia, más/menos
+              temperatura) y comparar contra la evidencia histórica. Cada corrida queda en tu historial.
             </p>
             <div className="flex items-center gap-2 mt-2 flex-wrap">
-              <span className="ia-badge-mode">RiskClassifier ML · NASA POWER + OpenMeteo</span>
-              {selectedAnalysisId && inheritedRecord && (
-                <span
-                  className="text-xs text-[#4a4a4a] flex items-center gap-1.5"
-                  style={{ background: 'rgba(15,82,56,0.06)', padding: '0.15rem 0.6rem', borderRadius: 9999 }}
-                >
-                  <Sun size={10} style={{ color: '#0f5238' }} />
-                  {inheritedRecord.cultivo || '—'} · {[inheritedRecord.municipio, inheritedRecord.departamento].filter(Boolean).join(', ') || 'Sin ubicación'}
-                  {fechaSiembra && ` · Siembra: ${fechaSiembra.toLocaleDateString('es-CO')}`}
-                </span>
-              )}
+              <span className="ia-badge-mode">RiskClassifier ML · CHIRPS + ERA5</span>
             </div>
           </div>
         </header>
@@ -256,33 +190,21 @@ const IAPredictiva = () => {
           onDeptChange={handleDeptChange}
           selectedMunicipio={selectedMunicipio}
           onMunicipioChange={setSelectedMunicipio}
-          selectedCultivo={selectedCultivo}
-          onCultivoChange={setSelectedCultivo}
-          selectedFecha={selectedFecha}
-          onFechaChange={setSelectedFecha}
+          selectedMes={selectedMes}
+          onMesChange={setSelectedMes}
+          precipDelta={precipDelta}
+          onPrecipChange={setPrecipDelta}
+          tempDelta={tempDelta}
+          onTempChange={setTempDelta}
           onClear={handleClearAll}
           onExecute={handleExecute}
-          loading={isLoading}
+          loading={running}
         />
 
         {/* ═══════════ BENTO GRID ═══════════ */}
         <BentoGrid>
-          {/* ── LOADING / SIMULATING — spinner (siempre primero para evitar blank) ── */}
-          {isLoading && (
-            <BentoCard span={{ col: 12, row: 1 }} variant="default">
-              <div className="flex items-center justify-center py-8 gap-3 text-[#4a4a4a]">
-                <Loader2 size={20} className="animate-spin" />
-                <span className="text-sm">
-                  {estado === 'SIMULATING'
-                    ? 'Recalculando proyección con escenario...'
-                    : 'Calculando proyección estacional...'}
-                </span>
-              </div>
-            </BentoCard>
-          )}
-
-          {/* ── STATE: IDLE — empty state (solo cuando no está cargando ni proyectado) ── */}
-          {!isLoading && !isProjected && !queryCoords && (
+          {/* ── IDLE empty state ── */}
+          {!hasResult && (
             <BentoCard span={{ col: 12, row: 1 }} variant="default">
               <div className="flex flex-col items-center justify-center py-12 gap-4 text-center">
                 <div
@@ -294,18 +216,18 @@ const IAPredictiva = () => {
                 <div>
                   <h3 className="text-base font-bold text-[#1A1C1A] mb-1.5">Aún no hay análisis de riesgo</h3>
                   <p className="text-xs text-[#6b7280] max-w-md mx-auto leading-relaxed">
-                    Selecciona un departamento del Caribe en el mapa, ajusta el cultivo y la fecha de
-                    siembra, y presiona <strong style={{ color: '#0f5238' }}>Ejecutar</strong> para
-                    obtener la <strong style={{ color: '#ba1a1a' }}>predicción de riesgo de inundación y
-                    sequía</strong>. La planificación estacional aparece como sección complementaria.
+                    Selecciona un departamento del Caribe en el mapa, elige el mes a evaluar y
+                    (opcional) ajusta el escenario de clima, luego presiona{' '}
+                    <strong style={{ color: '#0f5238' }}>Ejecutar</strong> para obtener la{' '}
+                    <strong style={{ color: '#ba1a1a' }}>predicción de riesgo de inundación y sequía</strong>.
                   </p>
                 </div>
               </div>
             </BentoCard>
           )}
 
-          {/* ═══════════ PRIMARY: Modelo Predictivo de Riesgos ═══════════ */}
-          {queryCoords && (
+          {/* ═══════════ Predicción de riesgo ═══════════ */}
+          {hasResult && (
             <>
               <div className="ia-section ia-section--primary">
                 <div className="ia-section-text">
@@ -313,7 +235,7 @@ const IAPredictiva = () => {
                   <h2 className="ia-section-title">Modelo Predictivo de Riesgos</h2>
                   <p className="ia-section-subtitle">
                     Probabilidad de inundación y sequía estimada por el modelo ML (RiskClassifier)
-                    para la ubicación y fecha seleccionadas.
+                    para la ubicación y el escenario seleccionados.
                   </p>
                 </div>
               </div>
@@ -321,29 +243,28 @@ const IAPredictiva = () => {
               <ResultsErrorBoundary label="MLRiskPanel">
                 <BentoCard span={{ col: 12, row: 1 }} variant="default">
                   <MLRiskPanel
-                    lat={queryCoords.lat}
-                    lon={queryCoords.lng}
-                    year={CURRENT_YEAR}
-                    month={CURRENT_MONTH}
+                    lat={query.lat}
+                    lon={query.lng}
+                    month={query.mes}
+                    precipDeltaPct={query.precip}
+                    tempDeltaC={query.temp}
                     onRiskData={handleRiskData}
                   />
                 </BentoCard>
               </ResultsErrorBoundary>
 
-              <AnimatePresence>
-                {(riskData.flood || riskData.drought) && (
-                  <ResultsErrorBoundary label="PlantabilityPanel">
-                    <PlantabilityPanel
-                      flood={riskData.flood}
-                      drought={riskData.drought}
-                      cultivo={selectedCultivo || null}
-                      fecha={selectedFecha || null}
-                    />
-                  </ResultsErrorBoundary>
-                )}
-              </AnimatePresence>
+              {(riskData.flood || riskData.drought) && (
+                <ResultsErrorBoundary label="PlantabilityPanel">
+                  <PlantabilityPanel
+                    flood={riskData.flood}
+                    drought={riskData.drought}
+                    cultivo={null}
+                    fecha={null}
+                  />
+                </ResultsErrorBoundary>
+              )}
 
-              {/* ── Evidencia histórica local (debajo del riesgo, antes de la planificación) ── */}
+              {/* ── Evidencia histórica local ── */}
               <div className="ia-section">
                 <div className="ia-section-text">
                   <span className="ia-section-eyebrow"><History size={13} /> Evidencia histórica</span>
@@ -357,187 +278,15 @@ const IAPredictiva = () => {
 
               <ResultsErrorBoundary label="HistorialLocalPanel">
                 <HistorialLocalPanel
-                  lat={queryCoords.lat}
-                  lon={queryCoords.lng}
-                  municipio={queryMunicipio}
+                  lat={query.lat}
+                  lon={query.lng}
+                  municipio={queryRef.current?.municipio || null}
                   limit={8}
                 />
               </ResultsErrorBoundary>
             </>
           )}
-
-          {/* ═══════════ SECONDARY: Planificación Estacional (colapsable) ═══════════ */}
-          {isProjected && !isLoading && (
-            <>
-              <div className="ia-section ia-section--secondary">
-                <div className="ia-section-text">
-                  <span className="ia-section-eyebrow"><CalendarRange size={13} /> Apoyo a la planificación</span>
-                  <h2 className="ia-section-title">Planificación Estacional</h2>
-                  <p className="ia-section-subtitle">
-                    Proyección climática estacional, simulación de escenarios y mitigación.
-                    Es apoyo a la planificación, no la predicción de riesgo principal.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  className="ia-section-toggle"
-                  aria-expanded={seasonalOpen}
-                  onClick={() => setSeasonalOpen((o) => !o)}
-                >
-                  {seasonalOpen ? 'Ocultar' : 'Mostrar'}
-                  <ChevronDown size={15} className="ia-section-chevron" />
-                </button>
-              </div>
-
-              {seasonalOpen && (
-                <>
-              {/* ROW 1: MonthlyProjectionTabs + ClimateRiskPanel */}
-              <ResultsErrorBoundary label="Proyección Estacional">
-                <BentoCard span={{ col: 8, row: 1 }} variant="default" title="Proyección Estacional" icon={Search}>
-                  <MonthlyProjectionTabs
-                    proyeccion={proyeccion6M}
-                    mejorMes={proyeccion6M.mejor_mes}
-                    mejorCultivo={proyeccion6M.mejor_cultivo}
-                    loading={false}
-                  />
-                </BentoCard>
-              </ResultsErrorBoundary>
-
-              <ResultsErrorBoundary label="ClimateRiskPanel">
-                <BentoCard span={{ col: 4, row: 1 }} variant="default">
-                  <ClimateRiskPanel proyeccion={proyeccion6M} />
-                </BentoCard>
-              </ResultsErrorBoundary>
-
-              {/* ROW 2: SimulationSection */}
-              {proyeccion6M && (
-                <ResultsErrorBoundary label="Simulación de Fenómenos">
-                  <BentoCard span={{ col: 12, row: 1 }} variant="default" title="Simulación de Fenómenos" icon={Search}>
-                    <SimulationSection proyeccion={proyeccion6M} />
-                  </BentoCard>
-                </ResultsErrorBoundary>
-              )}
-
-              {/* ROW 3: ScenarioSimulator */}
-              <ResultsErrorBoundary label="Simulador de Escenarios">
-                <BentoCard span={{ col: 12, row: 1 }} variant="default">
-                  <ScenarioSimulator
-                    precipDeltaPct={precipDeltaPct}
-                    tempDeltaC={tempDeltaC}
-                    npkSim={npkSim}
-                    riegoSim={riegoSim}
-                    onPrecipChange={handlePrecipChange}
-                    onTempChange={handleTempChange}
-                    onNpkChange={setNpkSim}
-                    onRiegoChange={setRiegoSim}
-                    stale={predStale}
-                    loading={loadingProyeccion}
-                    onSimular={handleSimularContramedida}
-                  />
-                </BentoCard>
-              </ResultsErrorBoundary>
-
-              {/* ROW 4.5: Comparar Escenarios Niño vs Normal */}
-              {queryCoords && (
-                <ResultsErrorBoundary label="Comparar Escenarios">
-                  <BentoCard span={{ col: 12, row: 1 }} variant="default" title="Comparar Escenarios Niño vs Normal" icon={GitCompare}>
-                    <div className="flex flex-col gap-3">
-                      {!compareData ? (
-                        <div className="flex items-center justify-between gap-3">
-                          <p className="text-xs text-[#6b7280]">
-                            Compara la proyección actual con un escenario de El Niño (sequía extendida + altas temperaturas).
-                          </p>
-                          <button
-                            className="ia-generate-btn"
-                            onClick={() => compararEscenarios(queryCoords.lat, queryCoords.lng, 6)}
-                            disabled={loadingCompare}
-                            style={{ whiteSpace: 'nowrap' }}
-                          >
-                            {loadingCompare ? (
-                              <><Loader2 size={14} className="animate-spin" /> Cargando...</>
-                            ) : (
-                              <><GitCompare size={14} /> Comparar Escenarios</>
-                            )}
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="flex flex-col gap-3">
-                          <div className="flex items-center justify-between">
-                            <p className="text-xs text-[#6b7280]">
-                              Comparación generada. Revisa las diferencias entre escenarios.
-                            </p>
-                            <div className="flex gap-2">
-                              <button
-                                className="ia-generate-btn"
-                                onClick={() => compararEscenarios(queryCoords.lat, queryCoords.lng, 6)}
-                                disabled={loadingCompare}
-                                style={{ whiteSpace: 'nowrap' }}
-                              >
-                                {loadingCompare ? (
-                                  <><Loader2 size={14} className="animate-spin" /> Recargando...</>
-                                ) : (
-                                  <><GitCompare size={14} /> Recalcular</>
-                                )}
-                              </button>
-                              <button
-                                className="text-xs text-[#6b7280] hover:text-[#4a4a4a] transition-colors"
-                                onClick={clearCompare}
-                                style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Manrope, sans-serif' }}
-                              >
-                                Cerrar
-                              </button>
-                            </div>
-                          </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {/* Normal column */}
-                            <div className="rounded-xl p-3" style={{ background: 'rgba(15,82,56,0.04)', border: '1px solid rgba(15,82,56,0.1)' }}>
-                              <h4 className="text-xs font-bold text-[#0f5238] mb-2">🌤 Normal</h4>
-                              <GrowthStressChart proyeccion={{ meses: compareData.normal?.meses || [] }} />
-                            </div>
-                            {/* Niño column */}
-                            <div className="rounded-xl p-3" style={{ background: 'rgba(186,26,26,0.04)', border: '1px solid rgba(186,26,26,0.1)' }}>
-                              <h4 className="text-xs font-bold text-[#ba1a1a] mb-2">🔥 El Niño</h4>
-                              <GrowthStressChart proyeccion={{ meses: compareData.nino?.meses || [] }} />
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </BentoCard>
-                </ResultsErrorBoundary>
-              )}
-
-              {/* ROW 5: GrowthStressChart + FeatureChart */}
-              <ResultsErrorBoundary label="Gráficas de Crecimiento">
-                <BentoCard span={{ col: 6, row: 1 }} variant="default">
-                  <GrowthStressChart proyeccion={proyeccion6M} />
-                </BentoCard>
-                <BentoCard span={{ col: 6, row: 1 }} variant="default">
-                  <FeatureChart factors={featureFactors} />
-                </BentoCard>
-              </ResultsErrorBoundary>
-
-              {/* ROW 5: MitigationActions */}
-              <ResultsErrorBoundary label="Mitigación">
-                <BentoCard span={{ col: 12, row: 1 }} variant="default">
-                  <MitigationActions proyeccion={proyeccion6M} />
-                </BentoCard>
-              </ResultsErrorBoundary>
-                </>
-              )}
-            </>
-          )}
         </BentoGrid>
-
-        {/* ── Clear projection ── */}
-        {proyeccion6M && (
-          <button
-            onClick={handleClearAll}
-            className="text-xs text-[#6b7280] mt-3 hover:text-[#4a4a4a] transition-colors"
-          >
-            Descartar proyección actual
-          </button>
-        )}
       </div>
     </ResearcherLayout>
   );

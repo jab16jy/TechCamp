@@ -1,13 +1,13 @@
 import { motion } from 'framer-motion';
-import { MapPin, Building2, Sprout, Calendar, Play, RotateCcw, Loader2 } from 'lucide-react';
+import { MapPin, Building2, CalendarRange, Play, RotateCcw, Loader2, CloudRain, Thermometer, FlaskConical } from 'lucide-react';
 import { MUNICIPIOS_REFERENCIA } from '@shared/services/api';
 import DeptMap from './DeptMap';
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
-const CULTIVOS = [
-  'Maiz', 'Yuca', 'Arroz', 'Frijol', 'Platano', 'Name',
-  'Cacao', 'Algodón', 'Sorgo', 'Palma Aceitera', 'Mango', 'Ají',
+const MESES = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
 ];
 
 // ── Component ──────────────────────────────────────────────────────────────
@@ -17,21 +17,26 @@ export default function ControlBar({
   onDeptChange,
   selectedMunicipio,
   onMunicipioChange,
-  selectedCultivo,
-  onCultivoChange,
-  selectedFecha,
-  onFechaChange,
+  selectedMes,
+  onMesChange,
+  precipDelta,
+  onPrecipChange,
+  tempDelta,
+  onTempChange,
   onClear,
   onExecute,
   loading,
 }) {
-  const hasSelection = selectedDept || selectedMunicipio || selectedCultivo || selectedFecha;
+  const hasScenario = Number(precipDelta) !== 0 || Number(tempDelta) !== 0;
+  const hasSelection = selectedDept || selectedMunicipio || hasScenario;
   const canExecute = !!selectedDept && !loading;
 
   // Municipios available for the chosen department (reference centroids).
   const municipios = selectedDept
     ? MUNICIPIOS_REFERENCIA.filter((m) => m.departamento === selectedDept)
     : [];
+
+  const fmtDelta = (v, unit) => `${Number(v) > 0 ? '+' : ''}${v}${unit}`;
 
   return (
     <motion.section
@@ -55,8 +60,8 @@ export default function ControlBar({
         <div>
           <h2 className="cb-title">Configurar consulta</h2>
           <p className="cb-subtitle">
-            Elige un departamento en el mapa, define cultivo y fecha de siembra,
-            y ejecuta la proyección climática.
+            Elige un departamento (y opcionalmente un municipio) y el mes a evaluar.
+            Puedes simular un escenario de clima antes de ejecutar.
           </p>
         </div>
 
@@ -82,38 +87,74 @@ export default function ControlBar({
           </select>
         </div>
 
-        {/* Crop selector */}
+        {/* Month to evaluate */}
         <div className="cb-field">
-          <label className="bento-field-label" htmlFor="cb-cultivo">
-            <Sprout size={13} />
-            Cultivo
+          <label className="bento-field-label" htmlFor="cb-mes">
+            <CalendarRange size={13} />
+            Mes a evaluar
           </label>
           <select
-            id="cb-cultivo"
+            id="cb-mes"
             className="bento-field-input"
-            value={selectedCultivo || ''}
-            onChange={(e) => onCultivoChange(e.target.value)}
+            value={selectedMes}
+            onChange={(e) => onMesChange(Number(e.target.value))}
           >
-            <option value="">Maíz (por defecto)</option>
-            {CULTIVOS.map((c) => (
-              <option key={c} value={c}>{c}</option>
+            {MESES.map((m, i) => (
+              <option key={m} value={i + 1}>{m}</option>
             ))}
           </select>
         </div>
 
-        {/* Date picker */}
-        <div className="cb-field">
-          <label className="bento-field-label" htmlFor="cb-fecha">
-            <Calendar size={13} />
-            Fecha de siembra <span className="cb-optional">(opcional)</span>
-          </label>
-          <input
-            id="cb-fecha"
-            type="date"
-            className="bento-field-input"
-            value={selectedFecha || ''}
-            onChange={(e) => onFechaChange(e.target.value)}
-          />
+        {/* Climate scenario (simulation) */}
+        <div className="cb-scenario">
+          <div className="cb-section-label" style={{ marginBottom: 6 }}>
+            <FlaskConical size={13} />
+            Escenario climático <span className="cb-optional">(simulación)</span>
+          </div>
+
+          <div className="cb-slider-row">
+            <label className="cb-slider-label" htmlFor="cb-precip">
+              <CloudRain size={12} /> Lluvia
+              <strong className="cb-slider-val">{fmtDelta(precipDelta, '%')}</strong>
+            </label>
+            <input
+              id="cb-precip"
+              type="range"
+              min={-100}
+              max={300}
+              step={10}
+              value={precipDelta}
+              onChange={(e) => onPrecipChange(Number(e.target.value))}
+              className="cb-slider"
+            />
+          </div>
+
+          <div className="cb-slider-row">
+            <label className="cb-slider-label" htmlFor="cb-temp">
+              <Thermometer size={12} /> Temperatura
+              <strong className="cb-slider-val">{fmtDelta(tempDelta, '°C')}</strong>
+            </label>
+            <input
+              id="cb-temp"
+              type="range"
+              min={-5}
+              max={5}
+              step={0.5}
+              value={tempDelta}
+              onChange={(e) => onTempChange(Number(e.target.value))}
+              className="cb-slider"
+            />
+          </div>
+
+          {hasScenario && (
+            <button
+              type="button"
+              className="cb-scenario-reset"
+              onClick={() => { onPrecipChange(0); onTempChange(0); }}
+            >
+              Restablecer escenario
+            </button>
+          )}
         </div>
 
         {/* Actions */}
@@ -126,7 +167,7 @@ export default function ControlBar({
             {loading ? (
               <><Loader2 size={15} className="cb-spin" /> Calculando…</>
             ) : (
-              <><Play size={15} fill="currentColor" /> Ejecutar proyección</>
+              <><Play size={15} fill="currentColor" /> Ejecutar</>
             )}
           </button>
 
